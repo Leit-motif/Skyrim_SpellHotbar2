@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.21)
 
 project(SpellHotbar2 VERSION 2.0.10 LANGUAGES CXX)
 
-#output folder to copy dll after building
-set(OUTPUT_FOLDER "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2")
+#output folder to copy dll after building (override with -DOUTPUT_FOLDER=...)
+if(NOT DEFINED OUTPUT_FOLDER)
+    set(OUTPUT_FOLDER "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2")
+endif()
+#set(OUTPUT_FOLDER "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2")
 #set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_5_97/mods/Spell Hotbar 2")
 #set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_6_1170/mods/Spell Hotbar 2")
 
