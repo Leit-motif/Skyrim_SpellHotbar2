@@ -19,3 +19,11 @@ _Avoid_: Equip-first casting, secondary test mode
 **Installed Configuration**:
 The exact set of components and options selected in the user's current FOMOD installation. Compatibility acceptance covers this configuration, not unselected installer alternatives.
 _Avoid_: Every installer permutation, theoretical support matrix
+
+**Core Fork**:
+The maintained Spell Hotbar 2 source that owns generally applicable native behavior, fixes, and improvements.
+_Avoid_: Nolvus patch, load-order bundle
+
+**Compatibility Package**:
+A separate integration layer that owns records, presets, configuration, and other adaptations specific to the user's Nolvus load order.
+_Avoid_: Core fork, upstream source
