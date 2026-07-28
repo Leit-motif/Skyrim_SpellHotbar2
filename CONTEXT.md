@@ -35,3 +35,7 @@ _Avoid_: Community release, supported mod-list distribution
 **Accepted Baseline**:
 The independently validated Installed Configuration before any behavior customization, retained as the known-good reference for attributing later regressions.
 _Avoid_: Build success, provisional smoke test
+
+**Dual-Input Compatibility**:
+Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them.
+_Avoid_: Controller-only support, keyboard-only support
