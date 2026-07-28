@@ -27,3 +27,7 @@ _Avoid_: Nolvus patch, load-order bundle
 **Compatibility Package**:
 A separate integration layer that owns records, presets, configuration, and other adaptations specific to the user's Nolvus load order.
 _Avoid_: Core fork, upstream source
+
+**Personal Integration**:
+The private runtime result maintained for the user's own Nolvus installation, without a public release or compatibility claim for other users.
+_Avoid_: Community release, supported mod-list distribution
