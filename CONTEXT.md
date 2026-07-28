@@ -39,3 +39,11 @@ _Avoid_: Build success, provisional smoke test
 **Dual-Input Compatibility**:
 Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them.
 _Avoid_: Controller-only support, keyboard-only support
+
+**Material Interaction**:
+A repeatable Nolvus-specific conflict, regression, stability problem, or meaningful behavioral deviation from normal upstream expectations that prevents acceptance.
+_Avoid_: Harmless warning, unselected feature behavior, theoretical conflict
+
+**Compatibility Evidence**:
+The traceable runtime record supporting acceptance, tied to the tested source and binary, MO2 environment, Installed Configuration, saves, input paths, logs, and visible results. For reWASD, record the mappings exercised rather than archiving the full profile unless a defect depends on it.
+_Avoid_: Build success, undocumented smoke test
