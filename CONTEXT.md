@@ -15,3 +15,7 @@ _Avoid_: Experimental proof of concept, reduced feature trial, customization mil
 **Direct Cast**:
 The fork's primary casting mode, where activating a hotbar slot casts its bound spell directly instead of first equipping it. This behavior is the central reason for adopting Spell Hotbar 2.
 _Avoid_: Equip-first casting, secondary test mode
+
+**Installed Configuration**:
+The exact set of components and options selected in the user's current FOMOD installation. Compatibility acceptance covers this configuration, not unselected installer alternatives.
+_Avoid_: Every installer permutation, theoretical support matrix
