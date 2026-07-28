@@ -31,3 +31,7 @@ _Avoid_: Core fork, upstream source
 **Personal Integration**:
 The private runtime result maintained for the user's own Nolvus installation, without a public release or compatibility claim for other users.
 _Avoid_: Community release, supported mod-list distribution
+
+**Accepted Baseline**:
+The independently validated Installed Configuration before any behavior customization, retained as the known-good reference for attributing later regressions.
+_Avoid_: Build success, provisional smoke test
