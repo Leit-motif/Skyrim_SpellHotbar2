@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 - [ ] Record the exact selected FOMOD components, relevant MCM options, enabled compatibility data, hotbar bindings, and enabled input stack, including Gamepad++, Input Switcher, reWASD, and other input-affecting mods present.
 - [ ] Record the Core Fork commit and immutable identity of the tested DLL.
