@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** claimed
+**Status:** resolved
 
 - [x] Record the exact selected FOMOD components, relevant MCM options, enabled compatibility data, hotbar bindings, and enabled input stack, including Gamepad++, Input Switcher, reWASD, and other input-affecting mods present. — FOMOD components and compatibility data derived decisively; input stack recorded. **MCM options and hotbar bindings do not exist yet**: they serialize into the SKSE co-save and the mod had never been active in this profile, so the fixture records their absence and assigns their first capture to ticket 02. reWASD was not running at capture; its mappings are recorded per-mapping in ticket 04.
 - [x] Record the Core Fork commit and immutable identity of the tested DLL.
