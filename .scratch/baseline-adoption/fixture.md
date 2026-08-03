@@ -75,8 +75,11 @@ open:
 | `plugins.txt` | 131348 | `9B18AFAF9A317FEAC0CDF37FD4D5BE147FB0B5F5CF3AF4A6E30E7389BA9B70B5` |
 | `loadorder.txt` | 129703 | `B441CB4757D71C1CB3D65126C83B3F429223FD1CE5087164D96B7BB41B30A1D8` |
 
-- Enabled mods `3911`, enabled plugins `3735` (7/29: `3906` / `3733`; the delta is these two mods
-  plus three unrelated changes made by other work between the captures).
+- Enabled mods `3911`, enabled plugins `3735` (7/29: `3906` / `3733`). The plugin delta of `+2` is
+  exactly this ticket's two plugins. The mod delta is `+5`: two are this ticket's, and **the other
+  three are unattributed** — the 7/29 capture recorded only a hash of `modlist.txt`, not its
+  contents, so the intervening changes cannot be identified from this record. They were not made
+  by this ticket.
 - Mod priority: `Dev - Spell Hotbar 2` at `4353`, `Spell Hotbar 2` at `4352` — both at the top of
   the list, so **the development DLL override wins over the FOMOD-installed release DLL**. That
   arrangement is deliberate: `Dev - Spell Hotbar 2` contains exactly one file, the DLL.
@@ -165,17 +168,31 @@ ticket 04; do not archive the full profile.
 
 ## Save fixtures
 
-Both files were read and hashed only, and both are byte-identical to the 7/29 capture despite
-heavy unrelated use of the same character by other work on 2026-08-03.
+A save fixture here is **two files**, not one. The `.ess` holds the game save; the `.skse` co-save
+holds serialized SKSE state — including, once the mod runs, the `GDAT` record carrying this mod's
+bindings and settings. A fixture identified by its `.ess` alone cannot prove it was unchanged, and
+cannot tie later evidence to the exact state a run started from. Both halves are fingerprinted.
 
-- Controlled disposable: `Save20_EBCD0A92_0_5861656C6C65_QASmoke_000547_20260723170328_17_1.ess`,
-  size `9728814`, SHA-256 `21A5BCCA9D90769C6FF757A1C51866CD9AAE1444C8917C8113FEDE4F196DC726`
-- Representative playthrough:
-  `Save2_97ED70F8_0_4D61656C6C65_WhiterunDragonsreach_000856_20260705191607_11_1.ess`, size
-  `10842171`, SHA-256 `F1F8322DD336AC9EC2783F9F69CB518A3B90E2FA2AE4AEF68DC4D1BE13B8902A`
+Controlled disposable — `Save20_EBCD0A92_0_5861656C6C65_QASmoke_000547_20260723170328_17_1`:
 
-Both live under `...\MODS\profiles\Nolvus Awakening\saves`. Other tasks autosave the same
-disposable character; re-verify both hashes before each run, reload rather than overwrite, and
+| Part | Size | SHA-256 |
+| --- | --- | --- |
+| `.ess` | 9728814 | `21A5BCCA9D90769C6FF757A1C51866CD9AAE1444C8917C8113FEDE4F196DC726` |
+| `.skse` | 617190 | `A2FB787B1C92BCC0F3DEDB3386B767CC3D8543C498E1B93B71F1BD591B946867` |
+
+Representative playthrough —
+`Save2_97ED70F8_0_4D61656C6C65_WhiterunDragonsreach_000856_20260705191607_11_1`:
+
+| Part | Size | SHA-256 |
+| --- | --- | --- |
+| `.ess` | 10842171 | `F1F8322DD336AC9EC2783F9F69CB518A3B90E2FA2AE4AEF68DC4D1BE13B8902A` |
+| `.skse` | 1694923 | `BB807C9C4DB08BA95DA1B77307BCED537AF89F86F9B7FE38680FB63FB318032A` |
+
+All four files were read and hashed only. Both `.ess` hashes are byte-identical to the 7/29
+capture despite heavy unrelated use of the same character by other work on 2026-08-03.
+
+All live under `...\MODS\profiles\Nolvus Awakening\saves`. Other tasks autosave the same
+disposable character; re-verify all four hashes before each run, reload rather than overwrite, and
 save derived test states under distinct names.
 
 Neither save has ever run with Spell Hotbar 2 active — the mod was disabled in this profile until
@@ -188,23 +205,57 @@ here.
 
 Previewed, then applied on 2026-08-03 under the ownership grant above.
 
-- Source: `<scratch>/staging-baseline01/SKSE/Plugins/SpellHotbar2.dll`, SHA-256 `9846FB9B…`
-- Destination: `...\MODS\mods\Dev - Spell Hotbar 2\SKSE\Plugins\SpellHotbar2.dll`
-- Replaced: SHA-256 `93357D44…`, preserved at
-  `<scratch>/rollback-devmod-dll/SpellHotbar2.dll.pre-baseline01`
+- Source: the staged build output, SHA-256 `9846FB9B…`
+- Destination: `C:\Nolvus\Instances\Nolvus Awakening\MODS\mods\Dev - Spell Hotbar 2\SKSE\Plugins\SpellHotbar2.dll`
+- Replaced: SHA-256 `93357D44…`
 - Verified after the copy: destination SHA-256 equals the staged source.
 - Untouched: the installed `Spell Hotbar 2` mod and every profile file.
 
+### Durable artifact store
+
+Rollback artifacts are useless in a session-scoped temp directory. Everything needed to restore
+this environment lives at an absolute, session-independent path:
+
+`C:\Nolvus\_artifacts\spell-hotbar-2\baseline-adoption\01\`
+
+| File | Size | SHA-256 |
+| --- | --- | --- |
+| `dll\SpellHotbar2.dll.tested-a50bda1` | 1713664 | `9846FB9B79E0D5C352F24D32FA354B7C98F9EE9A1384131719A1D0F2AA6D311D` |
+| `dll\SpellHotbar2.dll.replaced-20260723` | 1713664 | `93357D4414A3576C1ADDB0B684FF5562B818AE44EC32354E1FE5389DC094756F` |
+| `profile-activated\modlist.txt` | 147537 | `DB5942D0D7704B3F42D1D30E554B092FE1C722791F2361C0677FCD9B967C9489` |
+| `profile-activated\plugins.txt` | 131348 | `9B18AFAF9A317FEAC0CDF37FD4D5BE147FB0B5F5CF3AF4A6E30E7389BA9B70B5` |
+| `profile-activated\loadorder.txt` | 129703 | `B441CB4757D71C1CB3D65126C83B3F429223FD1CE5087164D96B7BB41B30A1D8` |
+| `profile-pre-activation\modlist.txt` | 147537 | `0222C9FE5B281E3115E4EA83625CB2C67762C8A3AD38E6AB934911800B38ED1C` |
+| `profile-pre-activation\plugins.txt` | 131301 | `DB153B263FEA8CD2AF4DD9D06B6541B4278C2656CBDEDACAA4B8A085E9D0D46A` |
+| `profile-pre-activation\loadorder.txt` | 129658 | `18B23C5749E036F9E7CD30682C74E1C9EF34E40D490185C0806B001D457E44EC` |
+
+`profile-activated` was copied from the live files and each copy hashes equal to its source.
+`dll\...tested-a50bda1` hashes equal to the DLL currently deployed at the destination.
+
+### The pre-activation snapshot is reconstructed, and the reconstruction is proven
+
+There is no captured pre-activation snapshot, because the owner activated the mods before this
+ticket's work began; a copy taken afterwards is a copy of the activated state and cannot restore
+what preceded it. The pre-activation files above were therefore **reconstructed** by inverting the
+activation, and the inversion is proven rather than asserted: each reconstructed file hashes
+byte-exactly to the hash captured from the live file *before* activation.
+
+The inversion is not a single uniform edit, which is why asserting it would have been wrong:
+
+- `modlist.txt` — both entries already existed, disabled. Activation flipped `-` to `+`; the
+  inversion flips them back. Size is unchanged at `147537`, which is itself the tell.
+- `plugins.txt` and `loadorder.txt` — the entries did **not** exist. Activation *added* two lines
+  to each; the inversion removes those whole lines. Sizes drop by `47` and `45` bytes. Merely
+  dropping the `*` prefix would leave the plugins listed-but-disabled, which is a different state
+  from absent.
+
 Restoration paths, in increasing scope:
 
-1. Copy the preserved DLL back over the destination.
+1. Copy `dll\SpellHotbar2.dll.replaced-20260723` back over the destination.
 2. Disable `Dev - Spell Hotbar 2` in the profile, falling back to the installed release DLL
    `AB8F82DB…`.
-3. Restore the profile snapshot taken before this ticket's work, held beside the live files as
-   `modlist.txt.bak-sh2-baseline01-20260803`, `plugins.txt.bak-sh2-baseline01-20260803`, and
-   `loadorder.txt.bak-sh2-baseline01-20260803`. To return to the pre-activation state, flip
-   `+Dev - Spell Hotbar 2` and `+Spell Hotbar 2` to `-`, and drop the `*` from
-   `*SpellHotbar.esp` and `*SpellHotbar_BattleMage.esp`.
+3. Copy the three `profile-pre-activation` files over the live profile files. Do this with MO2
+   closed, or MO2 will flush its in-memory state over them on exit.
 
 ## Prior-run evidence that does not transfer
 

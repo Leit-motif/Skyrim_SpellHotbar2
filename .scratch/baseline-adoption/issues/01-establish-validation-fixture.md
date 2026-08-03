@@ -80,3 +80,58 @@ recorded at three scopes. Save fixtures were read and hashed only and are byte-i
 Open by construction: no bindings, MCM state, or mode state exist for either save fixture, because
 they serialize into the SKSE co-save and the mod has never run in this profile. Their first
 capture is ticket 02's opening act.
+
+### 2026-08-03 — Cold review and closure
+
+Independent review by Codex GPT-5.6 Sol at `high` reasoning effort, over
+`7802b0f...b4ce74b`, against this ticket, the spec, `CONTEXT.md`, and `AGENTS.md`.
+
+Verdict: **not ACCEPT** — three P1 blocking findings, all `RECORD`, no `PRODUCT` or `TEST`
+findings. The reviewer confirmed independently that all six FOMOD inversions rest on unique
+installed-payload markers, that the MCM/binding limitation is stated clearly enough not to read as
+observed data, and that all 24 runtime cells remain `open`.
+
+All three closures changed only the fixture record, so no second model pass is owed. Each is
+proven below by the command output that closes it.
+
+**Finding 1 — rollback artifacts sat in a session-scoped temp directory.** Correct: the staged
+build and the replaced DLL were under `%TEMP%\claude\…\scratchpad`, which cleanup can delete, and
+the fixture referred to them as `<scratch>`, which names no reproducible location. Closed by
+copying every artifact to `C:\Nolvus\_artifacts\spell-hotbar-2\baseline-adoption\01\` and
+recording absolute paths with sizes and hashes. Verified: the durable tested DLL hashes equal to
+the DLL now deployed at the destination, and the durable activated-profile copies hash equal to
+their live sources.
+
+**Finding 2 — only the `.ess` half of each save fixture was fingerprinted.** Correct, and the
+omission was self-contradictory: the same fixture argues that bindings and settings serialize into
+the SKSE co-save. Closed by fingerprinting both halves of both fixtures —
+`Save20…QASmoke….skse` size `617190` SHA-256 `A2FB787B…`, and
+`Save2…WhiterunDragonsreach….skse` size `1694923` SHA-256 `BB807C9C…`.
+
+**Finding 3 — the "snapshot taken before this ticket's work" was nothing of the kind.** This was a
+real error, not a wording problem. The owner activated the mods before the snapshot was taken, so
+all three files were copies of the *activated* state and hashed identically to the live files; and
+the recorded reversal ("drop the `*`") was wrong for two of the three, because activation had
+**added** those lines rather than disabling them. Dropping the prefix would have left the plugins
+listed-but-disabled, which is not the pre-activation state.
+
+Closed by reconstructing the pre-activation profile and proving the reconstruction against the
+hashes captured from the live files before activation. The read/write path was first shown
+byte-faithful by round-tripping an untouched file to an identical hash, so a mismatch could only
+come from the transformation itself:
+
+| File | Transformation | Reconstructed size | Reconstructed SHA-256 | vs pre-activation |
+| --- | --- | --- | --- | --- |
+| `modlist.txt` | flip 2 lines `+` → `-` | 147537 | `0222C9FE…` | MATCH |
+| `plugins.txt` | remove 2 lines | 131301 | `DB153B26…` | MATCH |
+| `loadorder.txt` | remove 2 lines | 129658 | `18B23C57…` | MATCH |
+
+The check discriminates: the first attempt at `modlist.txt` anchored `$` before a trailing `\r`,
+replaced nothing, and reproduced the *activated* hash `DB5942D0…` — a visible failure, corrected
+and re-verified. The three mislabelled `*.bak-sh2-baseline01-20260803` files were removed from the
+profile directory; the durable store supersedes them. The live profile is unchanged.
+
+One further correction made unprompted: the fixture had described the mod-count delta as "three
+unrelated changes made by other work", which asserted more than the evidence supports. The 7/29
+capture recorded only a hash of `modlist.txt`, not its contents, so those three are now recorded as
+unattributed and merely not made by this ticket.
