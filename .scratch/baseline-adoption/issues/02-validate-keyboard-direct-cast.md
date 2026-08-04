@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 — Establish the reproducible validation fixture.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 - [ ] Exercise representative fire-and-forget, concentration, self-targeted, and aimed/projectile spells through physical keyboard bindings.
 - [ ] Cover first-person and third-person casting, left-hand and right-hand choices, and dual casting where the Installed Configuration and character state enable it.
