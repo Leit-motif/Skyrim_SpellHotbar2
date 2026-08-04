@@ -1,6 +1,34 @@
 # Baseline Adoption Compatibility Validation
 
-Status: ready-for-agent
+Status: **superseded 2026-08-03 — see `../mco-integration/spec.md`**
+
+## Why this effort stopped
+
+The owner ended Baseline Adoption partway through ticket 02. The stated goal is to integrate
+this mod with MCO, not to validate a mod they are content to assume works as its repository
+advertises. Judged against that goal, per-cell runtime validation was apparatus rather than
+progress, and the remaining tickets (03–07) are dropped.
+
+The redirection is well founded and the repository already showed it: `CONTEXT.md`'s findings
+are almost entirely MCO integration research — the shout-graph cast, the chain window,
+`IsShouting` teardown, the sibling engine's hook points. This specification sat beside that
+material rather than serving it.
+
+**What this effort established, and what carries forward:**
+
+- Direct Cast works in the Nolvus load order. It fires, sustains and releases, restores
+  equipment, and charges exactly what normal casting charges (proved by control, not
+  assumed). That is the precondition for integrating anything, and it is now settled.
+- The Installed Configuration is recorded and the fixture is reproducible — a tested binary
+  with a proven producing commit, fingerprinted profile and saves. Any MCO work inherits it.
+- **`SEAM-OAR-1` failed, and that failure is an MCO problem, not a compatibility footnote.**
+  Every cast played SYHO's shout animation. Carried into the new effort as its own ticket.
+
+**What is dropped, and is not passed:** every remaining `open` cell. Tickets 03 and 04 were
+already deferred; 05, 06 and 07 are now dropped too. No cell in `acceptance-matrix.csv` may
+be read as passing on the strength of this decision.
+
+The original specification is preserved unchanged below for provenance.
 
 ## Problem Statement
 
