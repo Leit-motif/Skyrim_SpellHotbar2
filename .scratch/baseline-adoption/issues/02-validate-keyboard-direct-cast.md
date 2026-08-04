@@ -99,8 +99,62 @@ diagnosis ticket, not to this one.
   Treat the `.seq` gap as a real and generally applicable defect — it is not Nolvus-specific,
   so it belongs in the Core Fork — but not as a proven explanation of either symptom.
 
-### Fixture state — NOT yet restored
+### Cost is correct, and it took one cast to prove rather than one per spell
 
-`MagickaRate` is currently forced to `0` on the player and **must be restored to `3.0`**.
-Skyrim was still running at the end of this entry. The controlled save was loaded but never
-saved over.
+The owner pushed back on measuring a magicka figure for every spell, and was right. The spec
+asks about cost for one reason — user story 14, that Direct Cast "does not bypass or
+incorrectly multiply costs". Per-spell absolute numbers do not answer that question; a
+control does.
+
+Oakflesh, cast both ways by the same character at the same skill, with regen frozen:
+
+| Path | Magicka | Cost |
+| --- | --- | --- |
+| Direct Cast from hotbar slot 5 | 191.01 → 100.20 | **90.81** |
+| Normal cast, equipped left hand | 100.20 → 9.39 | **90.81** |
+
+Identical, not merely close. **Direct Cast charges exactly what normal casting charges.**
+User story 14 is satisfied for every spell at once, and no further per-spell cost
+measurement is owed in this ticket.
+
+Worth stating because it nearly became a false finding: 90.81 for a novice Alteration spell
+looked high enough to suspect the mod. It is Nolvus's rebalance and the character's skill.
+The control is what distinguished those, and without it the number would have been recorded
+as suspicious with nothing to compare against. Note the "normal" path here is Magic Casting
+Behavior Overhaul, which is what normal means in this load order — a vanilla-isolated
+comparison would not have been the right control.
+
+### Two more cells, and a category error in the matrix
+
+- `KB-AIM-1` **passed** — Ice Spike, tap, third person. Fired once. Cost 31.56, derived by
+  difference (122.37 combined for Ice Spike plus Oakflesh, with Oakflesh independently
+  measured at 90.81). Equipment restored.
+- `KB-SELF-1` **passed** — Oakflesh, tap, third person. Applied to self: spell `0x0005AD5C`
+  active on the player at magnitude 40.0, duration 480.0. Cost 90.81. Equipment restored.
+  The three Oakflesh-sourced entries in the effect list are Vokriinator Black's Armor
+  30/50/70 perk-bonus tiers, not the base effect stacking.
+
+**The `hand_mode` column is a category error for Direct Cast, and neither cell exercised
+it.** `KB-AIM-1` specifies right hand and `KB-SELF-1` left, but `CONTEXT.md` finding 1
+establishes that a hotbar cast is driven by notifying the shout behaviour graph and never
+equips the spell — which is precisely why it does not occupy a hand, and the property the
+whole integration exists to preserve. There was no hand choice to make. Both cells are
+recorded passed on their observable behaviour with the hand deviation stated rather than
+silently absorbed.
+
+This has a consequence beyond bookkeeping: **user story 12 ("left-hand and right-hand
+choices validated") may not be answerable in these terms at all.** Before ticket 07 treats
+it as satisfied or failed, someone has to establish whether the mod offers a per-hand
+binding concept for Direct Cast, or whether the story was written against equip-first
+assumptions. That is a design question, not a test result.
+
+### Fixture state
+
+`MagickaRate` was forced to `0` for cost measurement and has been **restored to `3.0`**,
+verified by reading it back. Magicka was left at ~9 and regenerates normally.
+
+The character's left hand now holds Oakflesh rather than the fixture's Incinerate, because
+the control required equipping it. Nothing was saved over the fixture, so a reload restores
+the original loadout; both halves of the save on disk remain untouched.
+
+Skyrim was still running at the end of this entry.
