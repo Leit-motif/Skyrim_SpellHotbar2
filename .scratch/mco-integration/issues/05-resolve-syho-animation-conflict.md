@@ -83,10 +83,59 @@ Next run decides it: full-copy overlay plays this mod's own casting animation �
 and the priority fix is sound. Still T-poses → cause is (a), and the ticket needs rethinking
 from the top.
 
+## 2026-08-03 — full-copy overlay still T-posed; ticket redirected
+
+The full-copy overlay T-posed too, so the cause is **(a)**. The owner's OAR animation log
+showed `cast_1h_left`, `mt_shout_exhale` and `1hm_shout_inhale` winning — this mod's own
+submods — which proves the overlay worked and the priorities are right. The clips themselves
+fail.
+
+Cheap explanations ruled out, so nobody re-checks them:
+
+- **Not a bad or wrong-format file.** `mt_shout_exhale.hkx` is `hk_2010.2.0-r1`, byte-for-byte
+  the same Havok version string as SYHO's and MCBO's working clips.
+- **Not the priorities, and not the JSON.** OAR selected the intended submods, and the
+  full-copy overlay's configs differ from the originals by exactly one number.
+
+What remains is that these clips do not work against this load order's skeleton or
+Nemesis-rebuilt behaviour. **That is not being diagnosed**, because the owner does not want
+this mod's casting animations at all — they want Magic Casting Behavior Overhaul's. Debugging
+animations that are going to be replaced buys nothing.
+
+### Redirected: play MCBO clips from the shout paths
+
+The mechanism stays, the source changes. A hotbar cast fires shout events; OAR decides what
+those play; so map the shout paths to MCBO's clips.
+
+MCBO is a Nemesis behaviour mod (`Nemesis_engine/mod/msco`, plus a `BehaviorDataInjector`
+SKSE plugin) that injects magic states, with `MSCO_left1-10.hkx` sitting in the plain
+animations folder as the clips those states play. They are ordinary player-skeleton clips, so
+they can be substituted into other animation paths.
+
+Probe built as MO2 mod **`Spell Hotbar 2 - MCBO Cast Animations`** (not in this repo — it is
+runtime state):
+
+- One submod `SpellHotbar2_MCBO/cast_left_probe`, priority `101500000` (above SYHO's
+  `99999996`).
+- `MSCO_left1.hkx` copied over the six shout paths a cast requests: `mt_shout_exhale`,
+  `mt_shout_inhale`, `1hm_shout_inhale`, `2hm_shout_inhale`, `sneak1hm_shout_exhale`,
+  `sneak1hm_shout_inhale`.
+- Gated on `SpellHotbar.esp:815 > 0` (cast active) plus an inlined player check, so real
+  shouts are untouched and keep SYHO.
+
+Deliberately one clip, not the full five-variant mapping — it answers whether an MCBO clip
+plays from a shout path at all before more is invested. Inhale and exhale share a clip in the
+probe; that is a known crudity, not the intended end state.
+
 Remaining:
 
-- [ ] Re-enable the overlay in MO2 above `Spell Hotbar 2` and relaunch; the VFS only changes
-      on restart.
+- [ ] **Disable `Spell Hotbar 2 - OAR Priority Over SYHO`.** Its bumped range reaches
+      `101901002`, which would outrank the probe — and it is what makes the broken clips win.
+      With it off, this mod's originals sit below SYHO and the probe wins hotbar casts.
+- [ ] Enable the probe mod, relaunch, cast, and record whether an MCBO clip plays.
+- [ ] If it plays: map the remaining left variants and decide whether inhale and exhale should
+      differ. If it T-poses too: MCBO clips cannot be driven from the shout graph, and the
+      animation problem escalates to the graph work in tickets 02/03.
 - [ ] **Confirm in game.** Nothing above proves what plays; it only proves what OAR should
       select. Untested.
 - [ ] Read SYHO's own OAR conditions if the overlay does not resolve it. They have still
