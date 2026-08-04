@@ -67,26 +67,6 @@ If a suspected Material Interaction is found, reproduce and attribute it before 
 47. As the maintainer, I want future upstream changes deliberately reviewed against the Accepted Baseline, so that abandoned or sporadic upstream activity cannot silently alter the integration.
 48. As the player, I want a clear acceptance decision, so that customization begins only after the base mod is trustworthy in my load order.
 
-## Scope decision: keyboard-first MVP (2026-08-03)
-
-The owner scoped the first pass to **physical keyboard only**. Gamepad work is an enhancement to
-be taken after MVP, not part of it.
-
-- Deferred: ticket 03 (native gamepad) and ticket 04 (representative reWASD mappings).
-- Ticket 06 no longer waits on 03 or 04, and repeats material coverage on the keyboard path only.
-- The acceptance decision in ticket 07 therefore yields a **keyboard-only Accepted Baseline**. It
-  is not the Dual-Input Compatibility baseline defined in this specification's language, and must
-  not be described as one.
-- The `GP-*`, `RW-*`, `PLAY-GP-1`, and `PLAY-RW-1` cells stay `open`. Deferred by scope is not
-  passed, and nothing may close them but their own runtime evidence.
-
-Context for the deferred work, from the owner: play is normally on gamepad, with Auto Input Switch
-allowing both devices and reWASD binding keyboard keys to gamepad buttons. When gamepad work
-resumes, the governing constraint is that **no physical button may be bound both natively and
-through a reWASD keyboard mapping** — overlap is where the two paths collide. Worth checking then:
-whether reWASD's keyboard emulation makes Auto Input Switch flip prompts to keyboard mid-controller
-play. Unverified.
-
 ## Implementation Decisions
 
 - Baseline Adoption is a compatibility-validation milestone, not a reduced proof of concept and not a customization milestone.
