@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 — Establish the reproducible validation fixture.
 
-**Status:** claimed
+**Status:** resolved (closed early by the 2026-08-03 scope change; see `../spec.md`)
 
 - [ ] Exercise representative fire-and-forget, concentration, self-targeted, and aimed/projectile spells through physical keyboard bindings.
 - [ ] Cover first-person and third-person casting, left-hand and right-hand choices, and dual casting where the Installed Configuration and character state enable it.
@@ -157,4 +157,39 @@ The character's left hand now holds Oakflesh rather than the fixture's Incinerat
 the control required equipping it. Nothing was saved over the fixture, so a reload restores
 the original loadout; both halves of the save on disk remain untouched.
 
-Skyrim was still running at the end of this entry.
+### Dual cast, and then the session ended
+
+`KB-DUAL-1` **passed**. With the dual-cast modifier bound to `B` (index 17, scancode 48) the
+cast cost 339.0 → 244.33 = **94.67**, exactly 3.00× Ice Spike's single-cast 31.56. The
+modifier engaged and the perk was present — dual casting cannot fire without it. Equipment
+restored correctly.
+
+Whether 3.00× is the right multiplier was **not** established. Vanilla dual casting charges
+2.8×, but Adamant and Vokriinator Black both touch dual-cast scaling, so 3.0× may be correct
+here. The control that would settle it — a normal dual cast of the same spell — was not run;
+the owner accepted 3.00× as correct and redirected the work. Recorded as accepted-by-owner,
+not as measured.
+
+Two mistakes of mine belong in the record. I bound the dual-cast modifier to `C` without
+checking the owner's bindings and collided with auto-run. And I read an equipment state of
+Ice-Spike-in-both-hands as a restoration failure and built a hypothesis on it before asking;
+the owner had equipped it manually. The mod was not at fault, and a later clean run confirmed
+dual cast restores equipment correctly.
+
+One real observation about the mod came out of that: **`SetKeyBind` silently unbinds a
+colliding action.** Setting the dual-cast modifier to Right Ctrl (157) normalized it to Left
+Ctrl (29) and unbound `modifier_1`, which had held 29 — no error, no warning. Ctrl-modified
+bars would have stopped working with nothing on screen to explain why. Both facts (the
+silent steal and the RCtrl→LCtrl normalization) were verified by reading the binds back, and
+`modifier_1` was restored to 29.
+
+### Closed early — scope change
+
+The owner stopped Baseline Adoption on 2026-08-03: the goal is **MCO integration**, not
+validating a mod they are willing to assume works. Remaining cells in this ticket are
+**dropped by that decision, not passed**. `KB-FAF-1` and `KB-CONC-1` stay `open` (first
+person declined); `SEAM-OAR-1` stays `failed`.
+
+Fixture restored: `MagickaRate` returned to `3.0` and verified; Skyrim quit through DevBench
+(`qqq`) with MO2 left running; both halves of the controlled save byte-identical to the
+ticket 01 record.
