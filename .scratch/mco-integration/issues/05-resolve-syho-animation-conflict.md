@@ -52,9 +52,41 @@ Applied as a **Compatibility Package overlay**, not an edit to the installed mod
 - The installed `Spell Hotbar 2` is untouched; its 56 originals are still in place. Rollback
   is disabling or deleting the overlay mod.
 
+## 2026-08-03 — the configs-only overlay T-posed the player
+
+Tested live on the owner's new save `Save42_EBCD0A92_…_QASmoke_000551_20260804020940_17_1`:
+
+| Overlay | Result |
+| --- | --- |
+| enabled (configs only) | **T-pose on cast** |
+| disabled | SYHO shout animation, cast works |
+
+So the first overlay caused it. Two candidate causes, needing different fixes:
+
+- **(a)** Spell Hotbar's own animations do not work in this load order, and SYHO was masking
+  that by winning every contested cast. Nemesis Unlimited Behavior Engine and several Nemesis
+  patches are enabled here, and the submods replace not just `mt_shout_*` / `1hm_shout_inhale`
+  but the idles for every weapon type (`mt_idle`, `2hm_idle`, `dw1hm1hmidle`, `bow_idleheld`,
+  `staff_idle` …, 23 copies each). If (a) holds, this entire ticket's approach is dead.
+- **(b)** The overlay broke resolution. It shipped only `config.json` files, so OAR finding the
+  animations depended on MO2's VFS merging the base mod's `.hkx` into the same submod folder.
+  That assumption was mine and was never tested.
+
+**Overlay rebuilt as a full copy to discriminate them** — 1117 files including all 1040 `.hkx`,
+so nothing depends on a merge. Priorities are now edited *textually* (regex on the
+`"priority": N` token) rather than by JSON round-trip, leaving each config byte-identical to
+its original apart from that number; the first version went through
+`ConvertFrom-Json`/`ConvertTo-Json`, which was an unnecessary risk with a parser as
+casing-sensitive as OAR's.
+
+Next run decides it: full-copy overlay plays this mod's own casting animation → cause was (b),
+and the priority fix is sound. Still T-poses → cause is (a), and the ticket needs rethinking
+from the top.
+
 Remaining:
 
-- [ ] Enable the overlay in MO2 above `Spell Hotbar 2` and record its priority.
+- [ ] Re-enable the overlay in MO2 above `Spell Hotbar 2` and relaunch; the VFS only changes
+      on restart.
 - [ ] **Confirm in game.** Nothing above proves what plays; it only proves what OAR should
       select. Untested.
 - [ ] Read SYHO's own OAR conditions if the overlay does not resolve it. They have still
