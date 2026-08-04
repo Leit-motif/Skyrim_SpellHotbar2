@@ -2,9 +2,14 @@
 
 **What to build:** Evidence that the material Direct Cast, input, feature, and persistence behavior proven on the controlled fixture also works in the player's realistic Nolvus Awakening playthrough state.
 
-**Blocked by:** 02 — Validate Direct Cast with physical keyboard; 03 — Validate Direct Cast with native gamepad input; 04 — Validate Direct Cast through representative reWASD mappings; 05 — Validate enabled features and integration seams.
+**Blocked by:** 02 — Validate Direct Cast with physical keyboard; 05 — Validate enabled features and integration seams.
 
 **Status:** ready-for-agent
+
+Blockers 03 and 04 were removed 2026-08-03 by the keyboard-first MVP scope decision (see
+`../spec.md`); they are deferred, and leaving them as blockers would stall this ticket
+permanently. Repeat material coverage on the **keyboard path only**. `PLAY-GP-1` and `PLAY-RW-1`
+stay `open` and are out of MVP scope — deferred is not passed.
 
 - [ ] Load the recorded representative playthrough save through the same active Nolvus Awakening MO2 instance, profile, load order, Installed Configuration, commit, and binary used for controlled validation.
 - [ ] Repeat the material Direct Cast coverage across physical keyboard, native gamepad, and representative reWASD paths.

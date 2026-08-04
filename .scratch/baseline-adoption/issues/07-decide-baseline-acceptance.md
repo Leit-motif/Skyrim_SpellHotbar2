@@ -6,6 +6,11 @@
 
 **Status:** ready-for-agent
 
+Scoped 2026-08-03 by the keyboard-first MVP decision (see `../spec.md`). What this ticket can
+accept is a **keyboard-only Accepted Baseline**. It is not the Dual-Input Compatibility baseline
+this project's language defines, and the decision must say so in those words. The `GP-*`, `RW-*`,
+`PLAY-GP-1`, and `PLAY-RW-1` cells remain `open`; accept around them, never through them.
+
 - [ ] Review the complete acceptance matrix and leave every unexercised or inadequately evidenced cell open rather than implying it passed.
 - [ ] Confirm that runtime evidence is tied to the exact fork commit, binary, Nolvus Awakening instance/profile and load order, Installed Configuration, save fixtures, and input paths.
 - [ ] Review SpellHotbar2, crash, and relevant runtime logs together with screenshots and stability observations.

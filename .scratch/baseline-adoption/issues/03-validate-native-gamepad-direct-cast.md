@@ -4,7 +4,14 @@
 
 **Blocked by:** 01 — Establish the reproducible validation fixture.
 
-**Status:** ready-for-agent
+**Status:** deferred
+
+Deferred 2026-08-03 by the owner's keyboard-first MVP scope decision (see `../spec.md`). Gamepad is
+an enhancement after MVP. Do not start this ticket as part of the MVP pass, and do not let its
+`GP-*` cells be closed by anything but their own runtime evidence — deferred is not passed.
+
+When it resumes: no physical button may be bound both natively and through a reWASD keyboard
+mapping. Overlap is where the two paths collide.
 
 - [ ] Exercise representative Direct Cast behavior through bindings received as native gamepad input while the installed input stack remains enabled.
 - [ ] Cover the relevant fire-and-forget, concentration, targeting, camera, hand, and dual-cast cases needed to expose input-path-specific failures.

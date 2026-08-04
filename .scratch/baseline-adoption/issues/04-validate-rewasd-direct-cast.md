@@ -4,7 +4,15 @@
 
 **Blocked by:** 01 — Establish the reproducible validation fixture.
 
-**Status:** ready-for-agent
+**Status:** deferred
+
+Deferred 2026-08-03 by the owner's keyboard-first MVP scope decision (see `../spec.md`). Gamepad is
+an enhancement after MVP. Do not start this ticket as part of the MVP pass, and do not let its
+`RW-*` cells be closed by anything but their own runtime evidence — deferred is not passed.
+
+When it resumes: this is the owner's normal way of playing — reWASD binds keyboard keys to gamepad
+buttons — so it depends on ticket 02's keyboard bindings already being known good. The reWASD
+mappings for Spell Hotbar do not exist yet and will be authored as part of this ticket.
 
 - [ ] Record and exercise representative reWASD mappings that emit the keyboard keys, modifiers, or combinations used by the Installed Configuration.
 - [ ] Exercise enough fire-and-forget, concentration, targeting, camera, and hand cases to expose mapping-path-specific failures.
