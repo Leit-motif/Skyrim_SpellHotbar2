@@ -98,6 +98,20 @@ It also treats the `IsShouting` graph variable as a liveness check: the moment `
 false, the cast instance is torn down. Anything that ends the shout state early — including an
 MCO chain-out during a Chain Window — destroys the cast and the spell never fires.
 
+**Decided 2026-08-05: the cast gains a commitment point.**
+[ADR 0004](docs/adr/0004-commit-a-cast-at-the-graphs-spellfire-event.md) makes the graph's own
+`Voice_SpellFire_Event` — the event this finding notes the mod does not use — the instant from
+which the spell is delivered regardless of `IsShouting`. Before it, teardown is unchanged. This is
+the fork's answer to the engine's ticket 38, and it deliberately builds no cross-mod API: the
+engine already refuses to open its window before that same event, so the two rules become one
+instant rather than two parties. Ticket 07 implements it.
+
+Note the exposure this closes is not confined to chaining, and not small. The magicka is deducted
+only *after* `cast_spell` succeeds, so an interruption in the gap costs the player the spell and
+refunds nothing. A ritual cast notifies the exhale 250 ms before it fires, and a ritual
+concentration cast 1.0 or 1.5 s before, per animation — a stagger anywhere in that lead loses the
+spell today, with no MCO engine involved at all.
+
 ### 5. Which animation plays is data, not code
 
 A global set per cast (`SpellHotbar_SpellAnimationType`, `SpellHotbar.esp`) is read by OAR
@@ -107,15 +121,36 @@ A cast that looks like an unmodified vanilla shout may therefore be an unmapped 
 than a design limit. Check the in-game spell editor's animation assignment before treating it
 as a defect.
 
-### 6. The MCO shout behavior engine needs no changes to serve this mod
+### 6. ~~The MCO shout behavior engine needs no changes to serve this mod~~ — WITHDRAWN 2026-08-05
 
-That engine's DLL is a pure animation-event observer, and its ADR-0002 forbids it from reading
+~~That engine's DLL is a pure animation-event observer, and its ADR-0002 forbids it from reading
 shout cooldown or availability state. It cannot distinguish a Shout-Graph Cast from a real
-shout. All integration work is therefore on this side of the line.
+shout. All integration work is therefore on this side of the line.~~
 
-Its documentation frames consumers as animation *packs*. This mod is a second consumer class —
-a *driver* that enters the shout graph programmatically with no shout equipped — which is worth
-a note in that project but implies no code change there.
+**Both halves are wrong, and the conclusion they support is the load-bearing one.**
+
+**(a) ADR-0002 was mis-cited.** Its decision governs **cooldown** state only — the voice recovery
+timer, "is a shout currently available", and anything derived from either. It never mentions
+equipment state. Source: `docs/adr/0002-never-inspect-shout-cooldown-state.md` in the engine repo,
+which now carries a scope note recording exactly this. The engine side has struck its own half of
+the mis-citation (its finding 18).
+
+**(b) "It cannot distinguish" is false.** The engine has read `selectedPower` since its ticket 06
+(`ReadWindowKey`) and reads `high->currentShout` in `ReadShoutVariation` — both in
+`src/ShoutChainEngine.cpp`, the latter added by a cold review whose comment argues this exact
+point: *"widens the read away from the cooldown fields, not toward them."* Reading equipment state
+to identify a driver's cast was already established, reviewed and shipping on that side while this
+finding claimed it was forbidden.
+
+**So the conclusion "all integration work is therefore on this side of the line" has no stated
+justification left.** Finding 12 goes further and inverts it: the engine is not merely *able* to
+participate, it is currently the party that is structurally absent, and the connection cannot be
+built here alone.
+
+The one part of this finding that survives: its documentation frames consumers as animation
+*packs*, and this mod is a second consumer class — a *driver* that enters the shout graph
+programmatically with no shout equipped. That note has since been made on that side (its finding
+18), and unlike the rest of this finding it did imply engine changes.
 
 ### 7. Battlemage separates cleanly except for the part that pays out
 
@@ -132,6 +167,11 @@ hook.
 ### 8. The MCO engine's chain-out would destroy a cast, so finding 6 needs a caveat
 
 Recorded 2026-08-02 from the engine side, after a session on the sibling project.
+
+**Two amendments, 2026-08-05, and they pull in opposite directions — read both.** The mechanism
+below is sound and is still the crux of the whole integration. But it describes a path that is
+**not reachable today** (finding 12: the engine never arms on a hotbar cast, so it never cuts one),
+and its closing claim about ADR-0002 is withdrawn with finding 6's.
 
 Finding 6 says that engine needs no changes to serve this mod. That is true of its *code* and
 misleading about its *behaviour*, and the gap is finding 4's.
@@ -150,9 +190,13 @@ Two consequences:
 
 - **Chaining out of a Shout-Graph Cast is not a feature to enable; it is a data-loss bug to
   prevent.** Whatever integration is built must either fire the spell before the cut or suppress
-  chaining while a cast is live.
-- The engine cannot help. ADR-0002 forbids it from reading shout state to tell a cast from a
-  shout, and finding 6 is right that the distinction has to be made on this side.
+  chaining while a cast is live. *Still true, and now forward-looking rather than current: this
+  is the cost of the integration in finding 12, not a hazard the player is exposed to today.*
+- ~~The engine cannot help. ADR-0002 forbids it from reading shout state to tell a cast from a
+  shout, and finding 6 is right that the distinction has to be made on this side.~~ **WITHDRAWN
+  2026-08-05** with finding 6(a): ADR-0002 governs cooldown state only, and the engine already
+  reads equipment state. The engine can help, and finding 12 says it is the only party that can
+  start.
 
 ### 9. Casts land on the sheathed branch, which is not where MCO chaining lives
 
@@ -201,6 +245,53 @@ first thing to check before treating a wrong cast animation as a defect here, an
 reason (with finding 5) that a cast looking like a vanilla shout may not be a code problem.
 
 A `Dev - Spell Hotbar 2` mod folder already exists in that MO2 instance alongside `Spell Hotbar 2`.
+
+### 12. The engine never arms on a hotbar cast, so the two mods are safe and disconnected
+
+Recorded 2026-08-05 from the engine side, which drove **the first Spell Hotbar 2 hotbar cast ever
+traced in either project**. It inverts the premise both repos had been working from, and it is why
+findings 6 and 8 carry corrections.
+
+**A hotbar cast does not raise `BeginCastVoice`.** That is the engine's arming event. Without it
+its `BeginShoutLocked` never runs, `shoutActive` is never set, no window is scheduled, and an
+attack press during a cast is handed straight to the game:
+
+```
+>>> INPUT forwarded to the game (down edge, shout inactive, engine enabled)
+```
+
+As far as the engine's hook sees, a hotbar cast raises only `Voice_SpellFire_Event` → `shoutStop`
+→ `inRdy`. **No press taken, no cut sent.**
+
+**Control, run in the same session so the absence means something:** an ordinary shout key does
+raise `BeginCastVoice` and arms with `>>> SHOUT begin (shout 00013E07)`. The instrument works; the
+absence belongs to the hotbar cast, not to the trace.
+
+Two consequences, and they are opposite:
+
+- **Safe today.** The engine is structurally absent from a hotbar cast, so it cannot destroy one.
+  Finding 8's data loss is unreachable rather than merely unlikely. The engine's release docs no
+  longer call the two mods incompatible.
+- **Disconnected today, and the obvious next move is the dangerous one.** Nothing chains, which is
+  the feature this integration exists to get. Arming the engine on this mod's own events
+  (`ShoutStart` or the exhale) *without first solving finding 8's cut* is **strictly worse than
+  today**: today there is no chain and no harm; that change gives a chain that silently eats the
+  spell. See ticket 03.
+
+Evidence, in the engine repo (read-only from this side):
+`.scratch/shout-mco-engine/T37-hotbar-cast-then-attack-2026-08-05.log`,
+`.scratch/shout-mco-engine/T37-session-RAW-ShoutMCO-2026-08-05.log`, and the write-up
+`.scratch/shout-mco-engine/issues/37-do-not-cut-a-driver-cast.md`. The integration itself is
+that repo's ticket 38.
+
+Fixture: binary `969C59D6` (v1.0.3.0), profile `Nolvus Awakening`, the owner's own recent save
+rather than `RD-A67`, slot 0's keybind read live as DIK 2 via `SpellHotbar.getKeyBind(0)`.
+
+**Not established by that session, and nobody should repeat it as settled:** whether the spell
+actually fires on a hotbar cast was never objectively confirmed. Magicka read 339/339 after the
+trials, but it also reads full at rest and regenerates in well under a minute, so it discriminates
+nothing. Every claim above is engine-side — no arm, no press taken, no cut. **Direct Cast mode was
+not driven at all**, nor anything beyond one spell in one slot in one configuration.
 
 ### Open question
 

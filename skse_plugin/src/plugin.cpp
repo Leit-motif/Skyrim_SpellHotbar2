@@ -28,8 +28,9 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
         }
      });
 
-    //Install animationeventhook
-    //SpellHotbar::events::install(); no need
+    //Install animationeventhook -- needed again as of ADR 0004: the cast's commitment point is
+    //the graph's own `Voice_SpellFire_Event`, and this hook is how we hear it.
+    SpellHotbar::events::install();
     SpellHotbar::events::GameLoopHook::hook();
 
     auto event_listener = SpellHotbar::events::EventListener::GetSingleton();

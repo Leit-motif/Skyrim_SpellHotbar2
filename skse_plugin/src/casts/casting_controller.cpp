@@ -1,4 +1,5 @@
 #include "casting_controller.h"
+#include <atomic>
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
 #include "../input/keybinds.h"
@@ -9,9 +10,44 @@ namespace SpellHotbar::casts::CastingController {
 
 	std::unique_ptr<BaseCastingInstance> current_cast = nullptr;
 
+	// THE COMMITMENT POINT (ADR 0004, ticket 07).
+	//
+	// The vanilla graph raises `Voice_SpellFire_Event` about a tenth of a second into the exhale,
+	// and that instant is what makes a real shout robust: the magic is already out, so anything
+	// that ends the shout afterwards costs nothing. This mod fires on its own timer instead, which
+	// for a ritual cast is 250ms after the exhale is notified and for a ritual concentration cast
+	// 1.0-1.5s after. In that gap the cast used to be torn down by any loss of `IsShouting` -- an
+	// MCO chain, a stagger, a killmove -- losing the spell and refunding nothing, since the
+	// magicka is only deducted once `cast_spell` succeeds.
+	//
+	// Reading the vanilla event rather than inventing a signal is the whole of ADR 0004: the MCO
+	// shout behavior engine already refuses to open its chain window before this same event, so
+	// its floor and our guarantee are one instant, agreed by construction rather than by an API.
+	//
+	// File-scope and atomic rather than a member, because the animation-event hook runs on the
+	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
+	// touches an instance the loop may be destroying underneath it.
+	std::atomic<bool> spellfire_seen{ false };
+
+	void notify_spellfire() {
+		spellfire_seen.store(true, std::memory_order_relaxed);
+	}
+
+	// Cleared when a cast starts, not only when one ends: a shout pressed on the vanilla key
+	// raises spellfire with no cast instance live at all, and that must not leave the next hotbar
+	// cast committed before it has begun.
+	void clear_spellfire() {
+		spellfire_seen.store(false, std::memory_order_relaxed);
+	}
+
+	bool is_cast_committed() {
+		return spellfire_seen.load(std::memory_order_relaxed);
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
 		current_cast.reset();
+		clear_spellfire();
 	}
 
 	//Play sound on actor and return soundhandle
@@ -246,7 +282,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool CastingInstance::update(RE::PlayerCharacter* pc, float delta)
 	{
-		if (is_anim_ok(pc)) {
+		// Past spellfire the cast is committed and delivers regardless of the shout state (ADR
+		// 0004). Before it, losing the state cancels exactly as it always has.
+		if (is_anim_ok(pc) || is_cast_committed()) {
 			if (is_first_time_update()) {
 				play_charge_sound();
 				apply_cast_start_spell(pc);
@@ -402,7 +440,10 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		else if (m_cast_timer < m_release_anim_time) {
 			//during charge loop
-			if (!keydown || !is_anim_ok(pc)) {
+			// A ritual concentration cast notifies its exhale up to 1.5s before the first
+			// `cast_spell`, so this is where the longest commitment gap lives (ADR 0004). A
+			// released key still stops the cast -- that is the player asking, not an interruption.
+			if (!keydown || (!is_anim_ok(pc) && !is_cast_committed())) {
 				//trigger gcd and stop cast
 				set_casted();
 				stop_charge_sound();
@@ -440,12 +481,20 @@ namespace SpellHotbar::casts::CastingController {
 			else if (static_cast<int>(timer_old / loop_timer) < static_cast<int>(m_cast_timer / loop_timer)) {
 				//Check for anim reloop & do loop callbacks
 
-				pc->NotifyAnimationGraph(get_start_anim());
+				// LIVENESS IS CHECKED BEFORE THE RE-NOTIFY, NOT AFTER IT (ticket 07).
+				//
+				// The other order re-enters the shout graph on a channel that has already been
+				// cut -- and the graph honours shout entry from an MCO attack state, tearing that
+				// attack down. A player who chained out of a channel would be yanked back into it
+				// twice a second, and `IsShouting` would read true again immediately afterwards,
+				// so the channel never ended. Checking first makes the trade honest: the first
+				// application has landed, and the rest of the channel is what the attack cost.
 				if (!is_anim_ok(pc)) {
 					//do same exit code as if key was no longer held down, anim got interrupted
 					keydown = false;
 				}
 				else {
+					pc->NotifyAnimationGraph(get_start_anim());
 					RenderManager::highlight_skill_slot(m_slot, loop_timer*2.0f, false);
 					auto spell = m_form->As<RE::SpellItem>();
 					if (spell != nullptr) {
@@ -628,6 +677,7 @@ namespace SpellHotbar::casts::CastingController {
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
 		if (can_start_new_cast()) {
+			clear_spellfire();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
 				bool is_shouting{ false };
@@ -755,6 +805,7 @@ namespace SpellHotbar::casts::CastingController {
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
 		if (can_start_new_cast()) {
+			clear_spellfire();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
 				bool is_shouting{ false };

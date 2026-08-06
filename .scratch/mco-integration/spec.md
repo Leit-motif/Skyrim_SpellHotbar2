@@ -31,6 +31,14 @@ and the spell never goes off**. For a real shout the same cut is harmless, becau
 puts `Voice_SpellFire_Event` 0.1 s into the exhale and the magic is already out. This is data
 loss, not a missing feature.
 
+**Corrected 2026-08-05 — the mechanism is right, the tense is wrong.** The engine side traced the
+first live hotbar cast (its ticket 37) and found it **never arms**: a hotbar cast does not raise
+`BeginCastVoice`, so no window is scheduled, the attack press is forwarded straight to the game,
+and no cut is ever sent. The two mods are safe together today. The paragraph above describes what
+happens the moment the engine *is* made to engage — which is precisely what the integration
+requires — so it is the price of collision 1's fix, not a hazard the player currently faces. See
+`CONTEXT.md` finding 12.
+
 **2. Casts land on the branch MCO chaining does not serve.** The vanilla graph's six exhale
 events encode word count *and stance*. `MT_BreathExhaleShort` selects the sheathed branch;
 the `CombatReady_*` events select weapon-drawn. The mod fires the sheathed event
@@ -78,9 +86,17 @@ independent and can proceed in parallel.
 Boundaries are unchanged from the previous effort and still hold. Generally applicable native
 behaviour belongs in the **Core Fork**. Records, presets, configuration and load-order
 adaptations belong in the **Compatibility Package**. The SYHO resolution is likely the latter;
-everything else here is the former. The sibling engine needs no code change — its ADR-0002
-forbids it from reading shout state to tell a cast from a shout, and that distinction has to
-be made on this side.
+everything else here is the former.
+
+~~The sibling engine needs no code change — its ADR-0002 forbids it from reading shout state to
+tell a cast from a shout, and that distinction has to be made on this side.~~ **WITHDRAWN
+2026-08-05.** ADR-0002 governs **cooldown** state only; the engine already reads `selectedPower`
+and `high->currentShout` to identify a driver's cast. And it needs the *only* code change there
+is — it never arms on a hotbar cast, so nothing chains until it does. Collision 1 is therefore a
+**cross-project design**, tracked as ticket 38 in the engine repo and ticket 03 here.
+`CONTEXT.md` findings 6, 8 and 12 carry the detail. The out-of-scope line below still holds as a
+working rule — this repo does not *edit* the engine — but it no longer means the engine is
+uninvolved.
 
 ## Secondary scope
 

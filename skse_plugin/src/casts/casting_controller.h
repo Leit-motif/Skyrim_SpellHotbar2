@@ -219,6 +219,23 @@ namespace SpellHotbar::casts::CastingController {
 
 	extern std::unique_ptr<BaseCastingInstance> current_cast;
 
+	/**
+	* The graph raised `Voice_SpellFire_Event`: from here a live cast is committed and will
+	* deliver its spell whatever happens to the shout state (ADR 0004). Called from the
+	* animation-event hook, on the animation thread.
+	*/
+	void notify_spellfire();
+
+	/**
+	* Forget any commitment. Called when a cast starts and when one ends.
+	*/
+	void clear_spellfire();
+
+	/**
+	* Has the graph passed the commitment point for the current cast?
+	*/
+	bool is_cast_committed();
+
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
