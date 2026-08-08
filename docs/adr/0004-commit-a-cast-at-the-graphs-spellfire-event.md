@@ -1,6 +1,6 @@
 # Commit a cast at the graph's spellfire event
 
-A hotbar cast becomes committed at the vanilla `Voice_SpellFire_Event` raised by the exhale clip. Before that instant an interruption cancels the cast as it does today; from that instant the spell is delivered whatever happens to `IsShouting`. The fork builds no cross-mod API with the MCO shout behaviour engine, because that event already is one.
+A hotbar cast becomes committed at the vanilla `Voice_SpellFire_Event` raised by the exhale clip. Before that instant an interruption cancels the cast as it does today; from that instant the spell is delivered whatever happens to `IsShouting`. The fork builds no cross-mod commitment handshake with the MCO shout behaviour engine, because that event already is one.
 
 The problem this settles is the one collision that loses player data. The engine chains by cutting the shout with `shoutStop`, which clears `IsShouting`; `CastingInstance::update` gates every frame on a raw `IsShouting` read and destroys the cast instance the moment it goes false. A cast cut before its own timer fires never reaches `cast_spell` and the spell is gone. A real shout survives the same cut because vanilla puts the magic out a tenth of a second into the exhale; this mod deliberately does not use that event, which is precisely why the cut is safe there and destructive here.
 
@@ -17,3 +17,12 @@ The release leads stay exactly as authored. A ritual cast notifies the exhale 25
 A chain ends a concentration channel, and the channel must let it. The loop re-notifies `ShoutStart` every half second and checks liveness only afterwards, so a cut channel would re-enter the shout graph and tear down the MCO attack the player just chained into — the two systems fighting twice a second, indistinguishable from a transition bug. Checking liveness before re-notifying makes the trade honest: the first application has already landed, and the player has exchanged the rest of the channel for an attack.
 
 What this does not settle is that nothing here makes a chain happen. The engine never arms on a hotbar cast — it arms on `BeginCastVoice`, which a hotbar cast does not raise — so it must still be changed to arm on the exhale, and that half is its ticket 38. This decision is the fork's answer to that ticket: the contract it asked for already exists, and what it needs from this side is the guarantee recorded here rather than a message. Casts must also reach the `CombatReady_*` branch first, which is ticket 02. And whether the spell fires at all on a hotbar cast has never been objectively confirmed.
+
+## Scope amendment — 2026-08-08
+
+The rejection of a cross-mod API is specifically a rejection of a **commitment handshake** for an
+already-started cast. It remains correct: `Voice_SpellFire_Event` is still the commitment point.
+
+ADR-0005 adds a different API at a different seam: before a Direct Cast starts during an active
+MCO attack, Spell Hotbar retains the payload while ShoutMCO decides when to release or abandon the
+input intent. That API neither reports spellfire nor changes this decision.

@@ -56,6 +56,14 @@ _Avoid_: Shout, spell casting animation, magic behavior
 The interval late in a shout exhale during which attack input is honored, letting the animation hand off to an MCO attack. Owned by the separate MCO shout behavior engine, not by this mod.
 _Avoid_: Attack cancel, animation blend
 
+**Cast Driver**:
+A mod that owns a cast payload and asks ShoutMCO whether the request should pass through now or be deferred. Spell Hotbar 2 is the first driver; it keeps ownership of the slot, spell, resources, and execution.
+_Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
+
+**Cast Intent**:
+One pending request to activate a hotbar payload. Spell Hotbar 2 retains and revalidates it; ShoutMCO owns only its release or abandonment timing.
+_Avoid_: Copied spell payload, queued spell object
+
 ## Findings
 
 Verified 2026-07-31 by static inspection of this repository unless noted. The vanilla
@@ -102,9 +110,15 @@ MCO chain-out during a Chain Window — destroys the cast and the spell never fi
 [ADR 0004](docs/adr/0004-commit-a-cast-at-the-graphs-spellfire-event.md) makes the graph's own
 `Voice_SpellFire_Event` — the event this finding notes the mod does not use — the instant from
 which the spell is delivered regardless of `IsShouting`. Before it, teardown is unchanged. This is
-the fork's answer to the engine's ticket 38, and it deliberately builds no cross-mod API: the
+the fork's answer to the engine's ticket 38, and it deliberately builds no cross-mod commitment
+handshake: the
 engine already refuses to open its window before that same event, so the two rules become one
 instant rather than two parties. Ticket 07 implements it.
+
+**Scope correction 2026-08-08:** “no cross-mod API” applies to the *spellfire commitment point*.
+It does not apply to scheduling a new Direct Cast behind an active MCO attack. That separate input
+problem now uses ShoutMCO's generic cast-intent API under ADR-0005; no commitment handshake was
+added.
 
 Note the exposure this closes is not confined to chaining, and not small. The magicka is deducted
 only *after* `cast_spell` succeeds, so an interruption in the gap costs the player the spell and
@@ -222,8 +236,12 @@ no longer cancelled mid-swing. Its ticket 15.
 the `Shout` user event. A cast triggered from a hotbar key never reaches that handler, so a cast
 pressed mid-swing still tears the attack down exactly as before.
 
-The *pattern* transfers — swallow the input, wait for the swing, replay it — but the hook point
-does not. Anything built here needs its own hold on this mod's own input path.
+~~The *pattern* transfers — swallow the input, wait for the swing, replay it — but the hook point
+does not. Anything built here needs its own hold on this mod's own input path.~~
+
+**Superseded 2026-08-08:** this mod owns the payload but not an independent hold policy. It asks
+ShoutMCO's generic API to pass through or defer, then revalidates and executes once on release.
+That keeps one authority for MCO state and avoids duplicating `HitFrame`/ready tracking here.
 
 One correction to carry across with it, because it cost a build to learn: **`MCO_WinOpen` is not
 proof a swing happened.** On the measured power attack the window opens ~180 ms *before*
@@ -281,8 +299,9 @@ Two consequences, and they are opposite:
 Evidence, in the engine repo (read-only from this side):
 `.scratch/shout-mco-engine/T37-hotbar-cast-then-attack-2026-08-05.log`,
 `.scratch/shout-mco-engine/T37-session-RAW-ShoutMCO-2026-08-05.log`, and the write-up
-`.scratch/shout-mco-engine/issues/37-do-not-cut-a-driver-cast.md`. The integration itself is
-that repo's ticket 38.
+`.scratch/shout-mco-engine/issues/37-do-not-cut-a-driver-cast.md`. The original graph-entry
+integration is that repo's ticket 38. **Current 2026-08-08 input-entry work is ShoutMCO ticket 50
+plus this repo's ticket 04; ticket 38's already-built driver-cast chain-out remains separate.**
 
 Fixture: binary `969C59D6` (v1.0.3.0), profile `Nolvus Awakening`, the owner's own recent save
 rather than `RD-A67`, slot 0's keybind read live as DIK 2 via `SpellHotbar.getKeyBind(0)`.

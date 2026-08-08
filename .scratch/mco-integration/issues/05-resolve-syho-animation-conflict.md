@@ -9,6 +9,11 @@ shadowed by another mod's shout clips.
 
 **Status:** ready-for-agent
 
+> **Owner report 2026-08-08:** the currently enabled MCBO probe still T-poses. Treat that as a
+> reproduced-user report, not closed diagnosis: capture the failing frame and OAR winner in one
+> session, then continue from the probe's failure branch below. This remains Spell Hotbar-owned
+> animation compatibility work and blocks the combined Shouts for MCO publication path.
+
 Reproduced live 2026-08-03 during Baseline Adoption ticket 02, and attributed without needing
 to read anyone's conditions:
 

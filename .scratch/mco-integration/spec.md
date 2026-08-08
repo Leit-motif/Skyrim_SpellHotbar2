@@ -46,11 +46,11 @@ unconditionally, so every cast lands outside the branch MCO chaining is built ar
 whatever the player has drawn. Fixing this is not merely an animation-quality fix; it is the
 precondition for any chaining integration at all.
 
-**3. A cast pressed mid-swing tears the attack down.** The sibling engine shipped protection
-for this (its ticket 15): the press is held until `HitFrame` and handed to the game after the
-swing lands. It hooks `ShoutHandler::ProcessButton` and matches the `Shout` user event, which
-a hotbar key never reaches. The *pattern* transfers; the hook point does not. Anything built
-here needs its own hold on this mod's own input path.
+**3. A cast pressed mid-swing needs the shared input buffer.** The sibling engine's vanilla-shout
+hook cannot see a hotbar key, but duplicating its MCO state tracking here would create two timing
+authorities. Owner ruling 2026-08-08: this mod retains its cast payload and asks ShoutMCO's generic
+driver API whether to pass through or defer. ShoutMCO releases or abandons once at a confirmed
+state; this mod revalidates and executes once on release.
 
 **4. Another mod owns the animation outright.** `SYHO - Shout Your Heart Out` declares OAR
 submod priorities `99999990`–`99999996`. This mod's 56 submods top out at `99901002`. SYHO's
@@ -78,10 +78,14 @@ intermittently and be misdiagnosed as a transition problem.
 
 ## Solution
 
-Answer the open question first, because it can invalidate the design of the rest. Then fix
-the stance-blind release event, because chaining cannot be addressed until casts reach the
-`CombatReady_*` branch. Then handle the two input-timing collisions. The SYHO conflict is
-independent and can proceed in parallel.
+The 2026-08-08 owner ruling supersedes the open question as a design gate: Direct Cast does not
+attempt `ShoutStart` while an MCO attack is live. Its payload is deferred through ShoutMCO's
+generic API until the engine confirms a legal release state. The notify-path experiment remains
+useful evidence but no longer chooses the architecture.
+
+Implement the Spell Hotbar adapter after ShoutMCO ticket 50. Preserve ADR-0004's graph-spellfire
+commitment for casts that have already started. Resolve the stance/animation path and the T-pose as
+separate Spell Hotbar-owned work; both are required for end-to-end publication acceptance.
 
 Boundaries are unchanged from the previous effort and still hold. Generally applicable native
 behaviour belongs in the **Core Fork**. Records, presets, configuration and load-order
@@ -93,7 +97,8 @@ tell a cast from a shout, and that distinction has to be made on this side.~~ **
 2026-08-05.** ADR-0002 governs **cooldown** state only; the engine already reads `selectedPower`
 and `high->currentShout` to identify a driver's cast. And it needs the *only* code change there
 is — it never arms on a hotbar cast, so nothing chains until it does. Collision 1 is therefore a
-**cross-project design**, tracked as ticket 38 in the engine repo and ticket 03 here.
+**cross-project design**. The existing spellfire commitment remains ticket 07 here; input deferral
+is ShoutMCO ticket 50 plus ticket 04 here, under ADR-0005.
 `CONTEXT.md` findings 6, 8 and 12 carry the detail. The out-of-scope line below still holds as a
 working rule — this repo does not *edit* the engine — but it no longer means the engine is
 uninvolved.
@@ -126,5 +131,6 @@ no acceptance matrix.
 
 - Re-validating Direct Cast. It works; assume the repository's advertised behaviour.
 - Resuming Baseline Adoption tickets 03–07 or the acceptance matrix.
-- Changing the sibling MCO shout behaviour engine.
+- Implementing or editing the sibling MCO shout behaviour engine from this repository. Consuming
+  its published driver API is in scope.
 - Publishing modified binaries.
