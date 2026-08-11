@@ -19,7 +19,7 @@ int get_number_of_slots(RE::StaticFunctionTag*)
  * Test seam: trigger a hotbar slot exactly like its bound keypress would, but from inside
  * the process. Runtime verification drives casts through this because synthetic OS input
  * does not reach an unfocused window. Uses the same InputMode::process_input path as a real
- * key, including the queued native voice-button event for shout-shaped casts.
+ * key, including any queued native input event the mode produces (real shouts).
  */
 void cast_slot(RE::StaticFunctionTag*, int slot_index)
 {
@@ -46,7 +46,7 @@ void cast_slot(RE::StaticFunctionTag*, int slot_index)
                 queue->PushOntoInputQueue(addEvent);
             }
         }
-        logger::info("castSlot({}): processed (skill type={}, queued voice press={})", slot_index, static_cast<int>(skill.type), addEvent != nullptr);
+        logger::info("castSlot({}): processed (skill type={}, queued input event={})", slot_index, static_cast<int>(skill.type), addEvent != nullptr);
     });
 }
 
