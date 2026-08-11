@@ -101,3 +101,69 @@ Save `Codex_T05_Smooth_Riverwood`; `SpellHotbar.loadBarsFromFile(<worktree>\.scr
 evidence\bars-fixture-probe.json, same)`; cast via `SpellHotbar.castSlot(0)` (DevBench
 papyrus, window focused) or the owner pressing "1"; watch `SpellHotbar2.log` debug lines and
 the OAR animation log.
+
+## 2026-08-11 in-game smoke test — entry REJECTED; root cause is the load order, not the code
+
+Run: save loaded headless via DevBench, bars fixture loaded, `castSlot(0)` at 10:36:16 with
+**Incinerate genuinely equipped in the left hand** (best case for the graph), third person:
+
+```
+[10:36:16] MSCO cast: notified MSCO_start_left -> false
+```
+
+The owner then pressed "1" live at 10:48:51-54 — six more presses, six identical
+`MSCO_start_left -> false` rejections through the real input path. The driver's fail-safe
+behaved as designed each time: variables dropped, instance reset, no stuck controls, no
+ghost cast. The code path is fine; the event name does not resolve in the runtime graph.
+
+**Root cause, two independent halves, both log-verified this session:**
+
+1. **The msco Nemesis patch has never been built into this load order.** The `Nemesis
+   Output` mod contains no `magicbehavior.hkx` at all; the VFS winner for that path is
+   `TK Dodge RE`'s prebuilt file, which contains zero MSCO strings (binary grep). So the
+   MSCO states, wildcard transitions, and `bIsMSCO` binding do not exist at runtime.
+   Nemesis was evidently never re-run after MCBO was installed.
+2. **Behavior Data Injector is broken in this load order.** MCBO ships
+   `BehaviorDataInjector/MSCO_BDI.json` to inject its 15 event names into the character
+   project — that is how `NotifyAnimationGraph("MSCO_start_*")` is supposed to resolve.
+   `BehaviorDataInjector.log` (544 lines this session) shows **every** injection failing —
+   all 14 MSCO events (`Fail to Inject a event "MSCO_start_left" to graph
+   "MagicBehavior.hkb"`, 10:23:51) and every other mod's too (Precision's `FakeHit`,
+   bow-sound events), with zero successes. Installed BDI is Maxsu's original (Nexus 78146,
+   v0.13, 2022-11) — SE-era, a year older than game 1.6.1170. The AE-supporting successor
+   is **Behavior Data Injector Universal Support** (Nexus 78159, doodlum, v0.13.0.1).
+
+**Implication beyond this mod:** with no states in the graph and no resolvable events,
+MCBO's animation layer cannot be functioning for the owner's ordinary equipped casts either
+(its DLL sends the same events). Unconfirmed by observation — a console `player.cast` is not
+the real pipeline, so the frames captured prove nothing about it. Owner can confirm in ten
+seconds: cast the equipped Incinerate by hand and see whether a vanilla pose or an MSCO
+combo swing plays.
+
+**What fixing it needs (owner decisions, in order):**
+
+1. Replace BDI 78146 with 78159 (drop-in, fixes event-name resolution for everything BDI
+   serves in this list).
+2. Re-run Nemesis with MCBO's `msco` patch ticked **on top of the existing Nolvus patch
+   set** (Nolvus ships its output pre-built; a wrong patch set regresses the combat stack).
+   Note `Nemesis Output` (line ~607) already outranks TK Dodge RE (~922), so a rebuilt
+   `magicbehavior.hkx` wins cleanly.
+3. Then re-run this exact smoke test — the remaining unknown (can the MSCO state be ENTERED
+   from a hotbar cast: spell equipped vs not, sheathed vs drawn) only becomes testable once
+   the events resolve.
+
+**Session hygiene / environment changes this session:**
+
+- Skyrim closed (qqq), save untouched, fixture bars were runtime-only and discarded.
+- New MO2 mod **`Dev - Display Tweaks Quarter Window`** created and enabled at top priority
+  (modlist backup `modlist.txt.bak-devdisplay-*` beside it): 1720x720 borderless +
+  `LockCursor=false`, dev-only for headless testing; **disable before owner
+  visual-acceptance sessions**. Takes effect next launch; if the window comes up full-size,
+  refresh MO2 (F5) — the modlist was edited while MO2 was open.
+- Headless finding: this setup **pauses the game main thread when the window is unfocused**
+  (no `bAlwaysActive`). DevBench queues commands but they only flush while focused. Prior
+  sessions' "background" runs worked because the game window happened to keep focus.
+  Options: grab focus per test burst (owner authorized), or set `bAlwaysActive=1` in the
+  profile Skyrim.ini — owner's call, it changes normal play (world runs while alt-tabbed).
+- Cosmetic: `castSlot` log line still says "queued voice press" — stale wording from the
+  voice driver, fold into the next cleanup.
