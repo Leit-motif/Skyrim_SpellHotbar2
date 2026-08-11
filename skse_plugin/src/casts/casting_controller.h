@@ -115,8 +115,9 @@ namespace SpellHotbar::casts::CastingController {
 		uint16_t m_casteffect;
 		bool m_spell_proc;
 		bool m_spell_started;
-		// Grace window after the MSCO_start_* event during which a not-yet-true bIsMSCO
-		// must not cancel the cast; the graph needs a few frames to enter the state.
+		// Grace window after the SH2_CastRight send during which a not-yet-seen
+		// SH2_CastEnter must not cancel the cast; the graph needs a few frames to
+		// enter the state.
 		float m_entry_grace;
 		bool m_last_anim_ok;
 	};

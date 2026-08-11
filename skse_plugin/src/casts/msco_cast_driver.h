@@ -4,7 +4,7 @@
 namespace SpellHotbar::casts::MscoCastDriver {
 
 	/**
-	 * Enter the sh2c cast state: send SH2_CastRight, whose listener this project's own
+	 * Enter the shtb cast state: send SH2_CastRight, whose listener this project's own
 	 * Nemesis patch authored on magicbehavior's root state machine. Returns the notify
 	 * result — false means no active listener (magic stance not drawn) and the caller
 	 * tears the cast down. Minimal slice: every hand routes into the one state, whose
@@ -17,11 +17,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * enterNotifyEvents) raises the active flag, SH2_CastDone (exitNotifyEvents)
 	 * clears it. Called by the animation-event hook for every player graph event.
 	 */
-	void relay_from_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
+	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
 
 	/**
-	 * Is the sh2c cast state live right now? Reads the flag maintained by
-	 * relay_from_graph_event; begin() resets it so a dropped SH2_CastDone cannot
+	 * Is the shtb cast state live right now? Reads the flag maintained by
+	 * observe_graph_event; begin() resets it so a dropped SH2_CastDone cannot
 	 * leak into the next cast.
 	 */
 	bool is_active(RE::PlayerCharacter* pc);
@@ -32,13 +32,15 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	bool replay(RE::PlayerCharacter* pc);
 
 	/**
-	 * Leave the cast state early via SH2_CastExit (no-op when the state is not live).
+	 * Leave the cast state early via SH2_CastExit. Sent unconditionally: the event's
+	 * only listener is the state's own local transition, so it reaches nothing when
+	 * the state is not live, and a missed SH2_CastEnter cannot strand the state.
 	 */
 	void cancel(RE::PlayerCharacter* pc);
 
 	/**
-	 * End-of-cast cleanup: sends SH2_CastExit if the state is still live; the state
-	 * also exits itself through an end-of-clip trigger raising the same event.
+	 * End-of-cast cleanup; same send as cancel(), kept separate for call-site intent.
+	 * The state also exits itself through an end-of-clip trigger raising SH2_CastExit.
 	 */
 	void finish(RE::PlayerCharacter* pc);
 }

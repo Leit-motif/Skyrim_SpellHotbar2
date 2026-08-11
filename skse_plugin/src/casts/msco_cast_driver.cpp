@@ -12,6 +12,17 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// MSCO.dll uses to hear CastingStateExit, so it is the authoritative "our casting
 		// state is live" signal and needs no graph-variable polling.
 		std::atomic<bool> state_active{ false };
+
+		// SH2_CastExit is this mod's own event: the only listener is the state-local
+		// transition inside SH2_CastRight_State, so sending it while the state is not
+		// live reaches nothing. Sending unconditionally covers the case where entry
+		// happened but SH2_CastEnter never reached the hook.
+		void send_exit(RE::PlayerCharacter* pc)
+		{
+			if (pc) {
+				pc->NotifyAnimationGraph("SH2_CastExit"sv);
+			}
+		}
 	}
 
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand)
@@ -34,7 +45,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		return sent;
 	}
 
-	void relay_from_graph_event(RE::Actor*, const RE::BSFixedString& a_tag)
+	void observe_graph_event(RE::Actor*, const RE::BSFixedString& a_tag)
 	{
 		if (a_tag == "SH2_CastEnter"sv) {
 			state_active.store(true, std::memory_order_relaxed);
@@ -64,15 +75,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	void cancel(RE::PlayerCharacter* pc)
 	{
-		if (pc && is_active(pc)) {
-			pc->NotifyAnimationGraph("SH2_CastExit"sv);
-		}
+		send_exit(pc);
 	}
 
 	void finish(RE::PlayerCharacter* pc)
 	{
-		if (pc && is_active(pc)) {
-			pc->NotifyAnimationGraph("SH2_CastExit"sv);
-		}
+		send_exit(pc);
 	}
 }

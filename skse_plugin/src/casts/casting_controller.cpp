@@ -11,18 +11,18 @@ namespace SpellHotbar::casts::CastingController {
 
 	std::unique_ptr<BaseCastingInstance> current_cast = nullptr;
 
-	// THE COMMITMENT POINT (ADR 0004, ticket 07).
+	// THE COMMITMENT POINT (ADR 0004 as amended by ADR 0006, ticket 07).
 	//
-	// MCBO's casting clips carry a `MLh_SpellFire_Event` / `MRh_SpellFire_Event` annotation at
-	// the exact frame the hand throws the spell (0.48s into MSCO_left1), and the graph raises it
-	// as an event when the clip crosses that frame. That instant is the commitment point: the
-	// magic is out, so anything that ends the animation afterwards costs nothing. Before it,
-	// losing the casting state cancels the cast and costs nothing either, since the magicka is
-	// only deducted once `cast_spell` succeeds.
+	// The clip our shtb state plays (MSCO_left1) carries an `MRh_SpellFire_Event` annotation at
+	// the exact frame the hand throws the spell (0.283s in), and the graph raises it as an event
+	// when the clip crosses that frame. That instant is the commitment point: the magic is out,
+	// so anything that ends the animation afterwards costs nothing. Before it, losing the
+	// casting state cancels the cast and costs nothing either, since the magicka is only
+	// deducted once `cast_spell` succeeds.
 	//
-	// Reading the clip's own event rather than inventing a timer is the whole of ADR 0004: the
-	// payload lands at the frame the animation shows it leaving the hand, agreed by construction
-	// rather than by an API. MSCO.dll itself keys its node replacement off this same event.
+	// The annotation leads, the authored cast time is the floor (ADR 0006): if the event never
+	// arrives — clip replaced by an override without the annotation, graph rebuilt wrong — the
+	// cast still delivers when its timer expires, instead of silently delivering nothing.
 	//
 	// File-scope and atomic rather than a member, because the animation-event hook runs on the
 	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
@@ -37,7 +37,7 @@ namespace SpellHotbar::casts::CastingController {
 	std::atomic<uint8_t> spellfire_mask{ 0 };
 
 	// Arm the commitment point for one cast: forget stale fires and accept only the hand(s)
-	// this cast throws with. Called right before the MSCO entry is sent.
+	// this cast throws with. Called right before the state entry is sent.
 	void arm_spellfire(hand_mode used_hand) {
 		// Minimal slice: the single SH2 state plays MSCO_left1, whose annotation is the
 		// RIGHT-hand SpellFire regardless of the hand this cast chose, so only the right
@@ -52,7 +52,7 @@ namespace SpellHotbar::casts::CastingController {
 	void notify_spellfire(bool left_hand) {
 		const uint8_t bit = left_hand ? fire_left : fire_right;
 		if (spellfire_mask.load(std::memory_order_relaxed) & bit) {
-			logger::debug("MSCO cast: graph raised a {} SpellFire event", left_hand ? "left" : "right");
+			logger::debug("SH2 cast: graph raised a {} SpellFire event", left_hand ? "left" : "right");
 			spellfire_seen.store(true, std::memory_order_relaxed);
 		}
 	}
@@ -310,15 +310,16 @@ namespace SpellHotbar::casts::CastingController {
 	{
 		const bool anim_ok = is_anim_ok(pc);
 		if (anim_ok != m_last_anim_ok) {
-			logger::debug("MSCO cast: casting state active became {} ({}s on the cast timer)", anim_ok, m_cast_timer);
+			logger::debug("SH2 cast: casting state active became {} ({}s on the cast timer)", anim_ok, m_cast_timer);
 			m_last_anim_ok = anim_ok;
 		}
 
 		// Past spellfire the cast is committed and delivers regardless of the casting state
 		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
 		if (anim_ok || is_cast_committed()) {
-			// The grace only bridges the frames between the MSCO_start_* event and the state
-			// becoming active; once entry is confirmed, losing the state cancels immediately.
+			// The grace only bridges the frames between the SH2_CastRight send and the
+			// state raising SH2_CastEnter; once entry is confirmed, losing the state
+			// cancels immediately.
 			m_entry_grace = 0.0f;
 			if (is_first_time_update()) {
 				play_charge_sound();
@@ -326,11 +327,16 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 
-			// The timer owns the GCD; the clip's spellfire annotation owns payload timing.
-			advance_time(delta);
+			// The clip's spellfire annotation leads; the authored cast time is the
+			// delivery floor (ADR 0006), so a clip that lost its annotation still casts.
+			const bool timer_expired = advance_time(delta);
 			GameData::advance_cast_timer(delta);
 
-			if (is_cast_committed() && !m_spell_started) {
+			if (timer_expired && !is_cast_committed() && !m_spell_started) {
+				logger::warn("SH2 cast: no SpellFire event by the authored cast time; delivering on the timer floor");
+			}
+
+			if ((is_cast_committed() || timer_expired) && !m_spell_started) {
 				m_spell_started = true;
 				stop_charge_sound();
 				play_release_sound();
@@ -346,8 +352,8 @@ namespace SpellHotbar::casts::CastingController {
 			}
 		}
 		else if (m_entry_grace > 0.0f) {
-			// The MSCO_start_* event is sent when the instance is created and the graph takes
-			// a few frames to enter the state and raise bIsMSCO; cancelling in that window
+			// SH2_CastRight is sent when the instance is created and the graph takes a few
+			// frames to enter the state and raise SH2_CastEnter; cancelling in that window
 			// would tear the cast down before it ever had a state to enter.
 			m_entry_grace -= delta;
 		}
@@ -463,8 +469,8 @@ namespace SpellHotbar::casts::CastingController {
 		advance_time(delta);
 		const bool anim_ok = is_anim_ok(pc);
 		if (anim_ok) {
-			// Entry confirmed: the grace only bridges the frames between the MSCO_start_*
-			// event and the state becoming active.
+			// Entry confirmed: the grace only bridges the frames between the SH2_CastRight
+			// send and the state raising SH2_CastEnter.
 			m_entry_grace = 0.0f;
 		}
 		else {
@@ -473,9 +479,9 @@ namespace SpellHotbar::casts::CastingController {
 
 		if (timer_old == 0) {
 			//startup
-			//stop if key not down directly at start; the MSCO_start_* event was only just
-			//sent, so the casting state cannot be required here -- the grace check in the
-			//charge loop covers the entry window.
+			//stop if key not down directly at start; SH2_CastRight was only just sent, so
+			//the casting state cannot be required here -- the grace check in the charge
+			//loop covers the entry window.
 			if (!keydown) {
 				MscoCastDriver::cancel(pc);
 				GameData::reset_animation_vars();
@@ -488,11 +494,12 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 		}
-		else if (!is_cast_committed()) {
+		else if (!is_cast_committed() && m_cast_timer < m_release_anim_time) {
 			//during charge loop
-			// The clip's spellfire annotation commits the cast on its own schedule (ADR 0004).
-			// A released key still stops the cast -- that is the player asking, not an
-			// interruption.
+			// The clip's spellfire annotation commits the cast on its own schedule (ADR
+			// 0004); the authored charge time is the floor (ADR 0006), so the charge also
+			// completes when the timer passes it. A released key still stops the cast --
+			// that is the player asking, not an interruption.
 			if (!keydown || (!anim_ok && !is_cast_committed() && m_entry_grace <= 0.0f)) {
 				//trigger gcd and stop cast
 				set_casted();

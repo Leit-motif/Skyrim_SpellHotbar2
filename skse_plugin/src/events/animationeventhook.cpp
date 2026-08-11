@@ -27,9 +27,9 @@ namespace SpellHotbar::events {
 			//
 			// This runs on the animation thread. It sets an atomic and touches nothing else.
 			if (eventHolder->IsPlayerRef()) {
-				// Dispatch context is the one place a mod-declared event name is known to
-				// deliver from, so parked MSCO sends ride the next player graph event.
-				casts::MscoCastDriver::relay_from_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
+				// The driver's active flag is fed from here: SH2_CastEnter / SH2_CastDone
+				// arrive on this same stream.
+				casts::MscoCastDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_event->tag == "MLh_SpellFire_Event"sv) {
 					casts::CastingController::notify_spellfire(true);
@@ -47,9 +47,9 @@ namespace SpellHotbar::events {
 
 	RE::BSEventNotifyControl Animation_event_hook::ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
 	{
-		// Chain first: every earlier handler -- MSCO.dll's CastingStateExit cleanup
-		// included -- must finish with this event before the relay nests a new send
-		// inside the dispatch, or cleanup and re-entry can invert.
+		// Chain first: every earlier handler must finish with this event before our
+		// observer reads it, so another mod's cleanup for the same event cannot land
+		// after our state bookkeeping.
 		const auto result = _ProcessEvent_PC(a_sink, a_event, a_eventSource);
 		ProcessEvent(a_event, a_eventSource);
 		return result;
