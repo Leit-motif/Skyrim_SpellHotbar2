@@ -240,3 +240,56 @@ the game loses the merged graph.
   profile Skyrim.ini — owner's call, it changes normal play (world runs while alt-tabbed).
 - Cosmetic: `castSlot` log line still says "queued voice press" — stale wording from the
   voice driver, fold into the next cleanup.
+
+## 2026-08-11 retest verdict — option 1 FALSIFIED (three independent sources)
+
+Owner retest ~12:57 (relay build, commits 412c166+5a5e29b): pressing "1" with Firebolt
+slotted did nothing; an equipped MCBO reference cast and a shout both worked.
+
+**Telemetry (SpellHotbar2.log):** the relay worked as designed and still failed —
+`notified MSCO_start_left from graph-event context -> false` five times. The event does
+not deliver even from inside BSAnimationGraphEvent dispatch. The call-site hypothesis is
+dead: delivery context was never the difference.
+
+**MCBO's real mechanism (MSCO.log, the 12:57:39 reference cast):**
+
+```
+BeginCastLeft: 'Firebolt', CastingType = kFireAndForget   <- vanilla anim event, hooked by its AnimEventFramework
+LeftMSCOStart | chargeTime=0.500                          <- its own bookkeeping event
+replaceNode: output_node='NPC L MagicNode [LMag]'          <- DLL swaps the animation node
+consumeResource: Spell 'Firebolt' cost=33.064
+```
+
+MSCO.dll rides the **vanilla animated casting pipeline** (hooks
+`AttackBlockHandler::ProcessButton`, `Magic::RequestCastImpl`, and the anim-event stream)
+and swaps the animation at the node level. It never enters its graph states from outside.
+
+**Graph dissection (merged magicbehavior.hkx, hkxc → XML, VFS winner confirmed =
+TK Dodge RE's copy via housecarl_asset_status):**
+
+- `MSCO_start_left/right/dual/lr` (event ids 239/238/240/241) appear ONLY in transition
+  arrays flagged `FLAG_USE_TRIGGER_INTERVAL|FLAG_USE_INITIATE_INTERVAL`: initiate window
+  `MSCO_WinOpen`(231) → `MSCO_WinClose`(232), trigger window `MRh_SpellFire_Event`(26) →
+  `MSCO_WinClose`. They are **combo-chain events** — valid only while an MSCO clip is
+  already playing and its window annotation is open. They were never the entry door.
+- **Zero transitions** listen for `LeftMSCOStart`/`RightMSCOStart`/`MSCOExit`/
+  `CastingStateExit` (event ids 233/234/235/237). Entry into MSCO clips is not
+  event-driven at all; it is the DLL's replaceNode on top of a real cast.
+- BDI's `Fail to Inject ... to graph "MagicBehavior.hkb"` for every MSCO event is the
+  benign duplicate case (the names already exist in the merged graph's 264-event table).
+
+**Conclusion:** no event sent from a mod can enter MCBO's casting animations from idle.
+The only entry is the vanilla animated casting pipeline itself. Our spell delivery via
+`CastSpellImmediate` (instant caster, `kOther`/`kInstant` source) bypasses everything MCBO
+hooks.
+
+**Candidate plan C (not yet owner-blessed):** make the hotbar cast a *real* hand cast —
+prime the hand's `ActorMagicCaster` (currentSpell) and enter the vanilla charge states via
+vanilla event names (`MLh/MRh_SpellAimedStart` chain — vanilla names deliver from any call
+site per thuum semantics), so the graph raises `BeginCastLeft` and MCBO skins the cast
+exactly as it does an equipped one. Encouraging detail: in the reference cast MSCO logged
+`GetEquippedSpell: No spells` and `GetCastingSpell: No magicCaster->spell` yet still
+resolved 'Firebolt' and chargeTime — it is robust to sparse spell context. The spellfire
+mask, entry grace, and anim-event hook all carry over. Alternative remains handoff option
+2 (dedicated Nemesis state, weeks). Handoff option 3 (ESAS engine cast) does NOT deliver
+MCBO anims — an engine voice/instant cast is not a hand cast and MCBO ignores it.
