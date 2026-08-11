@@ -579,6 +579,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
+		VoiceCastDriver::tick(delta);
 		if (current_cast) {
 			if (!current_cast->casted()) {
 				auto pc = RE::PlayerCharacter::GetSingleton();

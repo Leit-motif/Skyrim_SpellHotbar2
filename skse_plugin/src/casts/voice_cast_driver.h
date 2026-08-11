@@ -19,6 +19,12 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 	bool press();
 
 	/**
+	 * Emit the per-frame held-button repeat while a press is outstanding. Call once per
+	 * game-loop update; a physical key produces these and the shout charge logic needs them.
+	 */
+	void tick(float delta);
+
+	/**
 	 * Release the native voice button after the authored charge window.
 	 */
 	bool release(float held_duration);

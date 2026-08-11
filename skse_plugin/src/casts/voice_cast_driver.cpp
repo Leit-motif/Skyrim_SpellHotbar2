@@ -13,6 +13,12 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 		bool active{ false };
 		bool proxy_was_known{ false };
 		bool shout_added{ false };
+		// A physical key produces a down event, per-frame repeats with a growing hold time,
+		// and a release. Sending only the down reads as an instant tap (the word fired 52ms
+		// after the press on 2026-08-10) and leaves the engine holding a phantom button that
+		// blocks attack/sheathe controls. Track the hold and reproduce all three phases.
+		bool button_down{ false };
+		float button_held_secs{ 0.0f };
 
 		bool process_voice_button(float value, float held_duration)
 		{
@@ -134,17 +140,43 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 
 	bool press()
 	{
-		return active && process_voice_button(1.0f, 0.0f);
+		if (!active || button_down) {
+			return active && button_down;
+		}
+		if (!process_voice_button(1.0f, 0.0f)) {
+			return false;
+		}
+		button_down = true;
+		button_held_secs = 0.0f;
+		return true;
 	}
 
-	bool release(float held_duration)
+	void tick(float delta)
 	{
-		return active && process_voice_button(0.0f, std::max(held_duration, 0.001f));
+		if (active && button_down) {
+			button_held_secs += delta;
+			process_voice_button(1.0f, button_held_secs);
+		}
+	}
+
+	bool release(float)
+	{
+		if (!active || !button_down) {
+			return false;
+		}
+		if (!process_voice_button(0.0f, std::max(button_held_secs, 0.001f))) {
+			return false;
+		}
+		button_down = false;
+		return true;
 	}
 
 	bool replay(float held_duration)
 	{
-		if (!active || !process_voice_button(1.0f, 0.0f)) {
+		if (!active || button_down) {
+			return false;
+		}
+		if (!process_voice_button(1.0f, 0.0f)) {
 			return false;
 		}
 		return process_voice_button(0.0f, std::max(held_duration, 0.001f));
@@ -154,6 +186,13 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 	{
 		if (!active) {
 			return;
+		}
+
+		// Never leave the engine holding a phantom voice button -- that locks the player out
+		// of attacking and sheathing until something else releases it.
+		if (button_down) {
+			process_voice_button(0.0f, std::max(button_held_secs, 0.001f));
+			button_down = false;
 		}
 
 		if (!pc) {
