@@ -93,7 +93,9 @@ namespace SpellHotbar::casts::CastingController {
 		m_equip_ability(nullptr),
 		m_casteffect(casteffect),
 		m_spell_proc(is_spell_proc),
-		m_spell_started(false)
+		m_spell_started(false),
+		m_entry_grace(0.5f),
+		m_last_anim_ok(false)
 	{
 		if (m_form && (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll)) {
 			uint32_t size = get_spell()->effects.size();
@@ -285,9 +287,15 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool CastingInstance::update(RE::PlayerCharacter* pc, float delta)
 	{
+		const bool anim_ok = is_anim_ok(pc);
+		if (anim_ok != m_last_anim_ok) {
+			logger::debug("Voice cast: IsShouting became {} ({}s before release)", anim_ok, m_cast_timer);
+			m_last_anim_ok = anim_ok;
+		}
+
 		// Past spellfire the cast is committed and delivers regardless of the shout state (ADR
 		// 0004). Before it, losing the state cancels exactly as it always has.
-		if (is_anim_ok(pc) || is_cast_committed()) {
+		if (anim_ok || is_cast_committed()) {
 			if (is_first_time_update()) {
 				play_charge_sound();
 				apply_cast_start_spell(pc);
@@ -319,6 +327,12 @@ namespace SpellHotbar::casts::CastingController {
 				set_casted();
 				VoiceCastDriver::restore(pc);
 			}
+		}
+		else if (m_entry_grace > 0.0f) {
+			// The queued voice press is dispatched next frame and the graph takes a few more
+			// to raise IsShouting; cancelling in that window would tear the cast down before
+			// it ever had a state to enter.
+			m_entry_grace -= delta;
 		}
 		else {
 			GameData::reset_animation_vars();
@@ -430,11 +444,14 @@ namespace SpellHotbar::casts::CastingController {
 
 		float timer_old = m_cast_timer;
 		advance_time(delta);
+		m_entry_grace = std::max(0.0f, m_entry_grace - delta);
 
 		if (timer_old == 0) {
 			//startup
-			//stop if not anim or key not down directly at start
-			if (!keydown || !is_anim_ok(pc)) {
+			//stop if not anim or key not down directly at start; the queued voice press has
+			//not been dispatched yet on the very first update, so the shout state cannot be
+			//required here -- the grace check in the charge loop covers the entry window.
+			if (!keydown) {
 				cancel = true;
 			}
 			else {
@@ -449,7 +466,7 @@ namespace SpellHotbar::casts::CastingController {
 			// A ritual concentration cast notifies its exhale up to 1.5s before the first
 			// `cast_spell`, so this is where the longest commitment gap lives (ADR 0004). A
 			// released key still stops the cast -- that is the player asking, not an interruption.
-			if (!keydown || (!is_anim_ok(pc) && !is_cast_committed())) {
+			if (!keydown || (!is_anim_ok(pc) && !is_cast_committed() && m_entry_grace <= 0.0f)) {
 				//trigger gcd and stop cast
 				set_casted();
 				stop_charge_sound();

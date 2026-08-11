@@ -15,6 +15,41 @@ int get_number_of_slots(RE::StaticFunctionTag*)
     return static_cast<int>(SpellHotbar::Bars::barsize);
 }
 
+/**
+ * Test seam: trigger a hotbar slot exactly like its bound keypress would, but from inside
+ * the process. Runtime verification drives casts through this because synthetic OS input
+ * does not reach an unfocused window. Uses the same InputMode::process_input path as a real
+ * key, including the queued native voice-button event for shout-shaped casts.
+ */
+void cast_slot(RE::StaticFunctionTag*, int slot_index)
+{
+    SKSE::GetTaskInterface()->AddTask([slot_index]() {
+        using namespace SpellHotbar;
+        if (slot_index < 0 || slot_index >= static_cast<int>(Input::key_spells.size())) {
+            logger::warn("castSlot({}): slot index out of range", slot_index);
+            return;
+        }
+        if (!Input::in_ingame_state()) {
+            logger::warn("castSlot({}): not in ingame state", slot_index);
+            return;
+        }
+        size_t index = static_cast<size_t>(slot_index);
+        auto skill = GameData::get_current_spell_info_in_slot(index);
+        RE::InputEvent* addEvent = nullptr;
+        auto [shoutKeyDev, shoutKey] = Input::get_shout_key_and_device();
+        if (Input::InputModeBase::current_mode) {
+            Input::InputModeBase::current_mode->process_input(skill, addEvent, index, Input::key_spells[index], shoutKeyDev, shoutKey);
+        }
+        if (addEvent) {
+            auto queue = RE::BSInputEventQueue::GetSingleton();
+            if (queue) {
+                queue->PushOntoInputQueue(addEvent);
+            }
+        }
+        logger::info("castSlot({}): processed (skill type={}, queued voice press={})", slot_index, static_cast<int>(skill.type), addEvent != nullptr);
+    });
+}
+
 int set_number_of_slots(RE::StaticFunctionTag*, int num)
 {
     SpellHotbar::Bars::barsize = static_cast<uint8_t>(std::clamp(num, 1, static_cast<int>(SpellHotbar::max_bar_size)));
@@ -587,6 +622,7 @@ bool toggle_individual_shout_cooldowns(RE::StaticFunctionTag*) {
 }
 
 bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) {
+    vm->RegisterFunction("castSlot", "SpellHotbar", cast_slot);
     vm->RegisterFunction("getNumberOfSlots", "SpellHotbar", get_number_of_slots);
     vm->RegisterFunction("setNumberOfSlots", "SpellHotbar", set_number_of_slots);
     vm->RegisterFunction("setSlotScale", "SpellHotbar", set_slot_scale);

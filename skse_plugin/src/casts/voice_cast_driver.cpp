@@ -13,10 +13,15 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 
 		bool process_voice_button(float value, float held_duration)
 		{
-			auto controls = RE::PlayerControls::GetSingleton();
+			// Direct ShoutHandler::ProcessButton was accepted but never transitioned the graph
+			// (2026-08-08, two canaries). Real hotbar shout casts work because their button
+			// event travels the full input dispatch, so the synthetic press must too: push a
+			// fully-formed event onto the game's own input queue and let next frame's dispatch
+			// deliver it exactly like a physical keypress.
+			auto queue = RE::BSInputEventQueue::GetSingleton();
 			auto user_events = RE::UserEvents::GetSingleton();
-			if (!controls || !controls->shoutHandler || !user_events) {
-				logger::error("Voice cast driver could not resolve PlayerControls/ShoutHandler/UserEvents");
+			if (!queue || !user_events) {
+				logger::error("Voice cast driver could not resolve BSInputEventQueue/UserEvents");
 				return false;
 			}
 
@@ -27,18 +32,10 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 				return false;
 			}
 
-			const bool can_process = controls->shoutHandler->CanProcess(event);
-			if (can_process) {
-				controls->shoutHandler->ProcessButton(event, std::addressof(controls->data));
-			}
-			else {
-				logger::warn("Voice cast driver shout button was rejected (value={}, held={})", value, held_duration);
-			}
-			logger::debug("Voice cast driver processed shout button (value={}, held={}, accepted={})", value, held_duration, can_process);
-
-			event->~ButtonEvent();
-			RE::free(event);
-			return can_process;
+			// The queue owns the event from here; the dispatcher consumes it next frame.
+			queue->PushOntoInputQueue(event);
+			logger::debug("Voice cast driver queued shout button (value={}, held={})", value, held_duration);
+			return true;
 		}
 	}
 

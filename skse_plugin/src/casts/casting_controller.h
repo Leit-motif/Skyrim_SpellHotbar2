@@ -115,6 +115,10 @@ namespace SpellHotbar::casts::CastingController {
 		uint16_t m_casteffect;
 		bool m_spell_proc;
 		bool m_spell_started;
+		// Grace window after the queued voice press during which a not-yet-true IsShouting
+		// must not cancel the cast; the press only reaches dispatch on the following frame.
+		float m_entry_grace;
+		bool m_last_anim_ok;
 	};
 
 	//Regular spell cast (1h, movement allowed)
