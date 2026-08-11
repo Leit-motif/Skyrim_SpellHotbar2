@@ -7,82 +7,11 @@ using namespace std::literals;
 namespace SpellHotbar::casts::MscoCastDriver {
 
 	namespace {
-
-		// Which hand's state the current Direct Cast entered, so replay/cancel address the
-		// same one. hand_mode::end doubles as "no entry live".
-		hand_mode active_hand{ hand_mode::end };
-
-		// A send waiting for graph-event dispatch context. A mod-declared event name
-		// delivers when notified from inside BSAnimationGraphEvent processing -- where
-		// MSCO.dll sends MSCO_start_* itself (live-verified 10:48:39) -- and returns false
-		// from the Papyrus VM and input paths (live-verified seven times in the same
-		// session). A send that fails directly is parked here; the animation-event hook
-		// replays it from dispatch context on the next player graph event. The hand is
-		// baked into the value so the hook thread never reads active_hand.
-		enum class Pending : uint8_t {
-			kNone = 0,
-			kStartLeft,
-			kStartRight,
-			kStartDual,
-			kEnd,
-		};
-		std::atomic<Pending> pending{ Pending::kNone };
-
-		struct GraphNames {
-			std::string_view variable;
-			std::string_view event;
-		};
-
-		GraphNames names_for(hand_mode hand) {
-			switch (hand) {
-				case hand_mode::right_hand:
-					return { "IsCastingRight"sv, "MSCO_start_right"sv };
-				case hand_mode::dual_hand:
-					return { "IsCastingDual"sv, "MSCO_start_dual"sv };
-				default:
-					return { "IsCastingLeft"sv, "MSCO_start_left"sv };
-			}
-		}
-
-		Pending pending_for(hand_mode hand) {
-			switch (hand) {
-				case hand_mode::right_hand:
-					return Pending::kStartRight;
-				case hand_mode::dual_hand:
-					return Pending::kStartDual;
-				default:
-					return Pending::kStartLeft;
-			}
-		}
-
-		hand_mode hand_for(Pending p) {
-			switch (p) {
-				case Pending::kStartRight:
-					return hand_mode::right_hand;
-				case Pending::kStartDual:
-					return hand_mode::dual_hand;
-				default:
-					return hand_mode::left_hand;
-			}
-		}
-
-		// MSCO.dll drops all three at CastingStateExit; doing the same here covers the
-		// entries that never reached a state, where that event will never come.
-		void drop_variables(RE::Actor* actor) {
-			actor->SetGraphVariableBool("IsCastingLeft"sv, false);
-			actor->SetGraphVariableBool("IsCastingRight"sv, false);
-			actor->SetGraphVariableBool("IsCastingDual"sv, false);
-		}
-
-		bool send_start(RE::Actor* actor, hand_mode hand, std::string_view context) {
-			const auto names = names_for(hand);
-			if (!actor->SetGraphVariableBool(names.variable, true)) {
-				logger::warn("MSCO cast: could not set {}", names.variable);
-			}
-			const bool sent = actor->NotifyAnimationGraph(names.event);
-			logger::debug("MSCO cast: notified {} from {} -> {}", names.event, context, sent);
-			return sent;
-		}
+		// Set when the graph raises SH2_CastEnter (our state's enterNotifyEvents), cleared
+		// on SH2_CastDone (exitNotifyEvents). This rides the same anim-event stream
+		// MSCO.dll uses to hear CastingStateExit, so it is the authoritative "our casting
+		// state is live" signal and needs no graph-variable polling.
+		std::atomic<bool> state_active{ false };
 	}
 
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand)
@@ -90,93 +19,55 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		if (!pc) {
 			return false;
 		}
-		active_hand = hand;
-		if (send_start(pc, hand, "the calling thread"sv)) {
-			pending.store(Pending::kNone, std::memory_order_relaxed);
-			return true;
-		}
-		// Direct delivery failed; park the entry for the hook. The controller's entry
-		// grace covers the wait, and its timeout path tears down through finish().
-		pending.store(pending_for(hand), std::memory_order_relaxed);
-		return true;
+		// Minimal slice: one state, one clip (MSCO_left1.hkx, whose SpellFire annotation
+		// is the RIGHT-hand event); every hand routes into it. The entry transition lives
+		// in magicbehavior's MagicRoot, so a false here means the magic stance is not
+		// drawn and the controller tears the cast down through its normal failure path.
+		(void)hand;
+		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
+		logger::debug("SH2 cast: notified SH2_CastRight -> {}", sent);
+		return sent;
 	}
 
-	void relay_from_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_carrier)
+	void relay_from_graph_event(RE::Actor*, const RE::BSFixedString& a_tag)
 	{
-		// Cleared before sending: the send itself dispatches events that re-enter the
-		// hook, and the re-entrant call must find nothing to do.
-		const Pending p = pending.exchange(Pending::kNone, std::memory_order_relaxed);
-		if (p == Pending::kNone || !a_player) {
-			return;
+		if (a_tag == "SH2_CastEnter"sv) {
+			state_active.store(true, std::memory_order_relaxed);
+			logger::debug("SH2 cast: state entered");
 		}
-		if (p == Pending::kEnd) {
-			const bool sent = a_player->NotifyAnimationGraph("MCO_EndAnimation"sv);
-			logger::debug("MSCO cast: notified MCO_EndAnimation from graph-event context (carrier '{}') -> {}",
-				a_carrier.c_str(), sent);
-			return;
-		}
-		const bool sent = send_start(a_player, hand_for(p), "graph-event context"sv);
-		if (sent) {
-			logger::debug("MSCO cast: relay carried by graph event '{}'", a_carrier.c_str());
+		else if (a_tag == "SH2_CastDone"sv) {
+			state_active.store(false, std::memory_order_relaxed);
+			logger::debug("SH2 cast: state exited");
 		}
 	}
 
-	bool is_active(RE::PlayerCharacter* pc)
+	bool is_active(RE::PlayerCharacter*)
 	{
-		bool active{ false };
-		if (pc) {
-			pc->GetGraphVariableBool("bIsMSCO"sv, active);
-		}
-		return active;
+		return state_active.load(std::memory_order_relaxed);
 	}
 
 	bool replay(RE::PlayerCharacter* pc)
 	{
-		if (!pc || active_hand == hand_mode::end) {
+		if (!pc) {
 			return false;
 		}
 		if (is_active(pc)) {
 			return true;
 		}
-		if (!send_start(pc, active_hand, "the calling thread"sv)) {
-			pending.store(pending_for(active_hand), std::memory_order_relaxed);
-		}
-		return true;
+		return pc->NotifyAnimationGraph("SH2_CastRight"sv);
 	}
 
 	void cancel(RE::PlayerCharacter* pc)
 	{
-		if (pc) {
-			if (is_active(pc)) {
-				if (!pc->NotifyAnimationGraph("MCO_EndAnimation"sv)) {
-					// The exit event is mod-declared too; park it for dispatch context.
-					pending.store(Pending::kEnd, std::memory_order_relaxed);
-				}
-			}
-			else {
-				// The state never entered; a parked start must not fire later.
-				pending.store(Pending::kNone, std::memory_order_relaxed);
-			}
-			drop_variables(pc);
+		if (pc && is_active(pc)) {
+			pc->NotifyAnimationGraph("SH2_CastExit"sv);
 		}
-		else {
-			pending.store(Pending::kNone, std::memory_order_relaxed);
-		}
-		active_hand = hand_mode::end;
 	}
 
 	void finish(RE::PlayerCharacter* pc)
 	{
-		// A parked early-end is still owed to the graph while its state plays; dropping
-		// it here would leave a deliberately cancelled animation running to its natural
-		// end. Everything else parked is stale once the cast is done.
-		const bool still_active = pc && is_active(pc);
-		if (!(still_active && pending.load(std::memory_order_relaxed) == Pending::kEnd)) {
-			pending.store(Pending::kNone, std::memory_order_relaxed);
+		if (pc && is_active(pc)) {
+			pc->NotifyAnimationGraph("SH2_CastExit"sv);
 		}
-		if (pc && !still_active) {
-			drop_variables(pc);
-		}
-		active_hand = hand_mode::end;
 	}
 }
