@@ -354,3 +354,20 @@ states appended to magicbehavior), msco, thuum's `shmco` (+ ticket 45 playbook a
   Nemesis writes in-place into Nemesis Output now (hygiene done). thuum
   `tools/run-nemesis.ps1` automates tick→launch→wait; `verify-nemesis-patch.mjs` is the
   patch linter pattern.
+
+## 2026-08-11 sh2c patch BUILT and VERIFIED in the merged graph
+
+- Patch authored at `nemesis/Nemesis_Engine/mod/sh2c/` (7 files), deployed into
+  `Dev - Spell Hotbar 2`, ticked and generated via thuum's
+  `tools/run-nemesis.ps1 -Tick sh2c -Apply` (clean, 1045 animations, 115 s, 30 patches).
+- Verified: `SH2_CastRight`, `SH2_CastExit`, `SH2_CastRight_State` present in
+  `Nemesis Output/meshes/.../magicbehavior.hkx` (fresh 13:58). TK Dodge RE and JBO
+  originals untouched — the hygiene redirect held.
+- NEXT (in flight): patch iteration 2 — add `SH2_CastEnter`/`SH2_CastDone` raised via
+  `enterNotifyEvents`/`exitNotifyEvents` on `#sh2c$2` (new hkbStateMachineEventPropertyArray
+  objects $3/$4, msco's exitNotifyEvents pattern — this is exactly how MSCO.dll hears
+  CastingStateExit, so our BSAnimationGraphEvent hook will hear entry/exit). Register both
+  names in #0077/#0079. Re-run Nemesis. THEN task #11: DLL driver swap — send
+  `SH2_CastRight` (all hands → right for the slice), `SH2_CastExit` on finish/cancel,
+  active-flag set by hook on SH2_CastEnter tag / cleared on SH2_CastDone, spellfire arms
+  RIGHT (clip fires MRh at 0.283s). Acceptance test MUST be in magic stance (spell drawn).
