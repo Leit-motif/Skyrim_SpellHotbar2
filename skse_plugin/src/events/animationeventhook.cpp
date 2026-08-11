@@ -17,15 +17,16 @@ namespace SpellHotbar::events {
 
 			// THE COMMITMENT POINT (ADR 0004, ticket 07).
 			//
-			// The one event this hook exists for. Vanilla puts the magic out roughly a tenth of a
-			// second into the exhale and this is the graph saying so; a cast that has heard it
-			// delivers its spell even if the shout state is torn away afterwards. Casting rides
-			// the shout graph (finding 1), so this is the same event a real shout raises -- the
-			// flag it sets is cleared whenever a cast begins, so a shout on the vanilla key cannot
-			// leave a later hotbar cast pre-committed.
+			// The events this hook exists for. MCBO's casting clips carry a SpellFire annotation
+			// at the frame the hand throws the spell, and the graph raises it as this event; a
+			// cast that has heard it delivers its spell even if the casting state is torn away
+			// afterwards. Vanilla casting anims raise the same events on real casts -- the flag
+			// they set is cleared whenever a cast begins, so a real cast cannot leave a later
+			// hotbar cast pre-committed.
 			//
 			// This runs on the animation thread. It sets an atomic and touches nothing else.
-			if (eventHolder->IsPlayerRef() && a_event->tag == "Voice_SpellFire_Event"sv) {
+			if (eventHolder->IsPlayerRef() &&
+				(a_event->tag == "MLh_SpellFire_Event"sv || a_event->tag == "MRh_SpellFire_Event"sv)) {
 				casts::CastingController::notify_spellfire();
 			}
 

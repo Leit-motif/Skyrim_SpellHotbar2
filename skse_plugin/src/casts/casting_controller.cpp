@@ -5,7 +5,7 @@
 #include "../input/keybinds.h"
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
-#include "voice_cast_driver.h"
+#include "msco_cast_driver.h"
 
 namespace SpellHotbar::casts::CastingController {
 
@@ -13,17 +13,16 @@ namespace SpellHotbar::casts::CastingController {
 
 	// THE COMMITMENT POINT (ADR 0004, ticket 07).
 	//
-	// The vanilla graph raises `Voice_SpellFire_Event` about a tenth of a second into the exhale,
-	// and that instant is what makes a real shout robust: the magic is already out, so anything
-	// that ends the shout afterwards costs nothing. This mod fires on its own timer instead, which
-	// for a ritual cast is 250ms after the exhale is notified and for a ritual concentration cast
-	// 1.0-1.5s after. In that gap the cast used to be torn down by any loss of `IsShouting` -- an
-	// MCO chain, a stagger, a killmove -- losing the spell and refunding nothing, since the
-	// magicka is only deducted once `cast_spell` succeeds.
+	// MCBO's casting clips carry a `MLh_SpellFire_Event` / `MRh_SpellFire_Event` annotation at
+	// the exact frame the hand throws the spell (0.48s into MSCO_left1), and the graph raises it
+	// as an event when the clip crosses that frame. That instant is the commitment point: the
+	// magic is out, so anything that ends the animation afterwards costs nothing. Before it,
+	// losing the casting state cancels the cast and costs nothing either, since the magicka is
+	// only deducted once `cast_spell` succeeds.
 	//
-	// Reading the vanilla event rather than inventing a signal is the whole of ADR 0004: the MCO
-	// shout behavior engine already refuses to open its chain window before this same event, so
-	// its floor and our guarantee are one instant, agreed by construction rather than by an API.
+	// Reading the clip's own event rather than inventing a timer is the whole of ADR 0004: the
+	// payload lands at the frame the animation shows it leaving the hand, agreed by construction
+	// rather than by an API. MSCO.dll itself keys its node replacement off this same event.
 	//
 	// File-scope and atomic rather than a member, because the animation-event hook runs on the
 	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
@@ -31,7 +30,7 @@ namespace SpellHotbar::casts::CastingController {
 	std::atomic<bool> spellfire_seen{ false };
 
 	void notify_spellfire() {
-		logger::debug("Voice cast: graph raised Voice_SpellFire_Event");
+		logger::debug("MSCO cast: graph raised a SpellFire event");
 		spellfire_seen.store(true, std::memory_order_relaxed);
 	}
 
@@ -220,7 +219,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (pc) {
 			pc->RemoveSpell(GameData::spellhotbar_castfx_spell);
 		}
-		VoiceCastDriver::restore(pc);
+		MscoCastDriver::finish(pc);
 		if (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll) {
 			RE::SpellItem* spell = m_form->As<RE::SpellItem>();
 			GameData::post_cast_mod_callback(spell);
@@ -229,9 +228,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool CastingInstance::is_anim_ok(RE::PlayerCharacter* pc) const
 	{
-		bool is_shouting{ false };
-		pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
-		return is_shouting;
+		return MscoCastDriver::is_active(pc);
 	}
 
 	RE::BSSoundHandle _play_sound_if_exists(RE::BGSSoundDescriptorForm* snd)
@@ -290,12 +287,12 @@ namespace SpellHotbar::casts::CastingController {
 	{
 		const bool anim_ok = is_anim_ok(pc);
 		if (anim_ok != m_last_anim_ok) {
-			logger::debug("Voice cast: IsShouting became {} ({}s before release)", anim_ok, m_cast_timer);
+			logger::debug("MSCO cast: casting state active became {} ({}s on the cast timer)", anim_ok, m_cast_timer);
 			m_last_anim_ok = anim_ok;
 		}
 
-		// Past spellfire the cast is committed and delivers regardless of the shout state (ADR
-		// 0004). Before it, losing the state cancels exactly as it always has.
+		// Past spellfire the cast is committed and delivers regardless of the casting state
+		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
 		if (anim_ok || is_cast_committed()) {
 			if (is_first_time_update()) {
 				play_charge_sound();
@@ -303,15 +300,9 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 
-			// The timer owns charge/release timing; the graph's spellfire event owns payload timing.
+			// The timer owns the GCD; the clip's spellfire annotation owns payload timing.
 			advance_time(delta);
 			GameData::advance_cast_timer(delta);
-
-			if (should_play_release_anim()) {
-				if (VoiceCastDriver::release(get_current_casttime())) {
-					set_release_played();
-				}
-			}
 
 			if (is_cast_committed() && !m_spell_started) {
 				m_spell_started = true;
@@ -326,13 +317,12 @@ namespace SpellHotbar::casts::CastingController {
 					consume_items();
 				}
 				set_casted();
-				VoiceCastDriver::restore(pc);
 			}
 		}
 		else if (m_entry_grace > 0.0f) {
-			// The queued voice press is dispatched next frame and the graph takes a few more
-			// to raise IsShouting; cancelling in that window would tear the cast down before
-			// it ever had a state to enter.
+			// The MSCO_start_* event is sent when the instance is created and the graph takes
+			// a few frames to enter the state and raise bIsMSCO; cancelling in that window
+			// would tear the cast down before it ever had a state to enter.
 			m_entry_grace -= delta;
 		}
 		else {
@@ -449,9 +439,9 @@ namespace SpellHotbar::casts::CastingController {
 
 		if (timer_old == 0) {
 			//startup
-			//stop if not anim or key not down directly at start; the queued voice press has
-			//not been dispatched yet on the very first update, so the shout state cannot be
-			//required here -- the grace check in the charge loop covers the entry window.
+			//stop if key not down directly at start; the MSCO_start_* event was only just
+			//sent, so the casting state cannot be required here -- the grace check in the
+			//charge loop covers the entry window.
 			if (!keydown) {
 				cancel = true;
 			}
@@ -464,31 +454,16 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		else if (!is_cast_committed()) {
 			//during charge loop
-			// A ritual concentration cast notifies its exhale up to 1.5s before the first
-			// `cast_spell`, so this is where the longest commitment gap lives (ADR 0004). A
-			// released key still stops the cast -- that is the player asking, not an interruption.
+			// The clip's spellfire annotation commits the cast on its own schedule (ADR 0004).
+			// A released key still stops the cast -- that is the player asking, not an
+			// interruption.
 			if (!keydown || (!is_anim_ok(pc) && !is_cast_committed() && m_entry_grace <= 0.0f)) {
 				//trigger gcd and stop cast
 				set_casted();
 				stop_charge_sound();
 				GameData::reset_animation_vars();
-				VoiceCastDriver::cancel(pc);
+				MscoCastDriver::cancel(pc);
 			}
-
-			//check for pre_release_anim_time
-			if (m_pre_release_anim_time > 0.0f && !m_played_pre_release && (m_cast_timer + m_pre_release_anim_time >= m_release_anim_time))
-			{
-				if (VoiceCastDriver::release(m_cast_timer)) {
-					m_played_pre_release = true;
-					set_release_played();
-				}
-			}
-			else if (m_pre_release_anim_time <= 0.0f && should_play_release_anim()) {
-				if (VoiceCastDriver::release(m_cast_timer)) {
-					set_release_played();
-				}
-			}
-
 		}
 		else {
 			//charge finished
@@ -510,7 +485,7 @@ namespace SpellHotbar::casts::CastingController {
 				//Check for anim reloop & do loop callbacks
 
 				if (keydown) {
-					VoiceCastDriver::replay(0.15f);
+					MscoCastDriver::replay(pc);
 					RenderManager::highlight_skill_slot(m_slot, loop_timer*2.0f, false);
 					auto spell = m_form->As<RE::SpellItem>();
 					if (spell != nullptr) {
@@ -543,7 +518,7 @@ namespace SpellHotbar::casts::CastingController {
 					playerCaster->InterruptCast(false);
 				}
 				GameData::reset_animation_vars();
-				VoiceCastDriver::cancel(pc);
+				MscoCastDriver::cancel(pc);
 				play_release_sound();
 				apply_cooldown();
 				consume_items();
@@ -579,7 +554,6 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
-		VoiceCastDriver::tick(delta);
 		if (current_cast) {
 			if (!current_cast->casted()) {
 				auto pc = RE::PlayerCharacter::GetSingleton();
@@ -616,10 +590,9 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
-				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
-				VoiceCastDriver::cancel(pc);
 				current_cast.reset();
 				GameData::reset_animation_vars();
 			}
@@ -642,10 +615,9 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
-				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
-				VoiceCastDriver::cancel(pc);
 				current_cast.reset();
 				GameData::reset_animation_vars();
 			}
@@ -669,10 +641,9 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
-				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
-				VoiceCastDriver::cancel(pc);
 				current_cast.reset();
 				GameData::reset_animation_vars();
 			}
@@ -696,10 +667,9 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
-				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
-				VoiceCastDriver::cancel(pc);
 				current_cast.reset();
 				GameData::reset_animation_vars();
 			}

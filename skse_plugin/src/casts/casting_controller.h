@@ -115,8 +115,8 @@ namespace SpellHotbar::casts::CastingController {
 		uint16_t m_casteffect;
 		bool m_spell_proc;
 		bool m_spell_started;
-		// Grace window after the queued voice press during which a not-yet-true IsShouting
-		// must not cancel the cast; the press only reaches dispatch on the following frame.
+		// Grace window after the MSCO_start_* event during which a not-yet-true bIsMSCO
+		// must not cancel the cast; the graph needs a few frames to enter the state.
 		float m_entry_grace;
 		bool m_last_anim_ok;
 	};
@@ -225,9 +225,9 @@ namespace SpellHotbar::casts::CastingController {
 	extern std::unique_ptr<BaseCastingInstance> current_cast;
 
 	/**
-	* The graph raised `Voice_SpellFire_Event`: from here a live cast is committed and will
-	* deliver its spell whatever happens to the shout state (ADR 0004). Called from the
-	* animation-event hook, on the animation thread.
+	* The graph raised a `MLh/MRh_SpellFire_Event`: from here a live cast is committed and
+	* will deliver its spell whatever happens to the casting state (ADR 0004). Called from
+	* the animation-event hook, on the animation thread.
 	*/
 	void notify_spellfire();
 
