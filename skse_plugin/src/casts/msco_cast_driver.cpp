@@ -167,8 +167,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	void finish(RE::PlayerCharacter* pc)
 	{
-		pending.store(Pending::kNone, std::memory_order_relaxed);
-		if (pc && !is_active(pc)) {
+		// A parked early-end is still owed to the graph while its state plays; dropping
+		// it here would leave a deliberately cancelled animation running to its natural
+		// end. Everything else parked is stale once the cast is done.
+		const bool still_active = pc && is_active(pc);
+		if (!(still_active && pending.load(std::memory_order_relaxed) == Pending::kEnd)) {
+			pending.store(Pending::kNone, std::memory_order_relaxed);
+		}
+		if (pc && !still_active) {
 			drop_variables(pc);
 		}
 		active_hand = hand_mode::end;

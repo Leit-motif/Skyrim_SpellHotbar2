@@ -47,8 +47,12 @@ namespace SpellHotbar::events {
 
 	RE::BSEventNotifyControl Animation_event_hook::ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
 	{
+		// Chain first: every earlier handler -- MSCO.dll's CastingStateExit cleanup
+		// included -- must finish with this event before the relay nests a new send
+		// inside the dispatch, or cleanup and re-entry can invert.
+		const auto result = _ProcessEvent_PC(a_sink, a_event, a_eventSource);
 		ProcessEvent(a_event, a_eventSource);
-		return _ProcessEvent_PC(a_sink, a_event, a_eventSource);	
+		return result;
 	}
 
 	/*RE::BSEventNotifyControl Animation_event_hook::ProcessEvent_NPC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
