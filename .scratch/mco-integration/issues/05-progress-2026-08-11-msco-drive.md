@@ -293,3 +293,21 @@ resolved 'Firebolt' and chargeTime — it is robust to sparse spell context. The
 mask, entry grace, and anim-event hook all carry over. Alternative remains handoff option
 2 (dedicated Nemesis state, weeks). Handoff option 3 (ESAS engine cast) does NOT deliver
 MCBO anims — an engine voice/instant cast is not a hand cast and MCBO ignores it.
+
+## 2026-08-11 route confirmed + Nemesis hygiene EXECUTED
+
+Owner picked **plan B (dedicated Nemesis state), minimal slice first** after the A-vs-B
+brief (`~/.agents/briefs/2026-08-11-plan-a-vs-b.html`).
+
+Hygiene applied (game effect: none — byte-identical files, new provider):
+
+- Pre-seeded `Nemesis Output` (priority 607, above both carriers) with the 7 merged files
+  Nemesis had written in place: TK Dodge RE's `behaviors/1hm_behavior.hkx` +
+  `magicbehavior.hkx` (3rd + 1st person) and JBO's `0_master.hkx`, `defaultmale.hkx`,
+  `defaultfemale.hkx`.
+- Restored both mods' shipped originals from their archives (F:\Nolvus\ARCHIVE\...; both
+  archives ship all 7 files — they were legitimate mod files Nemesis overwrote, not
+  droppings).
+- Verified via housecarl_asset_status: Nemesis Output now WINS all 5 checked behavior
+  paths. Future Nemesis in-place writes land in Nemesis Output permanently.
+- Backup of the merged copies: scratchpad `hygiene-backup/merged-droppings.tar`.
