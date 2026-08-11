@@ -65,30 +65,43 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 			return false;
 		}
 
-		// This shipped form has one MagicEffect specifically authored as a zero-magnitude,
-		// zero-duration dummy. It becomes the proxy shout's word payload, so the shout fires
-		// nothing of its own.
-		proxy_power = GameData::spellhotbar_unbind_slot;
-
 		// A lesser power selected in the voice slot never entered the shout graph (2026-08-10:
 		// spellfire fired but IsShouting stayed false and no shout clip played). A genuine
 		// TESShout is the form ShoutHandler's animation path is built around, so construct a
 		// harmless one at runtime -- the same approach Equip Spells As Shouts ships with.
 		auto word_factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESWordOfPower>();
 		auto shout_factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESShout>();
-		if (!word_factory || !shout_factory) {
-			logger::error("Voice cast driver could not resolve WOOP/SHOU form factories");
+		auto spell_factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::SpellItem>();
+		if (!word_factory || !shout_factory || !spell_factory) {
+			logger::error("Voice cast driver could not resolve WOOP/SHOU/SPEL form factories");
 			return false;
 		}
 
 		proxy_word = word_factory->Create();
 		proxy_shout = shout_factory->Create();
-		if (!proxy_word || !proxy_shout) {
+		proxy_power = spell_factory->Create();
+		if (!proxy_word || !proxy_shout || !proxy_power) {
 			logger::error("Voice cast driver could not create the proxy shout forms");
 			proxy_word = nullptr;
 			proxy_shout = nullptr;
+			proxy_power = nullptr;
 			return false;
 		}
+
+		// The word payload must look like a vanilla shout word: a Voice Power with a real
+		// charge time. The first proxy reused the shipped do-nothing LESSER power and the
+		// engine fired the word 56ms after the press with no charge phase or animation at
+		// all -- the spell type/charge profile is what buys the inhale. Clone the shipped
+		// dummy's harmless effect list, then reshape the profile.
+		auto dummy = GameData::spellhotbar_unbind_slot;
+		proxy_power->fullName = "";
+		proxy_power->effects = dummy->effects;
+		proxy_power->equipSlot = dummy->equipSlot;
+		proxy_power->data = dummy->data;
+		proxy_power->data.spellType = RE::MagicSystem::SpellType::kVoicePower;
+		proxy_power->data.chargeTime = 0.9f;
+		proxy_power->data.castingType = RE::MagicSystem::CastingType::kFireAndForget;
+		proxy_power->data.delivery = RE::MagicSystem::Delivery::kSelf;
 
 		proxy_word->fullName = "";
 		proxy_word->translation = "";
