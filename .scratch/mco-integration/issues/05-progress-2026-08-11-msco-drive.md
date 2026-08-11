@@ -157,20 +157,53 @@ order — consistent with the owner wanting MCBO's animations and not having the
 equipped-cast by the owner (vanilla pose vs MSCO combo swing) confirms or refutes this in
 ten seconds; console `player.cast` does not exercise that pipeline and proves nothing.
 
-**Fix routes (decision pending):**
+## 2026-08-11 owner correction — MCBO WORKS; the analysis above is re-scoped
 
-1. **Root-table override probe (recommended, no Nemesis re-run, reversible):** hkxc
-   round-trip the built `0_master.hkx` to XML, append the 15 MSCO event names to the root
-   `hkbBehaviorGraphStringData.eventNames` + matching `eventInfos` (flags 0), repack, ship
-   as a new top-priority dev mod providing only `0_master.hkx`. If notify then resolves and
-   the state plays, the thuum root-table rule is confirmed, our driver works, AND MCBO's own
-   casting starts working for the owner. Disable the mod to revert. (Tooling:
-   `C:\Tools\SkyrimHKX` hkxc; the thuum project round-trips behavior files routinely.)
-2. **BDI forensics:** work out why `AddEvent` fails/doesn't stick on the root graph
-   (requires its CommonLib fork's source; heavier, upstream-shaped).
-3. **Nemesis-patch route (clean long-term):** author a small patch adding the event names
-   to 0_master's string data and re-run Nemesis with the exact 29-patch set from `mod
-   settings` — same effect as (1) but permanent and rebuild-gated.
+**Owner statement (authoritative): "Magic Casting Behavioral Overhaul has been working great
+the entire time"** (sole known issue was a Valhalla timed-block interaction, since resolved).
+That falsifies the "MCBO's animation layer never fired here" implication above and PARKS the
+0_master surgery recommendation — if MSCO.dll's `NotifyAnimationGraph("MSCO_start_left")`
+demonstrably works in this load order, the name IS deliverable from its call site, and a
+root-table gap cannot be the whole story.
+
+What survives, per the thuum project's tested semantics (CONTEXT.md ~382, ~2227): the return
+value means *received*, not *consumed*; mod-declared names returning `false` where vanilla
+names return `true` means non-delivery. So our seven `false` results are real non-delivery —
+**the same event name delivers from MSCO.dll's call site and does not deliver from ours.**
+Same API (`actor->NotifyAnimationGraph`), same actor, third person both.
+
+Candidate discriminators, now the open question:
+
+- **Call context.** MSCO.dll sends from inside the `BSAnimationGraphEvent` ProcessEvent
+  vtable hook (mid graph-event dispatch). Ours send from the Papyrus VM thread (`castSlot`)
+  and the input path (owner's "1"). If context is the difference, relaying our send through
+  our own animation-event hook context is a small code change.
+- **Session state.** BDI injects at `CreateSymbolIdMap`, guarded by `!eventIDMap` — a graph
+  instance that misses its injection window may stay unresolvable for the whole session.
+  The owner's "works great" is from normal play; nobody has confirmed MCBO working in THIS
+  session's DevBench-loaded state.
+
+**The 5-second discriminating test (owner-driven, zero code, one session):** with Incinerate
+equipped, (a) cast it normally with the cast button — does the MSCO combo swing play? then
+(b) press "1" — read the `MSCO cast: notified ... -> ?` log line.
+- (a) plays + (b) false → call-site difference → relay our notify through the graph-event
+  hook context and retest.
+- (a) vanilla-pose + (b) false → session-state / injection-window problem → chase BDI's
+  injection timing for this load path; owner's normal sessions differ somehow.
+- (b) true → whatever changed, proceed straight to observing the animation.
+
+## Load-order hygiene (owner question, separate from this ticket)
+
+MO2 has **no output redirection configured for the Nemesis executable** (no
+`customOverwrites` in `ModOrganizer.ini`), so Nemesis writes in-place into each output
+path's current VFS winner — the scatter that misled this session (built `magicbehavior.hkx`
+inside TK Dodge RE, built `0_master.hkx` + `defaultfemale.hkx` inside Jump Behavior
+Overhaul). Once-and-for-all fix: in MO2, edit the Nemesis executable and set **"Create
+files in mod" → `Nemesis Output`**, then after the next run restore TK Dodge RE's and JBO's
+original files from their archives (paths in each mod's `meta.ini`) so foreign mods stop
+carrying Nemesis outputs. Until that cleanup, TK Dodge RE's and JBO's copies ARE the live
+merged behaviors — do not "restore" them without a redirected rebuild in the same step, or
+the game loses the merged graph.
 
 **Session hygiene / environment changes this session:**
 
