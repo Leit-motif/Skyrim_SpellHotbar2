@@ -8,6 +8,7 @@
 #include "events/eventlistener.h"
 #include "events/animationeventhook.h"
 #include "events/gameloop_hook.h"
+#include "casts/voice_cast_driver.h"
 
 
 constexpr uint32_t serializazion_id = 0xB8498471; //random generated 4byte
@@ -24,6 +25,7 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
         //logger::trace("Received SKSE Message {}", message->type);
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             SpellHotbar::GameData::onDataLoad();
+            SpellHotbar::casts::VoiceCastDriver::initialize();
             logger::info("SpellHotbar2 GameData loaded!");
         }
      });

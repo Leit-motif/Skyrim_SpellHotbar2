@@ -60,6 +60,8 @@ set(source_files src/plugin.cpp
                  src/game_data/animation_data_csv_loader.cpp
                  src/casts/casting_controller.h
                  src/casts/casting_controller.cpp
+                 src/casts/voice_cast_driver.h
+                 src/casts/voice_cast_driver.cpp
                  src/game_data/keynames_csv_loader.h
                  src/game_data/keynames_csv_loader.cpp
                  src/rendering/spell_editor.h

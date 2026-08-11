@@ -114,6 +114,7 @@ namespace SpellHotbar::casts::CastingController {
 		RE::SpellItem* m_equip_ability;
 		uint16_t m_casteffect;
 		bool m_spell_proc;
+		bool m_spell_started;
 	};
 
 	//Regular spell cast (1h, movement allowed)

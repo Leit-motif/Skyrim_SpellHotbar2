@@ -5,6 +5,7 @@
 #include "../input/keybinds.h"
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
+#include "voice_cast_driver.h"
 
 namespace SpellHotbar::casts::CastingController {
 
@@ -91,7 +92,8 @@ namespace SpellHotbar::casts::CastingController {
 		m_used_hand(used_hand),
 		m_equip_ability(nullptr),
 		m_casteffect(casteffect),
-		m_spell_proc(is_spell_proc)
+		m_spell_proc(is_spell_proc),
+		m_spell_started(false)
 	{
 		if (m_form && (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll)) {
 			uint32_t size = get_spell()->effects.size();
@@ -215,6 +217,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (pc) {
 			pc->RemoveSpell(GameData::spellhotbar_castfx_spell);
 		}
+		VoiceCastDriver::restore(pc);
 		if (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll) {
 			RE::SpellItem* spell = m_form->As<RE::SpellItem>();
 			GameData::post_cast_mod_callback(spell);
@@ -291,16 +294,18 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 
-			//Regular spell
-			bool should_cast = advance_time(delta);
+			// The timer owns charge/release timing; the graph's spellfire event owns payload timing.
+			advance_time(delta);
 			GameData::advance_cast_timer(delta);
 
 			if (should_play_release_anim()) {
-				pc->NotifyAnimationGraph(get_end_anim());
-				set_release_played();
+				if (VoiceCastDriver::release(get_current_casttime())) {
+					set_release_played();
+				}
 			}
 
-			if (should_cast) {
+			if (is_cast_committed() && !m_spell_started) {
+				m_spell_started = true;
 				stop_charge_sound();
 				play_release_sound();
 				if (cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc)) {
@@ -312,6 +317,7 @@ namespace SpellHotbar::casts::CastingController {
 					consume_items();
 				}
 				set_casted();
+				VoiceCastDriver::restore(pc);
 			}
 		}
 		else {
@@ -438,7 +444,7 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 		}
-		else if (m_cast_timer < m_release_anim_time) {
+		else if (!is_cast_committed()) {
 			//during charge loop
 			// A ritual concentration cast notifies its exhale up to 1.5s before the first
 			// `cast_spell`, so this is where the longest commitment gap lives (ADR 0004). A
@@ -448,24 +454,32 @@ namespace SpellHotbar::casts::CastingController {
 				set_casted();
 				stop_charge_sound();
 				GameData::reset_animation_vars();
-				pc->NotifyAnimationGraph(get_cancel_anim());
+				VoiceCastDriver::cancel(pc);
 			}
 
 			//check for pre_release_anim_time
 			if (m_pre_release_anim_time > 0.0f && !m_played_pre_release && (m_cast_timer + m_pre_release_anim_time >= m_release_anim_time))
 			{
-				m_played_pre_release = true;
-				pc->NotifyAnimationGraph(get_end_anim());
+				if (VoiceCastDriver::release(m_cast_timer)) {
+					m_played_pre_release = true;
+					set_release_played();
+				}
+			}
+			else if (m_pre_release_anim_time <= 0.0f && should_play_release_anim()) {
+				if (VoiceCastDriver::release(m_cast_timer)) {
+					set_release_played();
+				}
 			}
 
 		}
-		else if (m_cast_timer >= m_release_anim_time) {
+		else {
 			//charge finished
 
 			constexpr float loop_timer = 0.5f;
 
-			if (timer_old < m_release_anim_time) {
+			if (!m_spell_started) {
 				//first cast update
+				m_spell_started = true;
 				cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc, m_manacost);
 				if (m_spell_proc) {
 					casts::SpellProc::consume_proc();
@@ -473,28 +487,12 @@ namespace SpellHotbar::casts::CastingController {
 				stop_charge_sound();
 				play_cast_loop_sound();
 				GameData::global_casting_conc_spell->value = 1.0f;
-				if (!m_played_pre_release) {
-					pc->NotifyAnimationGraph(get_end_anim());
-					pc->NotifyAnimationGraph(get_start_anim());
-				}
 			}
 			else if (static_cast<int>(timer_old / loop_timer) < static_cast<int>(m_cast_timer / loop_timer)) {
 				//Check for anim reloop & do loop callbacks
 
-				// LIVENESS IS CHECKED BEFORE THE RE-NOTIFY, NOT AFTER IT (ticket 07).
-				//
-				// The other order re-enters the shout graph on a channel that has already been
-				// cut -- and the graph honours shout entry from an MCO attack state, tearing that
-				// attack down. A player who chained out of a channel would be yanked back into it
-				// twice a second, and `IsShouting` would read true again immediately afterwards,
-				// so the channel never ended. Checking first makes the trade honest: the first
-				// application has landed, and the rest of the channel is what the attack cost.
-				if (!is_anim_ok(pc)) {
-					//do same exit code as if key was no longer held down, anim got interrupted
-					keydown = false;
-				}
-				else {
-					pc->NotifyAnimationGraph(get_start_anim());
+				if (keydown) {
+					VoiceCastDriver::replay(0.15f);
 					RenderManager::highlight_skill_slot(m_slot, loop_timer*2.0f, false);
 					auto spell = m_form->As<RE::SpellItem>();
 					if (spell != nullptr) {
@@ -527,7 +525,7 @@ namespace SpellHotbar::casts::CastingController {
 					playerCaster->InterruptCast(false);
 				}
 				GameData::reset_animation_vars();
-				pc->NotifyAnimationGraph(get_cancel_anim());
+				VoiceCastDriver::cancel(pc);
 				play_release_sound();
 				apply_cooldown();
 				consume_items();
@@ -599,8 +597,12 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
-				pc->NotifyAnimationGraph(current_cast->get_start_anim());
-				return true;
+				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+					return true;
+				}
+				VoiceCastDriver::cancel(pc);
+				current_cast.reset();
+				GameData::reset_animation_vars();
 			}
 		}
 		return false;
@@ -621,8 +623,12 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
-				pc->NotifyAnimationGraph(current_cast->get_start_anim());
-				return true;
+				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+					return true;
+				}
+				VoiceCastDriver::cancel(pc);
+				current_cast.reset();
+				GameData::reset_animation_vars();
 			}
 		}
 		return false;
@@ -644,8 +650,12 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
-				pc->NotifyAnimationGraph(current_cast->get_start_anim());
-				return true;
+				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+					return true;
+				}
+				VoiceCastDriver::cancel(pc);
+				current_cast.reset();
+				GameData::reset_animation_vars();
 			}
 		}
 		return false;
@@ -667,8 +677,12 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
-				pc->NotifyAnimationGraph(current_cast->get_start_anim());
-				return true;
+				if (VoiceCastDriver::begin(pc) && VoiceCastDriver::press()) {
+					return true;
+				}
+				VoiceCastDriver::cancel(pc);
+				current_cast.reset();
+				GameData::reset_animation_vars();
 			}
 		}
 		return false;
