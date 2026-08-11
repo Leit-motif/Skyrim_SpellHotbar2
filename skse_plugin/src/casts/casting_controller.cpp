@@ -40,10 +40,11 @@ namespace SpellHotbar::casts::CastingController {
 	// this cast throws with. Called right before the MSCO entry is sent.
 	void arm_spellfire(hand_mode used_hand) {
 		// Minimal slice: the single SH2 state plays MSCO_left1, whose annotation is the
-		// RIGHT-hand SpellFire regardless of the hand this cast chose, so both bits stay
-		// armed. Per-hand masking returns when the state matrix grows a clip per hand.
+		// RIGHT-hand SpellFire regardless of the hand this cast chose, so only the right
+		// bit arms — a left event can only come from an unrelated equipped cast and must
+		// not commit this one. Per-hand masking returns with the per-hand clip matrix.
 		(void)used_hand;
-		uint8_t mask = fire_left | fire_right;
+		uint8_t mask = fire_right;
 		spellfire_mask.store(mask, std::memory_order_relaxed);
 		spellfire_seen.store(false, std::memory_order_relaxed);
 	}

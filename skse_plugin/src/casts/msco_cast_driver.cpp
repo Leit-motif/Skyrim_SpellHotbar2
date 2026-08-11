@@ -19,6 +19,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		if (!pc) {
 			return false;
 		}
+		// A stale flag must not close this cast's entry grace: if the graph tore down
+		// without delivering SH2_CastDone (load, teardown mid-state), the flag would
+		// still read true here. Each cast starts from false; its own SH2_CastEnter
+		// raises it again.
+		state_active.store(false, std::memory_order_relaxed);
 		// Minimal slice: one state, one clip (MSCO_left1.hkx, whose SpellFire annotation
 		// is the RIGHT-hand event); every hand routes into it. The entry transition lives
 		// in magicbehavior's MagicRoot, so a false here means the magic stance is not

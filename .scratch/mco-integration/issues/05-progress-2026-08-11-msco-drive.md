@@ -371,3 +371,22 @@ states appended to magicbehavior), msco, thuum's `shmco` (+ ticket 45 playbook a
   `SH2_CastRight` (all hands → right for the slice), `SH2_CastExit` on finish/cancel,
   active-flag set by hook on SH2_CastEnter tag / cleared on SH2_CastDone, spellfire arms
   RIGHT (clip fires MRh at 0.283s). Acceptance test MUST be in magic stance (spell drawn).
+
+## 2026-08-11 slice review round (Codex task-msp1bhg6, recovered from job log again)
+
+Fixed: (1) BLOCKER `AnimationsMSCO_left1.hkx` — separator restored; (2) IdleStop safety
+transition removed (undeclared dependency on Hot Key Skill's registration) and replaced
+with an end-of-clip hkbClipTriggerArray (#sh2c$5, -0.05s relativeToEndOfClip) raising
+SH2_CastExit — also gives the SINGLE_PLAY state a completion exit; (3) stale
+`state_active` — begin() now resets it before sending; (4) spellfire mask arms RIGHT only
+(MSCO_left1 fires MRh; a left event can only be an unrelated equipped cast); (5) header
+and comments rewritten for the sh2c contract. Accepted: double SH2_CastExit on
+cancel+finish (second notify finds no listener, harmless); no cast-generation epoch on
+Enter/Done (begin-reset covers the slice); conc replay semantics untested (out of slice).
+
+State: patch redeployed, Nemesis re-run WITH Update Engine first (owner's rule: file
+change → Update Engine, then Build; 15:12 run, 1045 anims), all four SH2 events + the
+fixed clip path verified in the winning magicbehavior.hkx. DLL rebuilt and deployed 15:09.
+**Ready for the in-game acceptance test: magic stance DRAWN, press "1" (Firebolt slotted).
+Expected log: `SH2 cast: notified SH2_CastRight -> true`, `state entered`, right SpellFire
+commit; acceptance = owner's eyes on the MCBO cast animation.**
