@@ -95,7 +95,7 @@ namespace SpellHotbar::casts::CastingController {
 		m_casteffect(casteffect),
 		m_spell_proc(is_spell_proc),
 		m_spell_started(false),
-		m_entry_grace(0.5f),
+		m_entry_grace(1.5f),
 		m_last_anim_ok(false)
 	{
 		if (m_form && (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll)) {

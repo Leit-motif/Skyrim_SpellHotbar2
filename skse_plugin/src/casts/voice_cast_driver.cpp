@@ -7,9 +7,12 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 
 	namespace {
 		RE::SpellItem* proxy_power{ nullptr };
+		RE::TESShout* proxy_shout{ nullptr };
+		RE::TESWordOfPower* proxy_word{ nullptr };
 		RE::TESForm* previous_power{ nullptr };
 		bool active{ false };
 		bool proxy_was_known{ false };
+		bool shout_added{ false };
 
 		bool process_voice_button(float value, float held_duration)
 		{
@@ -41,7 +44,7 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 
 	bool initialize()
 	{
-		if (proxy_power) {
+		if (proxy_shout) {
 			return true;
 		}
 
@@ -57,15 +60,49 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 		}
 
 		// This shipped form has one MagicEffect specifically authored as a zero-magnitude,
-		// zero-duration dummy. Reusing it gives ShoutHandler a registered power with no payload.
+		// zero-duration dummy. It becomes the proxy shout's word payload, so the shout fires
+		// nothing of its own.
 		proxy_power = GameData::spellhotbar_unbind_slot;
-		logger::info("Voice cast driver initialized with proxy {:08X}", proxy_power->GetFormID());
+
+		// A lesser power selected in the voice slot never entered the shout graph (2026-08-10:
+		// spellfire fired but IsShouting stayed false and no shout clip played). A genuine
+		// TESShout is the form ShoutHandler's animation path is built around, so construct a
+		// harmless one at runtime -- the same approach Equip Spells As Shouts ships with.
+		auto word_factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESWordOfPower>();
+		auto shout_factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::TESShout>();
+		if (!word_factory || !shout_factory) {
+			logger::error("Voice cast driver could not resolve WOOP/SHOU form factories");
+			return false;
+		}
+
+		proxy_word = word_factory->Create();
+		proxy_shout = shout_factory->Create();
+		if (!proxy_word || !proxy_shout) {
+			logger::error("Voice cast driver could not create the proxy shout forms");
+			proxy_word = nullptr;
+			proxy_shout = nullptr;
+			return false;
+		}
+
+		proxy_word->fullName = "";
+		proxy_word->translation = "";
+		proxy_word->formFlags |= RE::TESForm::RecordFlags::kKnown;
+
+		proxy_shout->fullName = "";
+		for (auto& variation : proxy_shout->variations) {
+			variation.word = proxy_word;
+			variation.spell = proxy_power;
+			variation.recoveryTime = 0.0f;
+		}
+
+		logger::info("Voice cast driver initialized with proxy shout {:08X} (payload {:08X})",
+			proxy_shout->GetFormID(), proxy_power->GetFormID());
 		return true;
 	}
 
 	bool begin(RE::PlayerCharacter* pc)
 	{
-		if (!pc || active || (!proxy_power && !initialize())) {
+		if (!pc || active || (!proxy_shout && !initialize())) {
 			return false;
 		}
 		auto equip_manager = RE::ActorEquipManager::GetSingleton();
@@ -74,30 +111,24 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 			return false;
 		}
 
-		// ShoutHandler rejects a selected lesser power the actor does not know. Keep the proxy
-		// session-only, but add and equip it for exactly the lifetime of this Direct Cast. Going
-		// through ActorEquipManager is significant: assigning selectedPower alone does not build
-		// the voice equipment state consumed by ShoutHandler.
-		proxy_was_known = pc->HasSpell(proxy_power);
-		if (!proxy_was_known && !pc->AddSpell(proxy_power)) {
-			logger::error("Voice cast driver could not add proxy {:08X} to the player", proxy_power->GetFormID());
-			return false;
+		// ShoutHandler only acts on a voice form the actor knows, so the runtime shout is
+		// taught once per session; its word is unlocked the same way Game.UnlockWord would.
+		if (!shout_added) {
+			pc->AddShout(proxy_shout);
+			pc->UnlockWord(proxy_word);
+			shout_added = true;
 		}
 
 		auto& actor_data = pc->GetActorRuntimeData();
 		previous_power = actor_data.selectedPower;
-		equip_manager->EquipSpell(pc, proxy_power, GameData::equip_slot_voice);
-		if (actor_data.selectedPower != proxy_power) {
-			logger::error("Voice cast driver could not equip proxy {:08X}", proxy_power->GetFormID());
-			if (!proxy_was_known && pc->HasSpell(proxy_power)) {
-				pc->RemoveSpell(proxy_power);
-			}
+		equip_manager->EquipShout(pc, proxy_shout);
+		if (actor_data.selectedPower != proxy_shout) {
+			logger::error("Voice cast driver could not equip proxy shout {:08X}", proxy_shout->GetFormID());
 			previous_power = nullptr;
-			proxy_was_known = false;
 			return false;
 		}
 		active = true;
-		logger::debug("Voice cast driver selected proxy {:08X}", proxy_power->GetFormID());
+		logger::debug("Voice cast driver selected proxy shout {:08X}", proxy_shout->GetFormID());
 		return true;
 	}
 
@@ -130,7 +161,7 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 		}
 		if (pc) {
 			auto& actor_data = pc->GetActorRuntimeData();
-			if (actor_data.selectedPower == proxy_power) {
+			if (actor_data.selectedPower == proxy_shout) {
 				auto equip_manager = RE::ActorEquipManager::GetSingleton();
 				if (equip_manager && previous_power && previous_power->GetFormType() == RE::FormType::Shout) {
 					equip_manager->EquipShout(pc, previous_power->As<RE::TESShout>());
@@ -141,9 +172,6 @@ namespace SpellHotbar::casts::VoiceCastDriver {
 				else {
 					actor_data.selectedPower = previous_power;
 				}
-			}
-			if (proxy_power && !proxy_was_known && pc->HasSpell(proxy_power)) {
-				pc->RemoveSpell(proxy_power);
 			}
 		}
 
