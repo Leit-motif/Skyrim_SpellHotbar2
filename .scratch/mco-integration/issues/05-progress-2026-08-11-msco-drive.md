@@ -311,3 +311,46 @@ Hygiene applied (game effect: none — byte-identical files, new provider):
 - Verified via housecarl_asset_status: Nemesis Output now WINS all 5 checked behavior
   paths. Future Nemesis in-place writes land in Nemesis Output permanently.
 - Backup of the merged copies: scratchpad `hygiene-backup/merged-droppings.tar`.
+
+## 2026-08-11 plan B authoring spec (verified facts, patch-FID space)
+
+Patch: slug `sh2c`, project folder `magicbehavior`, canonical source
+`nemesis/Nemesis_Engine/mod/sh2c/` in this repo, deployed into `Dev - Spell Hotbar 2`.
+Template mods verified on disk: Hot Key Skill (`hotkey` — the exact shape: hotkey clip
+states appended to magicbehavior), msco, thuum's `shmco` (+ ticket 45 playbook at
+`C:\Nolvus\Projects\thuum-fully-animated-shouts-mco\.scratch\shout-mco-engine\issues\`).
+
+- Patch FIDs = Nemesis base numbering, shared by all published patches: `#0077`
+  stringdata (12 mods append), `#0078` valueset, `#0079` graphData, `#1346` = ROOT SM
+  `MagicBehavior` (vanilla states `#1345 MagicRoot id=4` = startState, `#0084 MRh_Shout
+  id=3`), `#1344` = MagicRoot's transition array (2 vanilla entries → toStateId 3), blend
+  effect `#0082` (vanilla, reused by hotkey). `temp_behaviors\xml\` in Nemesis Output =
+  post-merge reference (different numbering, do not hard-code from it).
+- **Do NOT touch `#1346` `wildcardTransitions` — tkds already replaces it (null→#tkds$8).**
+  Entry instead appends ONE transition to `#1344`: eventId `$eventID[SH2_CastRight]$`,
+  toStateId 746002, transition `#0082`, condition null, flags `FLAG_DISABLE_CONDITION`.
+- `#0077.txt`: append `SH2_CastRight`, `SH2_CastExit` to eventNames (MOD_CODE append, no
+  ORIGINAL). `#0079.txt`: append 2 eventInfos entries (flags 0) — events need NO valueset
+  entry (only variables do; the 3-list ordinal alignment trap is variables-only, thuum
+  A45.2b). Vanilla node text base: strip other mods' MOD_CODE blocks (keep ORIGINAL half)
+  from msco's/hotkey's copies of the same files.
+- `#1346.txt`: append `#sh2c$2` to `states` (ordinary multi-mod append — hotkey/tkds/tkuc
+  all do this).
+- New: `#sh2c$0` hkbClipGenerator (`Animations\MSCO_left1.hkx`, MODE_SINGLE_PLAY, triggers
+  null) — **MSCO_left1 fires MRh (RIGHT-hand) SpellFire at 0.283s** (anno dump; left/right
+  clip naming is swapped vs events), duration 1.667, also `MCO_winopen` 0.8 / `MCO_winclose`
+  1.2 / `MCO_recovery` 1.2 (lowercase — case vs registered names unverified, do not rely).
+  `#sh2c$1` transition array (state-local): `$eventID[SH2_CastExit]$`→toStateId 4 and
+  `$eventID[IdleStop]$`→4 (safety, mirrors hotkey), both via `#0082`. `#sh2c$2`
+  hkbStateMachineStateInfo: generator $0, transitions $1, name SH2_CastRight_State,
+  stateId 746002 (TK uses 5695600 — big unique ints are the convention).
+- DLL side (task #11): driver sends `SH2_CastRight` (any hand → right for the slice),
+  `SH2_CastExit` on finish/cancel; spellfire commit arms RIGHT (MRh) for MSCO_left1.
+  Delivery expectation: event lands only while magicbehavior active (MAGIC STANCE DRAWN —
+  acceptance test must draw a spell first); from other stances notify returns false (the
+  full matrix later patches 1hm_behavior etc., the TK Dodge distribution pattern).
+- Verify loop (task #10): tick patch in Nemesis (name shown = info.ini `name`), run, then
+  grep -ac the new event names in Nemesis Output's magicbehavior.hkx + check temp XML.
+  Nemesis writes in-place into Nemesis Output now (hygiene done). thuum
+  `tools/run-nemesis.ps1` automates tick→launch→wait; `verify-nemesis-patch.mjs` is the
+  patch linter pattern.
