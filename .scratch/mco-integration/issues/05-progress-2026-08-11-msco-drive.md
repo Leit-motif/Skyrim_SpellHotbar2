@@ -192,6 +192,26 @@ equipped, (a) cast it normally with the cast button — does the MSCO combo swin
   injection timing for this load path; owner's normal sessions differ somehow.
 - (b) true → whatever changed, proceed straight to observing the animation.
 
+## 2026-08-11 call-site fix — the graph-event relay (commits 412c166 + 5a5e29b)
+
+The owner's 10:48:39 equipped cast settled the discriminator with telemetry that already
+existed in `MSCO.log`: `BeginCastLeft` → `LeftMSCOStart` (state entered) → `replaceNode` →
+`consumeResource` — MSCO.dll's `MSCO_start_left` delivered and transitioned from inside
+graph-event dispatch, twelve seconds before our seven calling-thread sends returned false
+on the same graph. Session state and BDI are exonerated; the call site is the variable.
+
+Fix (copying MSCO.dll's own working pattern): a send that fails on the calling thread parks
+in an atomic and `Animation_event_hook` delivers it from dispatch context on the next
+player graph event (`MSCO cast: relay carried by graph event '<tag>'` in the log). Codex
+review (recovered from the job log after the companion runtime restart dropped the report):
+the hook now chains the original vtable implementation BEFORE relaying so earlier handlers
+finish with the carrier (CastingStateExit cleanup vs re-entry inversion), and `finish()`
+preserves a parked `MCO_EndAnimation` while the state still plays. Accepted residual: an
+already-claimed in-flight start can land just after teardown — rare, cosmetic (ghost clip),
+self-healing via MSCO.dll's CastingStateExit cleanup. Open empirical question for the next
+run: graph-event arrival rate while standing idle (the relay needs one carrier event within
+the 1.5s entry grace; the log's carrier line answers it either way).
+
 ## Load-order hygiene (owner question, separate from this ticket)
 
 MO2 has **no output redirection configured for the Nemesis executable** (no
