@@ -68,6 +68,33 @@ plays shout states any more) — disable or leave; it no longer participates.
 Acceptance stays what the handoff set: **the owner's eyes or continuous video.** Sparse frame
 captures do not count.
 
+## Codex review (pre-test gate), 2026-08-11
+
+Codex session `019ff159-6555-74d0-97e2-7fe30f30b75c` reviewed commit `3263243`; six findings,
+three fixed in the follow-up commit, three dispositioned:
+
+- **Fixed — spellfire/hand correlation:** a SpellFire event from a hand the cast does not
+  throw with no longer commits it (`spellfire_mask`, armed per cast right before the MSCO
+  entry). Residual, accepted: a simultaneous vanilla cast from the SAME hand could still
+  commit a pending hotbar cast early.
+- **Fixed — entry grace now closes on confirmed entry:** once `bIsMSCO` has been seen true,
+  losing the state pre-commit cancels immediately instead of consuming up to 1.5s more grace.
+- **Fixed — first-frame concentration cancel** now ends the accepted animation
+  (`MscoCastDriver::cancel`) and resets the animation globals instead of orphaning both.
+- **Accepted by design — cast time does not pace the release:** ADR 0004 puts the payload on
+  the clip's throw frame (0.483s for MSCO_left1), so a slow spell commits earlier than its
+  authored cast time. Pacing the clip (or picking variants) by cast time is the polish step
+  once anything plays at all. Same for the concentration duration window still being measured
+  from the old release time.
+- **Accepted, known-rough — concentration beyond the first clip exit:** `CastingStateExit`
+  interrupts the channel and `replay` restarts only the animation. FNF is the acceptance
+  test; conc needs its own pass.
+- **Accepted — `MCO_EndAnimation` only sent while the state is active:** cancelling inside
+  the ~2-frame entry window can leave one ghost clip playing out. The alternative
+  (unconditional send) risks cutting an unrelated MCO attack, which is worse.
+- **Deliberate — the `IsShouting` gate in `try_start_cast` stays:** no hotbar cast may start
+  during a real shout.
+
 ## Test recipe (unchanged from the voice session)
 
 Save `Codex_T05_Smooth_Riverwood`; `SpellHotbar.loadBarsFromFile(<worktree>\.scratch\

@@ -25,9 +25,13 @@ namespace SpellHotbar::events {
 			// hotbar cast pre-committed.
 			//
 			// This runs on the animation thread. It sets an atomic and touches nothing else.
-			if (eventHolder->IsPlayerRef() &&
-				(a_event->tag == "MLh_SpellFire_Event"sv || a_event->tag == "MRh_SpellFire_Event"sv)) {
-				casts::CastingController::notify_spellfire();
+			if (eventHolder->IsPlayerRef()) {
+				if (a_event->tag == "MLh_SpellFire_Event"sv) {
+					casts::CastingController::notify_spellfire(true);
+				}
+				else if (a_event->tag == "MRh_SpellFire_Event"sv) {
+					casts::CastingController::notify_spellfire(false);
+				}
 			}
 
 			//if (eventHolder->GetFormID() == 0x14) { //playerref

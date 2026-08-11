@@ -225,11 +225,12 @@ namespace SpellHotbar::casts::CastingController {
 	extern std::unique_ptr<BaseCastingInstance> current_cast;
 
 	/**
-	* The graph raised a `MLh/MRh_SpellFire_Event`: from here a live cast is committed and
-	* will deliver its spell whatever happens to the casting state (ADR 0004). Called from
-	* the animation-event hook, on the animation thread.
+	* The graph raised a `MLh/MRh_SpellFire_Event`: if the current cast throws with that
+	* hand, it is committed from here and will deliver its spell whatever happens to the
+	* casting state (ADR 0004). Called from the animation-event hook, on the animation
+	* thread.
 	*/
-	void notify_spellfire();
+	void notify_spellfire(bool left_hand);
 
 	/**
 	* Forget any commitment. Called when a cast starts and when one ends.

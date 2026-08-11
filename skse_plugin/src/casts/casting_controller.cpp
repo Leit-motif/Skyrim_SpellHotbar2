@@ -29,9 +29,33 @@ namespace SpellHotbar::casts::CastingController {
 	// touches an instance the loop may be destroying underneath it.
 	std::atomic<bool> spellfire_seen{ false };
 
-	void notify_spellfire() {
-		logger::debug("MSCO cast: graph raised a SpellFire event");
-		spellfire_seen.store(true, std::memory_order_relaxed);
+	// Which hand's SpellFire event may commit the current cast (bit 0 = left, bit 1 = right).
+	// A vanilla cast of an equipped spell raises the same events, so an event from a hand this
+	// cast is not using must not commit it.
+	constexpr uint8_t fire_left{ 1 };
+	constexpr uint8_t fire_right{ 2 };
+	std::atomic<uint8_t> spellfire_mask{ 0 };
+
+	// Arm the commitment point for one cast: forget stale fires and accept only the hand(s)
+	// this cast throws with. Called right before the MSCO entry is sent.
+	void arm_spellfire(hand_mode used_hand) {
+		uint8_t mask = fire_left | fire_right;
+		if (used_hand == hand_mode::left_hand) {
+			mask = fire_left;
+		}
+		else if (used_hand == hand_mode::right_hand) {
+			mask = fire_right;
+		}
+		spellfire_mask.store(mask, std::memory_order_relaxed);
+		spellfire_seen.store(false, std::memory_order_relaxed);
+	}
+
+	void notify_spellfire(bool left_hand) {
+		const uint8_t bit = left_hand ? fire_left : fire_right;
+		if (spellfire_mask.load(std::memory_order_relaxed) & bit) {
+			logger::debug("MSCO cast: graph raised a {} SpellFire event", left_hand ? "left" : "right");
+			spellfire_seen.store(true, std::memory_order_relaxed);
+		}
 	}
 
 	// Cleared when a cast starts, not only when one ends: a shout pressed on the vanilla key
@@ -294,6 +318,9 @@ namespace SpellHotbar::casts::CastingController {
 		// Past spellfire the cast is committed and delivers regardless of the casting state
 		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
 		if (anim_ok || is_cast_committed()) {
+			// The grace only bridges the frames between the MSCO_start_* event and the state
+			// becoming active; once entry is confirmed, losing the state cancels immediately.
+			m_entry_grace = 0.0f;
 			if (is_first_time_update()) {
 				play_charge_sound();
 				apply_cast_start_spell(pc);
@@ -435,7 +462,15 @@ namespace SpellHotbar::casts::CastingController {
 
 		float timer_old = m_cast_timer;
 		advance_time(delta);
-		m_entry_grace = std::max(0.0f, m_entry_grace - delta);
+		const bool anim_ok = is_anim_ok(pc);
+		if (anim_ok) {
+			// Entry confirmed: the grace only bridges the frames between the MSCO_start_*
+			// event and the state becoming active.
+			m_entry_grace = 0.0f;
+		}
+		else {
+			m_entry_grace = std::max(0.0f, m_entry_grace - delta);
+		}
 
 		if (timer_old == 0) {
 			//startup
@@ -443,6 +478,8 @@ namespace SpellHotbar::casts::CastingController {
 			//sent, so the casting state cannot be required here -- the grace check in the
 			//charge loop covers the entry window.
 			if (!keydown) {
+				MscoCastDriver::cancel(pc);
+				GameData::reset_animation_vars();
 				cancel = true;
 			}
 			else {
@@ -457,7 +494,7 @@ namespace SpellHotbar::casts::CastingController {
 			// The clip's spellfire annotation commits the cast on its own schedule (ADR 0004).
 			// A released key still stops the cast -- that is the player asking, not an
 			// interruption.
-			if (!keydown || (!is_anim_ok(pc) && !is_cast_committed() && m_entry_grace <= 0.0f)) {
+			if (!keydown || (!anim_ok && !is_cast_committed() && m_entry_grace <= 0.0f)) {
 				//trigger gcd and stop cast
 				set_casted();
 				stop_charge_sound();
@@ -590,6 +627,7 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
+				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
@@ -615,6 +653,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
+				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
@@ -641,6 +680,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
+				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
@@ -667,6 +707,7 @@ namespace SpellHotbar::casts::CastingController {
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
+				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
 					return true;
 				}
