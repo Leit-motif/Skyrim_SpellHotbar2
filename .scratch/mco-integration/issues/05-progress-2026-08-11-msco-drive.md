@@ -116,41 +116,61 @@ The owner then pressed "1" live at 10:48:51-54 — six more presses, six identic
 behaved as designed each time: variables dropped, instance reset, no stuck controls, no
 ghost cast. The code path is fine; the event name does not resolve in the runtime graph.
 
-**Root cause, two independent halves, both log-verified this session:**
+**Root cause — CORRECTED after two retractions (the section below supersedes what this
+note first claimed and what was said in-session):**
 
-1. **The msco Nemesis patch has never been built into this load order.** The `Nemesis
-   Output` mod contains no `magicbehavior.hkx` at all; the VFS winner for that path is
-   `TK Dodge RE`'s prebuilt file, which contains zero MSCO strings (binary grep). So the
-   MSCO states, wildcard transitions, and `bIsMSCO` binding do not exist at runtime.
-   Nemesis was evidently never re-run after MCBO was installed.
-2. **Behavior Data Injector is broken in this load order.** MCBO ships
-   `BehaviorDataInjector/MSCO_BDI.json` to inject its 15 event names into the character
-   project — that is how `NotifyAnimationGraph("MSCO_start_*")` is supposed to resolve.
-   `BehaviorDataInjector.log` (544 lines this session) shows **every** injection failing —
-   all 14 MSCO events (`Fail to Inject a event "MSCO_start_left" to graph
-   "MagicBehavior.hkb"`, 10:23:51) and every other mod's too (Precision's `FakeHit`,
-   bow-sound events), with zero successes. Installed BDI is Maxsu's original (Nexus 78146,
-   v0.13, 2022-11) — SE-era, a year older than game 1.6.1170. The AE-supporting successor
-   is **Behavior Data Injector Universal Support** (Nexus 78159, doodlum, v0.13.0.1).
+Two claims made during diagnosis were WRONG and are retracted with evidence:
 
-**Implication beyond this mod:** with no states in the graph and no resolvable events,
-MCBO's animation layer cannot be functioning for the owner's ordinary equipped casts either
-(its DLL sends the same events). Unconfirmed by observation — a console `player.cast` is not
-the real pipeline, so the frames captured prove nothing about it. Owner can confirm in ten
-seconds: cast the equipped Incinerate by hand and see whether a vanilla pose or an MSCO
-combo swing plays.
+- ~~"The msco Nemesis patch was never built"~~ — **false.** The last Nemesis run
+  (07-08-2026 19:48, `Nemesis Output\Nemesis_Engine\cache\mod settings`, 29 patches) had
+  `msco` ticked ("Mod Checked 17: msco", PatchLog) and compiled `magicbehavior` clean. MO2
+  wrote each output file **in-place into that path's winning provider**, which is why
+  `Nemesis Output` looks incomplete: the merged `magicbehavior.hkx` lives in **TK Dodge
+  RE's** folder (mtime 19:48:56, matching the PatchLog to the second) and DOES contain
+  `MSCO_start_left` (binary grep = 1; the session's earlier `strings`-based grep returned a
+  false 0 and was trusted — do not use `strings` for hkx greps, use `grep -ac`). The merged
+  root `0_master.hkx` lives in **Jump Behavior Overhaul's** folder; the character project
+  `defaultfemale.hkx` (also rebuilt 19:48:53) registers the MSCO clips.
+- ~~"BDI is broken for every mod" / "replace 78146 with 78159"~~ — **false and retracted.**
+  The game is 1.5.97 (exe version verified), so 78146 v0.13 is the correctly paired build;
+  78159 is the 1.6+ fork. BDI's successes log at DEBUG level (source:
+  `github.com/max-su-2019/BehaviorDataInjector`, `DataHandler.cpp` `InjectEvents`) and the
+  log level only shows warnings — 33 of 60 stored events (CPR, Smooth Moveset, Dynamic
+  Sprint, TK Dodge parries…) never log a failure. BDI is not globally dead.
 
-**What fixing it needs (owner decisions, in order):**
+**What is actually broken — the root event table.** The msco Nemesis patch adds its events
+to `magicbehavior.hkx`'s own string data, NOT to the root `0_master.hkx` — binary grep of
+the freshly built root: **zero MSCO strings**. Per the thuum project's resolution rule
+(`NotifyAnimationGraph` resolves names against the ROOT graph's event table; sub-behavior
+tables don't fire externally), an external `NotifyAnimationGraph("MSCO_start_left")` cannot
+resolve. MCBO knows this — its `MSCO_BDI.json` exists precisely to inject the names at
+runtime before `CreateSymbolIdMap` (the function BDI hooks). For these 15 events on the
+live player graph that injection demonstrably does not produce a resolvable name (seven
+`notify -> false`, scripted + owner presses; BDI logs `Fail to Inject` into
+`MagicBehavior.hkb` where the names now already exist in the built file). Why BDI's
+root-graph injection doesn't stick here is UNRESOLVED (its `AddEvent` lives in a patched
+CommonLib fork; failure semantics not fetched).
 
-1. Replace BDI 78146 with 78159 (drop-in, fixes event-name resolution for everything BDI
-   serves in this list).
-2. Re-run Nemesis with MCBO's `msco` patch ticked **on top of the existing Nolvus patch
-   set** (Nolvus ships its output pre-built; a wrong patch set regresses the combat stack).
-   Note `Nemesis Output` (line ~607) already outranks TK Dodge RE (~922), so a rebuilt
-   `magicbehavior.hkx` wins cleanly.
-3. Then re-run this exact smoke test — the remaining unknown (can the MSCO state be ENTERED
-   from a hotbar cast: spell equipped vs not, sheathed vs drawn) only becomes testable once
-   the events resolve.
+**Implication for MCBO itself:** MSCO.dll enters its states through the same external
+`NotifyAnimationGraph` calls, so its animation layer very likely never fired in this load
+order — consistent with the owner wanting MCBO's animations and not having them. A real
+equipped-cast by the owner (vanilla pose vs MSCO combo swing) confirms or refutes this in
+ten seconds; console `player.cast` does not exercise that pipeline and proves nothing.
+
+**Fix routes (decision pending):**
+
+1. **Root-table override probe (recommended, no Nemesis re-run, reversible):** hkxc
+   round-trip the built `0_master.hkx` to XML, append the 15 MSCO event names to the root
+   `hkbBehaviorGraphStringData.eventNames` + matching `eventInfos` (flags 0), repack, ship
+   as a new top-priority dev mod providing only `0_master.hkx`. If notify then resolves and
+   the state plays, the thuum root-table rule is confirmed, our driver works, AND MCBO's own
+   casting starts working for the owner. Disable the mod to revert. (Tooling:
+   `C:\Tools\SkyrimHKX` hkxc; the thuum project round-trips behavior files routinely.)
+2. **BDI forensics:** work out why `AddEvent` fails/doesn't stick on the root graph
+   (requires its CommonLib fork's source; heavier, upstream-shaped).
+3. **Nemesis-patch route (clean long-term):** author a small patch adding the event names
+   to 0_master's string data and re-run Nemesis with the exact 29-patch set from `mod
+   settings` — same effect as (1) but permanent and rebuild-gated.
 
 **Session hygiene / environment changes this session:**
 
