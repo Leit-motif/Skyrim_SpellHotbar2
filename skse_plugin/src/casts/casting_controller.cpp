@@ -31,6 +31,7 @@ namespace SpellHotbar::casts::CastingController {
 	std::atomic<bool> spellfire_seen{ false };
 
 	void notify_spellfire() {
+		logger::debug("Voice cast: graph raised Voice_SpellFire_Event");
 		spellfire_seen.store(true, std::memory_order_relaxed);
 	}
 
