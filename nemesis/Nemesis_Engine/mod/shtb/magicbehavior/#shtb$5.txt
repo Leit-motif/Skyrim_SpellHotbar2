@@ -1,4 +1,4 @@
-		<hkobject name="#sh2c$5" class="hkbClipTriggerArray" signature="0x59c23a0f">
+		<hkobject name="#shtb$5" class="hkbClipTriggerArray" signature="0x59c23a0f">
 			<hkparam name="triggers" numelements="1">
 				<hkobject>
 					<hkparam name="localTime">-0.050000</hkparam>

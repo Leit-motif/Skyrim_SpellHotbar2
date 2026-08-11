@@ -1,4 +1,4 @@
-		<hkobject name="#sh2c$1" class="hkbStateMachineTransitionInfoArray" signature="0xe397b11e">
+		<hkobject name="#shtb$1" class="hkbStateMachineTransitionInfoArray" signature="0xe397b11e">
 			<hkparam name="transitions" numelements="1">
 				<hkobject>
 					<hkparam name="triggerInterval">

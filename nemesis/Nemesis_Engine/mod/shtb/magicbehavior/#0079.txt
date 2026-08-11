@@ -1088,7 +1088,7 @@
 				<hkobject>
 					<hkparam name="flags">0</hkparam>
 				</hkobject>
-<!-- MOD_CODE ~sh2c~ OPEN -->
+<!-- MOD_CODE ~shtb~ OPEN -->
 				<hkobject>
 					<hkparam name="flags">0</hkparam>
 				</hkobject>

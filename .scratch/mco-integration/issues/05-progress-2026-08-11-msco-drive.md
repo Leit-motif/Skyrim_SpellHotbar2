@@ -390,3 +390,55 @@ fixed clip path verified in the winning magicbehavior.hkx. DLL rebuilt and deplo
 **Ready for the in-game acceptance test: magic stance DRAWN, press "1" (Firebolt slotted).
 Expected log: `SH2 cast: notified SH2_CastRight -> true`, `state entered`, right SpellFire
 commit; acceptance = owner's eyes on the MCBO cast animation.**
+
+## 2026-08-11 ~16:00 acceptance attempt — the sh2c graph CTDs the game at save load
+
+The 15:12 merged `magicbehavior.hkx` never survived to a cast. Loading
+`Codex_T05_Smooth_Riverwood` CTD'd twice (15:56:32, 16:01:43 — crash-log filenames are
+UTC+5), identical signature both times: `EXCEPTION_ACCESS_VIOLATION` at
+`SkyrimSE.exe+0B0222C` (`mov rax,[r14]`, r14=0; address-lib 62944), engine behavior-graph
+bind entered via OAR `HavokHooks::Unk3`, ~3m20s uptime each (mid save-load, first actor
+graph binds). A third log (16:03:28, 22s uptime, usvfs stack) was launch-vs-file-swap
+noise, not the graph.
+
+**A/B attribution:** with ONLY `magicbehavior.hkx` swapped back to the 07-08 pre-sh2c copy
+(hygiene tar), the same save loaded clean in 18s. The sh2c graph is the killer.
+
+**Graph dissection (bad build, hkxc → XML):** `SH2_CastRight_State` was emitted as `#1740`
+with `generator: null`, `transitions: null`, `enterNotifyEvents/exitNotifyEvents: null` — a
+null generator is exactly the observed crash. TKDodgeState (#1741) and every other mod's
+object is intact. Nemesis's own post-merge XML (`temp_behaviors/xml/magicbehavior.xml`)
+still contains five **literal `#sh2c$N` tokens** in reference position (`generator`,
+`transitions`, `enterNotifyEvents`, `exitNotifyEvents`, `triggers`) while the object
+*definitions* were renumbered (`#sh2c$0`→`#1828`, `#sh2c$2`→`#1830`) and references from
+vanilla-node files (`#1346` states append, `$eventID[...]$`) resolved. PatchLog: no
+warning — the drop is silent.
+
+**Root cause (working theory, matches all evidence): the mod code `sh2c` contains a
+digit.** Nemesis renames new-object definitions by filename but rewrites *references* with
+a content pass that never matched `#sh2c$N`. Every installed patch that creates
+cross-referenced new objects (hotkey, tkds, tkuc, msco, shmco) has a purely alphabetic
+code; the only digit-bearing codes in this load order (na1w, sh2c) — na1w ships no new
+objects, sh2c broke. thuum's shmco never cross-references its own new objects, so its
+success never tested this.
+
+**Fix applied: patch code renamed `sh2c` → `shtb`** (alphabetic, unused). Repo
+`nemesis/Nemesis_Engine/mod/shtb/` (git mv + token rewrite incl. `MOD_CODE ~shtb~`
+markers), deployed copy replaced in `Dev - Spell Hotbar 2` (old sh2c moved to session
+scratchpad `retired-deployed-sh2c`). Event names (`SH2_*`) are unchanged — no DLL change.
+Nemesis Output currently holds the **pre-sh2c 07-08 magicbehavior.hkx** (the A/B swap;
+the 15:12 bad copy is in session scratchpad `ab-test/current-1512/`) — a loadable state,
+but without SH2 events until the shtb re-run.
+
+Also this session: stale `castSlot` "queued voice press" log line reworded (commit
+1318b35), DLL rebuilt + auto-deployed 15:51. Control test on the old graph: `castSlot(0)`
+→ `SH2 cast: notified SH2_CastRight -> false`, fail-safe clean, no side effects.
+
+**Remaining:** (1) Nemesis re-run — Update Engine first, tick `shtb` (shows as "Spell
+Hotbar 2 Cast States"), Build; (2) verify zero literal `#shtb$` tokens in
+`temp_behaviors/xml/magicbehavior.xml` AND non-null `generator`/`transitions` on the built
+`SH2_CastRight_State` (hkxc dissect, not just a string grep — the string grep passed last
+time and the graph was still fatal); (3) relaunch, load T05 save (must survive — this is
+now the first acceptance gate), magic stance drawn, `castSlot(0)`/press "1"; (4) owner's
+eyes for the visual. Skyrim/MO2 are shared with another effort — coordinate before the
+Nemesis run or any launch.

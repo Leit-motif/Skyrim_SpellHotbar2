@@ -22,8 +22,8 @@
 			<hkparam name="states" numelements="2">
 				#1345
 				#0084
-<!-- MOD_CODE ~sh2c~ OPEN -->
-				#sh2c$2
+<!-- MOD_CODE ~shtb~ OPEN -->
+				#shtb$2
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="wildcardTransitions">null</hkparam>

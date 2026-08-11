@@ -52,7 +52,7 @@
 					<hkparam name="priority">0</hkparam>
 					<hkparam name="flags">FLAG_TO_NESTED_STATE_ID_IS_VALID</hkparam>
 				</hkobject>
-<!-- MOD_CODE ~sh2c~ OPEN -->
+<!-- MOD_CODE ~shtb~ OPEN -->
 				<hkobject>
 					<hkparam name="triggerInterval">
 						<hkobject>

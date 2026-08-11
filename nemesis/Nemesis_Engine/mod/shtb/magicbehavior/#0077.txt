@@ -97,7 +97,7 @@
 				<hkcstring>arrowDetach</hkcstring>
 				<hkcstring>attackStop</hkcstring>
 				<hkcstring>SneakSprintStartRoll</hkcstring>
-<!-- MOD_CODE ~sh2c~ OPEN -->
+<!-- MOD_CODE ~shtb~ OPEN -->
 				<hkcstring>SH2_CastRight</hkcstring>
 				<hkcstring>SH2_CastExit</hkcstring>
 				<hkcstring>SH2_CastEnter</hkcstring>
