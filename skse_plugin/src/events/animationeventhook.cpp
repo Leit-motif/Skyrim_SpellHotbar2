@@ -1,5 +1,6 @@
 #include "animationeventhook.h"
 #include "../casts/casting_controller.h"
+#include "../casts/msco_cast_driver.h"
 
 using namespace std::literals;
 
@@ -26,6 +27,10 @@ namespace SpellHotbar::events {
 			//
 			// This runs on the animation thread. It sets an atomic and touches nothing else.
 			if (eventHolder->IsPlayerRef()) {
+				// Dispatch context is the one place a mod-declared event name is known to
+				// deliver from, so parked MSCO sends ride the next player graph event.
+				casts::MscoCastDriver::relay_from_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
+
 				if (a_event->tag == "MLh_SpellFire_Event"sv) {
 					casts::CastingController::notify_spellfire(true);
 				}

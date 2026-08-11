@@ -6,9 +6,17 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	/**
 	 * Enter MCBO's own casting state for one Direct Cast: raise the hand's IsCasting*
 	 * graph variable and send the matching MSCO_start_* event, the same recipe MSCO.dll
-	 * runs when it intercepts BeginCastLeft/Right on a real cast.
+	 * runs when it intercepts BeginCastLeft/Right on a real cast. A send the calling
+	 * thread cannot deliver is parked for the animation-event hook to relay.
 	 */
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand);
+
+	/**
+	 * Deliver a parked send from inside BSAnimationGraphEvent dispatch -- the one context
+	 * a mod-declared event name is known to deliver from. Called by the animation-event
+	 * hook for every player graph event; no-ops when nothing is parked.
+	 */
+	void relay_from_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_carrier);
 
 	/**
 	 * Is an MSCO casting state active on the graph right now? bIsMSCO is written by an
