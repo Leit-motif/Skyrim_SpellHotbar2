@@ -108,6 +108,25 @@ each press logs its device, key, and the resolved attack binding.
       synthesises a mapped attack event is unknown and is what the cell answers.
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
+## The fixture, left standing 2026-08-12
+
+Skyrim is running on the latest save, weapon drawn, facing a **20000 HP essential Bandit Warrior**
+(`FF0026E0`, ~180 units ahead) that is in the line of fire: a control cast took it 20000 → 19992.5,
+so every landed hit reads as another 7.5 and the pool outlasts the whole matrix. Cast is hotbar
+slot 0 on key "1" (`SpellHotbar.GetKeyBind(0)` → 2).
+
+To run a cell: press "1", then press attack about **0.9 s** later — after the spell leaves the hand,
+inside `MSCO_WinOpen`. Then read `SpellHotbar2.log`:
+
+- `attack pressed on a committed cast; cut the state` — the branch fired.
+- `notified SH2_CastExit -> true` at that instant — the graph took the cut. `-> false` means it
+  refused, and the next move is the Nemesis transition, not the C++.
+- `press during a committed cast (device=…, key=…, attack key=…)` — a press the branch saw but did
+  not match; the two key numbers disagreeing is the whole diagnosis.
+
+**Fixtures to restore afterwards:** the spawned bandit (`FF0026E0 disable` / `markfordelete`) is the
+only world change. Nothing else was mutated — no `tcai`, no INI edits, no save renames.
+
 ## Open findings carried, not fixed
 
 - **The commitment flag has no cast generation.** `spellfire_seen` and `state_active` are
