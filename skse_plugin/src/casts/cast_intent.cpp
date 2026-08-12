@@ -1,4 +1,6 @@
 #include "cast_intent.h"
+#include <array>
+#include <string>
 #include "casting_controller.h"
 #include "../extern/ShoutMCO_CastIntent.h"
 #include "../game_data/game_data.h"
@@ -55,6 +57,32 @@ namespace SpellHotbar::casts::CastIntent {
 		}
 
 		/**
+		 * A one-line snapshot of the graph variables that say whether the player is still busy
+		 * swinging. Diagnostic only, at debug level: it is the difference between "the release
+		 * came too early" as an inference and as an observation, on both sides of the boundary.
+		 */
+		std::string graph_snapshot(RE::PlayerCharacter* pc)
+		{
+			if (!pc) {
+				return "no player";
+			}
+			constexpr std::array vars{ "IsAttacking"sv, "IsBashing"sv, "IsBlocking"sv,
+									   "IsRecoiling"sv, "IsStaggering"sv, "IsCastingRight"sv,
+									   "IsEquipping"sv, "bAnimationDriven"sv };
+			std::string out;
+			for (const auto& name : vars) {
+				bool value{ false };
+				if (pc->GetGraphVariableBool(RE::BSFixedString(name), value)) {
+					if (!out.empty()) {
+						out += ' ';
+					}
+					out += std::format("{}={}", name, value ? 1 : 0);
+				}
+			}
+			return out.empty() ? "no readable graph vars" : out;
+		}
+
+		/**
 		 * The release attempt. The intent may have waited hundreds of milliseconds, so every
 		 * precondition the original press passed is checked again here, and a payload that no
 		 * longer holds is discarded once with no retry.
@@ -89,6 +117,8 @@ namespace SpellHotbar::casts::CastIntent {
 				return;
 			}
 
+			logger::debug("SH2 cast intent: graph at release: {}", graph_snapshot(pc));
+
 			attempting_release = true;
 			const bool success = CastingController::try_start_cast(form, *p.keybind, p.slot, skill.hand);
 			attempting_release = false;
@@ -117,11 +147,12 @@ namespace SpellHotbar::casts::CastIntent {
 			clear_payload();
 
 			if (a_outcome == SHOUTMCO_CAST_RELEASE) {
+				logger::debug("SH2 cast intent: RELEASE for handle {} ({})", a_handle, cause_name(a_cause));
 				attempt_release(p);
 			}
 			else {
-				logger::debug("SH2 cast intent: abandoned ({}), payload on slot {} dropped",
-					cause_name(a_cause), p.slot);
+				logger::debug("SH2 cast intent: ABANDON for handle {} ({}), payload on slot {} dropped",
+					a_handle, cause_name(a_cause), p.slot);
 			}
 		}
 	}
@@ -188,7 +219,9 @@ namespace SpellHotbar::casts::CastIntent {
 		payload = Payload{ slot, skill.formID, skill.type, skill.hand, &keybind };
 		payload_retained = true;
 
-		logger::debug("SH2 cast intent: slot {} deferred to ShoutMCO", slot);
+		logger::debug("SH2 cast intent: slot {} deferred to ShoutMCO (handle {})", slot, handle);
+		logger::debug("SH2 cast intent: graph at defer:   {}",
+			graph_snapshot(RE::PlayerCharacter::GetSingleton()));
 		return true;
 	}
 

@@ -126,23 +126,45 @@ the player sees only the red border. Later presses release into a ready graph an
 **This is not a regression.** Before this change *every* mid-swing press failed that way. The
 change strictly adds successes; the failing cases fail exactly as they did before.
 
-**Attribution is unresolved and is the next step.** Either ShoutMCO releases before the graph has
-actually returned to `1HM_Ready_State`, or the entry transition needs a state reached a frame or
-two after ShoutMCO's confirmed state. The fix must not be a retry loop in Spell Hotbar 2 —
-ADR-0005 puts release timing on ShoutMCO's side of the boundary. An attempt to settle this by
-enabling ShoutMCO's `bTrace` and re-running was abandoned when the second game load wedged on the
-Loading Menu (unrelated to this change); `ShoutMCO.ini` was restored to `bTrace = 0`.
+**ATTRIBUTION RESOLVED — the defect is ShoutMCO's, and it is an ordering bug.** A second traced
+session (`bTrace = 1`, driver-side graph-variable logging at defer and release) settled it:
+ShoutMCO releases the intent on **`preHitFrame`**, not `inRdy`, while reporting cause `READY`. At
+that instant `IsAttacking=1`, so the graph is still in `AttackState` and refuses the entry.
+
+The power-attack trace shows the ordering directly — release at `10:28:43.591`, the driver's
+refused re-attempt at `.597`, and ShoutMCO's own `CANCEL fired 'attackStop' accepted=true` at
+`.599`, 8ms *after* the release it was supposed to precede. Ticket 04's brief and the API header
+both specify `HitFrame` → `CANCEL` → `attackStop` → `inRdy` → release; the implementation does
+release → `CANCEL` → `attackStop` → `inRdy`.
+
+This also explains the timing band exactly: a press before `preHitFrame` (~295ms into a light
+attack on this loadout) is released on that `preHitFrame` and lost; a press after it waits for the
+following `inRdy` and casts. Full write-up, with both logs interleaved, in
+[`evidence/ticket-04-release-fires-before-attackstop.md`](../evidence/ticket-04-release-fires-before-attackstop.md).
+
+**Spell Hotbar 2 is not changing to compensate.** No retry, no poll, no wait-a-few-frames. ADR-0005
+puts release timing on ShoutMCO's side, and a timer here is the duplicated policy that ADR forbids.
+The consumer behaviour on a bad release is already correct: revalidate, attempt once, discard, show
+the normal refusal.
+
+**Power attacks are now covered** and fail the same way, from the same cause: handles 4 and 5
+refused with `IsAttacking=1`; handle 6, pressed late enough that the graph had returned to ready,
+cast normally.
 
 ### Cells still open, named exactly
 
-- **Power attacks are entirely untested.** Every trial above used a light attack (tap). The
-  DevBench `input` tool needs `action:"hold"` for a power attack; that was discovered too late in
-  the session to run the matrix.
-- **Pre-hit vs post-hit is inferred from press offset, not from an observed `HitFrame`.** Reading
-  ShoutMCO's trace would replace inference with evidence.
+- **The early-press cell stays open until ShoutMCO's release point moves.** Nothing to do on this
+  side.
 - **Death, gameplay-control loss, blocking menu, and watchdog abandonment are untested at
   runtime.** Only load/new-game is covered by code (`Storage::LoadCallback` withdraws), and even
   that was not exercised live.
 - **The incompatible-major control is untested.** Only the `active` path ran; `unavailable` and
   `incompatible` are unobserved.
+- **Only the `kBehindAttack` hold reason was exercised**; `kBehindShout` is untested from this side.
 - **No visual frame was captured**, so nothing here supports a claim about how the cast looks.
+
+### Session trap worth keeping
+
+A save copied to a new filename (`SH2_T04_CastIntent.ess` / `.skse`) wedges this modlist on the
+Loading Menu indefinitely — reproduced twice, while the original `Save63…` loads normally every
+time. Test on the latest save read-only and never save over it, rather than on a renamed copy.
