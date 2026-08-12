@@ -183,9 +183,10 @@ and combo-position continuity — deliberately out of this ticket.
   "mco shout → sh2 spell" refuses the same way "mco shout → attack" does, so the gap is
   the shout's own chain window, not this patch. Additional owner rows: "sh2 shout → mco
   shout (godmode): couldn't tell if they chained, but didn't feel too stiff."
-- **The MCO swing check is indirect.** The owner drove attacks while building their chain
-  matrix (attack→SH2 rows require working attacks) and reported no stuck animations, but
-  no explicit before/after swing regression pass was run.
+- ~~**The MCO swing check is indirect.**~~ CLOSED same evening: the owner ran attacks
+  throughout the matrix rounds, including full swings against SH2 presses in both orders,
+  and reported "nothing is broken" — swings play normally, casts refuse cleanly mid-swing
+  (mechanism traced below). All three acceptance cells are now closed.
 
 **ADR footprint note (standards review):** ADR-0006 and ADR-0001's deviation record
 describe the shtb patch as magicbehavior-scoped; this slice grows it into a second graph.
