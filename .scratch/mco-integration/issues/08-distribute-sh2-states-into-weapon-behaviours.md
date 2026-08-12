@@ -25,7 +25,7 @@ constraint: touch nothing msco/MCBO owns.
 
 ## Verified mechanics to build on (all live-verified 2026-08-11, do not re-derive)
 
-- **The magicbehavior slice works and is owner-accepted** (commit `5922896`). Replicate its
+- **The magicbehavior slice works and is owner-accepted** (commit `8effcad`). Replicate its
   shape, do not redesign it: state + clip generator + state-local exit transition + entry
   transition appended to the root state's transition array, events registered in the
   graph's own stringdata/eventInfos.

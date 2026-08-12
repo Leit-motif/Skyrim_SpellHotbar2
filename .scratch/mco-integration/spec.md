@@ -137,7 +137,7 @@ no acceptance matrix.
 
 ## 2026-08-11 direction (owner rulings, post-acceptance of the shtb slice)
 
-The shtb casting slice is owner-accepted (commit `5922896`: entry from the magic stance,
+The shtb casting slice is owner-accepted (commit `8effcad`: entry from the magic stance,
 commit on the clip's left SpellFire at +0.47s). The owner set the integration direction for
 the bigger effort the same evening:
 
