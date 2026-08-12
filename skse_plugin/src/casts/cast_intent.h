@@ -53,13 +53,8 @@ namespace SpellHotbar::casts::CastIntent {
 	bool offer(size_t slot, const Input::KeyBind& keybind);
 
 	/**
-	 * Withdraw a pending intent, if this mod owns one. Safe to call at any time; a stale or
-	 * absent intent is not an error. The abandon callback still clears the payload.
+	 * Withdraw a pending intent, if this mod owns one, and drop the payload immediately. Safe to
+	 * call at any time; a stale or absent intent is not an error.
 	 */
 	void cancel();
-
-	/**
-	 * Is a payload retained right now, waiting for ShoutMCO to release it?
-	 */
-	bool has_pending_intent();
 }

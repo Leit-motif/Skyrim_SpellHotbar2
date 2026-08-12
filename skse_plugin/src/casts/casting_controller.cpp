@@ -893,6 +893,10 @@ namespace SpellHotbar::casts::CastingController {
 	{
 		if (can_start_new_cast()) {
 			clear_spellfire();
+			// A power or shout press is a newer input too, so it supersedes a waiting intent. A
+			// real shout also reaches ShoutMCO's own hook and would displace it there, but a
+			// voice-slot power never does — nothing on that path touches the driver at all.
+			CastIntent::cancel();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
 				bool is_shouting{ false };

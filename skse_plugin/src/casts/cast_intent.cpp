@@ -99,9 +99,12 @@ namespace SpellHotbar::casts::CastIntent {
 
 		/**
 		 * ShoutMCO's single callback, fired exactly once per deferred intent, on the main thread.
-		 * It also fires from inside `Request` and `Cancel` when those retire an older intent, so
-		 * this runs re-entrantly with respect to `offer()` and must only touch the payload the
-		 * handle names.
+		 *
+		 * It is never re-entrant: ShoutMCO retires the intent under its own mutex but only queues
+		 * the callback as a task, so this always arrives on a later drain — after the `Request` or
+		 * `Cancel` that retired it has long returned. The handle check is what makes that safe.
+		 * A callback for an intent this mod has already replaced or withdrawn names a handle that
+		 * is no longer the live one, and must not touch the payload that took its place.
 		 */
 		void on_intent(ShoutMCO_CastHandle a_handle, ShoutMCO_CastOutcome a_outcome, uint32_t a_cause, void*)
 		{
@@ -169,9 +172,10 @@ namespace SpellHotbar::casts::CastIntent {
 		req.callback = &on_intent;
 		req.context = nullptr;
 
-		// A deferred request replaces whatever intent was pending, whoever owned it. If that is
-		// one of ours, its abandon callback runs inside this call and clears the old payload --
-		// which is why the new one is only retained after the call returns.
+		// A deferred request replaces whatever intent was pending, whoever owned it. The displaced
+		// owner's abandon callback is queued, not called here, so if it was one of ours it lands
+		// after this returns and finds a handle that no longer matches -- which is exactly what
+		// keeps it from clearing the payload taken below.
 		ShoutMCO_CastHandle handle{ SHOUTMCO_CAST_HANDLE_INVALID };
 		const auto decision = api->Request(&req, &handle);
 		if (decision != SHOUTMCO_CAST_DEFERRED) {
@@ -193,12 +197,11 @@ namespace SpellHotbar::casts::CastIntent {
 		if (!api || live_handle == SHOUTMCO_CAST_HANDLE_INVALID) {
 			return;
 		}
-		// The abandon callback fires from inside this call and is what clears the payload.
 		api->Cancel(live_handle);
-	}
-
-	bool has_pending_intent()
-	{
-		return payload_retained;
+		// Drop local ownership now rather than waiting for the abandon callback, which ShoutMCO
+		// queues onto a later drain. Waiting would leave a withdrawn payload looking pending for
+		// the rest of the frame — and on a game load, past the point the bar it names still
+		// exists. The queued callback then finds a stale handle and does nothing, as intended.
+		clear_payload();
 	}
 }
