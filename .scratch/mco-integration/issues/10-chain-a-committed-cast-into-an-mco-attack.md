@@ -144,10 +144,24 @@ the hand-off worked all arrive once the state is already gone.
       kKeyboard)` is `kInvalid` and no keyboard key can ever match — OCPA's power key least of all,
       since it is not an attack control at all but a mod's own hotkey.
 
-      This is a scope decision, not a bug. Matching it means SH2 reading another mod's config
-      (`Data/MCM/Settings/OCPA.ini`), which is exactly what ShoutMCO already does
-      (`power key 48 read from Data/MCM/Settings/OCPA.ini`). Cheap, and a new cross-mod
-      dependency. **Left unbuilt pending the owner's call.**
+      This is a scope decision, not a bug. **Owner's call, 2026-08-12: resolved on the profile
+      side, not in code.** SH2 will not read `Data/MCM/Settings/OCPA.ini`; the owner moves the
+      power attack onto a real attack control instead, and no cross-mod dependency is created.
+
+      **Why that needs no code change.** The branch fires on the DOWN edge of whatever key carries
+      `Right Attack/Block`. A vanilla hold-to-power-attack therefore already chains: the press
+      cuts the cast state at ~0.9 s, the hold continues into `1HM_Ready_State`, and the power
+      attack develops from it exactly as it would from an idle stance. The chain-out is indifferent
+      to what the press later becomes — it only has to see the press.
+
+      **What that constrains.** The power attack must originate from the *mapped attack control*,
+      not from a separate hotkey. Binding a hotkey to the same physical key as the right attack is
+      not the same thing and would misfire on every ordinary swing. In practice this means letting
+      the vanilla hold produce the power attack rather than OCPA's instant key — worth confirming
+      OCPA is not suppressing the hold path once the rebind is made.
+
+      **Still open as a cell:** nobody has yet seen a power attack chain out of a cast. The
+      mechanism above is reasoning from a verified branch, not an observation.
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
 ## The fixture, left standing 2026-08-12
