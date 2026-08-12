@@ -161,12 +161,12 @@ and combo-position continuity — deliberately out of this ticket.
 
 **Open acceptance cells, named per the evidence rules (review round 2026-08-11):**
 
-- **2H (greatsword) drawn-idle entry is UNVERIFIED live.** The owner redirected acceptance
-  from the T05 fixture to a copy of their latest save, whose loadout is a 1H rapier. The
-  static case for 2H coverage is strong (2H attack/idle states live in the same
-  `1hm_behavior` root SM entered from the same `1HM_Ready_State`, and no 2hm graph exists)
-  but no greatsword cast has been driven on the new build. One `castSlot(0)` with a 2H
-  drawn settles it next session.
+- ~~**2H (greatsword) drawn-idle entry is UNVERIFIED live.**~~ CLOSED same evening, on
+  the owner's own keypress: greatsword drawn, pressed "1", cast played ("holy shit
+  greatsword with sh2 works!"). Log 2026-08-11 23:05:37/23:05:42 — two entries
+  `-> true`, both committed on the left SpellFire at +0.48/+0.50s, no timer floor. The
+  original acceptance loadout class is thereby covered: 1H and 2H both enter from
+  `1HM_Ready_State`, as the graph map predicted.
 - ~~**"A real shout still plays SYHO" is unconfirmed on this build.**~~ CLOSED same
   evening: the owner drove real (MCO) shouts — "sh2 spell → mco shout: works", and
   "mco shout → sh2 spell" refuses the same way "mco shout → attack" does, so the gap is
