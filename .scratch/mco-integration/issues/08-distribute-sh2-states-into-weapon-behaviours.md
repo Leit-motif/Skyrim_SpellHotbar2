@@ -167,9 +167,11 @@ and combo-position continuity — deliberately out of this ticket.
   `1hm_behavior` root SM entered from the same `1HM_Ready_State`, and no 2hm graph exists)
   but no greatsword cast has been driven on the new build. One `castSlot(0)` with a 2H
   drawn settles it next session.
-- **"A real shout still plays SYHO" is unconfirmed on this build.** An injected Shout
-  press produced no ShoutMCO arm line (likely no shout equipped in the save). The owner's
-  matrix covered SH2-driven shouts, not the vanilla shout key.
+- ~~**"A real shout still plays SYHO" is unconfirmed on this build.**~~ CLOSED same
+  evening: the owner drove real (MCO) shouts — "sh2 spell → mco shout: works", and
+  "mco shout → sh2 spell" refuses the same way "mco shout → attack" does, so the gap is
+  the shout's own chain window, not this patch. Additional owner rows: "sh2 shout → mco
+  shout (godmode): couldn't tell if they chained, but didn't feel too stiff."
 - **The MCO swing check is indirect.** The owner drove attacks while building their chain
   matrix (attack→SH2 rows require working attacks) and reported no stuck animations, but
   no explicit before/after swing regression pass was run.
