@@ -73,19 +73,18 @@ travel on untouched.
 - **Concentration channels are excluded.** Cutting a channel's state does not end the channel — its
   own loop re-enters the state within half a second — so the cut would be undone while the swing
   was still starting. Ending a channel properly is its own ticket, as ticket 08 already scoped it.
-- **Power attack is a separate cell.** This profile routes power attacks through One Click Power
-  Attack on key 48, which reads raw input.
+- **Power attack is a separate cell**, and it does not chain — see acceptance.
 
 ## Changed
 
 - `skse_plugin/src/casts/casting_controller.{h,cpp}` — `is_committed_cast_holding_graph()`, and
-  `is_concentration_channel()` on the instance hierarchy.
-- `skse_plugin/src/input/input.cpp` — `is_attack_press` / `chain_out_of_committed_cast`, and the
-  branch in `processAndFilter`.
+  `has_cuttable_cast_state()` on the instance hierarchy.
+- `skse_plugin/src/input/input.cpp` — `get_attack_key()` and the branch in `processAndFilter`.
 - `skse_plugin/src/casts/msco_cast_driver.cpp` — `send_exit` logs its notify return.
+- `skse_plugin/src/casts/msco_cast_driver.{h,cpp}` — `should_trace_graph_events()`, the bounded
+  post-cut trace window.
 - `skse_plugin/src/events/animationeventhook.cpp` — the graph-event trace (see ticket 08's
-  correction), bounded to a live cast state because it runs on the animation thread and the logger
-  flushes every line.
+  correction), bounded because it runs on the animation thread and the logger flushes every line.
 - `docs/adr/0006-own-nemesis-state-with-a-timer-floor.md` — amended with the measured annotation
   and the second graph, closing the footprint note ticket 08 left against it.
 
@@ -99,7 +98,6 @@ produced no cast and no log line at all, while `castSlot(0)` on the Papyrus seam
 session. Every cell below is on the input path, so every cell below is the owner's.
 
 Built and linked clean, 13/13, no new warnings; deployed byte-identical to `Dev - Spell Hotbar 2`.
-Everything below that is behavioural is unproven.
 
 The branch traces itself so a failed press says why in one session: while a committed cast is live,
 **every** press logs its device, key, and the resolved attack binding — matching or not — and the
