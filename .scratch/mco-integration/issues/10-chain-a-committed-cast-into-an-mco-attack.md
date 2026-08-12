@@ -73,13 +73,16 @@ travel on untouched.
 - **Concentration channels are excluded.** Cutting a channel's state does not end the channel — its
   own loop re-enters the state within half a second — so the cut would be undone while the swing
   was still starting. Ending a channel properly is its own ticket, as ticket 08 already scoped it.
-- **Power attack is a separate cell**, and it does not chain — see acceptance.
+- **Power attack chains too.** OCPA's key is not an attack control, so the control-map lookup can
+  never match it — but the press does reach this hook, so knowing the key is all that was missing.
+  SH2 reads it from OCPA's own config (`Data/MCM/Settings/OCPA.ini`), both `[General]` and
+  `[DualAttack]`, cached once and failing open to the mapped right attack alone.
 
 ## Changed
 
 - `skse_plugin/src/casts/casting_controller.{h,cpp}` — `is_committed_cast_holding_graph()`, and
   `has_cuttable_cast_state()` on the instance hierarchy.
-- `skse_plugin/src/input/input.cpp` — `get_attack_key()` and the branch in `processAndFilter`.
+- `skse_plugin/src/input/input.cpp` — `get_attack_key()`, `get_ocpa_keys()`, `is_attack_press()`, and the branch in `processAndFilter`.
 - `skse_plugin/src/casts/msco_cast_driver.cpp` — `send_exit` logs its notify return.
 - `skse_plugin/src/casts/msco_cast_driver.{h,cpp}` — `should_trace_graph_events()`, the bounded
   post-cut trace window.
@@ -137,31 +140,21 @@ the hand-off worked all arrive once the state is already gone.
       right attack is bound to the mouse and nothing on the keyboard carries that control. Zero
       false positives across the session.
 - [ ] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
-- [ ] **Power attack does NOT chain, and the reason is now measured, not guessed.** The owner
-      pressed OCPA's key 48 three times during committed casts. Each time the branch *saw* the
-      press and correctly declined it: `press during a committed cast (device=0, key=48, attack
-      key=255)`. The right attack is bound to the mouse, so `GetMappedKey("Right Attack/Block",
-      kKeyboard)` is `kInvalid` and no keyboard key can ever match — OCPA's power key least of all,
-      since it is not an attack control at all but a mod's own hotkey.
+- [ ] **Power attack now chains too — built 2026-08-12, unverified live.** The owner pressed OCPA's
+      key 48 three times during committed casts and each time the branch *saw* the press and
+      declined it: `press during a committed cast (device=0, key=48, attack key=255)`. That log
+      line is the whole diagnosis. The right attack is bound to the mouse, so
+      `GetMappedKey("Right Attack/Block", kKeyboard)` is `kInvalid` and no keyboard key can match —
+      OCPA's power key least of all, because it is a mod hotkey rather than an attack control.
 
-      This is a scope decision, not a bug. **Owner's call, 2026-08-12: resolved on the profile
-      side, not in code.** SH2 will not read `Data/MCM/Settings/OCPA.ini`; the owner moves the
-      power attack onto a real attack control instead, and no cross-mod dependency is created.
+      The press was never the problem; the lookup was. SH2 now reads OCPA's own config for the key,
+      the way ShoutMCO already does, and matches it alongside the mapped right attack.
 
-      **Why that needs no code change.** The branch fires on the DOWN edge of whatever key carries
-      `Right Attack/Block`. A vanilla hold-to-power-attack therefore already chains: the press
-      cuts the cast state at ~0.9 s, the hold continues into `1HM_Ready_State`, and the power
-      attack develops from it exactly as it would from an idle stance. The chain-out is indifferent
-      to what the press later becomes — it only has to see the press.
-
-      **What that constrains.** The power attack must originate from the *mapped attack control*,
-      not from a separate hotkey. Binding a hotkey to the same physical key as the right attack is
-      not the same thing and would misfire on every ordinary swing. In practice this means letting
-      the vanilla hold produce the power attack rather than OCPA's instant key — worth confirming
-      OCPA is not suppressing the hold path once the rebind is made.
-
-      **Still open as a cell:** nobody has yet seen a power attack chain out of a cast. The
-      mechanism above is reasoning from a verified branch, not an observation.
+      **Open risk worth naming:** OCPA reads raw input, on its own hook, so the order between its
+      power attack and this cut is not something this mod controls. If the power attack is raised
+      before the cut lands, the still-live cast state will refuse it exactly as it refused
+      everything before ticket 10. The light-attack path does not have this problem because the
+      game's own handler runs downstream of this hook, in the same dispatch.
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
 ## The fixture, left standing 2026-08-12
