@@ -210,7 +210,7 @@ hook for exactly this question:
 ```
 
 The driver's design is unaffected and should not change: it deliberately does **not** react
-to `SH2_CastEnter` (`msco_cast_driver.cpp:51-61`), and the notify return remains the entry
+to `SH2_CastEnter` (`msco_cast_driver.cpp:60-70`), and the notify return remains the entry
 signal. Only the stated reason was wrong. The trace that settled it is now permanent, at
 `trace` level behind a narrow tag filter, so the next ordering question costs a grep rather
 than a build.

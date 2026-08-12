@@ -121,59 +121,27 @@ namespace SpellHotbar::Input {
 
     namespace {
 
-        /**
-         * Is this press the attack control the chain cuts for?
-         *
-         * Keyboard and mouse only. The gamepad ids this file works in are its own 0-15 ordinals
-         * (`get_device_and_input`), while `GetMappedKey` answers in the engine's ids, so a
-         * gamepad comparison here is between two different alphabets and can only be wrong.
-         * `kNone` is excluded for a harder reason: it is -1, and `GetMappedKey` indexes
-         * `deviceMappings[device]` behind an assert that a release build drops.
-         *
-         * Only the right attack. The left control is block, or a left-hand cast, and neither is
-         * the "spell into a swing" the chain is for.
-         */
-        bool is_attack_press(uint32_t key_code, RE::INPUT_DEVICE key_device)
+        // Which key the right attack is bound to on this device, or kInvalid.
+        //
+        // Keyboard and mouse only. The gamepad ids this file works in are its own 0-15 ordinals
+        // (get_device_and_input), while GetMappedKey answers in the engine's ids, so a gamepad
+        // comparison here is between two different alphabets and can only be wrong. kNone is
+        // excluded for a harder reason: it is -1, and GetMappedKey indexes deviceMappings[device]
+        // behind an assert that a release build drops.
+        //
+        // Only the right attack. The left control is block, or a left-hand cast, and neither is
+        // the "spell into a swing" the chain is for.
+        uint32_t get_attack_key(RE::INPUT_DEVICE key_device)
         {
             if (key_device != RE::INPUT_DEVICE::kKeyboard && key_device != RE::INPUT_DEVICE::kMouse) {
-                return false;
+                return RE::ControlMap::kInvalid;
             }
             auto control_map = RE::ControlMap::GetSingleton();
             auto user_events = RE::UserEvents::GetSingleton();
             if (!control_map || !user_events) {
-                return false;
+                return RE::ControlMap::kInvalid;
             }
-            const uint32_t mapped = control_map->GetMappedKey(user_events->rightAttack, key_device);
-            // Traced because a wrong device or an unmapped control disables the chain silently,
-            // and this is the one branch an agent cannot drive: injected input never reaches this
-            // hook (verified 2026-08-12), so the owner's own press is the only test, and it has to
-            // say why it failed without a second session. Bounded: only reached while a committed
-            // cast is live.
-            logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
-                static_cast<int>(key_device), key_code, mapped);
-            return mapped != RE::ControlMap::kInvalid && key_code == mapped;
-        }
-
-        /**
-         * Leave the cast state on this press. The press itself is not touched: it travels the
-         * rest of this dispatch and reaches the game exactly as it does today.
-         *
-         * An earlier revision captured the press and re-queued a copy, meaning to buy the graph
-         * a frame. It does not: this hook runs inside `PollInputDevices`, and
-         * `PushOntoInputQueue` appends to the very chain being dispatched, so the copy arrives
-         * in the same frame anyway -- with an allocation, a second pass through this function's
-         * own callers, and no owner to free it. Both events reach the graph's queue in the order
-         * they were sent, which is the ordering the cut needs and the only one it can have.
-         *
-         * Leaving the press alone is also what makes the chain fail-safe: if the graph refuses
-         * the cut, the player gets exactly today's behaviour rather than a swallowed attack.
-         */
-        void chain_out_of_committed_cast()
-        {
-            if (auto pc = RE::PlayerCharacter::GetSingleton()) {
-                casts::MscoCastDriver::cancel(pc);
-                logger::debug("SH2 cast: attack pressed on a committed cast; cut the state");
-            }
+            return control_map->GetMappedKey(user_events->rightAttack, key_device);
         }
     }
 
@@ -336,13 +304,34 @@ namespace SpellHotbar::Input {
                     // state-local exit and nothing else -- so a press during the cast is
                     // silently refused for the whole clip (live-verified 2026-08-12: an attack
                     // press at 0.9s leaves stamina untouched, the same press at 1.8s spends it).
-                    // Leaving the state on the press is what turns the clip's ~1.1s of tail
-                    // after spellfire into the start of a swing.
-                    if (!captureEvent && bEvent->IsDown() && in_ingame_state() &&
-                        casts::CastingController::is_committed_cast_holding_graph() &&
-                        is_attack_press(key_code, key_device))
+                    // Ending the state on the press is what turns the clip's ~1.1s of tail after
+                    // spellfire into the start of a swing.
+                    //
+                    // The press itself is not touched: it travels the rest of this dispatch and
+                    // reaches the game exactly as it does today. An earlier revision captured it
+                    // and re-queued a copy, meaning to buy the graph a frame; it does not,
+                    // because this hook runs inside PollInputDevices and PushOntoInputQueue
+                    // appends to the very chain being dispatched. Both events reach the graph's
+                    // queue in the order they were sent, which is the ordering the cut needs and
+                    // the only one available. Leaving the press alone is also what makes this
+                    // fail-safe: a graph that refuses the cut gives the player today's behaviour
+                    // rather than a swallowed attack.
+                    if (!captureEvent && pc && bEvent->IsDown() && in_ingame_state() &&
+                        casts::CastingController::is_committed_cast_holding_graph())
                     {
-                        chain_out_of_committed_cast();
+                        const uint32_t attack_key = get_attack_key(key_device);
+                        // Traced for every press during a cast, matching or not, because this is
+                        // the one branch an agent cannot drive -- injected input never reaches
+                        // this hook (verified 2026-08-12), so the owner's own press is the only
+                        // test and it has to say why it failed without a second session. Two key
+                        // numbers that disagree are the whole diagnosis.
+                        logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
+                            static_cast<int>(key_device), key_code, attack_key);
+
+                        if (attack_key != RE::ControlMap::kInvalid && key_code == attack_key) {
+                            logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
+                            casts::MscoCastDriver::cancel(pc);
+                        }
                     }
 
                     if (!captureEvent) {

@@ -30,11 +30,11 @@ reaches zero, `cast_spell` is never called and the spell is gone.~~
 replaced both ends of the mechanism, and this paragraph is the one document still arguing from the
 old one. Do not re-derive the blocker from it.
 
-- `is_anim_ok` is now `return MscoCastDriver::is_active(pc);` (`casting_controller.cpp:254`) — a
+- `is_anim_ok` is now `return MscoCastDriver::is_active();` (`casting_controller.cpp:261`) — a
   flag fed by this mod's own `SH2_CastRight` notify and `SH2_CastExit`, with no `IsShouting` read
   anywhere on the path.
 - Past spellfire the cast is committed and delivers even if the state is torn away:
-  `if (anim_ok || is_cast_committed())` (`casting_controller.cpp:321`, ADR-0004, ticket 07).
+  `if (anim_ok || is_cast_committed())` (`casting_controller.cpp:336`, ADR-0004, ticket 07).
 - The engine's `shoutStop` is not the cut any more either, because a hotbar cast no longer enters
   the shout graph at all (ticket 08).
 

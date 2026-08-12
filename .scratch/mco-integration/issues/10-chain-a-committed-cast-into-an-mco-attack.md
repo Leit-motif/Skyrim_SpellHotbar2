@@ -42,13 +42,18 @@ same swing after a cast, standing idle with the blade down.
 and stand unchanged: SH2 owns the state, ShoutMCO cannot see this cast (`isShoutStateEntry` is
 exactly `tag == "SBF_ShoutStart"`), and `BeginShoutLocked`'s driver decline is load-bearing.
 
-On an attack press while a committed cast holds the graph: send `SH2_CastExit`, capture the press,
-and re-queue it so the game receives it one frame later.
+On an attack press while a committed cast holds the graph: send `SH2_CastExit`, and let the press
+travel on untouched.
 
-- **The gate is commitment, not liveness.** `is_committed_cast_holding_graph()` is true only for a
-  live cast instance whose graph state is active and whose `MLh_SpellFire_Event` has arrived.
+- **The gate is commitment, not liveness.** `is_committed_cast_holding_graph()` requires a live cast
+  instance that owns a cuttable state, an active graph state, and an arrived `MLh_SpellFire_Event`.
   Before that instant a cut costs the player the spell — ticket 03's original hazard, real for the
   clip's first 0.483 s — so a press then keeps today's behaviour exactly.
+
+  `has_cuttable_cast_state()` defaults to **false** on `BaseCastingInstance` so that only a kind of
+  cast that opts in is ever cut. A power, a shout, and a potion never enter the state, and ending it
+  on their behalf would be a send for a state they do not own; a concentration channel is excluded
+  for the separate reason below. Only a plain spell cast opts in.
 - **The press is forwarded untouched.** It is not captured, and nothing is re-queued. The first
   revision did capture and replay it, meaning to buy the graph a frame; a Codex review showed that
   is not what happens, and the CommonLib source agrees. This hook runs inside `PollInputDevices`,
@@ -65,10 +70,9 @@ and re-queue it so the game receives it one frame later.
   this file works in its own 0–15 gamepad ordinals while `GetMappedKey` answers in the engine's
   ids, so a gamepad comparison is between two alphabets and can only be wrong, and `kNone` is `-1`
   in an array index behind an assert a release build drops.
-- **Concentration channels are excluded** (`is_concentration_channel()`). Cutting a channel's state
-  does not end the channel — its own loop re-enters the state within half a second — so the cut
-  would be undone while the swing was still starting. Ending a channel properly is its own ticket,
-  as ticket 08 already scoped it.
+- **Concentration channels are excluded.** Cutting a channel's state does not end the channel — its
+  own loop re-enters the state within half a second — so the cut would be undone while the swing
+  was still starting. Ending a channel properly is its own ticket, as ticket 08 already scoped it.
 - **Power attack is a separate cell.** This profile routes power attacks through One Click Power
   Attack on key 48, which reads raw input.
 
@@ -94,8 +98,13 @@ injecting hotbar slot 0's own bound key (DX scan code 2, read back from `SpellHo
 produced no cast and no log line at all, while `castSlot(0)` on the Papyrus seam worked in the same
 session. Every cell below is on the input path, so every cell below is the owner's.
 
+Built and linked clean, 13/13, no new warnings; deployed byte-identical to `Dev - Spell Hotbar 2`.
+Everything below that is behavioural is unproven.
+
 The branch traces itself so a failed press says why in one session: while a committed cast is live,
-each press logs its device, key, and the resolved attack binding.
+**every** press logs its device, key, and the resolved attack binding — matching or not — and the
+graph trace continues for a bounded burst of events after a cut, because the events that say whether
+the hand-off worked all arrive once the state is already gone.
 
 - [ ] Weapon drawn and idle, press "1", then press attack about 0.9 s in: the swing starts and the
       spell still lands (a damaged target or a visible effect — not a magicka reading).
@@ -111,21 +120,34 @@ each press logs its device, key, and the resolved attack binding.
 ## The fixture, left standing 2026-08-12
 
 Skyrim is running on the latest save, weapon drawn, facing a **20000 HP essential Bandit Warrior**
-(`FF0026E0`, ~180 units ahead) that is in the line of fire: a control cast took it 20000 → 19992.5,
+(`FF0026E4`, ~140 units ahead) that is in the line of fire: a control cast took it 20000 → 19992.5,
 so every landed hit reads as another 7.5 and the pool outlasts the whole matrix. Cast is hotbar
 slot 0 on key "1" (`SpellHotbar.GetKeyBind(0)` → 2).
 
 To run a cell: press "1", then press attack about **0.9 s** later — after the spell leaves the hand,
 inside `MSCO_WinOpen`. Then read `SpellHotbar2.log`:
 
-- `attack pressed on a committed cast; cut the state` — the branch fired.
+- `press during a committed cast (device=…, key=…, attack key=…)` — every press the branch saw
+  during a cast. Two key numbers that agree mean it matched; disagreeing is the whole diagnosis of a
+  press that did nothing.
+- `attack pressed on a committed cast; ending the state` — the branch fired.
 - `notified SH2_CastExit -> true` at that instant — the graph took the cut. `-> false` means it
   refused, and the next move is the Nemesis transition, not the C++.
-- `press during a committed cast (device=…, key=…, attack key=…)` — a press the branch saw but did
-  not match; the two key numbers disagreeing is the whole diagnosis.
+- The `SH2 graph event:` lines that follow the cut — `attackStart` or an `MCO_*` among them is the
+  hand-off actually happening; their absence with a `-> true` cut is the interesting failure.
 
-**Fixtures to restore afterwards:** the spawned bandit (`FF0026E0 disable` / `markfordelete`) is the
+Expect a **second** `notified SH2_CastExit` roughly 0.6 s after the cut, when the cast instance's
+GCD expires and `on_reset` calls `finish()`. It is harmless — the event's only listener is a state
+that is already gone, so it reaches nothing and logs `-> false` — but it lands mid-swing and would
+look alarming unexplained.
+
+**Fixtures to restore afterwards:** the spawned bandit (`FF0026E4 disable` / `markfordelete`) is the
 only world change. Nothing else was mutated — no `tcai`, no INI edits, no save renames.
+
+**Regression cells that did close, on the shipped build:** three real MCO swings with no cast in
+flight added **zero** log lines, so the animation-thread trace stays off during ordinary combat; and
+an ordinary uninterrupted cast is unchanged end to end — entry `-> true`, `SH2_CastEnter` +0.18 s,
+`MLh_SpellFire_Event` +0.46 s, `MSCO_WinOpen` +0.67 s, `SH2_CastExit -> true` +1.50 s.
 
 ## Open findings carried, not fixed
 

@@ -71,11 +71,8 @@ namespace SpellHotbar::casts::CastingController {
 	}
 
 	bool is_committed_cast_holding_graph() {
-		if (!current_cast || !is_cast_committed() || current_cast->is_concentration_channel()) {
-			return false;
-		}
-		auto pc = RE::PlayerCharacter::GetSingleton();
-		return pc && MscoCastDriver::is_active(pc);
+		return current_cast && current_cast->has_cuttable_cast_state() && is_cast_committed() &&
+			   MscoCastDriver::is_active();
 	}
 
 	void reset_cast() {
@@ -259,9 +256,9 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
-	bool CastingInstance::is_anim_ok(RE::PlayerCharacter* pc) const
+	bool CastingInstance::is_anim_ok(RE::PlayerCharacter*) const
 	{
-		return MscoCastDriver::is_active(pc);
+		return MscoCastDriver::is_active();
 	}
 
 	RE::BSSoundHandle _play_sound_if_exists(RE::BGSSoundDescriptorForm* snd)
@@ -288,9 +285,14 @@ namespace SpellHotbar::casts::CastingController {
 		return false;
 	}
 
-	bool BaseCastingInstance::is_concentration_channel() const
+	bool BaseCastingInstance::has_cuttable_cast_state() const
 	{
 		return false;
+	}
+
+	bool CastingInstance::has_cuttable_cast_state() const
+	{
+		return true;
 	}
 
 	void BaseCastingInstance::on_reset()
@@ -597,9 +599,9 @@ namespace SpellHotbar::casts::CastingController {
 		return m_blocks_movement && !m_casted;
 	}
 
-	bool CastingInstanceSpellConcentration::is_concentration_channel() const
+	bool CastingInstanceSpellConcentration::has_cuttable_cast_state() const
 	{
-		return true;
+		return false;
 	}
 
 	bool CastingInstanceSpellConcentration::has_duration() const

@@ -9,20 +9,17 @@ namespace SpellHotbar::events {
 
 	namespace {
 		// Every chaining question this integration has turns on the ORDER of a handful of
-		// events on the player's stream -- the state's own SH2_*, the commitment point, and
-		// the MCO/MSCO annotations on the clip it borrows. Two documents disagree about that
-		// order, and one traced cast settles it, so the trace is kept rather than improvised
-		// again next time.
+		// events on the player's stream -- the state's own SH2_*, the commitment point, the
+		// MCO/MSCO annotations on the clip it borrows, and whether an attack follows a cut.
+		// Two documents disagreed about that order and one traced cast settled it, so the
+		// trace is kept rather than improvised again next time.
 		//
 		// Bounded twice over, because this runs on the animation thread and the logger flushes
-		// on every line: only while the cast state is live, and only for the tags this
-		// integration turns on. An ordinary MCO swing raises `MCO_*` and `attack*` several times
-		// a second and must never reach the file.
-		bool is_traced_graph_event(const RE::BSFixedString& a_tag)
+		// on every line: to a cast window (see should_trace_graph_events), and to the tags this
+		// integration turns on. An ordinary MCO swing raises `MCO_*` and `attack*` several
+		// times a second and must never reach the file.
+		bool is_traced_tag(const RE::BSFixedString& a_tag)
 		{
-			if (!casts::MscoCastDriver::is_active(RE::PlayerCharacter::GetSingleton())) {
-				return false;
-			}
 			const char* raw = a_tag.c_str();
 			if (!raw) {
 				return false;
@@ -54,12 +51,13 @@ namespace SpellHotbar::events {
 			//
 			// This runs on the animation thread. It sets an atomic and touches nothing else.
 			if (eventHolder->IsPlayerRef()) {
-				if (is_traced_graph_event(a_event->tag)) {
+				// Traced before the observer runs, so the event that ends the state appears in
+				// its own trace rather than being swallowed by the state it closes.
+				if (is_traced_tag(a_event->tag) && casts::MscoCastDriver::should_trace_graph_events()) {
 					logger::trace("SH2 graph event: {}", a_event->tag.c_str());
 				}
 
-				// The driver's active flag is fed from here: SH2_CastEnter / SH2_CastDone
-				// arrive on this same stream.
+				// The driver's active flag is cleared from here, on SH2_CastExit.
 				casts::MscoCastDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_event->tag == "MLh_SpellFire_Event"sv) {

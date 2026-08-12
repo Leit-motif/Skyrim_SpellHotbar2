@@ -48,13 +48,13 @@ _Avoid_: Harmless warning, unselected feature behavior, theoretical conflict
 The traceable runtime record supporting acceptance, tied to the tested source and binary, MO2 environment, Installed Configuration, saves, input paths, logs, and visible results. For reWASD, record the mappings exercised rather than archiving the full profile unless a defect depends on it.
 _Avoid_: Build success, undocumented smoke test
 
-**Shout-Graph Cast**:
-The mod's casting mechanism: a hotbar cast is driven entirely by notifying the vanilla shout behavior graph, with the played clip chosen by OAR. The mod owns no casting graph of its own.
-_Avoid_: Shout, spell casting animation, magic behavior
+**Driver Cast**:
+The mod's casting mechanism: a hotbar cast enters `SH2_CastRight_State`, a state this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the `SH2_CastRight` notify's own true return; the state plays an MCBO clip and ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
+_Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Chain Window**:
-The interval late in a shout exhale during which attack input is honored, letting the animation hand off to an MCO attack. Owned by the separate MCO shout behavior engine, not by this mod.
-_Avoid_: Attack cancel, animation blend
+The interval late in a shout exhale during which attack input is honored, letting the animation hand off to an MCO attack. Owned by the separate MCO shout behavior engine, not by this mod — and it governs **shouts only**. A driver cast has no window: an attack press past its commitment point ends the cast state directly, on this side (ticket 10).
+_Avoid_: Attack cancel, animation blend, driver-cast chain-out
 
 **Cast Driver**:
 A mod that owns a cast payload and asks ShoutMCO whether the request should pass through now or be deferred. Spell Hotbar 2 is the first driver; it keeps ownership of the slot, spell, resources, and execution.
@@ -202,10 +202,13 @@ does not use that event, which is exactly why the cut is safe there and destruct
 
 Two consequences:
 
-- **Chaining out of a Shout-Graph Cast is not a feature to enable; it is a data-loss bug to
+- ~~**Chaining out of a Shout-Graph Cast is not a feature to enable; it is a data-loss bug to
   prevent.** Whatever integration is built must either fire the spell before the cut or suppress
-  chaining while a cast is live. *Still true, and now forward-looking rather than current: this
-  is the cost of the integration in finding 12, not a hazard the player is exposed to today.*
+  chaining while a cast is live.~~ **Resolved 2026-08-12 by taking the first horn.** The spell now
+  fires before the cut: a cast is committed at the graph's own SpellFire annotation (ticket 07,
+  ADR-0004), and ticket 10's chain-out will not cut anything that has not reached it. The narrow
+  hazard survives — a cut inside the clip's first 0.483 s still cancels the cast — and the
+  commitment gate exists precisely to keep the chain out of that window.
 - ~~The engine cannot help. ADR-0002 forbids it from reading shout state to tell a cast from a
   shout, and finding 6 is right that the distinction has to be made on this side.~~ **WITHDRAWN
   2026-08-05** with finding 6(a): ADR-0002 governs cooldown state only, and the engine already
