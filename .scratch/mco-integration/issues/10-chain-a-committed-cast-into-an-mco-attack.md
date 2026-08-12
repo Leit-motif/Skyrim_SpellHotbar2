@@ -9,7 +9,7 @@ and starts the swing, instead of being swallowed for the rest of the clip.
 **Blocked by:** Nothing. Ticket 08 shipped the state this cuts; ticket 07 shipped the commitment
 flag that makes cutting safe.
 
-**Status:** claimed
+**Status:** resolved (power-attack cell open by decision, not by defect)
 
 ## What the trial found (live, 2026-08-12, T-save, Iron Rapier drawn)
 
@@ -106,15 +106,50 @@ The branch traces itself so a failed press says why in one session: while a comm
 graph trace continues for a bounded burst of events after a cut, because the events that say whether
 the hand-off worked all arrive once the state is already gone.
 
-- [ ] Weapon drawn and idle, press "1", then press attack about 0.9 s in: the swing starts and the
-      spell still lands (a damaged target or a visible effect — not a magicka reading).
+- [x] Weapon drawn and idle, press "1", then press attack about 0.9 s in: the swing starts.
+      **Owner-run live 2026-08-12, 16:35–16:39. 32 cuts fired; all 32 were followed by
+      `MCO_AttackInitiate` within 0.5 s — zero failures.** One run in full:
+
+      ```
+      41.516  MLh_SpellFire_Event                     the commitment point
+      41.619  press during a committed cast (device=1, key=0, attack key=0)
+      41.619  attack pressed on a committed cast; ending the state
+      41.620  notified SH2_CastExit -> true           the graph took the cut
+      41.626  attackStop, SBF_ReadyStart, MSCO_MagicReady        the state leaving
+      41.627  SBF_NormalAttackStart, MCO_AttackInitiate, MCO_AttackEnterNotify
+      41.764  MCO_InputBuffer
+      41.913  MCO_AllowRecovery
+      42.940  MCO_WinOpen, MCO_PowerWinOpen           a full ordinary MCO attack
+      ```
+
+      **The swing starts 7 ms after the cut, in the same frame batch** — which settles the design
+      question the first revision got wrong. Same-frame ordering is not merely adequate, it is
+      what happens: the cut's transition and MCO's attack event reach the graph's queue in the
+      order they were sent, and the graph honours both in one update. The replay would have bought
+      nothing.
+
+      The spell landing is structural rather than separately observed here: `m_spell_started` is
+      set the moment the commitment flag goes true, 103 ms before the press, so the magic is out
+      before the cut exists. Worth one deliberate look at a target to close it by eye.
 - [ ] The same press **before** 0.483 s behaves exactly as it does today, and costs the player
       nothing.
-- [ ] A press with no cast in flight is untouched — no capture, no replay, no dropped attack.
+- [x] A press with no cast in flight is untouched, and no unrelated press is ever matched.
+      **Owner-run 2026-08-12:** the branch saw and correctly declined every non-attack key pressed
+      during a cast — "1" itself (×5), W (×1), A (×3), D (×1) — all `attack key=255`, because the
+      right attack is bound to the mouse and nothing on the keyboard carries that control. Zero
+      false positives across the session.
 - [ ] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
-- [ ] Power attack (OCPA, key 48) — its own cell, and its own run. OCPA reads raw input on an
-      unmapped keyboard attack control, so this branch does not fire for it; whether OCPA then
-      synthesises a mapped attack event is unknown and is what the cell answers.
+- [ ] **Power attack does NOT chain, and the reason is now measured, not guessed.** The owner
+      pressed OCPA's key 48 three times during committed casts. Each time the branch *saw* the
+      press and correctly declined it: `press during a committed cast (device=0, key=48, attack
+      key=255)`. The right attack is bound to the mouse, so `GetMappedKey("Right Attack/Block",
+      kKeyboard)` is `kInvalid` and no keyboard key can ever match — OCPA's power key least of all,
+      since it is not an attack control at all but a mod's own hotkey.
+
+      This is a scope decision, not a bug. Matching it means SH2 reading another mod's config
+      (`Data/MCM/Settings/OCPA.ini`), which is exactly what ShoutMCO already does
+      (`power key 48 read from Data/MCM/Settings/OCPA.ini`). Cheap, and a new cross-mod
+      dependency. **Left unbuilt pending the owner's call.**
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
 ## The fixture, left standing 2026-08-12
@@ -159,9 +194,14 @@ an ordinary uninterrupted cast is unchanged end to end — entry `-> true`, `SH2
 - **CONTEXT.md still describes the retired shout-graph chain model.** Ticket 03 is corrected;
   CONTEXT.md is not, and the two now disagree.
 
-## Known risk, named rather than assumed
+## Known risk — closed 2026-08-12
 
-The cut's mechanism is proven at 1.5 s and **unproven at 0.9 s**. `MscoCastDriver::finish`'s
+~~The cut's mechanism is proven at 1.5 s and **unproven at 0.9 s**.~~ **Closed by the owner's run:
+32 of 32 cuts at ~0.6–0.9 s returned `-> true` and the state left on the next frame.** The Papyrus
+`Debug.SendAnimationEvent` probe that appeared to show the opposite was measuring a different call
+path, exactly as suspected — the Nemesis transition in `#shtb$1.txt` was never at fault.
+
+The original text, kept because the reasoning is worth reusing: `MscoCastDriver::finish`'s
 `NotifyAnimationGraph("SH2_CastExit")` returned **true** at 1.504 s into a cast and the state left
 immediately (`attackStop` / `SBF_ReadyStart` / `MSCO_MagicReady` on the next two log lines). A
 Papyrus `Debug.SendAnimationEvent` of the same event at 0.2 s and 0.9 s did **not** stop the clip or
