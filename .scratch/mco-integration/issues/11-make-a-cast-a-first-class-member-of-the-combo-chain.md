@@ -123,21 +123,24 @@ variable itself, we need to be sure the two never both write.
    (`MSCO_left1.hkx`) reused for every cast, which is also why a second cast looks identical to the
    first.
 
-   **This cell has two readings, and only one of them is safe.** Both deserve stating because
-   thuum's ADR-0005 anticipated the question and rejected one of them by name:
+   **Settled by the owner 2026-08-12, and it is the safe reading.** Asked whether a cast should
+   occupy a step of MCO's combo, the answer was the orthogonal one:
 
-   - *A cast plays a different clip each time* — SH2 keeps its own cast counter, cycles its own
-     clips, and never touches `MCO_nextattack`. Orthogonal, composes with everything, no conflict.
-     **This is the reading being built.**
-   - *A cast occupies a step of MCO's combo*, so `attack1 → attack2 → cast → attack` fires attack 4
-     rather than attack 3. ADR-0005 rejected exactly this, for a reason that is not stylistic: at
-     the last step of an N-attack moveset there is nowhere to advance to, so MCO either wraps to 1 —
-     making a late-combo cast *reset* the combo, the punishment this work exists to remove — or
-     clamps, and the rule silently does nothing in the one position a player would notice. The ADR
-     notes the rejected shape "is the intuitive one and will be proposed again".
+   > "i expect attack1 -> attack2 -> cast -> attack3. eventually i would want
+   > attack1 -> attack2 -> cast1 -> attack3 -> cast2. as well as cast1 -> cast2 -> cast3 -> cast4
+   > (as you see in MSCO)"
 
-   If the owner wants the second reading anyway, it is a cross-project ADR change and not a quiet
-   implementation detail — raise it rather than build it.
+   So there are **two independent counters, and each is preserved across the other's activity**:
+
+   | | advances on | preserved across | owned by |
+   |---|---|---|---|
+   | MCO attack index (`MCO_nextattack`) | an attack | a cast | MCO, read and restored by SH2 |
+   | SH2 cast index | a cast | an attack | SH2, entirely its own |
+
+   `attack1 → attack2 → cast1 → attack3 → cast2` falls out of that directly, and so does a pure
+   `cast1 → cast2 → cast3 → cast4` chain. Nothing here writes `read + 1` into MCO's variable, so
+   thuum's ADR-0005 is satisfied rather than amended — the shape it rejected (a cast *advancing*
+   MCO's index, firing attack 4) is not what was asked for.
 3. **Chain INTO a cast from an MSCO hand cast.** The owner's 2026-08-11 matrix already records this
    direction working (`LH cast → SH2 chains`), so this cell is mostly confirmation on the current
    build.
