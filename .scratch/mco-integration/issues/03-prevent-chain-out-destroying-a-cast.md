@@ -20,11 +20,27 @@ attack press is forwarded straight to the game, and **no cut is ever sent**. `CO
 So the two mods are safe together and **disconnected**. The work here is a **missing feature**,
 not a defect — and the cost of building it is exactly the data loss the original ticket described.
 
-**The mechanism is unchanged and still the crux.** The engine's cut is `shoutStop`, which clears
+~~**The mechanism is unchanged and still the crux.** The engine's cut is `shoutStop`, which clears
 `IsShouting`. `CastingInstance::update` gates every frame on `is_anim_ok` — a raw `IsShouting`
 read — and on false it calls `reset_animation_vars()` and returns true, destroying the instance
 (`skse_plugin/src/casts/casting_controller.cpp:247`). If the instance dies before its timer
-reaches zero, `cast_spell` is never called and the spell is gone.
+reaches zero, `cast_spell` is never called and the spell is gone.~~
+
+**Withdrawn 2026-08-12: neither half of that describes the code on disk.** Tickets 07 and 08
+replaced both ends of the mechanism, and this paragraph is the one document still arguing from the
+old one. Do not re-derive the blocker from it.
+
+- `is_anim_ok` is now `return MscoCastDriver::is_active(pc);` (`casting_controller.cpp:254`) — a
+  flag fed by this mod's own `SH2_CastRight` notify and `SH2_CastExit`, with no `IsShouting` read
+  anywhere on the path.
+- Past spellfire the cast is committed and delivers even if the state is torn away:
+  `if (anim_ok || is_cast_committed())` (`casting_controller.cpp:321`, ADR-0004, ticket 07).
+- The engine's `shoutStop` is not the cut any more either, because a hotbar cast no longer enters
+  the shout graph at all (ticket 08).
+
+**The remaining hazard is narrower and still real:** a cut taken **before** `MLh_SpellFire_Event`
+— the clip's first 0.483 s — still cancels the cast. That is why ticket 10's chain-out gates on
+commitment rather than on the state being live.
 
 **Therefore the obvious next move is the dangerous one.** Arming the engine on this mod's events
 (`ShoutStart` or the exhale) without solving the cut first is **strictly worse than today**: today
@@ -56,9 +72,11 @@ in this ticket is the integration itself, which is still blocked.
 
 - [ ] Carry the decision to the engine side as this project's answer to its ticket 38 (its
       A38.1). ADR 0004 is the artifact; **do not edit that repo**.
-- [ ] The engine must arm on a hotbar cast. It arms on `BeginCastVoice`, which a hotbar cast does
-      not raise, so nothing chains until that changes — and it must reach the `CombatReady_*`
-      branch first, which is ticket 02.
+- ~~[ ] The engine must arm on a hotbar cast.~~ **Superseded 2026-08-12 by ticket 10.** The chain
+      is built on this side and the engine never arms: SH2 owns the state it cuts, and widening
+      ShoutMCO's `isShoutStateEntry` gate to see a driver's cast would drag its whole window /
+      combo / root-lock apparatus onto a path that needs one event sent. ADR-0005 puts *cast-intent
+      release* upstream and says nothing about who ends SH2's own animation.
 - [ ] Verify live that a chain-out taken during a cast leaves the spell intact. **The spell
       firing at all has never been objectively confirmed** (finding 12), so this needs a real
       observation: a damaged target or a visible effect, not a magicka reading.

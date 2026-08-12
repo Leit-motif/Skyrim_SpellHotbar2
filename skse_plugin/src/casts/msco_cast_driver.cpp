@@ -23,7 +23,12 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		void send_exit(RE::PlayerCharacter* pc)
 		{
 			if (pc) {
-				pc->NotifyAnimationGraph("SH2_CastExit"sv);
+				// The return says whether a transition consumed the event, exactly as it does
+				// for the entry send. It is logged because a cut that reaches nothing and a cut
+				// the state ignores look identical from outside, and the chain-out depends on
+				// telling them apart.
+				const bool sent = pc->NotifyAnimationGraph("SH2_CastExit"sv);
+				logger::debug("SH2 cast: notified SH2_CastExit -> {}", sent);
 			}
 		}
 	}

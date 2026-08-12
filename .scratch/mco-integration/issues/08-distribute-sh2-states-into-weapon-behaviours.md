@@ -30,10 +30,11 @@ constraint: touch nothing msco/MCBO owns.
   transition appended to the root state's transition array, events registered in the
   graph's own stringdata/eventInfos.
 - **Entry semantics:** `NotifyAnimationGraph` return means "a transition consumed this" —
-  it is the entry confirmation. `enterNotifyEvents` reach the event sink only at state
-  EXIT; `exitNotifyEvents` never arrive; consumed external notifies do not echo to the
-  sink. The driver already encodes this (`state_active` = notify return, cleared on
-  observed `SH2_CastExit`); do not resurrect enter/exit-notify reliance.
+  it is the entry confirmation. ~~`enterNotifyEvents` reach the event sink only at state
+  EXIT~~ — **corrected 2026-08-12, see below**; `exitNotifyEvents` never arrive; consumed
+  external notifies do not echo to the sink. The driver already encodes this
+  (`state_active` = notify return, cleared on observed `SH2_CastExit`); do not resurrect
+  enter/exit-notify reliance.
 - **The clip:** `Animations\MSCO_left1.hkx` fires `MLh_SpellFire_Event` at 0.483s (LEFT
   hand — `spellfire_mask` arms left), `MSCO_WinOpen` at ~0.8s, duration 1.667s; the shtb
   patch adds an end-of-clip trigger raising `SH2_CastExit` at −0.05s. Annotation-driven
@@ -191,6 +192,32 @@ and combo-position continuity — deliberately out of this ticket.
 **ADR footprint note (standards review):** ADR-0006 and ADR-0001's deviation record
 describe the shtb patch as magicbehavior-scoped; this slice grows it into a second graph.
 Fold an ADR scope update into the next ADR-touching change.
+
+**Correction, 2026-08-12 — `SH2_CastEnter` arrives DURING the cast, not at its exit.** This
+ticket's "enterNotifyEvents reach the event sink only at state EXIT" is wrong, and the
+2026-08-12 trace that disagreed with it was right. One traced cast on a drawn weapon,
+timestamps from `SpellHotbar2.log` and a filtered graph-event trace added to the animation
+hook for exactly this question:
+
+```
+14:51:50.286  notified SH2_CastRight -> true      (entry)
+14:51:50.290  SBF_CastStopDual, SBF_ReadyStop
+14:51:50.483  SH2_CastEnter                        (+0.197s -- BEFORE spellfire)
+14:51:50.775  MLh_SpellFire_Event                  (+0.489s -- the commitment point)
+14:51:50.977  MSCO_WinOpen                         (+0.691s)
+14:51:51.790  notified SH2_CastExit -> true        (+1.504s, from finish())
+14:51:51.792  attackStop, SBF_ReadyStart, MSCO_MagicReady   (the state leaving)
+```
+
+The driver's design is unaffected and should not change: it deliberately does **not** react
+to `SH2_CastEnter` (`msco_cast_driver.cpp:51-61`), and the notify return remains the entry
+signal. Only the stated reason was wrong. The trace that settled it is now permanent, at
+`trace` level behind a narrow tag filter, so the next ordering question costs a grep rather
+than a build.
+
+The same trace also shows an external `SH2_CastExit` notify from C++ being **consumed
+mid-clip** — `-> true` at +1.504s, with the state leaving on the next frame, ahead of the
+clip's own end-of-clip trigger at +1.617s. Ticket 10 depends on that.
 
 **Session traps confirmed:** the wedged-Alt `A-` bar appeared after relaunch and did NOT
 clear from an injected Alt tap or 0.3s hold (the documented fix presumes a different wedge

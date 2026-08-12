@@ -5,6 +5,7 @@
 #include <imgui_impl_win32.h>
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
+#include "../casts/msco_cast_driver.h"
 #include "../storage/storage.h"
 #include "keycode_helper.h"
 #include "modes.h"
@@ -117,6 +118,67 @@ namespace SpellHotbar::Input {
     }
 
     void install_hook() { OnInputEventDispatch::Install(); }
+
+    namespace {
+
+        // The attack control this mod chains out of. Only the right attack: the left one is
+        // block, or a left-hand cast, and neither is the "spell into a swing" the chain is for.
+        constexpr std::string_view attack_control{ "Right Attack/Block"sv };
+
+        bool is_attack_press(uint32_t key_code, RE::INPUT_DEVICE key_device)
+        {
+            auto control_map = RE::ControlMap::GetSingleton();
+            if (!control_map) {
+                return false;
+            }
+            const uint32_t mapped = control_map->GetMappedKey(attack_control, key_device);
+            // Traced because a wrong device or an unmapped control disables the chain silently,
+            // and this is the one branch an agent cannot drive: injected input never reaches this
+            // hook (verified 2026-08-12), so the owner's own press is the only test, and it has to
+            // say why it failed without a second session. Bounded: only reached while a committed
+            // cast is live.
+            logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
+                static_cast<int>(key_device), key_code, mapped);
+            return mapped < 255 && key_code == mapped;
+        }
+
+        /**
+         * Leave the cast state on this press, and hand the press back to the game one frame
+         * later so the graph has an update in which to transition.
+         *
+         * Forwarding the press in the same frame is the case most likely to misbehave -- the
+         * graph may still be in the cast state when MCO reads the input -- so the press is
+         * captured and re-queued instead. `PushOntoInputQueue` is the same replay primitive the
+         * voice cast driver uses for the shout key, and the game's own dispatcher delivers the
+         * copy exactly as it delivers a physical press.
+         *
+         * Returns whether the original press was consumed. On false the caller forwards it
+         * untouched, so a failure here costs the chain, never the attack.
+         */
+        bool chain_out_of_committed_cast(const RE::ButtonEvent* press, uint32_t key_code, RE::INPUT_DEVICE key_device)
+        {
+            auto pc = RE::PlayerCharacter::GetSingleton();
+            auto queue = RE::BSInputEventQueue::GetSingleton();
+            auto user_events = RE::UserEvents::GetSingleton();
+            if (!pc || !queue || !user_events) {
+                return false;
+            }
+
+            // Built before the cut: a cast left without its state and without its press would
+            // be the worst of both.
+            auto replay = RE::ButtonEvent::Create(key_device, user_events->rightAttack, key_code,
+                press->Value(), press->HeldDuration());
+            if (!replay) {
+                logger::error("SH2 cast: could not allocate the replayed attack press");
+                return false;
+            }
+
+            casts::MscoCastDriver::cancel(pc);
+            queue->PushOntoInputQueue(replay);
+            logger::debug("SH2 cast: attack pressed on a committed cast; cut the state and re-queued the press");
+            return true;
+        }
+    }
 
     void processAndFilter(RE::InputEvent** a_event)
     {
@@ -270,6 +332,20 @@ namespace SpellHotbar::Input {
 
                             }
                         }
+                    }
+
+                    // Chain a committed cast into an MCO attack. The shtb cast state has no
+                    // transition to the attack states -- SH2's patch authored an entry and a
+                    // state-local exit and nothing else -- so a press during the cast is
+                    // silently refused for the whole clip (live-verified 2026-08-12: an attack
+                    // press at 0.9s leaves stamina untouched, the same press at 1.8s spends it).
+                    // Leaving the state on the press is what turns the clip's ~1.1s of tail
+                    // after spellfire into the start of a swing.
+                    if (!captureEvent && bEvent->IsDown() && in_ingame_state() &&
+                        casts::CastingController::is_committed_cast_holding_graph() &&
+                        is_attack_press(key_code, key_device))
+                    {
+                        captureEvent = chain_out_of_committed_cast(bEvent, key_code, key_device);
                     }
 
                     if (!captureEvent) {

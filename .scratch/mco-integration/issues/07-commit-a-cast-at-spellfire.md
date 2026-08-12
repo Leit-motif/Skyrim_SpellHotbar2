@@ -58,8 +58,13 @@ Changed:
 
 ## Acceptance
 
-- [ ] The commitment point is the graph's own `Voice_SpellFire_Event`, not a timer offset and not
+- [x] The commitment point is the graph's own `Voice_SpellFire_Event`, not a timer offset and not
       a constant. If the event never arrives, behaviour falls back to today's exactly.
+      **Live 2026-08-12**, five casts, plus the traced cast in ticket 08's correction: the event is
+      now `MLh_SpellFire_Event` (ADR-0006 renamed the clip's annotation), the log line
+      `SH2 cast: graph raised a left SpellFire event` lands at +0.46–0.49 s on every cast, and the
+      timer-floor warning never fires. The fallback is the ADR-0006 floor, still unexercised
+      because no clip without the annotation has been found.
 - [ ] A ritual concentration cast interrupted during its 1.0–1.5 s lead delivers its spell and
       deducts its magicka, rather than losing both.
 - [ ] An interruption **before** spellfire still cancels the cast, unchanged, and still costs the
@@ -72,6 +77,17 @@ Changed:
       does not discriminate** — it reads full at rest and regenerates in under a minute (finding
       12). The spell landing needs a damaged target or a visible effect.
 - [ ] Restore fixtures and close Skyrim after runtime work.
+
+## Runtime evidence so far (2026-08-12)
+
+Only the first cell above is closed. What the session could reach was the *arrival* of the
+commitment point, not the *survival* it buys: nothing in a normal cast tears the state away, so
+"committed casts survive a teardown" stays unproven until ticket 10's cut is exercised by hand.
+Ticket 10 leans on it, and says so.
+
+The uninterrupted regression cell is partly covered — plain casts from a drawn weapon behaved
+exactly as before across the session, and a control cast landed on a 5000 HP fixture (5000 →
+4992.5) — but ritual, dual, and both concentration kinds are untouched, so the cell stays open.
 
 ## Known gap
 

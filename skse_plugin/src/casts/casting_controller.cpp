@@ -70,6 +70,14 @@ namespace SpellHotbar::casts::CastingController {
 		return spellfire_seen.load(std::memory_order_relaxed);
 	}
 
+	bool is_committed_cast_holding_graph() {
+		if (!current_cast || !is_cast_committed()) {
+			return false;
+		}
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		return pc && MscoCastDriver::is_active(pc);
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
 		current_cast.reset();

@@ -243,6 +243,16 @@ namespace SpellHotbar::casts::CastingController {
 	*/
 	bool is_cast_committed();
 
+	/**
+	* Is a committed cast holding the graph right now — a live cast instance, its shtb state
+	* active, and the commitment point already passed?
+	*
+	* The attack-press chain-out reads this and nothing else. Before the commitment point a
+	* cut costs the player the spell (ticket 03's original hazard, real for the clip's first
+	* 0.483s), so a press then must keep today's behaviour.
+	*/
+	bool is_committed_cast_holding_graph();
+
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
