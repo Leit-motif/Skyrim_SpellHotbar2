@@ -9,7 +9,7 @@ and starts the swing, instead of being swallowed for the rest of the clip.
 **Blocked by:** Nothing. Ticket 08 shipped the state this cuts; ticket 07 shipped the commitment
 flag that makes cutting safe.
 
-**Status:** resolved (power-attack cell open by decision, not by defect)
+**Status:** resolved as an MVP cut. Combo continuity and the MSCO directions are ticket 11.
 
 ## What the trial found (live, 2026-08-12, T-save, Iron Rapier drawn)
 

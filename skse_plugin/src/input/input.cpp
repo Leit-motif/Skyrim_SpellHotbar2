@@ -1,4 +1,6 @@
 #include "input.h"
+#include <charconv>
+#include <fstream>
 #include "keybinds.h"
 #include "../logger/logger.h"
 #include <imgui_impl_dx11.h>
@@ -142,6 +144,84 @@ namespace SpellHotbar::Input {
                 return RE::ControlMap::kInvalid;
             }
             return control_map->GetMappedKey(user_events->rightAttack, key_device);
+        }
+
+        // One Click Power Attack's keys, read from its own config so they are configured in one
+        // place rather than copied here and left to drift. Read once; OCPA's binding does not move
+        // mid-session.
+        //
+        // A power attack does not travel the control map at all -- OCPA is a mod hotkey, which is
+        // why the right-attack lookup above answers kInvalid for it and why three power-attack
+        // presses during a cast were seen and declined on 2026-08-12. The press itself does reach
+        // this hook, so knowing the key is the whole of what was missing.
+        //
+        // Fails open: no config, no key, and only the mapped right attack chains.
+        struct OcpaKeys {
+            uint32_t power{ 0 };
+            uint32_t dual{ 0 };
+        };
+
+        const OcpaKeys& get_ocpa_keys()
+        {
+            static const OcpaKeys keys = [] {
+                // Both paths OCPA has shipped. Relative to the game root, so MO2's VFS resolves
+                // them to the load order's winner exactly as it does for the game's own files.
+                constexpr std::string_view paths[]{
+                    "Data/MCM/Settings/OCPA.ini"sv,
+                    "Data/MCM/Config/OCPA/settings.ini"sv,
+                };
+
+                OcpaKeys found{};
+                for (const auto& path : paths) {
+                    std::ifstream in{ std::string{ path } };
+                    if (!in) {
+                        continue;
+                    }
+                    // The file's first `iKeycode` is [General]'s -- the power attack. The second is
+                    // [DualAttack]'s. Either may be absent or negative, meaning unbound.
+                    std::string line;
+                    int seen{ 0 };
+                    while (std::getline(in, line) && seen < 2) {
+                        const auto eq = line.find('=');
+                        if (eq == std::string::npos || line.find("iKeycode") == std::string::npos) {
+                            continue;
+                        }
+                        int code{ 0 };
+                        const auto value = line.substr(eq + 1);
+                        const auto* first = value.data();
+                        const auto* last = first + value.size();
+                        while (first != last && (*first == ' ' || *first == '\t')) {
+                            ++first;
+                        }
+                        if (std::from_chars(first, last, code).ec != std::errc{}) {
+                            continue;
+                        }
+                        (seen == 0 ? found.power : found.dual) = code > 0 ? static_cast<uint32_t>(code) : 0U;
+                        ++seen;
+                    }
+                    logger::info("SH2 cast: OCPA keys read from {} (power={}, dual={})", path, found.power, found.dual);
+                    return found;
+                }
+                logger::info("SH2 cast: no OCPA config found; only the mapped right attack chains out of a cast");
+                return found;
+            }();
+            return keys;
+        }
+
+        // Is this press one that starts an attack -- the mapped right attack, or one of OCPA's
+        // power-attack hotkeys? Reported together because the chain-out treats them alike: it ends
+        // the cast state and lets the press reach whoever handles it.
+        bool is_attack_press(uint32_t key_code, RE::INPUT_DEVICE key_device, uint32_t attack_key)
+        {
+            if (attack_key != RE::ControlMap::kInvalid && key_code == attack_key) {
+                return true;
+            }
+            if (key_device != RE::INPUT_DEVICE::kKeyboard) {
+                return false;
+            }
+            const auto& ocpa = get_ocpa_keys();
+            return (ocpa.power != 0 && key_code == ocpa.power) ||
+                   (ocpa.dual != 0 && key_code == ocpa.dual);
         }
     }
 
@@ -328,7 +408,7 @@ namespace SpellHotbar::Input {
                         logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
                             static_cast<int>(key_device), key_code, attack_key);
 
-                        if (attack_key != RE::ControlMap::kInvalid && key_code == attack_key) {
+                        if (is_attack_press(key_code, key_device, attack_key)) {
                             logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
                             casts::MscoCastDriver::cancel(pc);
                         }
