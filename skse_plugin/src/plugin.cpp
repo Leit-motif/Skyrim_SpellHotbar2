@@ -8,6 +8,7 @@
 #include "events/eventlistener.h"
 #include "events/animationeventhook.h"
 #include "events/gameloop_hook.h"
+#include "casts/cast_intent.h"
 
 
 constexpr uint32_t serializazion_id = 0xB8498471; //random generated 4byte
@@ -22,7 +23,12 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
         //logger::trace("Received SKSE Message {}", message->type);
-        if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+        if (message->type == SKSE::MessagingInterface::kPostLoad) {
+            //Every SKSE plugin DLL is loaded by now, so ShoutMCO's optional cast-intent export
+            //can be resolved. Absent or incompatible is normal and costs nothing (ADR 0005).
+            SpellHotbar::casts::CastIntent::negotiate();
+        }
+        else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             SpellHotbar::GameData::onDataLoad();
             logger::info("SpellHotbar2 GameData loaded!");
         }

@@ -64,6 +64,9 @@ set(source_files src/plugin.cpp
                  src/casts/voice_cast_driver.cpp
                  src/casts/msco_cast_driver.h
                  src/casts/msco_cast_driver.cpp
+                 src/casts/cast_intent.h
+                 src/casts/cast_intent.cpp
+                 src/extern/ShoutMCO_CastIntent.h
                  src/game_data/keynames_csv_loader.h
                  src/game_data/keynames_csv_loader.cpp
                  src/rendering/spell_editor.h

@@ -5,6 +5,7 @@
 #include "../bar/hotbar.h"
 #include "../input/keybinds.h"
 #include "../input/modes.h"
+#include "../casts/cast_intent.h"
 
 namespace SpellHotbar::Storage {
 
@@ -169,6 +170,11 @@ namespace SpellHotbar::Storage {
     void LoadCallback(SKSE::SerializationInterface* a_intfc)
     {
         logger::trace("Loading from SKSE save...");
+
+        //A cast intent pending from the session being left behind names a slot on a bar that is
+        //about to be replaced. ShoutMCO abandons it on a game load too; withdrawing here does not
+        //depend on that.
+        casts::CastIntent::cancel();
 
         //clear all bars
         SpellHotbar::Bars::clear_bars();

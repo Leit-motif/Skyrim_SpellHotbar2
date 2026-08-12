@@ -6,6 +6,7 @@
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
 #include "msco_cast_driver.h"
+#include "cast_intent.h"
 
 namespace SpellHotbar::casts::CastingController {
 
@@ -620,12 +621,18 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
-	bool start_cast(CastingInstanceSpellData& cast_info)
+	// Why a start attempt produced no live cast. `graph_refused` is the one failure ShoutMCO can
+	// wait out: MscoCastDriver::begin() returned false because the animation graph is not in a
+	// state that hosts the cast entry — mid-MCO-swing the root state machine sits in AttackState
+	// (ticket 08). Every other failure is final and refuses exactly as it always did.
+	enum class start_result { started, graph_refused, failed };
+
+	start_result start_cast(CastingInstanceSpellData& cast_info)
 	{
 		if (!current_cast) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
-				
+
 				int anim = cast_info.m_animation;
 				if (anim < 0) {
 					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, false);
@@ -636,16 +643,17 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
-					return true;
+					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				return start_result::graph_refused;
 			}
 		}
-		return false;
+		return start_result::failed;
 	}
 
-	bool start_conc_cast(CastingInstanceSpellData& cast_info, const Input::KeyBind& keybind, size_t slot)
+	start_result start_conc_cast(CastingInstanceSpellData& cast_info, const Input::KeyBind& keybind, size_t slot)
 	{
 		if (!current_cast) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
@@ -662,16 +670,17 @@ namespace SpellHotbar::casts::CastingController {
 
 				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
-					return true;
+					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				return start_result::graph_refused;
 			}
 		}
-		return false;
+		return start_result::failed;
 	}
 
-	bool start_ritual_conc_cast(CastingInstanceSpellData & cast_info, const Input::KeyBind& keybind, size_t slot)
+	start_result start_ritual_conc_cast(CastingInstanceSpellData & cast_info, const Input::KeyBind& keybind, size_t slot)
 	{
 		if (!current_cast) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
@@ -689,16 +698,17 @@ namespace SpellHotbar::casts::CastingController {
 
 				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
-					return true;
+					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				return start_result::graph_refused;
 			}
 		}
-		return false;
+		return start_result::failed;
 	}
 
-	bool start_ritual_cast(CastingInstanceSpellData& cast_info)
+	start_result start_ritual_cast(CastingInstanceSpellData& cast_info)
 	{
 		if (!current_cast) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
@@ -716,11 +726,31 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand)) {
-					return true;
+					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				return start_result::graph_refused;
 			}
+		}
+		return start_result::failed;
+	}
+
+	/**
+	 * Turn a start attempt into the press's answer. A graph refusal is offered to ShoutMCO, which
+	 * owns release timing (ADR-0005): if it takes the intent, the press is accepted and this mod
+	 * re-attempts it once from the release callback. Anything else refuses as it always did.
+	 */
+	bool resolve_start(start_result result, const Input::KeyBind& keybind, size_t slot)
+	{
+		if (result == start_result::started) {
+			return true;
+		}
+		if (result == start_result::graph_refused) {
+			// The armed hand belongs to the cast that never started; a deferred intent must not
+			// leave it waiting to commit something.
+			clear_spellfire();
+			return CastIntent::offer(slot, keybind);
 		}
 		return false;
 	}
@@ -729,6 +759,10 @@ namespace SpellHotbar::casts::CastingController {
 	{
 		if (can_start_new_cast()) {
 			clear_spellfire();
+			// This press supersedes any intent still waiting from an earlier one, whether or not
+			// it ends up deferred itself. Withdrawing here keeps a stale payload from surfacing
+			// as a cast the player no longer asked for.
+			CastIntent::cancel();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
 				bool is_shouting{ false };
@@ -797,24 +831,26 @@ namespace SpellHotbar::casts::CastingController {
 							}
 							CastingInstanceSpellData cast_info{ spell, casttime, manacost, hand, dual_cast, spell_data.animation, spell_data.animation2, spell_data.casteffectid, is_spell_proc};
 
+							start_result result{ start_result::failed };
 							if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration) {
 								if (spell->IsTwoHanded()) {
-									return start_ritual_conc_cast(cast_info, keybind, slot);
+									result = start_ritual_conc_cast(cast_info, keybind, slot);
 								}
 								else
 								{
-									return start_conc_cast(cast_info, keybind, slot);
+									result = start_conc_cast(cast_info, keybind, slot);
 								}
 							}
 							else {
 								if (spell->IsTwoHanded() || dual_cast) {
-									return start_ritual_cast(cast_info);
+									result = start_ritual_cast(cast_info);
 								}
 								else
 								{
-									return start_cast(cast_info);
+									result = start_cast(cast_info);
 								}
 							}
+							return resolve_start(result, keybind, slot);
 						}
 						else {
 							RE::HUDMenu::FlashMeter(RE::ActorValue::kMagicka);
