@@ -502,3 +502,92 @@ Delivery experiments, all negative:
   which is the mechanism thuum's ticket 45 proved end-to-end; variables are declared in
   #0078/#0079 valueset/varinfo, the 3-list ordinal alignment trap applies).
 - TK Dodge RE's DLL source remains worth a read for its exact send + variable recipe.
+
+## 2026-08-11 ~19:00–20:00 — ENTRY WORKS; every prior "refusal" re-explained; two bugs found and fixed
+
+The two-event discriminator ran and the answer was the third branch nobody predicted:
+`SH2_CastRight -> true, probe MRh_SpellAimedStart -> false` — OUR event delivers and the
+VANILLA event is the one that returns false. The notify return tracks "a transition consumed
+this", not name resolution. The thuum "vanilla names always return true" rule does not hold
+on this graph.
+
+**Why every earlier run refused: the stance was never magicbehavior's.** The T05 save holds
+Incinerate LEFT + a greatsword RIGHT — drawing that loadout enters the 2hm weapon stance, so
+`SH2_CastRight` legitimately had no listener. `player.equipspell 10f7ed right` (spells in
+both hands, then draw) put the graph in the magic stance and entry worked first try. The
+19:52 "drawn stance confirmed by frame capture" from the earlier session confirmed DRAWN,
+not WHICH stance. Corollary the same evening: a sneaking player resolves the Sneak Magic
+bar and `castSlot(0)` reads an empty slot (`skill type=0`, driver never called) — the
+owner's Alt+Tab was leaking sneak toggles into the game.
+
+**Full-stream instrumentation (all player BSAnimationGraphEvents logged + grace 3.0 probe)
+rewrote the timeline.** Entry is IMMEDIATE — the state goes live on the send frame:
+
+```
++0.000s  SH2_CastRight -> true; SBF_CastStopDual; Pie @SGVI MSCO_next* (clip PIE payloads)
++0.46s   MLh_SpellFire_Event            <- the clip's throw annotation (authored 0.483s)
++0.68s   MSCO_WinOpen                   <- combo window annotation (authored 0.8)
++1.61s   SH2_CastExit                   <- our end-of-clip trigger (authored 1.617s)
++1.61s   SH2_CastEnter (!), MSCO_* resets, MSCO_MagicReady, tailCombatIdle
++2.12s   controller timer floor delivers (no armed SpellFire ever seen)
+```
+
+Reproduced identically 3×. Two graph-semantics findings, both load-bearing:
+
+- **`SH2_CastEnter` (enterNotifyEvents) reaches the BSAnimationGraphEvent sink only when
+  the state EXITS**, bundled after `SH2_CastExit`; `SH2_CastDone` (exitNotifyEvents) never
+  arrives at all. The clip's own annotations and its trigger array deliver on schedule.
+  The earlier sessions' "+1.5s state entry" was never entry latency — it was the enter
+  notification surfacing when the grace-expiry teardown's `SH2_CastExit` ended the state.
+- **The clip fires the LEFT-hand SpellFire** (`MLh_SpellFire_Event`, 0.483s), not MRh as
+  this doc's authoring spec claimed. The right-only `spellfire_mask` therefore never
+  committed, and every delivery fell to the ADR 0006 timer floor (+2.1s) — the owner's
+  live report ("animation plays, spell launches 3–4s after press") is exactly that floor
+  plus projectile flight.
+
+**Owner visual confirmation (live, same evening): the MCBO cast animation PLAYS.** With
+Incinerate equipped in hand it "casts twice" — magicka telemetry with Flames equipped
+instead showed NO cost at the +0.48s annotation and a single ~210-point cost at the timer
+floor, so the doubled cast is tied to the hotbar spell also being the equipped spell
+(engine/MCBO reaction to the left SpellFire on a charged hand); with a different spell
+equipped there is exactly one delivery, ours.
+
+**Fixes applied (this build):**
+
+- `spellfire_mask` arms LEFT for the slice clip; commit now lands on the +0.48s throw
+  frame and the timer floor returns to being a true fallback.
+- Driver liveness rebuilt on verified semantics: `state_active` set from the notify's own
+  return in `begin`/`replay`, cleared on observed `SH2_CastExit` (clip end or cancel echo)
+  and in `cancel`/`finish`; the `SH2_CastEnter`/`SH2_CastDone` handlers are gone (enter
+  arrives only post-exit and would re-raise the flag on a dead state).
+- Probes removed (vanilla probe-notify, full event-stream log), grace restored to 1.5s.
+
+**Retest 2026-08-11 20:05 — PASS, owner-accepted ("just tested, it works!").** The owner's
+own press: `SH2_CastRight -> true`, casting state active same frame, `graph raised a left
+SpellFire event` at +0.47s, **no timer-floor warning** — the cast commits and delivers on
+the clip's throw frame. Owner watched the MCBO animation play with the spell releasing
+where it should.
+
+**Release-timing design decision (owner, same session):** annotation-as-source-of-truth is
+the MVP (clips carrying a SpellFire annotation self-time; clips lacking one get one
+injected offline via hkxc-anno-cli). A per-clip/per-combo-step tuning override consumed by
+the timer path (SKSE menu/JSON) is the future enhancement, not MVP scope.
+
+**Two live-session traps documented for every future run:**
+
+- **Sneak switches the bar**: a sneaking player resolves the Sneak Magic bar; if it's
+  empty, `castSlot(0)` logs `skill type=0` and the driver never runs.
+- **Alt+Tab wedges the Alt modifier**: the game receives Alt-down but never Alt-up, the
+  HUD shows the `A-` prefixed (empty) modifier bar, and casts resolve it. Fix: tap Alt
+  once (DevBench `input` tap key 56 works; a bare `up` does not clear the latch).
+
+**Still open (polish, not blockers):** the recovery tail of the clip can be trimmed when
+the instance's teardown (`on_reset` → `finish()` → `SH2_CastExit`) lands before the clip's
+1.667s end — the absent "state exiting" log line this run says the state exited via the
+consumed finish-send, not the clip trigger; hold `finish()` until clip end if the cut
+recovery ever shows. The equipped-spell double-cast (hotbar spell == equipped spell fires
+twice; engine reaction to the left SpellFire on a charged hand) needs a decision for
+normal play. Consumed external notifies do NOT echo to the event sink; only clip-raised
+events do — liveness telemetry must account for it. shtb's enter/exit notify arrays are
+runtime-dead weight (prune in a later patch iteration). Concentration remains out of
+slice.

@@ -40,7 +40,7 @@ namespace SpellHotbar::events {
 			}
 
 			//if (eventHolder->GetFormID() == 0x14) { //playerref
-			//	logger::info("AnimationGraphEvent: {}, {}, {}", std::string(a_event->tag), eventHolder->GetFormID(), std::string(a_event->payload));
+			//	logger::debug("AnimationGraphEvent: {}, {}, {}", std::string(a_event->tag), eventHolder->GetFormID(), std::string(a_event->payload));
 			//}
 		}
 	}

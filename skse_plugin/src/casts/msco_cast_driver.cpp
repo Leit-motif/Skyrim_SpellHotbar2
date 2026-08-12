@@ -7,10 +7,13 @@ using namespace std::literals;
 namespace SpellHotbar::casts::MscoCastDriver {
 
 	namespace {
-		// Set when the graph raises SH2_CastEnter (our state's enterNotifyEvents), cleared
-		// on SH2_CastDone (exitNotifyEvents). This rides the same anim-event stream
-		// MSCO.dll uses to hear CastingStateExit, so it is the authoritative "our casting
-		// state is live" signal and needs no graph-variable polling.
+		// True from a consumed SH2_CastRight send until the clip's end-of-clip trigger
+		// (SH2_CastExit) crosses the anim-event stream. The state's enter/exit notify
+		// events cannot feed this flag: runtime-verified 2026-08-11, the sink receives
+		// SH2_CastEnter only when the state EXITS (bundled with the exit batch), and
+		// SH2_CastDone never arrives at all — while the clip's own annotations and its
+		// trigger array deliver on schedule. The notify's true return is the entry
+		// signal (a consumed transition), the clip trigger is the exit signal.
 		std::atomic<bool> state_active{ false };
 
 		// SH2_CastExit is this mod's own event: the only listener is the state-local
@@ -30,30 +33,28 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		if (!pc) {
 			return false;
 		}
-		// A stale flag must not close this cast's entry grace: if the graph tore down
-		// without delivering SH2_CastDone (load, teardown mid-state), the flag would
-		// still read true here. Each cast starts from false; its own SH2_CastEnter
-		// raises it again.
-		state_active.store(false, std::memory_order_relaxed);
 		// Minimal slice: one state, one clip (MSCO_left1.hkx, whose SpellFire annotation
-		// is the RIGHT-hand event); every hand routes into it. The entry transition lives
+		// is the LEFT-hand event); every hand routes into it. The entry transition lives
 		// in magicbehavior's MagicRoot, so a false here means the magic stance is not
 		// drawn and the controller tears the cast down through its normal failure path.
+		// A true means the transition was consumed and the state is live NOW — the clip
+		// starts this frame (annotations verified on schedule from the send timestamp).
 		(void)hand;
 		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
+		state_active.store(sent, std::memory_order_relaxed);
 		logger::debug("SH2 cast: notified SH2_CastRight -> {}", sent);
 		return sent;
 	}
 
 	void observe_graph_event(RE::Actor*, const RE::BSFixedString& a_tag)
 	{
-		if (a_tag == "SH2_CastEnter"sv) {
-			state_active.store(true, std::memory_order_relaxed);
-			logger::debug("SH2 cast: state entered");
-		}
-		else if (a_tag == "SH2_CastDone"sv) {
+		// SH2_CastExit reaches this sink two ways, both meaning the state is ending: the
+		// clip's own end-of-clip trigger, and our cancel/finish sends echoed back. Do NOT
+		// react to SH2_CastEnter here — it is delivered only in the exit batch (after
+		// SH2_CastExit), so handling it would re-raise the flag on a state that just died.
+		if (a_tag == "SH2_CastExit"sv) {
 			state_active.store(false, std::memory_order_relaxed);
-			logger::debug("SH2 cast: state exited");
+			logger::debug("SH2 cast: state exiting (clip end or cancel)");
 		}
 	}
 
@@ -70,16 +71,20 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		if (is_active(pc)) {
 			return true;
 		}
-		return pc->NotifyAnimationGraph("SH2_CastRight"sv);
+		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
+		state_active.store(sent, std::memory_order_relaxed);
+		return sent;
 	}
 
 	void cancel(RE::PlayerCharacter* pc)
 	{
 		send_exit(pc);
+		state_active.store(false, std::memory_order_relaxed);
 	}
 
 	void finish(RE::PlayerCharacter* pc)
 	{
 		send_exit(pc);
+		state_active.store(false, std::memory_order_relaxed);
 	}
 }

@@ -13,9 +13,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	// THE COMMITMENT POINT (ADR 0004 as amended by ADR 0006, ticket 07).
 	//
-	// The clip our shtb state plays (MSCO_left1) carries an `MRh_SpellFire_Event` annotation at
-	// the exact frame the hand throws the spell (0.283s in), and the graph raises it as an event
-	// when the clip crosses that frame. That instant is the commitment point: the magic is out,
+	// The clip our shtb state plays (MSCO_left1) carries an `MLh_SpellFire_Event` annotation at
+	// the exact frame the hand throws the spell (0.483s in, observed live at +0.46s), and the
+	// graph raises it as an event when the clip crosses that frame. That instant is the commitment point: the magic is out,
 	// so anything that ends the animation afterwards costs nothing. Before it, losing the
 	// casting state cancels the cast and costs nothing either, since the magicka is only
 	// deducted once `cast_spell` succeeds.
@@ -40,11 +40,12 @@ namespace SpellHotbar::casts::CastingController {
 	// this cast throws with. Called right before the state entry is sent.
 	void arm_spellfire(hand_mode used_hand) {
 		// Minimal slice: the single SH2 state plays MSCO_left1, whose annotation is the
-		// RIGHT-hand SpellFire regardless of the hand this cast chose, so only the right
-		// bit arms — a left event can only come from an unrelated equipped cast and must
+		// LEFT-hand SpellFire regardless of the hand this cast chose (runtime-verified
+		// 2026-08-11: MLh_SpellFire_Event at +0.46s, every run), so only the left bit
+		// arms — a right event can only come from an unrelated equipped cast and must
 		// not commit this one. Per-hand masking returns with the per-hand clip matrix.
 		(void)used_hand;
-		uint8_t mask = fire_right;
+		uint8_t mask = fire_left;
 		spellfire_mask.store(mask, std::memory_order_relaxed);
 		spellfire_seen.store(false, std::memory_order_relaxed);
 	}
@@ -317,9 +318,9 @@ namespace SpellHotbar::casts::CastingController {
 		// Past spellfire the cast is committed and delivers regardless of the casting state
 		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
 		if (anim_ok || is_cast_committed()) {
-			// The grace only bridges the frames between the SH2_CastRight send and the
-			// state raising SH2_CastEnter; once entry is confirmed, losing the state
-			// cancels immediately.
+			// The grace only bridges the send frame: the driver's flag is set from the
+			// notify's own return, so a live state reads active immediately and losing
+			// it afterwards cancels immediately.
 			m_entry_grace = 0.0f;
 			if (is_first_time_update()) {
 				play_charge_sound();
@@ -352,9 +353,9 @@ namespace SpellHotbar::casts::CastingController {
 			}
 		}
 		else if (m_entry_grace > 0.0f) {
-			// SH2_CastRight is sent when the instance is created and the graph takes a few
-			// frames to enter the state and raise SH2_CastEnter; cancelling in that window
-			// would tear the cast down before it ever had a state to enter.
+			// SH2_CastRight is sent when the instance is created; the grace covers the
+			// frames between instance creation and the send landing, so a cast is not
+			// torn down before its state had a chance to go live.
 			m_entry_grace -= delta;
 		}
 		else {
