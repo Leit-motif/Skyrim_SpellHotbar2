@@ -140,7 +140,13 @@ release → `CANCEL` → `attackStop` → `inRdy`.
 This also explains the timing band exactly: a press before `preHitFrame` (~295ms into a light
 attack on this loadout) is released on that `preHitFrame` and lost; a press after it waits for the
 following `inRdy` and casts. Full write-up, with both logs interleaved, in
-[`evidence/ticket-04-release-fires-before-attackstop.md`](../evidence/ticket-04-release-fires-before-attackstop.md).
+[`evidence/ticket-04-release-fires-before-attackstop.md`](../evidence/ticket-04-release-fires-before-attackstop.md)
+— note that `.scratch/**/evidence/` is gitignored here, so that file does not travel with the repo.
+
+**Filed upstream as thuum ticket 54** (`9f8c55f`),
+`.scratch/shout-mco-engine/issues/54-a-driver-cast-intent-releases-before-the-attack-ends.md`,
+which carries the same traces and the acceptance list for the fix. This ticket's early-press cell
+is blocked on it.
 
 **Spell Hotbar 2 is not changing to compensate.** No retry, no poll, no wait-a-few-frames. ADR-0005
 puts release timing on ShoutMCO's side, and a timer here is the duplicated policy that ADR forbids.
