@@ -14,7 +14,7 @@ live MCO attack) is deliberately OUT of this ticket — that is the ShoutMCO tic
 cast-intent API per the 2026-08-08 driver boundary; this ticket only makes the weapon
 graphs able to hear and play the cast at all.
 
-**Status:** open
+**Status:** resolved
 
 ## What this slice is
 
@@ -107,3 +107,60 @@ constraint: touch nothing msco/MCBO owns.
   acceptance decides whether variants are needed; do not pre-build them).
 - Pruning the now-dead enter/exit notify arrays from the magicbehavior patch (fold into
   the next patch iteration that touches those files anyway).
+
+## Answer
+
+Shipped as `nemesis/Nemesis_Engine/mod/shtb/1hm_behavior/` — the TK Dodge distribution
+pattern applied to the one graph that hosts every drawn melee stance. Owner-verified live
+2026-08-11 on a copy of their latest save (`SH2_T08_WeaponCast`, Riverwood, Iron Rapier
+right + Flames left): no T-poses, clean release frames, clean sheathing, no stuck
+animations.
+
+**The map (work item 1).** `1hm_behavior` is the weapon graph, singular: its root SM
+(`1HM_Behavior`, vanilla `#4876`, 13 vanilla states) hosts ready/attack/block/bash/bow/
+crossbow plus every combat mod's distributed states (MCO, SCAR, TK Dodge, Maxsu Block,
+hotkey skills — 36 states in the merged winner). `1HM_Ready_State` (stateId 0, transitions
+`#4872`) is the drawn-idle root state and the analog of magicbehavior's MagicRoot; a rapier
+cast entering from it proved the stance live. No second graph needed for the slice.
+Attach-point trap check: amco/hotkey/block/tkuc/tudm/zcbe all EDIT `#4872` in place and
+scar/sbeef keep `#4874`'s transitions pointer intact, so appending to `#4872` merges clean —
+the magicbehavior wildcard-replacement trap has no analog here (tkds edits `#0088` in
+place too).
+
+**The shape (work items 2–3).** Exactly the magicbehavior three-object shape plus the clip
+trigger array: `#shtb$0` clip generator (same `MSCO_left1.hkx`), `#shtb$1` state-local exit
+(`SH2_CastExit` → stateId 0), `#shtb$2` stateInfo (stateId 746002, **no** enter/exit notify
+arrays — the dead pattern was not replicated), `#shtb$3` end-of-clip trigger (−0.05s).
+Entry appended to `#4872` with `FLAG_DISABLE_CONDITION`, transition effect `#0091`
+(`DefaultBlendTransition`, this graph's `#0082` analog). Patch bases were derived by
+reverting other mods' MOD_CODE blocks and cross-checked identical from two independent
+mods per object.
+
+**The build cost this slice paid to learn:** the clip's SpellFire annotation resolves
+against the HOSTING graph's event table. `MLh_SpellFire_Event` is native to magicbehavior
+but absent from 1hm_behavior, so the first live cast entered, played, and fell to the
+ADR-0006 timer floor ("no SpellFire event by the authored cast time"). Registering
+`MLh_SpellFire_Event` in the patch's `#0085`/`#0087` fixed it: every later cast committed
+on the annotation at +0.46–0.50s, zero floor deliveries. Any future graph this state is
+distributed into needs the same registration.
+
+**Live evidence (SpellHotbar2.log timestamps, 2026-08-11 22:33–22:44):** sheathed refusal
+`-> false` ×2 (22:33:12, 22:43:56); drawn entry `-> true` ×5 (two scripted castSlot runs,
+two more scripted in the owner demo, one from the owner's own "1" keypress at 22:40:47 —
+the real input path); left SpellFire commit on every entry, no timer floor. Second cast
+succeeding proves the exit transition returns to `1HM_Ready_State` (the entry transition
+exists only there). DevBench recording `recording_1786505659.json` (38s) spans the first
+fixed-build cast. Verified per graph-dissect: 21/21 checks (zero literal `#shtb$` tokens,
+event ids == merged table indices 701/702/703 of 714).
+
+**Owner chain matrix (2026-08-11, recorded for the follow-up tickets, not acceptance
+criteria here):** attack→SH2 no chain; SH2→attack no chain; LH cast→SH2 **chains**;
+SH2→LH cast no chain; attack→SH2-shout **chains**; SH2-shout→attack unclear (shout combo
+window may be too strict). The no-chain rows are the ShoutMCO ticket-50 cast-intent API
+and combo-position continuity — deliberately out of this ticket.
+
+**Session traps confirmed:** the wedged-Alt `A-` bar appeared after relaunch and did NOT
+clear from an injected Alt tap or 0.3s hold (the documented fix presumes a different wedge
+source); it proved cosmetic for `castSlot` — casts resolved the real spell throughout.
+Owner fixture ruling recorded: test on a copy of the LATEST save, not the old Codex_T05
+fixtures.
