@@ -8,7 +8,21 @@ in **both** directions.
 
 **Blocked by:** Nothing. Ticket 10 shipped the cut this builds on.
 
-**Status:** claimed
+**Status:** claimed — decision-complete, not started
+
+## State this ticket starts from
+
+- **Baseline:** `spell-hotbar-2` branch `main`. Ticket 10 shipped the cut this builds on and is
+  owner-verified (32 of 32 cuts chained into a swing).
+- **One change is built but NOT deployed:** power-attack chaining (SH2 reads OCPA's key from its own
+  config). It compiles and links clean; the copy into `Dev - Spell Hotbar 2` failed with the game
+  holding the DLL, so **the deployed DLL is one build behind the source**. Re-run
+  `skse_plugin/build-release.bat` with Skyrim closed before testing anything.
+- **Nothing in this ticket is started.** No graph edit, no driver change, no clip work.
+- **One question is out and unanswered:** `../questions/question-2026-08-12-sh2-to-shoutmco-combo-index-ownership.md`,
+  also at `%TEMP%`. It asks whether ShoutMCO ever writes `MCO_nextattack` for an SH2 driver cast. A
+  "no" closes the collision risk; a "yes" changes the design. Do not start the write path without
+  reading its `## Answer` section.
 
 ## The owner's words, because the scope is theirs and not mine to trim
 
