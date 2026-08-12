@@ -442,3 +442,55 @@ time and the graph was still fatal); (3) relaunch, load T05 save (must survive �
 now the first acceptance gate), magic stance drawn, `castSlot(0)`/press "1"; (4) owner's
 eyes for the visual. Skyrim/MO2 are shared with another effort — coordinate before the
 Nemesis run or any launch.
+
+## 2026-08-11 evening — shtb rebuild VERIFIED SOUND; load CTD fixed; entry still refused
+
+Pre-rebuild, the review round landed (commit e393e57): timer delivery floor (ADR 0006 —
+the SpellFire annotation leads, the authored cast time delivers when it never arrives),
+`SH2_CastExit` sent unconditionally, `relay_from_graph_event`→`observe_graph_event`,
+comment/vocabulary sweep. DLL deployed 18:28.
+
+Nemesis re-run (Update Engine 113s + Build 114s, 1045 anims, `run-nemesis.ps1 -Tick shtb
+-UpdateEngine -Apply`). **The digit-code diagnosis is confirmed by construction:** zero
+literal `#shtb$` tokens in the final temp XML; the built `SH2_CastRight_State` (#1740) has
+generator #1744 (`SH2_CastRight_Clip` → `Animations\MSCO_left1.hkx`, trigger array #1745
+at -0.05 end-of-clip), transitions #1743, enter/exit notify #1741/#1742; entry transition
+eventId 252 == `SH2_CastRight`'s index 252 in the 268-name event table; state in the root
+SM's states array. **In-game: the T05 save loads clean and plays** — the load CTD is
+fixed. (Two crashes tonight were environmental: the owner clicking into the game window
+reproduced the pre-existing worker-thread signature identical to the 03:31 overnight log —
+no mod frames, not the graph.)
+
+**But entry is still refused in the drawn magic stance**: `SH2_CastRight -> false` with
+the stance visually confirmed by frame capture (the new focus-free stack works: DevBench
+`input` tool taps Ready Weapon by scan code + userEvent, PrintWindow captures frames, all
+unfocused; `Input.TapKey` confirmed a no-op unfocused — do not use it).
+
+Delivery experiments, all negative:
+
+- **BDI root injection does not fix it.** Shipped `SpellHotbar2_BDI.json` (repo
+  `nemesis/SKSE/Plugins/BehaviorDataInjector/`, deployed) with `projectPath: "Actors"` —
+  the form CPR uses, vs MCBO's `actors\\Character` — kEvent entries for
+  SH2_CastRight/SH2_CastExit. BDI stored both and only MagicBehavior.hkb logs the benign
+  duplicate warning, yet the notify still returns false in drawn stance.
+- **`Debug.SendAnimationEvent(player, "SH2_CastRight")`** — no state entry (no
+  SH2_CastEnter in our hook log).
+- **Control: `Debug.SendAnimationEvent(player, "TKDodgeForward")`** — TK Dodge RE's own
+  event, whose dodge works in normal play — **also does nothing** from this path. So
+  external delivery of custom graph events fails generally in this load order, not just
+  for our patch; the mods that work (TK Dodge, MCBO mid-cast on 12:57) do something their
+  DLLs know and ours doesn't.
+- Hot Key Skill turns out to be a stub install here (meta.ini + Nemesis patch only, no
+  DLL) — its runtime delivery was never proven; it validated patch structure only.
+
+**Next lever (offline, no game needed): read the working senders' source.**
+(a) MSCO's `AnimEventFramework.cpp` (local: `C:\Nolvus\Projects\
+magic-casting-behavioral-overhaul\ref\src`) — its `MSCO_start_left` demonstrably delivered
+and transitioned at 12:57 from inside graph-event dispatch during a real cast; find the
+exact call and its preconditions (mid-cast active branch? different API than
+`IAnimationGraphManagerHolder::NotifyAnimationGraph`?).
+(b) TK Dodge RE's source — how its DLL enters TKDodgeState (send-by-id via the hkb event
+queue? graph variable + wildcard? `hkbBehaviorGraph::...` direct?). If either sends the
+hkbEvent BY ID into the active graph, we already know our id (252 in the current build —
+but ids shift per rebuild, so resolve at runtime from the name table, never hard-code).
+Then copy that mechanism into `MscoCastDriver::begin`.

@@ -1,0 +1,12 @@
+[
+  {
+    "projectPath": "Actors",
+    "type": "kEvent",
+    "name": "SH2_CastRight"
+  },
+  {
+    "projectPath": "Actors",
+    "type": "kEvent",
+    "name": "SH2_CastExit"
+  }
+]
