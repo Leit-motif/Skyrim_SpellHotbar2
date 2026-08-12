@@ -43,8 +43,8 @@ happen, and an attack launched from idle is by definition the first of a combo.*
 MCO defending itself; it is this patch routing through the one state that means "no combo in
 progress".
 
-That makes the shape of the fix structural rather than a trick: the cast state has to stop being a
-detour out of the chain and become a member of it.
+The obvious reading of that is "rehome the cast state inside MCO's chain". The mechanism section
+below shows there is a much cheaper fix that leaves the transition alone.
 
 ## The mechanism, answered — thuum already solved this and wrote it down
 
@@ -83,8 +83,10 @@ variable itself, we need to be sure the two never both write.
 ## The four cells
 
 1. **Cast continues the combo it interrupts.** attack1 → cast → attack2, not attack1 → cast →
-   attack1. Requires the exit to land somewhere other than `1HM_Ready_State`, chosen by the combo
-   position at entry.
+   attack1. Snapshot `MCO_nextattack` / `MCO_nextpowerattack` at cast start, write them back after
+   the cut's ready pass. Note this needs **no change to the exit transition**: routing through
+   `1HM_Ready_State` is fine once the index is restored afterwards, which is a far smaller change
+   than rehoming the state inside MCO's chain.
 2. **Casts have combos of their own.** Consecutive casts play different clips, chained the way MCO
    chains attack1→2→3. Needs a per-position clip set; the slice currently has exactly one clip
    (`MSCO_left1.hkx`) reused for every cast, which is also why a second cast looks identical to the
