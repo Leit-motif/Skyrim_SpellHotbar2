@@ -153,6 +153,17 @@ exists only there). DevBench recording `recording_1786505659.json` (38s) spans t
 fixed-build cast. Verified per graph-dissect: 21/21 checks (zero literal `#shtb$` tokens,
 event ids == merged table indices 701/702/703 of 714).
 
+**Mid-swing refusal mechanism (owner-observed, code-traced 2026-08-11):** during an MCO
+swing, for the whole clip, an SH2 press shows the bar's red error border and nothing
+casts. The trace: the press passes `allowed_to_instantcast`/`allowed_to_cast` (neither
+gates on attack state), `try_start_cast` runs, the driver notifies `SH2_CastRight`, and
+the GRAPH refuses — mid-swing the root SM sits in `AttackState`, and the entry transition
+exists only in `1HM_Ready_State`'s transition array. The false return takes the
+controller's failure path and `InputModeCast::process_input` paints the red highlight on
+`!success` (`input/modes.cpp:53`). Nothing is broken; this is the designed idle-stance
+boundary, and the `-> false` refusal in `begin()` is the exact seam where ticket-50's
+defer-to-ShoutMCO hook replaces "fail" with "queue and re-attempt on release."
+
 **Owner chain matrix (2026-08-11, recorded for the follow-up tickets, not acceptance
 criteria here):** attack→SH2 no chain; SH2→attack no chain; LH cast→SH2 **chains**;
 SH2→LH cast no chain; attack→SH2-shout **chains**; SH2-shout→attack unclear (shout combo
