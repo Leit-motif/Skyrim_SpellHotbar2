@@ -475,22 +475,30 @@ Delivery experiments, all negative:
   duplicate warning, yet the notify still returns false in drawn stance.
 - **`Debug.SendAnimationEvent(player, "SH2_CastRight")`** — no state entry (no
   SH2_CastEnter in our hook log).
-- **Control: `Debug.SendAnimationEvent(player, "TKDodgeForward")`** — TK Dodge RE's own
-  event, whose dodge works in normal play — **also does nothing** from this path. So
-  external delivery of custom graph events fails generally in this load order, not just
-  for our patch; the mods that work (TK Dodge, MCBO mid-cast on 12:57) do something their
-  DLLs know and ours doesn't.
+- **Control: `Debug.SendAnimationEvent(player, "TKDodgeForward")`** — no dodge, but this
+  probe is INCONCLUSIVE (checked post-hoc in the merged graph): TK's wildcard transitions
+  (#1802: eventIds 256/257/258 → TKDodgeState) each carry an hkbExpressionCondition on
+  DLL-set variables, so a delivered event without TK's variables is refused legitimately.
+  Do not re-run this probe as delivery evidence.
 - Hot Key Skill turns out to be a stub install here (meta.ini + Nemesis patch only, no
   DLL) — its runtime delivery was never proven; it validated patch structure only.
 
-**Next lever (offline, no game needed): read the working senders' source.**
-(a) MSCO's `AnimEventFramework.cpp` (local: `C:\Nolvus\Projects\
-magic-casting-behavioral-overhaul\ref\src`) — its `MSCO_start_left` demonstrably delivered
-and transitioned at 12:57 from inside graph-event dispatch during a real cast; find the
-exact call and its preconditions (mid-cast active branch? different API than
-`IAnimationGraphManagerHolder::NotifyAnimationGraph`?).
-(b) TK Dodge RE's source — how its DLL enters TKDodgeState (send-by-id via the hkb event
-queue? graph variable + wildcard? `hkbBehaviorGraph::...` direct?). If either sends the
-hkbEvent BY ID into the active graph, we already know our id (252 in the current build —
-but ids shift per rebuild, so resolve at runtime from the name table, never hard-code).
-Then copy that mechanism into `MscoCastDriver::begin`.
+**Next levers (offline first, then one instrumented run):**
+
+- MSCO's source (read tonight, `ref/src/AnimEventFramework.cpp:287/297/323/334`) uses the
+  SAME `actor->NotifyAnimationGraph(...)` API we do. That re-opens the reading of its
+  12:57 "success": `LeftMSCOStart` in MSCO.log is its own bookkeeping enum, and the visible
+  animation came from `replaceNode` — so MSCO's event sends may ALSO be undelivered no-ops
+  in this load order, with nobody noticing because replaceNode does the work. If so, no
+  installed mod demonstrates external custom-event ENTRY into magicbehavior, and the
+  entry design needs a different trigger, not a different sender.
+- **The one clean discriminator left (needs one game run):** from `MscoCastDriver::begin`,
+  probe-notify a VANILLA magicbehavior event (e.g. `MRh_SpellAimedStart`) alongside
+  `SH2_CastRight` and log both returns in the same drawn-stance frame. Vanilla true + ours
+  false = name-resolution scope (then chase send-by-id / root registration via a 0_master
+  patch). Both false = external notify cannot reach magicbehavior at all from the calling
+  thread, and entry must be re-designed (candidates: TK's shape — wildcard transition on a
+  vanilla-or-injected event gated by OUR graph variable set via `SetGraphVariableBool`,
+  which is the mechanism thuum's ticket 45 proved end-to-end; variables are declared in
+  #0078/#0079 valueset/varinfo, the 3-list ordinal alignment trap applies).
+- TK Dodge RE's DLL source remains worth a read for its exact send + variable recipe.
