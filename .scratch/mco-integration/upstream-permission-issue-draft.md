@@ -15,8 +15,9 @@ Permission to put an MCO fork on Nexus?
 
 ## Body
 
-Hey — I forked SH2 and built MCO/ADXP support into it. Casts start from the drawn weapon stance and
-commit on the animation's SpellFire, instead of getting refused mid-swing.
+Hey — I forked SH2 and built MCO/ADXP support into it. You can cast straight out of a drawn weapon
+stance, mid-combo, without dropping out of the moveset — it's the piece that makes hotbar casting
+actually work in an MCO setup.
 
 I'd like to put it on Nexus, credited and linked back here. Mostly for reach — SH2 has no Nexus
 page and almost nobody I talk to knows it exists.
