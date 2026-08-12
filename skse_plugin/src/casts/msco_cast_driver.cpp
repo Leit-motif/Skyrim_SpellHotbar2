@@ -34,9 +34,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return false;
 		}
 		// Minimal slice: one state, one clip (MSCO_left1.hkx, whose SpellFire annotation
-		// is the LEFT-hand event); every hand routes into it. The entry transition lives
-		// in magicbehavior's MagicRoot, so a false here means the magic stance is not
-		// drawn and the controller tears the cast down through its normal failure path.
+		// is the LEFT-hand event); every hand routes into it. Entry transitions live in two
+		// graphs — magicbehavior's MagicRoot and 1hm_behavior's 1HM_Ready_State — so a false
+		// here means no hosting drawn idle is current: the weapon is sheathed, or the graph
+		// sits in AttackState mid-swing. The controller then tears the cast down through its
+		// normal failure path.
 		// A true means the transition was consumed and the state is live NOW — the clip
 		// starts this frame (annotations verified on schedule from the send timestamp).
 		(void)hand;
