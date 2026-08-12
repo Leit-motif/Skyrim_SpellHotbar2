@@ -159,6 +159,25 @@ SH2→LH cast no chain; attack→SH2-shout **chains**; SH2-shout→attack unclea
 window may be too strict). The no-chain rows are the ShoutMCO ticket-50 cast-intent API
 and combo-position continuity — deliberately out of this ticket.
 
+**Open acceptance cells, named per the evidence rules (review round 2026-08-11):**
+
+- **2H (greatsword) drawn-idle entry is UNVERIFIED live.** The owner redirected acceptance
+  from the T05 fixture to a copy of their latest save, whose loadout is a 1H rapier. The
+  static case for 2H coverage is strong (2H attack/idle states live in the same
+  `1hm_behavior` root SM entered from the same `1HM_Ready_State`, and no 2hm graph exists)
+  but no greatsword cast has been driven on the new build. One `castSlot(0)` with a 2H
+  drawn settles it next session.
+- **"A real shout still plays SYHO" is unconfirmed on this build.** An injected Shout
+  press produced no ShoutMCO arm line (likely no shout equipped in the save). The owner's
+  matrix covered SH2-driven shouts, not the vanilla shout key.
+- **The MCO swing check is indirect.** The owner drove attacks while building their chain
+  matrix (attack→SH2 rows require working attacks) and reported no stuck animations, but
+  no explicit before/after swing regression pass was run.
+
+**ADR footprint note (standards review):** ADR-0006 and ADR-0001's deviation record
+describe the shtb patch as magicbehavior-scoped; this slice grows it into a second graph.
+Fold an ADR scope update into the next ADR-touching change.
+
 **Session traps confirmed:** the wedged-Alt `A-` bar appeared after relaunch and did NOT
 clear from an injected Alt tap or 0.3s hold (the documented fix presumes a different wedge
 source); it proved cosmetic for `castSlot` — casts resolved the real spell throughout.
