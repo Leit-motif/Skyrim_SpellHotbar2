@@ -28,6 +28,17 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool blocks_movement() const;
 
+		/**
+		* Is this a concentration channel — a cast that keeps re-entering its own state for as
+		* long as the key is held, rather than one clip that ends?
+		*
+		* The attack chain-out reads this and refuses: cutting the state of a channel does not
+		* end the channel, and the channel's own loop re-enters the state within half a second,
+		* so the cut would be undone while the swing was still starting. Ending a channel
+		* properly is its own ticket.
+		*/
+		virtual bool is_concentration_channel() const;
+
 		virtual void on_reset();
 
 		void consume_items();
@@ -152,6 +163,7 @@ namespace SpellHotbar::casts::CastingController {
 		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
 		virtual bool is_gcd_expired() const override;
 		virtual bool blocks_movement() const override;
+		virtual bool is_concentration_channel() const override;
 
 		virtual bool has_duration() const;
 		virtual float get_current_gcd_progress() const override;

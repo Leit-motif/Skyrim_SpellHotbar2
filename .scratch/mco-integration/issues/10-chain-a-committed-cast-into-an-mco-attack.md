@@ -49,23 +49,41 @@ and re-queue it so the game receives it one frame later.
   live cast instance whose graph state is active and whose `MLh_SpellFire_Event` has arrived.
   Before that instant a cut costs the player the spell — ticket 03's original hazard, real for the
   clip's first 0.483 s — so a press then keeps today's behaviour exactly.
-- **The press is replayed, not forwarded.** Sending the cut and forwarding the same press in the
-  same frame is the case most likely to misbehave, because the graph may not have left the state
-  when MCO reads the input. `BSInputEventQueue::PushOntoInputQueue` is the replay primitive the
-  voice cast driver already uses for the shout key, and it costs one frame.
-- **Right attack only.** The left control is block, or a left-hand cast; neither is the "spell into
-  a swing" being asked for.
+- **The press is forwarded untouched.** It is not captured, and nothing is re-queued. The first
+  revision did capture and replay it, meaning to buy the graph a frame; a Codex review showed that
+  is not what happens, and the CommonLib source agrees. This hook runs inside `PollInputDevices`,
+  and `PushOntoInputQueue` sets `queueTail->next` on the very chain being dispatched
+  (`BSInputEventQueue.cpp`), so the copy arrives in the same frame regardless — paying for an
+  allocation nobody frees, a second pass through this file's own modifier and keybind handling,
+  and a second ImGui mouse event. Both events reach the graph's queue in the order they were sent,
+  which is the only ordering available and the one the cut needs.
+
+  Leaving the press alone is also what makes the chain fail-safe: if the graph refuses the cut, the
+  player gets exactly today's behaviour instead of a swallowed attack.
+- **Right attack only, keyboard and mouse only.** The left control is block, or a left-hand cast;
+  neither is the "spell into a swing" being asked for. The device restriction is not fastidiousness:
+  this file works in its own 0–15 gamepad ordinals while `GetMappedKey` answers in the engine's
+  ids, so a gamepad comparison is between two alphabets and can only be wrong, and `kNone` is `-1`
+  in an array index behind an assert a release build drops.
+- **Concentration channels are excluded** (`is_concentration_channel()`). Cutting a channel's state
+  does not end the channel — its own loop re-enters the state within half a second — so the cut
+  would be undone while the swing was still starting. Ending a channel properly is its own ticket,
+  as ticket 08 already scoped it.
 - **Power attack is a separate cell.** This profile routes power attacks through One Click Power
   Attack on key 48, which reads raw input.
 
 ## Changed
 
-- `skse_plugin/src/casts/casting_controller.{h,cpp}` — `is_committed_cast_holding_graph()`.
+- `skse_plugin/src/casts/casting_controller.{h,cpp}` — `is_committed_cast_holding_graph()`, and
+  `is_concentration_channel()` on the instance hierarchy.
 - `skse_plugin/src/input/input.cpp` — `is_attack_press` / `chain_out_of_committed_cast`, and the
   branch in `processAndFilter`.
 - `skse_plugin/src/casts/msco_cast_driver.cpp` — `send_exit` logs its notify return.
-- `skse_plugin/src/events/animationeventhook.cpp` — the filtered graph-event trace (see ticket 08's
-  correction).
+- `skse_plugin/src/events/animationeventhook.cpp` — the graph-event trace (see ticket 08's
+  correction), bounded to a live cast state because it runs on the animation thread and the logger
+  flushes every line.
+- `docs/adr/0006-own-nemesis-state-with-a-timer-floor.md` — amended with the measured annotation
+  and the second graph, closing the footprint note ticket 08 left against it.
 
 ## Acceptance — the owner's hands are required, and here is why
 
@@ -85,8 +103,20 @@ each press logs its device, key, and the resolved attack binding.
       nothing.
 - [ ] A press with no cast in flight is untouched — no capture, no replay, no dropped attack.
 - [ ] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
-- [ ] Power attack (OCPA, key 48) — its own cell, and its own run.
+- [ ] Power attack (OCPA, key 48) — its own cell, and its own run. OCPA reads raw input on an
+      unmapped keyboard attack control, so this branch does not fire for it; whether OCPA then
+      synthesises a mapped attack event is unknown and is what the cell answers.
 - [ ] Restore fixtures and close Skyrim after runtime work.
+
+## Open findings carried, not fixed
+
+- **The commitment flag has no cast generation.** `spellfire_seen` and `state_active` are
+  process-wide; a stray accepted left SpellFire could in principle authorise a cut for a cast whose
+  own annotation has not arrived. `arm_spellfire` clears the flag at every cast start, which bounds
+  it, and the design is ticket 07's rather than this ticket's — but it is a real hole and belongs in
+  whichever ticket next touches the commitment point.
+- **CONTEXT.md still describes the retired shout-graph chain model.** Ticket 03 is corrected;
+  CONTEXT.md is not, and the two now disagree.
 
 ## Known risk, named rather than assumed
 

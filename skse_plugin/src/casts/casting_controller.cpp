@@ -71,7 +71,7 @@ namespace SpellHotbar::casts::CastingController {
 	}
 
 	bool is_committed_cast_holding_graph() {
-		if (!current_cast || !is_cast_committed()) {
+		if (!current_cast || !is_cast_committed() || current_cast->is_concentration_channel()) {
 			return false;
 		}
 		auto pc = RE::PlayerCharacter::GetSingleton();
@@ -284,6 +284,11 @@ namespace SpellHotbar::casts::CastingController {
 	}
 
 	bool BaseCastingInstance::blocks_movement() const
+	{
+		return false;
+	}
+
+	bool BaseCastingInstance::is_concentration_channel() const
 	{
 		return false;
 	}
@@ -590,6 +595,11 @@ namespace SpellHotbar::casts::CastingController {
 	bool CastingInstanceSpellConcentration::blocks_movement() const
 	{
 		return m_blocks_movement && !m_casted;
+	}
+
+	bool CastingInstanceSpellConcentration::is_concentration_channel() const
+	{
+		return true;
 	}
 
 	bool CastingInstanceSpellConcentration::has_duration() const

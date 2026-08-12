@@ -10,10 +10,26 @@ this load order's shout-path clips T-pose, MSCO's own entry events are combo-cha
 unreachable from idle, and MCBO animates only real hand casts, which a hotbar cast is not.
 
 ADR-0004's reasoning survives the move; only the event names change. The commitment point is
-the clip's own SpellFire annotation (`MRh_SpellFire_Event` for the slice's clip, 0.283s in),
-read from the graph rather than invented by a timer, for exactly 0004's reasons: the payload
-lands at the frame the animation shows it leaving the hand, and no cross-mod handshake is
-built where the graph already raises the fact.
+the clip's own SpellFire annotation, read from the graph rather than invented by a timer, for
+exactly 0004's reasons: the payload lands at the frame the animation shows it leaving the hand,
+and no cross-mod handshake is built where the graph already raises the fact.
+
+**Amended 2026-08-12, on two runtime corrections this ADR predates.** Neither changes the
+decision; both change what the decision names, and a reader who trusts the original text
+arrives at the wrong event and the wrong graph.
+
+- *The annotation is `MLh_SpellFire_Event` at 0.483s, not `MRh_` at 0.283s.* `MSCO_left1.hkx`
+  raises the LEFT-hand event whatever hand the cast chose, so the driver arms the left bit only
+  (`casting_controller.cpp`, `arm_spellfire`). Measured at +0.46–0.50s on every observed cast,
+  across two sessions.
+- *The patch is no longer magicbehavior-scoped.* Ticket 08 distributed the state into
+  `1hm_behavior` as well, which is what makes a cast from a drawn weapon possible at all; a clip
+  annotation resolves against its HOSTING graph's event table, so every graph the state is
+  distributed into must register `MLh_SpellFire_Event` too. This also settles the footprint note
+  ticket 08 left against this ADR and ADR-0001's deviation record.
+- *`SH2_CastEnter` does arrive, and before spellfire* (+0.197s, traced 2026-08-12) — but the
+  driver deliberately does not use it. The notify's own return is the entry signal, and
+  `SH2_CastDone` never arrives at all.
 
 What 0004 left implicit is now explicit: **the annotation leads, the authored cast time is the
 floor.** Commitment protects a cast from interruption after spellfire; it is not the sole

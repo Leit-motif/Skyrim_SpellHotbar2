@@ -12,10 +12,17 @@ namespace SpellHotbar::events {
 		// events on the player's stream -- the state's own SH2_*, the commitment point, and
 		// the MCO/MSCO annotations on the clip it borrows. Two documents disagree about that
 		// order, and one traced cast settles it, so the trace is kept rather than improvised
-		// again next time. Trace level and a narrow tag filter: an ordinary session's log does
-		// not grow, and the whole of a cast is one grep away when it matters.
+		// again next time.
+		//
+		// Bounded twice over, because this runs on the animation thread and the logger flushes
+		// on every line: only while the cast state is live, and only for the tags this
+		// integration turns on. An ordinary MCO swing raises `MCO_*` and `attack*` several times
+		// a second and must never reach the file.
 		bool is_traced_graph_event(const RE::BSFixedString& a_tag)
 		{
+			if (!casts::MscoCastDriver::is_active(RE::PlayerCharacter::GetSingleton())) {
+				return false;
+			}
 			const char* raw = a_tag.c_str();
 			if (!raw) {
 				return false;

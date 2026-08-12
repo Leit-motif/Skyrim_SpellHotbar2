@@ -121,17 +121,29 @@ namespace SpellHotbar::Input {
 
     namespace {
 
-        // The attack control this mod chains out of. Only the right attack: the left one is
-        // block, or a left-hand cast, and neither is the "spell into a swing" the chain is for.
-        constexpr std::string_view attack_control{ "Right Attack/Block"sv };
-
+        /**
+         * Is this press the attack control the chain cuts for?
+         *
+         * Keyboard and mouse only. The gamepad ids this file works in are its own 0-15 ordinals
+         * (`get_device_and_input`), while `GetMappedKey` answers in the engine's ids, so a
+         * gamepad comparison here is between two different alphabets and can only be wrong.
+         * `kNone` is excluded for a harder reason: it is -1, and `GetMappedKey` indexes
+         * `deviceMappings[device]` behind an assert that a release build drops.
+         *
+         * Only the right attack. The left control is block, or a left-hand cast, and neither is
+         * the "spell into a swing" the chain is for.
+         */
         bool is_attack_press(uint32_t key_code, RE::INPUT_DEVICE key_device)
         {
-            auto control_map = RE::ControlMap::GetSingleton();
-            if (!control_map) {
+            if (key_device != RE::INPUT_DEVICE::kKeyboard && key_device != RE::INPUT_DEVICE::kMouse) {
                 return false;
             }
-            const uint32_t mapped = control_map->GetMappedKey(attack_control, key_device);
+            auto control_map = RE::ControlMap::GetSingleton();
+            auto user_events = RE::UserEvents::GetSingleton();
+            if (!control_map || !user_events) {
+                return false;
+            }
+            const uint32_t mapped = control_map->GetMappedKey(user_events->rightAttack, key_device);
             // Traced because a wrong device or an unmapped control disables the chain silently,
             // and this is the one branch an agent cannot drive: injected input never reaches this
             // hook (verified 2026-08-12), so the owner's own press is the only test, and it has to
@@ -139,44 +151,29 @@ namespace SpellHotbar::Input {
             // cast is live.
             logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
                 static_cast<int>(key_device), key_code, mapped);
-            return mapped < 255 && key_code == mapped;
+            return mapped != RE::ControlMap::kInvalid && key_code == mapped;
         }
 
         /**
-         * Leave the cast state on this press, and hand the press back to the game one frame
-         * later so the graph has an update in which to transition.
+         * Leave the cast state on this press. The press itself is not touched: it travels the
+         * rest of this dispatch and reaches the game exactly as it does today.
          *
-         * Forwarding the press in the same frame is the case most likely to misbehave -- the
-         * graph may still be in the cast state when MCO reads the input -- so the press is
-         * captured and re-queued instead. `PushOntoInputQueue` is the same replay primitive the
-         * voice cast driver uses for the shout key, and the game's own dispatcher delivers the
-         * copy exactly as it delivers a physical press.
+         * An earlier revision captured the press and re-queued a copy, meaning to buy the graph
+         * a frame. It does not: this hook runs inside `PollInputDevices`, and
+         * `PushOntoInputQueue` appends to the very chain being dispatched, so the copy arrives
+         * in the same frame anyway -- with an allocation, a second pass through this function's
+         * own callers, and no owner to free it. Both events reach the graph's queue in the order
+         * they were sent, which is the ordering the cut needs and the only one it can have.
          *
-         * Returns whether the original press was consumed. On false the caller forwards it
-         * untouched, so a failure here costs the chain, never the attack.
+         * Leaving the press alone is also what makes the chain fail-safe: if the graph refuses
+         * the cut, the player gets exactly today's behaviour rather than a swallowed attack.
          */
-        bool chain_out_of_committed_cast(const RE::ButtonEvent* press, uint32_t key_code, RE::INPUT_DEVICE key_device)
+        void chain_out_of_committed_cast()
         {
-            auto pc = RE::PlayerCharacter::GetSingleton();
-            auto queue = RE::BSInputEventQueue::GetSingleton();
-            auto user_events = RE::UserEvents::GetSingleton();
-            if (!pc || !queue || !user_events) {
-                return false;
+            if (auto pc = RE::PlayerCharacter::GetSingleton()) {
+                casts::MscoCastDriver::cancel(pc);
+                logger::debug("SH2 cast: attack pressed on a committed cast; cut the state");
             }
-
-            // Built before the cut: a cast left without its state and without its press would
-            // be the worst of both.
-            auto replay = RE::ButtonEvent::Create(key_device, user_events->rightAttack, key_code,
-                press->Value(), press->HeldDuration());
-            if (!replay) {
-                logger::error("SH2 cast: could not allocate the replayed attack press");
-                return false;
-            }
-
-            casts::MscoCastDriver::cancel(pc);
-            queue->PushOntoInputQueue(replay);
-            logger::debug("SH2 cast: attack pressed on a committed cast; cut the state and re-queued the press");
-            return true;
         }
     }
 
@@ -345,7 +342,7 @@ namespace SpellHotbar::Input {
                         casts::CastingController::is_committed_cast_holding_graph() &&
                         is_attack_press(key_code, key_device))
                     {
-                        captureEvent = chain_out_of_committed_cast(bEvent, key_code, key_device);
+                        chain_out_of_committed_cast();
                     }
 
                     if (!captureEvent) {
