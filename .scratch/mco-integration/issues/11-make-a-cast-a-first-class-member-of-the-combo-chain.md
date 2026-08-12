@@ -56,22 +56,53 @@ from outside" for shouts and closed both of its gating questions with runtime ev
   `MCO_nextattack`, `MCO_nextpowerattack`, `MCO_currentattack`, `MCO_currentpowerattack`. Reads
   return real values from a *different graph's* context — "cross-graph linkage by name works" —
   which is what makes this reachable from SH2 at all.
-- **The reset is named and located.** `MCO_ReadyEEM` (`#amco$0.txt`, an
-  `hkbEvaluateExpressionModifier` over `#amco$1`) sets `MCO_nextattack = 1` and
-  `MCO_currentattack = 0`. *"Any path through the ready state resets the combo counter."* That is
-  precisely what ticket 10's trace shows happening at `SBF_ReadyStart`, and it confirms the reading
-  above from an independent direction.
+- **The variable IS the position, proven at the graph.** `MCO_Attack.hkx`'s
+  `AttackNodes_StateMachine` binds its own `startStateId` to `MCO_nextattack` through an
+  `hkbVariableBindingSet` (`memberPath startStateId`, `variableIndex 230`). Its ten states
+  `AttackNodesState1..10` have `transitions: null` and `wildcardTransitions: null` — there is no
+  attack1→attack2 edge anywhere. Selecting the clip *is* reading the variable.
+- **The combo is advanced by the animations themselves, not by MCO.** Each moveset clip carries a
+  Payload Interpreter annotation at t=0.06: `mco_attack1.hkx` → `@SGVI|MCO_nextattack|2`,
+  `attack2` → `|3`, `attack3` → `|1|` (the wrap). A 5-hit moveset simply annotates further.
+  **This is the hard evidence behind "never derive an index":** moveset length is data living in
+  someone else's animation files, so it is not a thing this mod can compute.
+- **The reset is two notify-event payloads, and `MCO_ReadyEEM` is NOT what this load order runs.**
+  thuum's CONTEXT.md names `MCO_ReadyEEM` (`#amco$0.txt`); `ADXP MCO 1.6.0.6 Bug Fixes` reuses the
+  `amco` patch code, wins the merge, and replaces it — `MCO_ReadyEEM` is **absent from the merged
+  graph**. What actually resets, verified in the merged `1hm_behavior`:
+  - `1HM_Ready_State` (stateId 0) `enterNotifyEvents` → `#0006`, which fires PIE payloads
+    `@SGVI|MCO_nextattack|1`, `@SGVI|MCO_nextpowerattack|1`, `@SGVI|MCO_currentattack|0`,
+    `@SGVI|MCO_currentpowerattack|0`.
+  - `AttackState` (stateId 10) `exitNotifyEvents` → `#0784`, the identical payload set.
+
+  The first is exactly what ticket 10's trace shows at `SBF_ReadyStart`. **The second is the one
+  that bites this ticket** — see the snapshot problem below.
 - **Therefore the write must be late** — after the ready pass, at the `attackStart` edge.
 - **And a late write works.** thuum's own "not yet verified" list, now struck through: *"Does a late
   `MCO_nextattack` write survive to continue the combo rather than restart it? **Yes**, when ordered
-  after `inRdy`. MCO resumes at whatever index is written."*
+  after `inRdy`. MCO resumes at whatever index is written."* Ordering after the ready pass is the
+  requirement; with `MCO_ReadyEEM` gone the thing to order after is `#0006`'s payload burst.
 - **Preserve, never derive.** Write back the value read at cast start. Not `read + 1`, not
   `MCO_currentattack + 1`. ADR-0005's reasoning is that the last step of a combo has nowhere to
   advance to, so any arithmetic either wraps the player to 1 — punishing a late-combo cast, the
   exact thing this work removes — or silently clamps.
 
-So cell 1 is a known pattern with a precedent, not an architectural risk: snapshot the index at cast
-start, and write it back after the cut's ready pass.
+So cell 1 is a known pattern with a precedent, not an architectural risk. But the graph dig surfaced
+a constraint thuum's summary does not spell out:
+
+**The snapshot cannot be taken at cast start.** The combo resets on *leaving* `AttackState`, not
+only on entering ready — and a cast cannot begin mid-swing at all (ticket 08: the entry transition
+lives only in `1HM_Ready_State`). By the time a cast is able to start, the attack it followed has
+already ended and stomped `MCO_nextattack` to 1. A read at cast start therefore returns the reset
+value every time, and restoring it would preserve nothing.
+
+This is why thuum carries a `RollingCombo` — a rolling sample of `MCO_nextattack` taken while
+attacking and kept with a max age (theirs is 5 s), rather than a single read at the interruption.
+SH2 needs the same shape. Their own comment block, "WHERE THE COMBO POSITION IS CAPTURED, AND WHY
+IT IS NOT AT `BeginCastVoice`", is the write-up of this exact trap; read it before building.
+
+`MCO_currentattack` is not an alternative source: it is a write-only mirror each state sets on
+entry, and it is zeroed by the same payloads.
 
 **One coordination question is genuinely open and is being sent to thuum** (see
 `../questions/question-2026-08-12-sh2-to-shoutmco-combo-index-ownership.md`, sent on the `%TEMP%` channel
