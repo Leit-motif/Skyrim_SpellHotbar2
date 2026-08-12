@@ -134,3 +134,31 @@ no acceptance matrix.
 - Implementing or editing the sibling MCO shout behaviour engine from this repository. Consuming
   its published driver API is in scope.
 - Publishing modified binaries.
+
+## 2026-08-11 direction (owner rulings, post-acceptance of the shtb slice)
+
+The shtb casting slice is owner-accepted (commit `5922896`: entry from the magic stance,
+commit on the clip's left SpellFire at +0.47s). The owner set the integration direction for
+the bigger effort the same evening:
+
+- **Goal statement:** a seamless framework of MCO weapon combat + animated Shouts + SH2
+  casting, where a hotbar spell never needs to occupy a hand. MCBO is thereby not *needed* —
+  but users who run both must stay supported, so nothing may stomp MCBO's states or hooks
+  (ours are already separate; keep it that way as a design constraint).
+- **Priority axis: weapon swings → SH2 cast → weapon swings.** This requires the SH2 states
+  to be distributed into the weapon behaviours (`1hm_behavior` etc., the TK Dodge
+  distribution pattern) — the magic-stance entry proved the mechanism, and the greatsword
+  refusals proved the weapon graphs are deaf until patched. The magicbehavior side
+  (MCBO-style cast chains) is the cheaper follow-up, not the lead.
+- **Workspace ruling: split by ownership** (matches the 2026-08-08 driver boundary). The
+  generic cast-intent API, MCO state tracking, and release timing live in the thuum repo
+  (its ticket 50); the driver adapter, cast states, and Nemesis patches live here. Sessions
+  run in whichever repo owns the slice; cross-repo reads stay routine.
+- **Concentration combo path, tiered:** (1) a looping conc state in the shtb patch, exit on
+  button release — our own state, so nothing interrupts the channel; (2) a chain-out window
+  the driver opens at release, honoured by the engine (the Chain Window mechanism thuum
+  already ships for shout exhales); (3) true combo-position continuity (attack3, not
+  attack1) is engine-owned MCO state via the ticket-50 API.
+- **Release timing MVP:** clip annotations are the source of truth (inject via
+  hkxc-anno-cli where missing); a per-clip/per-combo-step tuning override is a future
+  enhancement.
