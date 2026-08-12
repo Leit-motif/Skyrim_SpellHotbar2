@@ -64,6 +64,7 @@ set(source_files src/plugin.cpp
                  src/casts/voice_cast_driver.cpp
                  src/casts/msco_cast_driver.h
                  src/casts/msco_cast_driver.cpp
+                 src/casts/combo_cache.h
                  src/casts/cast_intent.h
                  src/casts/cast_intent.cpp
                  src/extern/ShoutMCO_CastIntent.h
@@ -97,6 +98,10 @@ set(source_files src/plugin.cpp
                  src/game_data/localization.h
                  src/game_data/localization.cpp
 )
+
+add_executable(combo_cache_test src/casts/combo_cache_test.cpp)
+target_compile_features(combo_cache_test PRIVATE cxx_std_23)
+target_include_directories(combo_cache_test PRIVATE src/casts)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)

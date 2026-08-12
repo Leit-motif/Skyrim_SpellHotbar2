@@ -223,6 +223,40 @@ namespace SpellHotbar::Input {
             return (ocpa.power != 0 && key_code == ocpa.power) ||
                    (ocpa.dual != 0 && key_code == ocpa.dual);
         }
+
+        uint32_t get_left_attack_key(RE::INPUT_DEVICE key_device)
+        {
+            if (key_device != RE::INPUT_DEVICE::kKeyboard && key_device != RE::INPUT_DEVICE::kMouse) {
+                return RE::ControlMap::kInvalid;
+            }
+            auto control_map = RE::ControlMap::GetSingleton();
+            auto user_events = RE::UserEvents::GetSingleton();
+            if (!control_map || !user_events) {
+                return RE::ControlMap::kInvalid;
+            }
+            return control_map->GetMappedKey(user_events->leftAttack, key_device);
+        }
+
+        bool left_hand_holds_spell(RE::PlayerCharacter* pc)
+        {
+            if (!pc) {
+                return false;
+            }
+            auto* obj = pc->GetEquippedObject(true);
+            return obj && (obj->Is(RE::FormType::Spell) || obj->Is(RE::FormType::Scroll));
+        }
+
+        // A left-hand cast press during a committed hotbar cast: the left control is block
+        // when the left hand holds a weapon or shield, so this only matches when it would
+        // actually start an MSCO hand cast.
+        bool is_left_hand_cast_press(RE::PlayerCharacter* pc, uint32_t key_code, RE::INPUT_DEVICE key_device)
+        {
+            if (!left_hand_holds_spell(pc)) {
+                return false;
+            }
+            const uint32_t left_key = get_left_attack_key(key_device);
+            return left_key != RE::ControlMap::kInvalid && key_code == left_key;
+        }
     }
 
     void processAndFilter(RE::InputEvent** a_event)
@@ -410,6 +444,9 @@ namespace SpellHotbar::Input {
 
                         if (is_attack_press(key_code, key_device, attack_key)) {
                             logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
+                            casts::MscoCastDriver::cancel(pc);
+                        } else if (is_left_hand_cast_press(pc, key_code, key_device)) {
+                            logger::debug("SH2 cast: left-hand cast pressed on a committed cast; ending the state");
                             casts::MscoCastDriver::cancel(pc);
                         }
                     }

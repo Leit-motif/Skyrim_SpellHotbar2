@@ -24,6 +24,9 @@
 				#0084
 <!-- MOD_CODE ~shtb~ OPEN -->
 				#shtb$2
+				#shtb$7
+				#shtb$9
+				#shtb$11
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="wildcardTransitions">null</hkparam>

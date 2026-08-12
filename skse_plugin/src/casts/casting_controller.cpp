@@ -81,6 +81,19 @@ namespace SpellHotbar::casts::CastingController {
 		clear_spellfire();
 	}
 
+	// Ticket 11 cell 2: a follow-up hotbar press during a committed cast is a combo step,
+	// the way an attack press is a chain-out. End the live state so the new begin() can
+	// enter the next clip from ready. Concentration is excluded by the cuttable gate.
+	void cut_committed_cast_for_combo(RE::PlayerCharacter* pc)
+	{
+		if (!is_committed_cast_holding_graph()) {
+			return;
+		}
+		logger::debug("SH2 cast: follow-up cast on a committed cast; ending the state");
+		MscoCastDriver::cancel(pc);
+		reset_cast();
+	}
+
 	//Play sound on actor and return soundhandle
 	RE::BSSoundHandle playSound(RE::Actor* a, RE::BGSSoundDescriptorForm* a_descriptor)
 	{
@@ -649,8 +662,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	start_result start_cast(CastingInstanceSpellData& cast_info)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 
 				int anim = cast_info.m_animation;
@@ -730,8 +744,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	start_result start_ritual_cast(CastingInstanceSpellData& cast_info)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 				
 				bool is_fast_cast = cast_info.m_casttime <= fast_cast_threshold;

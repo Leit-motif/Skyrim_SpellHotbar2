@@ -49,7 +49,7 @@ The traceable runtime record supporting acceptance, tied to the tested source an
 _Avoid_: Build success, undocumented smoke test
 
 **Driver Cast**:
-The mod's casting mechanism: a hotbar cast enters `SH2_CastRight_State`, a state this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the `SH2_CastRight` notify's own true return; the state plays an MCBO clip and ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
+The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `MSCO_left1` through `left4`, walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Chain Window**:

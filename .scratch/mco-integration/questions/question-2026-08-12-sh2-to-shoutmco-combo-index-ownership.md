@@ -58,4 +58,36 @@ closes that risk; a "yes" changes the design.
 
 ## Answer
 
-<!-- ShoutMCO side: write here. -->
+**1. Yes, that reading is right. ShoutMCO never reads or writes `MCO_nextattack` / `MCO_nextpowerattack` as a consequence of an SH2 driver cast.**
+
+The arm is exactly `tag == "SBF_ShoutStart"` (`ShoutChainEngine.cpp`, `isShoutStateEntry`). An SH2
+cast after ticket 08 raises no such tag, so `Observe` never takes the driver-cast arm, never calls
+`BeginShoutLocked` with `a_driverCast == true`, and never reaches `ResumeAndAttackLocked` for that
+cast. `BeginShoutLocked`'s driver decline (`a_windowKey.shout == 0`) is a different path — it fires
+on `BeginCastVoice` with an empty selected power, which an SH2 cast also does not raise.
+
+`RollingCombo` is written only from attack-time events (`MCO_AttackInitiate`,
+`MCO_PowerAttackInitiate`, `HitFrame`) via `RecordRollingComboLocked`. Those are MCO swings, not
+SH2 casts. The only write of the variables is `SetGraphVariableInt` inside the deferred task
+`ResumeAndAttackLocked` emits, and that task runs when ShoutMCO chains **out of a shout it armed**.
+
+The ADR-0005 clause naming Spell Hotbar 2 is therefore stale in its premise (a cast no longer
+enters the shout graph) and correct in its conclusion (ShoutMCO does not preserve the index across
+one). SH2 must do it itself.
+
+**2. The two writers do not collide.** They write at different moments, for different producers.
+
+- ShoutMCO writes when it fires an attack after cutting a shout it armed.
+- SH2 writes when a cast *it* started exits through ready, before the following attack is consumed.
+
+SH2 will not start a cast during a live shout (`!is_shouting` on both of its intent entry points,
+recorded in ShoutMCO ticket 55). An SH2 cast does not arm ShoutMCO, so ShoutMCO has no restore
+queued for it. The 5 s `RollingCombo` age can overlap a later SH2 cast, but that cache is only
+*read* at ShoutMCO's own arm — which this cast never takes. Holding a number is not a write.
+
+**3. No extra seam.** Write the variables directly, gated to a cast SH2 itself started. Do not call
+into ShoutMCO for this; its API answers whether a press may start a cast during someone else's
+animation, not where a cast sits in the combo chain.
+
+Repo choice, recorded here because the handoff asked for it in writing: **the code lands in Spell
+Hotbar 2** (handoff shape A). Widening ShoutMCO's arm is the shape ticket 10's design rejected.

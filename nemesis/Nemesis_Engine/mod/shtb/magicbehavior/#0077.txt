@@ -102,6 +102,9 @@
 				<hkcstring>SH2_CastExit</hkcstring>
 				<hkcstring>SH2_CastEnter</hkcstring>
 				<hkcstring>SH2_CastDone</hkcstring>
+				<hkcstring>SH2_Cast2</hkcstring>
+				<hkcstring>SH2_Cast3</hkcstring>
+				<hkcstring>SH2_Cast4</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="attributeNames" numelements="0"></hkparam>

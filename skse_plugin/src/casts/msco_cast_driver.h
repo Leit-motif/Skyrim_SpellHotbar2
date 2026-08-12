@@ -4,19 +4,20 @@
 namespace SpellHotbar::casts::MscoCastDriver {
 
 	/**
-	 * Enter the shtb cast state: send SH2_CastRight, whose listener this project's own
-	 * Nemesis patch authored on the root state machine of magicbehavior and of
-	 * 1hm_behavior. Returns the notify result — false means no active listener (no
-	 * hosting drawn idle: sheathed, or mid-swing in AttackState) and the caller tears
-	 * the cast down. Minimal slice: every hand routes into the one state, whose clip
-	 * (MSCO_left1.hkx) raises the LEFT-hand SpellFire at 0.483s whatever hand the cast
-	 * chose (ADR-0006 as amended 2026-08-12).
+	 * Enter the shtb cast state. The event is SH2_CastRight for combo step 1 and
+	 * SH2_Cast2/3/4 for the later clips (MSCO_left2/3/4.hkx). Returns the notify
+	 * result — false means no active listener (no hosting drawn idle: sheathed, or
+	 * mid-swing in AttackState) and the caller tears the cast down.
+	 *
+	 * Every clip in the set raises a LEFT-hand SpellFire (OAR Base-default variants:
+	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
 	 */
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand);
 
 	/**
-	 * Observe the player's animation-event stream for the one event that ends the state,
-	 * SH2_CastExit. Called by the animation-event hook for every player graph event.
+	 * Observe the player's animation-event stream. Ends the state on SH2_CastExit,
+	 * records MCO combo position at attack-time events, and writes that position
+	 * back after a cast's ready pass.
 	 */
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
 

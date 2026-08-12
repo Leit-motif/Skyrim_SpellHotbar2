@@ -8,7 +8,7 @@ in **both** directions.
 
 **Blocked by:** Nothing. Ticket 10 shipped the cut this builds on.
 
-**Status:** claimed — decision-complete, not started
+**Status:** claimed — built, acceptance open
 
 ## State this ticket starts from
 
@@ -177,3 +177,26 @@ variable itself, we need to be sure the two never both write.
 
 - Concentration channels. They cannot be cut at all yet (ticket 10), and giving them combo
   behaviour before they can end cleanly would build on sand.
+
+## Comments
+
+**2026-08-12 — built on `ticket-11-combo-chain` (repo choice A: SH2, not ShoutMCO).**
+
+The combo-index ownership question is answered: ShoutMCO never reads or writes `MCO_nextattack`
+for a driver cast. SH2 writes the variables itself. Collision risk closed.
+
+What shipped:
+
+- `skse_plugin/src/casts/combo_cache.h` — `RollingMcoCombo` (5 s cap, preserve never derive) and
+  `CastComboIndex` (1→2→3→4→1, not reset by attacks). Standalone test `combo_cache_test`.
+- Driver: rolling sample at `MCO_AttackInitiate` / `MCO_PowerAttackInitiate` / `HitFrame`; restore
+  `MCO_nextattack` + `MCO_nextpowerattack` on the ready-pass tags after a cast exit. `begin()`
+  sends `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` from the cast index.
+- Consecutive-cast cut in `start_cast` / `start_ritual_cast`. Left-hand cast press cut in the
+  input hook (Spell/Scroll in the left hand only).
+- `shtb` patch: `SH2_Cast2/3/4` states and clips (`MSCO_left2/3/4.hkx`) on both `1hm_behavior`
+  and `magicbehavior`. Shared exit transition. No new graph variables.
+
+Acceptance stays open until the four cells are seen in game. Agents cannot drive ticket 10/11
+input-hook cells (injected input never reaches `DispatchInputEvent`). Papyrus `castSlot` can
+drive consecutive casts. Owner presses for the attack-cut and left-hand-cast cells.
