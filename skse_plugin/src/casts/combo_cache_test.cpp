@@ -10,6 +10,7 @@ using SpellHotbar::casts::RollingMcoCombo;
 using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
 using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
+using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
 
@@ -171,9 +172,19 @@ void handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell()
 void driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell()
 {
 	expect(isolate_left_hand_caster_for_driver_cast(true),
-		"SpellFire on a borrowed MSCO clip must not complete an equipped left-hand spell");
+		"an in-progress left charge is cut when a Driver Cast begins");
 	expect(!isolate_left_hand_caster_for_driver_cast(false),
 		"an empty or weapon left hand has no equipped spell to isolate");
+}
+
+void driver_cast_isolates_before_vanilla_sees_left_spellfire()
+{
+	expect(isolate_left_hand_caster_before_vanilla_spellfire(true, true),
+		"a live Driver Cast must isolate before vanilla processes the clip's left SpellFire");
+	expect(!isolate_left_hand_caster_before_vanilla_spellfire(false, true),
+		"an ordinary left-hand MSCO cast keeps vanilla SpellFire");
+	expect(!isolate_left_hand_caster_before_vanilla_spellfire(true, false),
+		"other graph events still reach vanilla during a Driver Cast");
 }
 
 void left_hand_press_cuts_a_committed_hotbar_cast()
@@ -209,6 +220,7 @@ int main()
 	chain_press_keeps_commitment_until_the_cut();
 	handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell();
 	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();
+	driver_cast_isolates_before_vanilla_sees_left_spellfire();
 	left_hand_press_cuts_a_committed_hotbar_cast();
 
 	if (g_failures != 0) {

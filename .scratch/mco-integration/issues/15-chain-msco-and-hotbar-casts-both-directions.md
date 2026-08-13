@@ -68,3 +68,45 @@ left attack, and MSCO FNF → hotbar during the window.
 Fixtures: spawned Bandit `FF0012F3` disabled/deleted; `setessential 3DE8A 0`; `tcai`
 toggled back; Save65 reloaded (magicka 1000, health 500, Firebolt left, Iron Rapier);
 `qqq`; DevBench ping offline. MO2 left running.
+
+**2026-08-13 — owner playtest: dual-fire still red.** Lightning Bolt left, Firebolt on
+slot 0 / key 1. Both projectiles fire. The `castSlot` magicka cell was a false green:
+injected input never hits this hook, and same-spell Firebolt/Firebolt cannot tell the
+two deliveries apart.
+
+Same Skyrim session (`SpellHotbar2.log` starts 13:32:48). Isolate *did* run on the
+owner presses (`isolated left-hand caster` at 13:44:11/16/18/20, then `SH2_CastRight/2/3/4`).
+`MLh_SpellFire_Event` still arrives ~0.5 s later. MSCO did **not** `BeginCastLeft`
+Lightning Bolt during those Driver Casts. It did at **13:44:23.914**, 1.6 s after clip 4
+`CastExit` (13:44:22.302): `BeginCastLeft: 'Lightning Bolt'`, `consumeResource` 36.37,
+twice. SH2's leftover SpellFire lines at 13:44:24.523 / 13:44:25.624 are that MSCO cast,
+not the hotbar clip.
+
+`InterruptCast` at Driver Cast `begin()` is the wrong instant: the left caster is idle
+then, and the clip's SpellFire is half a second later. The animation hook also chains
+vanilla *first* (`_ProcessEvent_PC` then SH2), so an isolate on the SpellFire observer
+would already be too late. Capture has no log line; MSCO's silence during the 1-presses
+argues Hotkey1 was swallowed, and the second projectile is the equipped FNF completing
+on `MLh_SpellFire_Event` (and/or a left-hand cast after the combo). The 2026-08-11 note
+that a *different* equipped spell meant one delivery was from before SpellFire-commit,
+when SH2 delivered on the timer floor instead of on the throw frame.
+
+**2026-08-13 — SpellFire isolate moved before vanilla; one cost with distinct spells.**
+`InterruptCast` now runs on `MLh_SpellFire_Event` *before* vanilla (`ProcessEvent` then
+skip `_ProcessEvent_PC` for that event while a Driver Cast is live). Policy:
+`isolate_left_hand_caster_before_vanilla_spellfire` on `combo_cache.h`. Capture logs
+`captured hotbar press to prevent dual fire` when it swallows key 1.
+
+Save65, Lightning Bolt left (`0002DD29`), Firebolt on slot 0, magicka regen off, pool 200.
+Runtime DLL SHA-256 `B15DDD2F0C26A171AFE549520C72EC66332246429509B44ECC437788805444BD`;
+deployed now `BAB2DA94650D27403D7441F28E6AED00B9C4C9229534FC98904C23CF86031337` (begin()
+log renamed only). `castSlot(0)`: begin isolate (`at Driver Cast start`), `SH2_CastRight (clip 1) -> true`, **isolated left-hand
+caster before vanilla SpellFire**, then `MLh_SpellFire_Event`, `SH2_CastExit`. Magicka
+**200 → 168.4** (Firebolt only; Lightning Bolt is 36.4 via MSCO). `MSCO.log` has no
+`BeginCastLeft` this session. `combo_cache_test` green.
+
+`castSlot` still does not reach `DispatchInputEvent`, so capture remains owner: Lightning
+Bolt left, press **1**, one projectile. Chain cells still owner.
+
+Fixtures: Save65 reloaded (magicka 1000, health 500, Firebolt left, Iron Rapier); `qqq`.
+MO2 left running.

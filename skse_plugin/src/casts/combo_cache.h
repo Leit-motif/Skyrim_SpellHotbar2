@@ -153,12 +153,23 @@ enum class HotbarCastPress {
 	return handled_spell_slot && left_hand_holds_spell;
 }
 
-// A Driver Cast interrupts the left-hand MagicCaster so the clip's SpellFire
-// cannot complete an equipped left-hand spell.
+// A Driver Cast interrupts the left-hand MagicCaster when that hand holds a
+// spell, so an in-progress left charge cannot complete alongside the payload.
+// Idle casters are a no-op; clip SpellFire is isolated separately.
 [[nodiscard]] constexpr bool isolate_left_hand_caster_for_driver_cast(
 	bool left_hand_holds_spell) noexcept
 {
 	return left_hand_holds_spell;
+}
+
+// InterruptCast at begin() is too early: the left caster is idle, and the
+// borrowed clip's SpellFire is ~0.5s later. Vanilla also processes that
+// event before this plugin's observer. Isolate immediately before vanilla
+// sees left SpellFire while a Driver Cast is live.
+[[nodiscard]] constexpr bool isolate_left_hand_caster_before_vanilla_spellfire(
+	bool driver_cast_active, bool is_left_spellfire) noexcept
+{
+	return driver_cast_active && is_left_spellfire;
 }
 
 // The left control is block when that hand holds a weapon or shield. A

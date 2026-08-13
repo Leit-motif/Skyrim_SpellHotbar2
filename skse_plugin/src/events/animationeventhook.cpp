@@ -1,5 +1,6 @@
 #include "animationeventhook.h"
 #include "../casts/casting_controller.h"
+#include "../casts/combo_cache.h"
 #include "../casts/msco_cast_driver.h"
 #include "../logger/logger.h"
 
@@ -76,9 +77,28 @@ namespace SpellHotbar::events {
 
 	RE::BSEventNotifyControl Animation_event_hook::ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
 	{
-		// Chain first: every earlier handler must finish with this event before our
-		// observer reads it, so another mod's cleanup for the same event cannot land
-		// after our state bookkeeping.
+		// A Driver Cast's borrowed clip raises left SpellFire. Vanilla processes
+		// that event before this observer, which completes an equipped left-hand
+		// spell. Isolate first, then skip vanilla for this one event so MSCO and
+		// the engine do not also fire; SH2 still delivers via CastSpellImmediate.
+		const bool isolate = a_event && a_event->holder && a_event->holder->IsPlayerRef() &&
+			casts::isolate_left_hand_caster_before_vanilla_spellfire(
+				casts::MscoCastDriver::is_active(),
+				a_event->tag == "MLh_SpellFire_Event"sv);
+		if (isolate) {
+			if (auto* pc = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::PlayerCharacter>()) {
+				if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
+					caster->InterruptCast(true);
+				}
+			}
+			logger::debug("SH2 cast: isolated left-hand caster before vanilla SpellFire");
+			ProcessEvent(a_event, a_eventSource);
+			return RE::BSEventNotifyControl::kContinue;
+		}
+
+		// Chain first for every other event: earlier handlers must finish before
+		// our observer reads it, so another mod's cleanup cannot land after our
+		// state bookkeeping.
 		const auto result = _ProcessEvent_PC(a_sink, a_event, a_eventSource);
 		ProcessEvent(a_event, a_eventSource);
 		return result;

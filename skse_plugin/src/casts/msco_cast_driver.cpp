@@ -130,7 +130,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
 				caster->InterruptCast(true);
 			}
-			logger::debug("SH2 cast: isolated left-hand caster to prevent dual fire");
+			logger::debug("SH2 cast: isolated left-hand caster at Driver Cast start");
 		}
 		return send_entry(pc);
 	}

@@ -515,6 +515,7 @@ namespace SpellHotbar::Input {
                                             if (casts::capture_hotbar_press_to_prevent_dual_fire(
                                                     skill.type == slot_type::spell, left_hand_holds_spell(pc))) {
                                                 captureEvent = true;
+                                                logger::debug("SH2 cast: captured hotbar press to prevent dual fire");
                                             }
                                         }
                                     }
