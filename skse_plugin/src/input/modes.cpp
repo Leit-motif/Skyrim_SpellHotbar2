@@ -44,7 +44,11 @@ namespace SpellHotbar::Input {
 	void InputModeCast::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
 	{
         if (allowed_to_instantcast(skill.formID) && casts::CastingController::can_start_new_cast()) {
-            if (skill.formID > 0) {
+            if (skill.type == slot_type::weapon_art) {
+                bool success = casts::CastingController::try_start_art(skill.art_id, i);
+                SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, !success);
+            }
+            else if (skill.formID > 0) {
                 auto form = RE::TESForm::LookupByID(skill.formID);
 
                 if (skill.type == slot_type::spell) {
@@ -101,7 +105,11 @@ namespace SpellHotbar::Input {
     {
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (pc && allowed_to_instantcast(skill.formID)) {
-            if (skill.formID > 0) {
+            if (skill.type == slot_type::weapon_art) {
+                logger::info("SH2 art: refused in equip mode");
+                SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+            }
+            else if (skill.formID > 0) {
                 auto form = RE::TESForm::LookupByID(skill.formID);
 
                 if (skill.type == slot_type::spell || skill.type == slot_type::lesser_power || skill.type == slot_type::power) {
@@ -167,7 +175,11 @@ namespace SpellHotbar::Input {
         else {
             auto pc = RE::PlayerCharacter::GetSingleton();
             if (pc) {
-                if (skill.formID > 0) {
+                if (skill.type == slot_type::weapon_art) {
+                    logger::info("SH2 art: refused in oblivion mode");
+                    SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+                }
+                else if (skill.formID > 0) {
                     auto form = RE::TESForm::LookupByID(skill.formID);
 
                     if (skill.type == slot_type::spell) {

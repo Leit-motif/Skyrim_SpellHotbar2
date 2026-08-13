@@ -35,7 +35,7 @@ namespace SpellHotbar
     void serialize_bar(const SubBar& bar, SKSE::SerializationInterface* serializer, const std::string & name) {
 
         // write number off filled slots
-        uint8_t filled_slots = static_cast<uint8_t>(std::count_if(bar.m_slotted_skills.begin(), bar.m_slotted_skills.end(), [](const auto& elem) { return elem.formID != 0; }));
+        uint8_t filled_slots = static_cast<uint8_t>(std::count_if(bar.m_slotted_skills.begin(), bar.m_slotted_skills.end(), [](const auto& elem) { return !elem.isEmpty(); }));
 #ifdef DEBUG_LOG_SERIALIZATION
         //logger::info("-{}: {} slots", name, filled_slots);
 #endif
@@ -46,7 +46,7 @@ namespace SpellHotbar
 
         // write index + formID + hand_mode
         for (int i = 0U; i < bar.m_slotted_skills.size(); i++) {
-            if (bar.m_slotted_skills.at(i).formID != 0) {
+            if (!bar.m_slotted_skills.at(i).isEmpty()) {
 #ifdef DEBUG_LOG_SERIALIZATION
 //                logger::info("Saving: {}-{:08x}", i, bar.m_slotted_skills.at(i).formID);
 #endif
@@ -70,7 +70,9 @@ namespace SpellHotbar
 
         for (uint8_t i = 0U; i < slots; i++) {
             uint8_t read_slot{0Ui8};
+            uint8_t read_kind{0Ui8};
             RE::FormID read_id{0U};
+            uint32_t read_art{0U};
             uint8_t read_hand{0Ui8};
 
             if (!serializer->ReadRecordData(&read_slot, sizeof(uint8_t))) {
@@ -80,19 +82,40 @@ namespace SpellHotbar
                 read_slot = std::clamp(read_slot, 0Ui8, static_cast<uint8_t>(max_bar_size));
             }
 
-            if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
-                logger::error("Failed to load Hotbar {}!", name);
-                break;
-            } else {
-                RE::FormID resolved_id{0};
-                serializer->ResolveFormID(read_id, resolved_id);
-                RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
-                if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
-                    bar.m_slotted_skills[read_slot] = resolved_id;
+            if (version >= 6) {
+                if (!serializer->ReadRecordData(&read_kind, sizeof(uint8_t))) {
+                    logger::error("Failed to load Hotbar {}!", name);
+                    break;
+                }
+            }
+
+            if (version >= 6 && read_kind == 1) {
+                if (!serializer->ReadRecordData(&read_art, sizeof(uint32_t))) {
+                    logger::error("Failed to load Hotbar {}!", name);
+                    break;
+                }
+                if (GameData::get_art(read_art)) {
+                    bar.m_slotted_skills[read_slot].update_art_assignment(read_art);
                 }
                 else {
-                    logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
-                    bar.m_slotted_skills[read_slot] = 0;
+                    logger::info("Removing art {} from bar, id is unknown.", read_art);
+                    bar.m_slotted_skills[read_slot].clear();
+                }
+            } else {
+                if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
+                    logger::error("Failed to load Hotbar {}!", name);
+                    break;
+                } else {
+                    RE::FormID resolved_id{0};
+                    serializer->ResolveFormID(read_id, resolved_id);
+                    RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
+                    if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
+                        bar.m_slotted_skills[read_slot] = resolved_id;
+                    }
+                    else {
+                        logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
+                        bar.m_slotted_skills[read_slot] = 0;
+                    }
                 }
             }
 
@@ -138,10 +161,8 @@ namespace SpellHotbar
         }
     }
 
-    void Hotbar::deserialize(SKSE::SerializationInterface* serializer, uint32_t type, uint32_t /*version*/,
+    void Hotbar::deserialize(SKSE::SerializationInterface* serializer, uint32_t type, uint32_t version,
                              uint32_t length) {
-        // only 1 version for now, we can ignore version variable
-
         std::string name = Bars::bar_names.contains(type) ? Bars::bar_names.at(type) : "?";
         //logger::trace("Reading hotbar {} from save...", name);
 
@@ -157,10 +178,10 @@ namespace SpellHotbar
                 m_inherit_mode = inherit_mode(static_cast<int>(inherit_type));
             }
 
-            deserialize_bar(m_bar, serializer, name, type, length);
-            deserialize_bar(m_ctrl_bar, serializer, name, type, length);
-            deserialize_bar(m_shift_bar, serializer, name, type, length);
-            deserialize_bar(m_alt_bar, serializer, name, type, length);
+            deserialize_bar(m_bar, serializer, name, version, length);
+            deserialize_bar(m_ctrl_bar, serializer, name, version, length);
+            deserialize_bar(m_shift_bar, serializer, name, version, length);
+            deserialize_bar(m_alt_bar, serializer, name, version, length);
         }
 
         if (type == Bars::MAIN_BAR) {
@@ -704,7 +725,10 @@ namespace SpellHotbar
         int alpha_i = static_cast<int>(255 * alpha);
         ImVec4 color = ImColor(skill.color);
         color.w = alpha;
-        if (!RenderManager::draw_skill(skill.formID, icon_size, ImColor(color))) {
+        const bool drew_icon = (skill.type == slot_type::weapon_art)
+            ? RenderManager::draw_art_icon(skill.art_id, icon_size, ImColor(color))
+            : RenderManager::draw_skill(skill.formID, icon_size, ImColor(color));
+        if (!drew_icon) {
             RenderManager::draw_bg(icon_size, alpha);
         }
         else {
@@ -735,12 +759,21 @@ namespace SpellHotbar
                 RenderManager::draw_highlight_overlay(p, icon_size, IM_COL32(127, 127, 255, alpha_i));
             }
 
-            if ((has_charges && count == 0) || GameData::is_on_binary_cd(skill.formID)) {
+            if (skill.type != slot_type::weapon_art && ((has_charges && count == 0) || GameData::is_on_binary_cd(skill.formID))) {
                 RenderManager::draw_cd_overlay(p, icon_size, 0.0f, IM_COL32(255, 255, 255, alpha_i));
             }
             else {
-                float cd_prog =
-                    determine_cd(skill.formID, skill.type, game_time, time_scale, gcd_prog, gcd_dur, shout_cd, shout_cd_dur);
+                float cd_prog{0.0f};
+                if (skill.type == slot_type::weapon_art) {
+                    auto [gt_prog, gt_dur] = GameData::get_art_gametime_cooldown(game_time, skill.art_id);
+                    if (gt_dur > 0.0f) {
+                        cd_prog = gt_prog;
+                    } else if (gcd_prog > 0.0f) {
+                        cd_prog = gcd_prog;
+                    }
+                } else {
+                    cd_prog = determine_cd(skill.formID, skill.type, game_time, time_scale, gcd_prog, gcd_dur, shout_cd, shout_cd_dur);
+                }
                 if (cd_prog > 0.0f) {
                     RenderManager::draw_cd_overlay(p, icon_size, cd_prog, IM_COL32(255, 255, 255, alpha_i));
                 }
@@ -859,6 +892,25 @@ namespace SpellHotbar
             }
         }
     }
+
+    void SpellHotbar::Hotbar::slot_art(size_t index, uint32_t art_id, key_modifier modifier)
+    {
+        if (index >= max_bar_size) {
+            return;
+        }
+        if (art_id != 0 && !GameData::get_art(art_id)) {
+            logger::error("Unknown weapon art {}", art_id);
+            return;
+        }
+        auto& skill = get_skill_in_bar_by_ref(static_cast<int>(index), modifier);
+        if (art_id == 0) {
+            skill.clear();
+        } else {
+            skill.update_art_assignment(art_id);
+        }
+        logger::info("slotArt: bar slot {} bound to art {}", index, art_id);
+    }
+
     RE::FormID Hotbar::get_spell(size_t index, key_modifier modifier)
     {
         RE::FormID ret{0};
@@ -884,7 +936,7 @@ namespace SpellHotbar
 
     SlottedSkill::SlottedSkill() : SlottedSkill(0U){};
 
-    SlottedSkill::SlottedSkill(RE::FormID id) : formID(0U), type(slot_type::empty), hand(hand_mode::auto_hand), consumed(consumed_type::none), color(0xFFFFFFFF)
+    SlottedSkill::SlottedSkill(RE::FormID id) : formID(0U), art_id(0U), type(slot_type::empty), hand(hand_mode::auto_hand), consumed(consumed_type::none), color(0xFFFFFFFF)
     { 
         update_skill_assignment(id);
     }
@@ -900,8 +952,20 @@ namespace SpellHotbar
             ok = false;
             logger::error("Failed to write data for {}_{}", name, index);
         }
+        uint8_t kind = (type == slot_type::weapon_art) ? 1Ui8 : 0Ui8;
         if (ok) {
-            if (!serializer->WriteRecordData(&this->formID, sizeof(RE::FormID))) {
+            if (!serializer->WriteRecordData(&kind, sizeof(uint8_t))) {
+                ok = false;
+                logger::error("Failed to write data for {}_{}", name, index);
+            }
+        }
+        if (ok) {
+            if (kind == 1) {
+                if (!serializer->WriteRecordData(&this->art_id, sizeof(uint32_t))) {
+                    ok = false;
+                    logger::error("Failed to write data for {}_{}", name, index);
+                }
+            } else if (!serializer->WriteRecordData(&this->formID, sizeof(RE::FormID))) {
                 ok = false;
                 logger::error("Failed to write data for {}_{}", name, index);
             }
@@ -1006,12 +1070,25 @@ namespace SpellHotbar
         }
     }
 
+    void SlottedSkill::update_art_assignment(uint32_t p_art_id)
+    {
+        clear();
+        if (p_art_id == 0) {
+            return;
+        }
+        art_id = p_art_id;
+        type = slot_type::weapon_art;
+        hand = hand_mode::auto_hand;
+    }
+
     void SlottedSkill::clear()
     { 
         type = slot_type::empty;
         formID = 0U;
+        art_id = 0U;
         hand = hand_mode::auto_hand;
         consumed = consumed_type::none;
+        color = 0xFFFFFFFF;
     }
 
     bool SubBar::is_empty()

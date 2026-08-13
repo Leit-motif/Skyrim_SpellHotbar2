@@ -18,7 +18,8 @@ enum class slot_type: uint8_t {
     power,
     lesser_power,
     shout,
-    potion
+    potion,
+    weapon_art
 };
 
 enum inherit_mode
@@ -49,6 +50,7 @@ enum class consumed_type : uint8_t {
 struct SlottedSkill
 {
     RE::FormID formID;
+    uint32_t art_id;
     slot_type type;
     hand_mode hand;
     consumed_type consumed;
@@ -61,6 +63,7 @@ struct SlottedSkill
 
     bool serialize_skill(uint8_t index, SKSE::SerializationInterface* serializer, const std::string& name) const;
     void update_skill_assignment(RE::FormID p_formID);
+    void update_art_assignment(uint32_t p_art_id);
 };
 
 struct SubBar {
@@ -129,6 +132,8 @@ public:
     inline const std::string get_name() const;
 
     void slot_spell(size_t index, RE::FormID spell, key_modifier modifier);
+
+    void slot_art(size_t index, uint32_t art_id, key_modifier modifier);
 
     RE::FormID get_spell(size_t index, key_modifier modifier);
 

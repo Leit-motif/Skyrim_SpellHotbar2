@@ -1318,6 +1318,24 @@ bool RenderManager::draw_skill(RE::FormID formID, int size, ImU32 col) {
     }
 }
 
+bool RenderManager::draw_art_icon(uint32_t art_id, int size, ImU32 col)
+{
+    constexpr float scale = 1.0f;
+    const ArtDefinition* art = GameData::get_art(art_id);
+    if (!art) {
+        return false;
+    }
+    GameData::DefaultIconType type = GameData::DefaultIconType::UNKNOWN;
+    if (TextureCSVLoader::default_icon_names.contains(art->icon)) {
+        type = TextureCSVLoader::default_icon_names.at(art->icon);
+    }
+    if (!default_icons.contains(type)) {
+        return false;
+    }
+    default_icons.at(type).draw_with_scale(static_cast<float>(size), static_cast<float>(size), col, scale);
+    return true;
+}
+
 bool RenderManager::draw_skill_in_editor(RE::FormID formID, ImVec2 pos, int size, ImU32 col)
 {
     SubTextureImage* img = get_tex_for_skill_internal(formID);

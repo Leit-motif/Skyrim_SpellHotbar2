@@ -4,6 +4,7 @@
 #include "spell_cast_data.h"
 #include "user_custom_spelldata.h"
 #include "../bar/oblivion_bar.h"
+#include "art_definition.h"
 #include <optional>
 
 namespace SpellHotbar::GameData {
@@ -149,6 +150,7 @@ namespace SpellHotbar::GameData {
     extern RE::TESGlobal* global_casting_source;
     extern RE::TESGlobal* global_vampire_lord_equip_mode;
     extern RE::TESGlobal* global_casting_conc_spell;
+    extern RE::TESGlobal* global_art_selector;
 
     extern RE::SpellItem* spellhotbar_castfx_spell;
     extern RE::SpellItem* spellhotbar_unbind_slot;
@@ -248,6 +250,14 @@ namespace SpellHotbar::GameData {
     void set_spell_cooldown_effect(RE::FormID spell, RE::FormID cd_effect);
 
     void reload_data();
+
+    void set_art(ArtDefinition art);
+    const ArtDefinition* get_art(uint32_t art_id);
+    void set_art_selector(int value);
+    void reset_art_selector();
+    void add_art_cooldown(uint32_t art_id, float days);
+    bool is_art_on_cd(uint32_t art_id);
+    std::tuple<float, float> get_art_gametime_cooldown(float curr_game_time, uint32_t art_id);
 
     void add_gametime_cooldown(RE::FormID skill, float hours, bool update_existing);
 

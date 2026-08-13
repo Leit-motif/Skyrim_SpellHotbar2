@@ -64,6 +64,18 @@ _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
 One pending request to activate a hotbar payload. Spell Hotbar 2 retains and revalidates it; ShoutMCO owns only its release or abandonment timing.
 _Avoid_: Copied spell payload, queued spell object
 
+**Weapon Art**:
+A bindable attack animation played from a hotbar slot without equipping anything. The slot holds an art id, not a FormID. _Avoid_: power attack, additional attack, ash of war.
+
+**Art Selector**:
+The TESGlobal the fork writes to name which Weapon Art plays; OAR conditions read it. Zero means no fork art is selected. _Avoid_: art keyword, worn art.
+
+**Art Pack**:
+A set of OAR submods keyed to the Art Selector. _Avoid_: animation mod, moveset.
+
+**Terminal Art / Chaining Art**:
+An art whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
+
 ## Findings
 
 Verified 2026-07-31 by static inspection of this repository unless noted. The vanilla

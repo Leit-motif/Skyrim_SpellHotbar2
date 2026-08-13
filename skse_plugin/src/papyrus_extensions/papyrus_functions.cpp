@@ -50,6 +50,32 @@ void cast_slot(RE::StaticFunctionTag*, int slot_index)
     });
 }
 
+void slot_art(RE::StaticFunctionTag*, int slot_index, int art_id)
+{
+    SKSE::GetTaskInterface()->AddTask([slot_index, art_id]() {
+        using namespace SpellHotbar;
+        if (slot_index < 0 || slot_index >= static_cast<int>(max_bar_size)) {
+            logger::warn("slotArt({}, {}): slot index out of range", slot_index, art_id);
+            return;
+        }
+        uint32_t bar_id = Bars::getCurrentHotbar_ingame();
+        if (!Bars::hotbars.contains(bar_id)) {
+            logger::warn("slotArt({}, {}): no current hotbar", slot_index, art_id);
+            return;
+        }
+        Bars::hotbars.at(bar_id).slot_art(static_cast<size_t>(slot_index), static_cast<uint32_t>(std::max(0, art_id)),
+                                          Bars::get_current_modifier());
+    });
+}
+
+int get_art_selector(RE::StaticFunctionTag*)
+{
+    if (SpellHotbar::GameData::global_art_selector) {
+        return static_cast<int>(SpellHotbar::GameData::global_art_selector->value);
+    }
+    return 0;
+}
+
 int set_number_of_slots(RE::StaticFunctionTag*, int num)
 {
     SpellHotbar::Bars::barsize = static_cast<uint8_t>(std::clamp(num, 1, static_cast<int>(SpellHotbar::max_bar_size)));
@@ -623,6 +649,8 @@ bool toggle_individual_shout_cooldowns(RE::StaticFunctionTag*) {
 
 bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("castSlot", "SpellHotbar", cast_slot);
+    vm->RegisterFunction("slotArt", "SpellHotbar", slot_art);
+    vm->RegisterFunction("getArtSelector", "SpellHotbar", get_art_selector);
     vm->RegisterFunction("getNumberOfSlots", "SpellHotbar", get_number_of_slots);
     vm->RegisterFunction("setNumberOfSlots", "SpellHotbar", set_number_of_slots);
     vm->RegisterFunction("setSlotScale", "SpellHotbar", set_slot_scale);
