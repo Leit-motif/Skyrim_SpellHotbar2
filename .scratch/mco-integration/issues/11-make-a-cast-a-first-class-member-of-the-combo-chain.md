@@ -8,7 +8,7 @@ in **both** directions.
 
 **Blocked by:** Nothing. Ticket 10 shipped the cut this builds on.
 
-**Status:** claimed — built, acceptance open
+**Status:** split — do not implement this file; work 12–15. Acceptance stays open on the children.
 
 ## State this ticket starts from
 
@@ -171,6 +171,8 @@ variable itself, we need to be sure the two never both write.
 - [ ] Hotbar cast → MSCO hand cast chains.
 - [ ] Power attack chains in every case above, not only the light attack.
 - [ ] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
+- [ ] Close-out, after 13 and 14: `attack1 → attack2 → cast1 → attack3 → cast2` — both counters
+      independent. Not its own ticket; it is the joint demo of those two.
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
 ## Out of scope, and this time deliberately rather than by deferral
@@ -200,3 +202,42 @@ What shipped:
 Acceptance stays open until the four cells are seen in game. Agents cannot drive ticket 10/11
 input-hook cells (injected input never reaches `DispatchInputEvent`). Papyrus `castSlot` can
 drive consecutive casts. Owner presses for the attack-cut and left-hand-cast cells.
+
+**2026-08-12 evening — owner playtest, adversarial review session. Do not fix yet; record only.**
+
+1. **Spell release vs clip 4 windup.** SH2 casts look like the spell releases at the start of
+   the animation. That reads fine on clips 1–3. Clip 4 has a windup, and the spell fires
+   *during* the windup, which looks off. (Session log already showed clip 4 hitting the 0.5s
+   authored-time floor before `MLh_SpellFire_Event` at ~0.92s — same symptom, owner-confirmed
+   by eye.)
+2. **Left-hand spell + hotbar 1 fires both.** With a spell in the left hand, pressing 1 casts
+   the hotbar spell *and* the left-hand spell. MSCO ↔ SH2 chaining is not working on multiple
+   levels — not only the dedicated cut cells. Cells 3 and 4 stay open; this is a new, broader
+   failure than “SH2 → LH cast no chain.”
+3. **GCD vs MSCO pace.** SH2's global cooldown may need to follow the pace of the MSCO clips.
+   It may need to read MSCO's variable cooldown logic rather than keeping its own timer.
+4. **Rooting.** An SH2 cast is supposed to root the player. Currently the player can move
+   during the cast.
+5. **Power-attack cell, owner-verified:** `attack1 → pattack2 → sh2_cast1 → pattack3` works.
+6. **Left-hand Flames cannot chain.** It is a concentration spell. Confirmed in game: it
+   resets the combo. Matches the ticket's concentration out-of-scope note; not a cell-4
+   counterexample.
+
+**2026-08-12 evening — split into 12–15, playtest items filed as 17–19.**
+
+Ticket 11 is the parent, not an implement unit. Children:
+
+- 12 ADR-0005: combo position is not release timing (blocks 13)
+- 13 restore MCO combo position across a hotbar cast
+- 14 consecutive hotbar casts walk the cast combo (includes: an intervening attack does not
+  reset the cast index)
+- 15 MSCO and hotbar chain in both directions
+
+16 was dropped: mixed-chain orthogonality is not a third seam. Persist-across-attack lives on
+14; the joint demo `attack1 → attack2 → cast1 → attack3 → cast2` is this parent's close-out
+once 13 and 14 are both green.
+
+Playtest items, siblings not children: 17 clip-4 windup delivery, 18 GCD vs MSCO cadence, 19 rooting.
+
+**2026-08-12 — ticket 12 resolved.** ADR-0005 now names combo-position restore as an exception,
+not a second timing cache. Ticket 13 is unblocked. 14 and 15 remain frontier.
