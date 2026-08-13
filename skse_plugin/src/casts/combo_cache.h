@@ -181,4 +181,29 @@ enum class HotbarCastPress {
 	return committed_holding_graph && left_hand_holds_spell && is_left_attack_key;
 }
 
+// ADR-0006: the SpellFire annotation leads; the authored cast time is the
+// floor only as a missing-annotation fallback. Timer expiry while the clip
+// is still playing is not that fallback — clip 4's SpellFire is at ~0.92s,
+// past a 0.5s authored time, so a live clip waits for the pose.
+enum class CastDelivery {
+	wait,
+	deliver,
+	cancel,
+};
+
+[[nodiscard]] constexpr CastDelivery classify_cast_delivery(
+	bool already_delivered, bool timer_expired, bool spellfire_seen, bool anim_ok) noexcept
+{
+	if (already_delivered) {
+		return CastDelivery::wait;
+	}
+	if (spellfire_seen) {
+		return CastDelivery::deliver;
+	}
+	if (anim_ok) {
+		return CastDelivery::wait;
+	}
+	return timer_expired ? CastDelivery::deliver : CastDelivery::cancel;
+}
+
 }  // namespace SpellHotbar::casts

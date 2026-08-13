@@ -100,6 +100,7 @@ namespace SpellHotbar::casts::CastingController {
 		void play_release_sound() const ;
 		void play_cast_loop_sound();
 		void stop_cast_loop_sound();
+		void deliver_payload(RE::PlayerCharacter* pc);
 
 		virtual bool is_first_time_update() const;
 

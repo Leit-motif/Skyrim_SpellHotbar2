@@ -4,10 +4,12 @@
 #include <iostream>
 
 using SpellHotbar::casts::CastComboIndex;
+using SpellHotbar::casts::CastDelivery;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
 using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
+using SpellHotbar::casts::classify_cast_delivery;
 using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
 using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
@@ -187,6 +189,46 @@ void driver_cast_isolates_before_vanilla_sees_left_spellfire()
 		"other graph events still reach vanilla during a Driver Cast");
 }
 
+void clip_4_does_not_deliver_during_its_windup()
+{
+	expect(classify_cast_delivery(false, true, false, true) == CastDelivery::wait,
+		"clip 4's 0.5s floor must not release during the windup before SpellFire");
+}
+
+void clip_4_delivers_when_spellfire_arrives_past_the_floor()
+{
+	expect(classify_cast_delivery(false, true, true, true) == CastDelivery::deliver,
+		"clip 4 delivers at the SpellFire pose once the authored floor has passed");
+}
+
+void clips_1_to_3_still_deliver_near_the_start()
+{
+	expect(classify_cast_delivery(false, false, true, true) == CastDelivery::deliver,
+		"clips 1-3 deliver at SpellFire even when it lands before the authored time");
+	expect(classify_cast_delivery(false, false, true, false) == CastDelivery::deliver,
+		"a cut after SpellFire still delivers; the annotation already led");
+	expect(classify_cast_delivery(false, true, true, true) == CastDelivery::deliver,
+		"clips 1-3 still deliver when SpellFire and the authored time have both landed");
+}
+
+void missing_annotation_falls_back_when_the_clip_ends()
+{
+	expect(classify_cast_delivery(false, true, false, false) == CastDelivery::deliver,
+		"a clip that never raises SpellFire still delivers once it has ended past the floor");
+}
+
+void losing_the_state_before_the_floor_cancels()
+{
+	expect(classify_cast_delivery(false, false, false, false) == CastDelivery::cancel,
+		"losing the cast state before the floor and before SpellFire cancels");
+}
+
+void already_delivered_does_not_fire_again()
+{
+	expect(classify_cast_delivery(true, true, true, true) == CastDelivery::wait,
+		"a payload that already left the hand is not delivered twice");
+}
+
 void left_hand_press_cuts_a_committed_hotbar_cast()
 {
 	expect(cut_committed_cast_for_left_hand_press(true, true, true),
@@ -221,6 +263,12 @@ int main()
 	handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell();
 	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();
 	driver_cast_isolates_before_vanilla_sees_left_spellfire();
+	clip_4_does_not_deliver_during_its_windup();
+	clip_4_delivers_when_spellfire_arrives_past_the_floor();
+	clips_1_to_3_still_deliver_near_the_start();
+	missing_annotation_falls_back_when_the_clip_ends();
+	losing_the_state_before_the_floor_cancels();
+	already_delivered_does_not_fire_again();
 	left_hand_press_cuts_a_committed_hotbar_cast();
 
 	if (g_failures != 0) {

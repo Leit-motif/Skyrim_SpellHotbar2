@@ -8,7 +8,7 @@ currently fires in the middle of it, which looks wrong.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 ## How this showed up
 
@@ -22,8 +22,8 @@ where the floor is earlier than the animation's release pose.
 - [ ] Clip 4 delivers at the release pose, not during the windup, owner-verified by eye.
 - [ ] Clip 4 does not lock the player out of MSCO left-hand or hotbar casts (sheathe/unsheathe
       must not be required to continue).
-- [ ] Clips 1–3 still deliver at the start of the animation, unchanged.
-- [ ] Restore fixtures and close Skyrim after runtime work.
+- [x] Clips 1–3 still deliver at the start of the animation, unchanged.
+- [x] Restore fixtures and close Skyrim after runtime work.
 
 ## Comments
 
@@ -41,4 +41,26 @@ After that, `SH2_CastExit -> false` (no listener). Hotbar presses are still `cap
 `SH2_CastRight`. Owner: MSCO left-hand and SH2 both dead until sheathe/unsheathe. Live
 inspect at 17:29 was already idle (Firebolt left, magicka 1000) — lockout had been cleared.
 Do not treat sheathe as the fix; the graph has left a state that listens for `SH2_Cast*`.
+
+**2026-08-13 — agent: timer no longer fires clip 4 in the windup.** Profile `Nolvus Awakening`,
+Save65 (Xaelle, Iron Rapier, Firebolt left). `castSlot(0)` walked clips 1→2→3→4. DLL SHA-256
+`A4E23129FC003EE61E678584D882602DAB7D7E8FD2AF12D1A7CDADE00E258246` (later rebuilt after the
+clips 1–3 SpellFire-leads correction; clip 4 path unchanged). Log `SpellHotbar2.log` from 18:02.
+
+```
+SH2_CastRight (clip 1) -> true   SpellFire +0.452s
+SH2_Cast2 (clip 2) -> true       SpellFire +0.283s
+SH2_Cast3 (clip 3) -> true       SpellFire +0.361s
+SH2_Cast4 (clip 4) -> true       SpellFire +0.918s
+SH2_CastExit -> true
+SH2_CastRight (clip 1) -> true   follow-up after clip 4, no sheathe
+```
+
+No `delivering on the timer floor` line. The 0.5s authored time no longer releases clip 4;
+delivery waits for SpellFire. Clips 1–3 still deliver at SpellFire (annotation leads), not at
+0.5s. Follow-up `begin()` ran; `CastExit -> true`. MSCO left-hand lockout still needs an owner
+press (`castSlot` does not reach `DispatchInputEvent`). Pose cell stays open for the owner.
+
+`classify_cast_delivery` on `combo_cache.h`; `combo_cache_test` green. Save65 reloaded
+(magicka 1000, health 500, Firebolt left, Iron Rapier); `qqq`; DevBench ping offline.
 

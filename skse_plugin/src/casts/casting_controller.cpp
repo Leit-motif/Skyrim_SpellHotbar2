@@ -24,7 +24,9 @@ namespace SpellHotbar::casts::CastingController {
 	//
 	// The annotation leads, the authored cast time is the floor (ADR 0006): if the event never
 	// arrives — clip replaced by an override without the annotation, graph rebuilt wrong — the
-	// cast still delivers when its timer expires, instead of silently delivering nothing.
+	// cast still delivers when its timer expires *and the clip has ended*, instead of silently
+	// delivering nothing. Timer expiry while the clip is still playing is not that fallback
+	// (clip 4's SpellFire is at ~0.92s, past a 0.5s floor).
 	//
 	// File-scope and atomic rather than a member, because the animation-event hook runs on the
 	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
@@ -352,6 +354,28 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
+	void CastingInstance::deliver_payload(RE::PlayerCharacter* pc)
+	{
+		if (m_spell_started) {
+			return;
+		}
+		if (!is_cast_committed()) {
+			logger::warn("SH2 cast: no SpellFire event; delivering after the clip ended past the authored cast time");
+		}
+		m_spell_started = true;
+		stop_charge_sound();
+		play_release_sound();
+		if (cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc)) {
+			if (m_spell_proc) {
+				casts::SpellProc::consume_proc();
+			}
+			apply_cooldown();
+			pc->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -m_manacost);
+			consume_items();
+		}
+		set_casted();
+	}
+
 	bool CastingInstance::update(RE::PlayerCharacter* pc, float delta)
 	{
 		const bool anim_ok = is_anim_ok(pc);
@@ -361,7 +385,9 @@ namespace SpellHotbar::casts::CastingController {
 		}
 
 		// Past spellfire the cast is committed and delivers regardless of the casting state
-		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
+		// (ADR 0004). The annotation leads (ADR 0006); the authored cast time is only the
+		// missing-annotation fallback, not an early trigger. Clip 4's SpellFire is past
+		// that authored time, so a live clip waits for the pose instead of the windup.
 		if (anim_ok || is_cast_committed()) {
 			// The grace only bridges the send frame: the driver's flag is set from the
 			// notify's own return, so a live state reads active immediately and losing
@@ -373,28 +399,11 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 
-			// The clip's spellfire annotation leads; the authored cast time is the
-			// delivery floor (ADR 0006), so a clip that lost its annotation still casts.
 			const bool timer_expired = advance_time(delta);
 			GameData::advance_cast_timer(delta);
-
-			if (timer_expired && !is_cast_committed() && !m_spell_started) {
-				logger::warn("SH2 cast: no SpellFire event by the authored cast time; delivering on the timer floor");
-			}
-
-			if ((is_cast_committed() || timer_expired) && !m_spell_started) {
-				m_spell_started = true;
-				stop_charge_sound();
-				play_release_sound();
-				if (cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc)) {
-					if (m_spell_proc) {
-						casts::SpellProc::consume_proc();
-					}
-					apply_cooldown();
-					pc->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -m_manacost);
-					consume_items();
-				}
-				set_casted();
+			if (classify_cast_delivery(m_spell_started, timer_expired, is_cast_committed(), anim_ok) ==
+				CastDelivery::deliver) {
+				deliver_payload(pc);
 			}
 		}
 		else if (m_entry_grace > 0.0f) {
@@ -404,6 +413,11 @@ namespace SpellHotbar::casts::CastingController {
 			m_entry_grace -= delta;
 		}
 		else {
+			const bool timer_expired = m_cast_timer <= 0.0f;
+			if (classify_cast_delivery(m_spell_started, timer_expired, is_cast_committed(), anim_ok) ==
+				CastDelivery::deliver) {
+				deliver_payload(pc);
+			}
 			GameData::reset_animation_vars();
 			return true;
 		}

@@ -30,14 +30,20 @@ arrives at the wrong event and the wrong graph.
 - *`SH2_CastEnter` does arrive, and before spellfire* (+0.197s, traced 2026-08-12) — but the
   driver deliberately does not use it. The notify's own return is the entry signal, and
   `SH2_CastDone` never arrives at all.
+- *Timer expiry while the clip is still playing is not the missing-annotation fallback.*
+  Ticket 17, 2026-08-13: clip 4's SpellFire is at ~0.92s, past the 0.5s authored time. The
+  annotation still leads: clips 1–3 deliver at SpellFire even when it lands before 0.5s.
+  The fallback (timer expiry *and* clip ended, no annotation) is what "floor" names for a
+  clip that never raises SpellFire.
 
 What 0004 left implicit is now explicit: **the annotation leads, the authored cast time is the
 floor.** Commitment protects a cast from interruption after spellfire; it is not the sole
 trigger of delivery. If the annotation never arrives — an OAR override replaced the clip, a
 Nemesis rebuild dropped the state's wiring (this happened: the `sh2c` build compiled the state
-with a null generator) — the cast delivers when its own timer expires, logged as a warning,
-instead of silently delivering nothing. A broken animation layer degrades to vanilla-timed
-casting, never to a dead button.
+with a null generator) — the cast delivers when its own timer expires *and the clip has ended*,
+logged as a warning, instead of silently delivering nothing. A broken animation layer degrades
+to vanilla-timed casting, never to a dead button. Timer expiry while the clip is still playing
+is not that fallback: see the 2026-08-13 amendment above.
 
 Deliberate deviation, recorded against ADR-0001: the driver and the Nemesis patch currently
 live in the core fork, and a load order without the patch fails every animated hotbar cast at
