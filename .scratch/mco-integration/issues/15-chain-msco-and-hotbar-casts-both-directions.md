@@ -10,7 +10,7 @@ hotbar → MSCO not. Owner playtest on 2026-08-12 found a broader failure: left-
 **Blocked by:** None — can start immediately. Ticket 10 already ships the attack-press cut this
 mirrors.
 
-**Status:** ready-for-human
+**Status:** resolved
 
 ## What this is not
 
@@ -23,8 +23,8 @@ A hand-cast press during a committed hotbar cast ends the hotbar state the same 
 press now does. An MSCO hand cast must still be able to chain into a hotbar cast. A hotbar press
 while a spell is in the left hand must not also fire that left-hand spell.
 
-- [ ] MSCO hand cast → hotbar cast chains, with no dual fire.
-- [ ] Hotbar cast → MSCO hand cast chains, with no dual fire.
+- [x] MSCO hand cast → hotbar cast chains, with no dual fire.
+- [x] Hotbar cast → MSCO hand cast chains, with no dual fire.
 - [x] Left-hand spell + hotbar slot does not cast both.
 - [x] Concentration hand casts remain out of scope and must not be treated as a counterexample.
 - [x] Restore fixtures and close Skyrim after runtime work.
@@ -110,3 +110,12 @@ Bolt left, press **1**, one projectile. Chain cells still owner.
 
 Fixtures: Save65 reloaded (magicka 1000, health 500, Firebolt left, Iron Rapier); `qqq`.
 MO2 left running.
+
+**2026-08-13 evening — owner playtest closes the original cells.** Dual-fire: works
+(`captured hotbar press` + `isolated left-hand caster before vanilla SpellFire` on key 1).
+LH → slot 0: works, no duplicated cast (Firebolt + Ice Spike). Hotbar → LH: left-hand cut
+on clips 1–3 (`left-hand cast pressed on a committed cast; ending the state`,
+`SH2_CastExit -> true`). Clip 4's early timer-floor delivery and the sheathe-to-unlock
+lockout are [ticket 17](17-do-not-deliver-clip-4-during-its-windup.md). Mixed-chain works
+but the recovery-window feel is [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md).
+

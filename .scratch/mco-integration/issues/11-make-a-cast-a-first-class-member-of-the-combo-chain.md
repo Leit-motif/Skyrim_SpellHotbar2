@@ -261,3 +261,10 @@ magicka cost on Save65; capture + left-caster isolate). The two MSCO ↔ hotbar 
 still ride `DispatchInputEvent` and stay owner. Mixed-chain close-out
 `attack1 → attack2 → cast1 → attack3 → cast2` still waits on those presses. See
 [ticket 15](15-chain-msco-and-hotbar-casts-both-directions.md).
+
+**2026-08-13 evening — ticket 15 resolved.** Owner: dual-fire closed, LH → slot 0 chains
+with no duplicate, hotbar → LH cuts on clips 1–3. Mixed-chain
+`attack1 → attack2 → cast1 → attack3 → cast2` works if you wait for the clip to finish.
+Clip-4 windup + sheathe lockout is [ticket 17](17-do-not-deliver-clip-4-during-its-windup.md).
+Recovery-window cadence is [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md).
+
