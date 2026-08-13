@@ -317,6 +317,13 @@ not driven at all**, nor anything beyond one spell in one slot in one configurat
 
 ### Open question
 
+> **Superseded 2026-08-12.** Both questions below interrogate the retired voice-path entry
+> (`ShoutStart` notify). The shipped mechanism is the mod's own `shtb` states (see **Hotbar
+> Cast** above): entry from drawn idles is owner-verified, mid-swing entry is refused by the
+> graph by design, and a cast no longer stakes its life on `IsShouting` — it commits at
+> spellfire (ADR-0004, ticket 07). Kept for the record of how the question narrowed; ticket 01
+> is closed as superseded.
+
 Whether `ShoutStart` is honored while the player is inside an MCO attack state. If the graph
 refuses the transition, the liveness check in finding 4 fails on the first update and the cast is
 swallowed silently. Not answerable by static inspection.
