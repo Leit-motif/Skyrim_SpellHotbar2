@@ -123,6 +123,15 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		(void)hand;
 		trace_budget.store(0, std::memory_order_relaxed);
+		auto* left = pc->GetEquippedObject(true);
+		const bool left_holds_spell =
+			left && (left->Is(RE::FormType::Spell) || left->Is(RE::FormType::Scroll));
+		if (isolate_left_hand_caster_for_driver_cast(left_holds_spell)) {
+			if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
+				caster->InterruptCast(true);
+			}
+			logger::debug("SH2 cast: isolated left-hand caster to prevent dual fire");
+		}
 		return send_entry(pc);
 	}
 

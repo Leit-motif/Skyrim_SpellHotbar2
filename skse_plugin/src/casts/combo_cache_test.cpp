@@ -7,7 +7,10 @@ using SpellHotbar::casts::CastComboIndex;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
+using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
 using SpellHotbar::casts::classify_hotbar_cast_press;
+using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
+using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
 
 namespace {
@@ -155,6 +158,36 @@ void chain_press_keeps_commitment_until_the_cut()
 		"a refused press does not keep commitment");
 }
 
+void handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell()
+{
+	expect(capture_hotbar_press_to_prevent_dual_fire(true, true),
+		"a Direct Cast with a spell in the left hand must not also reach vanilla");
+	expect(!capture_hotbar_press_to_prevent_dual_fire(true, false),
+		"without a left-hand spell there is no dual-fire to prevent");
+	expect(!capture_hotbar_press_to_prevent_dual_fire(false, true),
+		"an unhandled press is not captured by this rule");
+}
+
+void driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell()
+{
+	expect(isolate_left_hand_caster_for_driver_cast(true),
+		"SpellFire on a borrowed MSCO clip must not complete an equipped left-hand spell");
+	expect(!isolate_left_hand_caster_for_driver_cast(false),
+		"an empty or weapon left hand has no equipped spell to isolate");
+}
+
+void left_hand_press_cuts_a_committed_hotbar_cast()
+{
+	expect(cut_committed_cast_for_left_hand_press(true, true, true),
+		"a left-hand FNF press during a committed Driver Cast ends the hotbar state");
+	expect(!cut_committed_cast_for_left_hand_press(false, true, true),
+		"before commitment the left-hand press keeps today's behaviour");
+	expect(!cut_committed_cast_for_left_hand_press(true, false, true),
+		"left attack with a weapon or shield is block, not an MSCO hand cast");
+	expect(!cut_committed_cast_for_left_hand_press(true, true, false),
+		"an unrelated key does not cut");
+}
+
 }  // namespace
 
 int main()
@@ -174,6 +207,9 @@ int main()
 	committed_follow_up_press_chains();
 	live_cast_without_commitment_is_refused();
 	chain_press_keeps_commitment_until_the_cut();
+	handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell();
+	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();
+	left_hand_press_cuts_a_committed_hotbar_cast();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

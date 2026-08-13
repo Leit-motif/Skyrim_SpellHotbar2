@@ -254,3 +254,10 @@ intervening CastExit; uninterrupted clip 1 unchanged; next cast after an attack 
 2). Ritual shares `start_ritual_cast`'s same cut. Concentration stays out. 15 remains
 frontier; the mixed-chain close-out `attack1 → attack2 → cast1 → attack3 → cast2` is unblocked
 on the cast-index half. See [ticket 14](14-consecutive-hotbar-casts-walk-the-cast-combo.md).
+
+**2026-08-13 — ticket 15 dual-fire closed; chain cells need owner presses.** Dual-fire of an
+equipped left-hand spell with a Driver Cast is closed on the public `castSlot` path (one
+magicka cost on Save65; capture + left-caster isolate). The two MSCO ↔ hotbar chain cells
+still ride `DispatchInputEvent` and stay owner. Mixed-chain close-out
+`attack1 → attack2 → cast1 → attack3 → cast2` still waits on those presses. See
+[ticket 15](15-chain-msco-and-hotbar-casts-both-directions.md).

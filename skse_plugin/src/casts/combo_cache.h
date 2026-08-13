@@ -144,4 +144,30 @@ enum class HotbarCastPress {
 	return press == HotbarCastPress::chain;
 }
 
+// A handled spell-slot press must not also reach vanilla when the left hand
+// holds a spell: the borrowed clip raises MLh_SpellFire_Event, and an
+// uncaptured hotbar key is vanilla Hotkey1.
+[[nodiscard]] constexpr bool capture_hotbar_press_to_prevent_dual_fire(
+	bool handled_spell_slot, bool left_hand_holds_spell) noexcept
+{
+	return handled_spell_slot && left_hand_holds_spell;
+}
+
+// A Driver Cast interrupts the left-hand MagicCaster so the clip's SpellFire
+// cannot complete an equipped left-hand spell.
+[[nodiscard]] constexpr bool isolate_left_hand_caster_for_driver_cast(
+	bool left_hand_holds_spell) noexcept
+{
+	return left_hand_holds_spell;
+}
+
+// The left control is block when that hand holds a weapon or shield. A
+// left-hand spell press during a committed Driver Cast ends the hotbar state
+// the same way an attack press does.
+[[nodiscard]] constexpr bool cut_committed_cast_for_left_hand_press(
+	bool committed_holding_graph, bool left_hand_holds_spell, bool is_left_attack_key) noexcept
+{
+	return committed_holding_graph && left_hand_holds_spell && is_left_attack_key;
+}
+
 }  // namespace SpellHotbar::casts
