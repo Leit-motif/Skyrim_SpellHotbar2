@@ -4,8 +4,11 @@
 #include <iostream>
 
 using SpellHotbar::casts::CastComboIndex;
+using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
+using SpellHotbar::casts::classify_hotbar_cast_press;
+using SpellHotbar::casts::keep_commitment_until_cut;
 
 namespace {
 
@@ -122,6 +125,36 @@ void cast_index_is_unchanged_by_an_attack_gap()
 	expect(idx.current() == 2, "an intervening attack does not reset the cast index");
 }
 
+void idle_press_starts_an_ordinary_cast()
+{
+	expect(classify_hotbar_cast_press(false, false) == HotbarCastPress::start,
+		"no live cast is an ordinary first press");
+	expect(classify_hotbar_cast_press(false, true) == HotbarCastPress::start,
+		"a stale holding flag cannot turn an idle press into a chain");
+}
+
+void committed_follow_up_press_chains()
+{
+	expect(classify_hotbar_cast_press(true, true) == HotbarCastPress::chain,
+		"a second press during a committed cuttable Driver Cast is a combo step");
+}
+
+void live_cast_without_commitment_is_refused()
+{
+	expect(classify_hotbar_cast_press(true, false) == HotbarCastPress::refuse,
+		"before spellfire, or a concentration channel, the second press is refused");
+}
+
+void chain_press_keeps_commitment_until_the_cut()
+{
+	expect(keep_commitment_until_cut(HotbarCastPress::chain),
+		"a chain press still needs the commitment bit when start_cast runs the cut");
+	expect(!keep_commitment_until_cut(HotbarCastPress::start),
+		"an idle start must not inherit a leftover shout's spellfire");
+	expect(!keep_commitment_until_cut(HotbarCastPress::refuse),
+		"a refused press does not keep commitment");
+}
+
 }  // namespace
 
 int main()
@@ -137,6 +170,10 @@ int main()
 	disarm_drops_a_pending_restore_without_writing();
 	cast_index_starts_at_one_and_wraps_after_four();
 	cast_index_is_unchanged_by_an_attack_gap();
+	idle_press_starts_an_ordinary_cast();
+	committed_follow_up_press_chains();
+	live_cast_without_commitment_is_refused();
+	chain_press_keeps_commitment_until_the_cut();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

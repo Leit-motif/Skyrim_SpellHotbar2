@@ -116,4 +116,32 @@ private:
 	int index_ = 1;
 };
 
+// Public hotbar path: a second press during a committed Driver Cast is a combo step, not a
+// refusal. Concentration and pre-spellfire are excluded by the holding flag the caller
+// already computed (is_committed_cast_holding_graph).
+enum class HotbarCastPress {
+	start,
+	chain,
+	refuse,
+};
+
+[[nodiscard]] constexpr HotbarCastPress classify_hotbar_cast_press(
+	bool has_live_cast, bool committed_cuttable_holding_graph) noexcept
+{
+	if (!has_live_cast) {
+		return HotbarCastPress::start;
+	}
+	if (committed_cuttable_holding_graph) {
+		return HotbarCastPress::chain;
+	}
+	return HotbarCastPress::refuse;
+}
+
+// The cut still reads commitment. Clearing spellfire between classify and start_cast
+// turns a chain press into a refuse against the live instance.
+[[nodiscard]] constexpr bool keep_commitment_until_cut(HotbarCastPress press) noexcept
+{
+	return press == HotbarCastPress::chain;
+}
+
 }  // namespace SpellHotbar::casts

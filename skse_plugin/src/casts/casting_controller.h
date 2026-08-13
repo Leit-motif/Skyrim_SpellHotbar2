@@ -83,6 +83,13 @@ namespace SpellHotbar::casts::CastingController {
 		virtual void apply_cast_start_spell(RE::PlayerCharacter* pc);
 
 		virtual void on_reset() override;
+
+		/**
+		 * Tear down FX and post-cast callbacks without leaving the shtb state. A follow-up
+		 * Driver Cast notifies the next clip event from inside the live state; CastExit
+		 * would route through ready and the next notify would miss.
+		 */
+		void on_reset_keep_graph();
 		/*
 		* Game loop update logic, return if cast should be cleared afterwards. 
 		*/
@@ -263,11 +270,18 @@ namespace SpellHotbar::casts::CastingController {
 	* Is a committed cast holding the graph right now — a live cast instance, its shtb state
 	* active, and the commitment point already passed?
 	*
-	* The attack-press chain-out reads this and nothing else. Before the commitment point a
-	* cut costs the player the spell (ticket 03's original hazard, real for the clip's first
-	* 0.483s), so a press then must keep today's behaviour.
+	* The attack-press chain-out and a consecutive-cast follow-up both read this. Before the
+	* commitment point a cut costs the player the spell (ticket 03's original hazard, real
+	* for the clip's first 0.483s), so a press then must keep today's behaviour.
 	*/
 	bool is_committed_cast_holding_graph();
+
+	/**
+	 * May the public hotbar path attempt a Driver Cast right now? True when no cast is live,
+	 * or when a committed cuttable Driver Cast holds the graph (a combo follow-up). False
+	 * during GCD, pre-spellfire, concentration, potions, and shouts.
+	 */
+	bool can_accept_hotbar_cast();
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 	

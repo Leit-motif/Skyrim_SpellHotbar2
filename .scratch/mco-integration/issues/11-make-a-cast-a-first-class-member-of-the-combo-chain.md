@@ -246,3 +246,11 @@ not a second timing cache. Ticket 13 is unblocked. 14 and 15 remain frontier.
 light and power cells owner-verified 2026-08-12; negative controls (swing / shout /
 uninterrupted cast) observed 2026-08-13; fixtures restored and Skyrim closed. 14 and 15
 remain frontier. The mixed-chain close-out still waits on 14.
+
+**2026-08-13 — ticket 14 resolved.** Consecutive Driver Casts walk SH2's own 1→2→3→4→1 index
+through the public `castSlot` path: a follow-up during a committed cast cuts without
+`CastExit` and notifies the next clip in-place. Observed on Save65 (clip 2→3→4→1 wrap, no
+intervening CastExit; uninterrupted clip 1 unchanged; next cast after an attack gap was clip
+2). Ritual shares `start_ritual_cast`'s same cut. Concentration stays out. 15 remains
+frontier; the mixed-chain close-out `attack1 → attack2 → cast1 → attack3 → cast2` is unblocked
+on the cast-index half. See [ticket 14](14-consecutive-hotbar-casts-walk-the-cast-combo.md).

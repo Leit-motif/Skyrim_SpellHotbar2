@@ -43,7 +43,12 @@ namespace SpellHotbar::Input {
 
 	void InputModeCast::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
 	{
-        if (allowed_to_instantcast(skill.formID) && casts::CastingController::can_start_new_cast()) {
+        // Ticket 14 widens only Driver Casts: a second spell press during a committed
+        // cast is a combo step. Shouts, powers, and potions still require no live instance.
+        const bool accept = skill.type == slot_type::spell
+            ? casts::CastingController::can_accept_hotbar_cast()
+            : casts::CastingController::can_start_new_cast();
+        if (allowed_to_instantcast(skill.formID) && accept) {
             if (skill.formID > 0) {
                 auto form = RE::TESForm::LookupByID(skill.formID);
 
