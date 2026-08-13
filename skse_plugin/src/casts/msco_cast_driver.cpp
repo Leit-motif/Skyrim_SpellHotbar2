@@ -16,8 +16,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 		RollingMcoCombo g_rolling;
 		CastComboIndex g_castIndex;
-		std::atomic<bool> restore_pending{ false };
-		McoCombo restore_value{};
 
 		constexpr std::array<std::string_view, CastComboIndex::kLength> kCastEvents{
 			"SH2_CastRight"sv,
@@ -47,10 +45,18 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				   tag == "HitFrame"sv;
 		}
 
-		bool is_ready_pass(std::string_view tag)
+		// PIE is #0006's reset payload. The original handler applies it before this
+		// observer runs, so a write here lands after the stomp. The named ready
+		// markers follow that burst; the first of them consumes so a later PIE
+		// (idle, shout, or the next swing's own advance) cannot replay the index.
+		bool is_reset_payload(std::string_view tag)
 		{
-			return tag == "SBF_ReadyStart"sv || tag == "MSCO_MagicReady"sv || tag == "inRdy"sv ||
-				   tag == "attackStop"sv || tag == "PIE"sv;
+			return tag == "PIE"sv;
+		}
+
+		bool is_restore_edge(std::string_view tag)
+		{
+			return tag == "SBF_ReadyStart"sv || tag == "MSCO_MagicReady"sv;
 		}
 
 		bool sample_mco(RE::Actor* actor, McoCombo& out)
@@ -82,15 +88,10 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 		void arm_restore()
 		{
-			const auto combo = g_rolling.usable(now_ms());
-			if (!combo) {
-				restore_pending.store(false, std::memory_order_relaxed);
-				return;
+			if (const auto combo = g_rolling.arm(now_ms())) {
+				logger::debug("SH2 cast: combo restore armed next={} power={}", combo->nextAttack,
+					combo->nextPowerAttack);
 			}
-			restore_value = *combo;
-			restore_pending.store(true, std::memory_order_relaxed);
-			logger::debug("SH2 cast: combo restore armed next={} power={}", combo->nextAttack,
-				combo->nextPowerAttack);
 		}
 
 		void send_exit(RE::PlayerCharacter* pc)
@@ -133,18 +134,29 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			McoCombo sample{};
 			if (sample_mco(a_player, sample)) {
 				g_rolling.record(sample, now_ms());
+			} else {
+				g_rolling.disarm();
 			}
-			restore_pending.store(false, std::memory_order_relaxed);
 		}
 
 		if (tag == "SH2_CastExit"sv) {
-			arm_restore();
+			if (is_active()) {
+				arm_restore();
+			}
 			state_active.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
 		}
 
-		if (restore_pending.load(std::memory_order_relaxed) && is_ready_pass(tag)) {
-			write_mco(a_player, restore_value);
+		if (is_reset_payload(tag)) {
+			if (const auto combo = g_rolling.peek()) {
+				write_mco(a_player, *combo);
+			}
+		}
+
+		if (is_restore_edge(tag)) {
+			if (const auto combo = g_rolling.consume()) {
+				write_mco(a_player, *combo);
+			}
 		}
 	}
 

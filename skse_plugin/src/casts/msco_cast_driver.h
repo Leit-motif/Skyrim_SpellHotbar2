@@ -17,7 +17,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	/**
 	 * Observe the player's animation-event stream. Ends the state on SH2_CastExit,
 	 * records MCO combo position at attack-time events, and writes that position
-	 * back after a cast's ready pass.
+	 * back once after a Driver Cast's ready-state reset (ADR-0005 named exception).
 	 */
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
 

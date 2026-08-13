@@ -52,6 +52,55 @@ void rolling_later_record_replaces_the_earlier()
 	expect(got && got->nextAttack == 4, "latest attack-time sample wins");
 }
 
+void restore_is_consumed_after_one_write()
+{
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 3, .nextPowerAttack = 2 }, 100.0);
+	cache.arm(100.0);
+	const auto peeked = cache.peek();
+	expect(peeked && peeked->nextAttack == 3, "peek preserves the sampled index");
+	expect(cache.peek().has_value(), "peek does not consume");
+	const auto first = cache.consume();
+	expect(first.has_value(), "armed restore is writable once");
+	expect(first && first->nextAttack == 3, "first write preserves nextAttack");
+	expect(first && first->nextPowerAttack == 2, "first write preserves nextPowerAttack");
+	expect(!cache.consume().has_value(), "a later ready marker cannot rewrite the index");
+	expect(!cache.peek().has_value(), "consumed restore is no longer pending");
+}
+
+void stale_sample_does_not_arm_a_restore()
+{
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 4, .nextPowerAttack = 3 }, 0.0);
+	cache.arm(RollingMcoCombo::kMaxAgeMs + 1.0);
+	expect(!cache.consume().has_value(), "stale sample writes nothing and leaves MCO at 1");
+}
+
+void empty_cache_does_not_arm_a_restore()
+{
+	RollingMcoCombo cache;
+	cache.arm(0.0);
+	expect(!cache.consume().has_value(), "no attack-time sample means no restore");
+}
+
+void a_new_swing_drops_a_pending_restore()
+{
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 2, .nextPowerAttack = 1 }, 0.0);
+	cache.arm(0.0);
+	cache.record(McoCombo{ .nextAttack = 3, .nextPowerAttack = 2 }, 10.0);
+	expect(!cache.consume().has_value(), "a real swing consumes no leftover restore");
+}
+
+void disarm_drops_a_pending_restore_without_writing()
+{
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 2, .nextPowerAttack = 1 }, 0.0);
+	cache.arm(0.0);
+	cache.disarm();
+	expect(!cache.consume().has_value(), "disarm writes nothing");
+}
+
 void cast_index_starts_at_one_and_wraps_after_four()
 {
 	CastComboIndex idx;
@@ -81,6 +130,11 @@ int main()
 	rolling_returns_the_recorded_value_not_plus_one();
 	rolling_is_usable_at_the_age_cap();
 	rolling_later_record_replaces_the_earlier();
+	restore_is_consumed_after_one_write();
+	stale_sample_does_not_arm_a_restore();
+	empty_cache_does_not_arm_a_restore();
+	a_new_swing_drops_a_pending_restore();
+	disarm_drops_a_pending_restore_without_writing();
 	cast_index_starts_at_one_and_wraps_after_four();
 	cast_index_is_unchanged_by_an_attack_gap();
 
