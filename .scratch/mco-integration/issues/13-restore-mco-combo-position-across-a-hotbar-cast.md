@@ -9,7 +9,7 @@ match and makes the restore safe to leave armed.
 
 **Blocked by:** 12 — Amend ADR-0005: combo position is not release timing
 
-**Status:** claimed
+**Status:** resolved
 
 ## What this is not
 
@@ -37,8 +37,8 @@ puts the previous index back after that reset, once.
 - [x] Power attacks continue the same way, not only light attacks.
 - [x] A restore is consumed after its ready pass; a later ready/PIE cannot rewrite the index.
 - [x] Capture and restore do not race across the animation callback and the main loop.
-- [ ] A real swing, a real shout, and an uninterrupted cast are unchanged.
-- [ ] Restore fixtures and close Skyrim after runtime work.
+- [x] A real swing, a real shout, and an uninterrupted cast are unchanged.
+- [x] Restore fixtures and close Skyrim after runtime work.
 
 ## Comments
 
@@ -76,3 +76,35 @@ OCPA key 48 cut the committed cast. Armed and restored `next=3 power=3` at 21:52
 A later ready/PIE did not replay: the post-cut `SBF_ReadyStart` consumed, and the power clip
 ran on the restored 3. Negative controls (clean swing / shout / uninterrupted cast) and
 session teardown are still open. Skyrim left running.
+
+**2026-08-13 — negative controls observed, fixtures restored, Skyrim closed.** Same binary and
+save as the light/power cells: DLL `SpellHotbar2.dll` SHA-256
+`373E7A2F88A2FC6A6064DF9147B676C7831589B9AFF379F89B86EBE89428CD33`, profile
+`Nolvus Awakening`, `Save65_00000000_0_5861656C6C65_Tamriel_000652_20260812232308_17_1`
+(Xaelle, Iron Rapier drawn, Firebolt left, Unrelenting Force equipped). Log:
+`Documents\My Games\Skyrim Special Edition\SKSE\SpellHotbar2.log`. `combo_cache_test` green.
+
+Uninterrupted cast (idle, empty rolling sample): DevBench `SpellHotbar.castSlot(0)` at
+08:25:10.583, `SH2_CastRight (clip 1) -> true`, left SpellFire, `SH2_CastExit -> true` at
+08:25:11.867. Live `MCO_nextattack` / `MCO_nextpowerattack` were 1 before and 1 after. The log
+has no `combo restore armed` and no `restored MCO_nextattack` line — empty sample wrote
+nothing.
+
+Real shout: DevBench `input` hold 0.6s, key 44 (`0x2c`), `userEvent="Shout"`, Unrelenting
+Force `0x00013E07`. `IsShouting` read true 80ms after the hold. Combo stayed 1 / 1. No SH2
+restore log line.
+
+Real swing: two chained mouse lights (`input` hold 0.2s, `userEvent="Right Attack/Block"`).
+`MCO_nextattack` walked 1 → 2 (350ms into swing 1) → 3 (350ms into swing 2) → 1 after the
+ready reset. That is vanilla MCO combo plus the ready stomp; SH2 did not write. Across the
+whole session the log contains zero restore lines.
+
+Fixture reloaded to the same Save65; `qqq`; DevBench ping offline. MO2 left running.
+
+## Answer
+
+A Driver Cast this mod started restores the sampled MCO combo position once after the ready
+reset, then consumes the pending write. Light and power cells were owner-verified 2026-08-12.
+Negative controls 2026-08-13: an uninterrupted idle cast, a real Unrelenting Force shout, and
+a chained two-swing MCO combo all left the index alone — SH2 wrote nothing. Fixtures restored,
+Skyrim closed.

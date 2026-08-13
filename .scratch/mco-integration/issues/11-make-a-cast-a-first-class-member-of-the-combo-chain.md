@@ -241,3 +241,8 @@ Playtest items, siblings not children: 17 clip-4 windup delivery, 18 GCD vs MSCO
 
 **2026-08-12 — ticket 12 resolved.** ADR-0005 now names combo-position restore as an exception,
 not a second timing cache. Ticket 13 is unblocked. 14 and 15 remain frontier.
+
+**2026-08-13 — ticket 13 resolved.** Combo-position restore across a Driver Cast is closed:
+light and power cells owner-verified 2026-08-12; negative controls (swing / shout /
+uninterrupted cast) observed 2026-08-13; fixtures restored and Skyrim closed. 14 and 15
+remain frontier. The mixed-chain close-out still waits on 14.
