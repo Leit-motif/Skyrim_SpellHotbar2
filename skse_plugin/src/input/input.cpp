@@ -7,6 +7,7 @@
 #include <imgui_impl_win32.h>
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
+#include "../casts/combo_cache.h"
 #include "../casts/msco_cast_driver.h"
 #include "../storage/storage.h"
 #include "keycode_helper.h"
@@ -223,6 +224,40 @@ namespace SpellHotbar::Input {
             return (ocpa.power != 0 && key_code == ocpa.power) ||
                    (ocpa.dual != 0 && key_code == ocpa.dual);
         }
+
+        uint32_t get_left_attack_key(RE::INPUT_DEVICE key_device)
+        {
+            if (key_device != RE::INPUT_DEVICE::kKeyboard && key_device != RE::INPUT_DEVICE::kMouse) {
+                return RE::ControlMap::kInvalid;
+            }
+            auto control_map = RE::ControlMap::GetSingleton();
+            auto user_events = RE::UserEvents::GetSingleton();
+            if (!control_map || !user_events) {
+                return RE::ControlMap::kInvalid;
+            }
+            return control_map->GetMappedKey(user_events->leftAttack, key_device);
+        }
+
+        bool left_hand_holds_spell(RE::PlayerCharacter* pc)
+        {
+            if (!pc) {
+                return false;
+            }
+            auto* obj = pc->GetEquippedObject(true);
+            return obj && (obj->Is(RE::FormType::Spell) || obj->Is(RE::FormType::Scroll));
+        }
+
+        // A left-hand cast press during a committed hotbar cast: the left control is block
+        // when the left hand holds a weapon or shield, so this only matches when it would
+        // actually start an MSCO hand cast.
+        bool is_left_hand_cast_press(RE::PlayerCharacter* pc, uint32_t key_code, RE::INPUT_DEVICE key_device)
+        {
+            const uint32_t left_key = get_left_attack_key(key_device);
+            return casts::cut_committed_cast_for_left_hand_press(
+                casts::CastingController::is_committed_cast_holding_graph(),
+                left_hand_holds_spell(pc),
+                left_key != RE::ControlMap::kInvalid && key_code == left_key);
+        }
     }
 
     void processAndFilter(RE::InputEvent** a_event)
@@ -411,6 +446,9 @@ namespace SpellHotbar::Input {
                         if (is_attack_press(key_code, key_device, attack_key)) {
                             logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
                             casts::MscoCastDriver::cancel(pc);
+                        } else if (is_left_hand_cast_press(pc, key_code, key_device)) {
+                            logger::debug("SH2 cast: left-hand cast pressed on a committed cast; ending the state");
+                            casts::MscoCastDriver::cancel(pc);
                         }
                     }
 
@@ -472,6 +510,13 @@ namespace SpellHotbar::Input {
                                         if (handled && (mod_1.isDown() || mod_2.isDown() || mod_3.isDown())) {
                                             //Do not forward keypress to game if modifier was used, this allows easy double binding with modifiers
                                             captureEvent = true;
+                                        } else if (handled && in_ingame_state()) {
+                                            const auto skill = GameData::get_current_spell_info_in_slot(i);
+                                            if (casts::capture_hotbar_press_to_prevent_dual_fire(
+                                                    skill.type == slot_type::spell, left_hand_holds_spell(pc))) {
+                                                captureEvent = true;
+                                                logger::debug("SH2 cast: captured hotbar press to prevent dual fire");
+                                            }
                                         }
                                     }
                                 }

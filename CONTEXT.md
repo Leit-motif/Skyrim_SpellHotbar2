@@ -49,7 +49,7 @@ The traceable runtime record supporting acceptance, tied to the tested source an
 _Avoid_: Build success, undocumented smoke test
 
 **Driver Cast**:
-The mod's casting mechanism: a hotbar cast enters `SH2_CastRight_State`, a state this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the `SH2_CastRight` notify's own true return; the state plays an MCBO clip and ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
+The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `MSCO_left1` through `left4`, walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Combo-position restore for a Driver Cast this mod started is this mod's work (ADR-0005 named exception), not ShoutMCO's release-timing API. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Chain Window**:
@@ -57,7 +57,7 @@ The interval late in a shout exhale during which attack input is honored, lettin
 _Avoid_: Attack cancel, animation blend, driver-cast chain-out
 
 **Cast Driver**:
-A mod that owns a cast payload and asks ShoutMCO whether the request should pass through now or be deferred. Spell Hotbar 2 is the first driver; it keeps ownership of the slot, spell, resources, and execution.
+A mod that owns a cast payload and asks ShoutMCO whether the request should pass through now or be deferred. That call is release timing (ADR-0005). Spell Hotbar 2 is the first driver; it keeps ownership of the slot, spell, resources, and execution. Combo-position continuity across a Driver Cast this mod started is a named exception in the same ADR, owned here, not a second ShoutMCO call.
 _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
 
 **Cast Intent**:
@@ -244,7 +244,12 @@ does not. Anything built here needs its own hold on this mod's own input path.~~
 
 **Superseded 2026-08-08:** this mod owns the payload but not an independent hold policy. It asks
 ShoutMCO's generic API to pass through or defer, then revalidates and executes once on release.
-That keeps one authority for MCO state and avoids duplicating `HitFrame`/ready tracking here.
+That keeps one authority for MCO **release timing** and avoids duplicating `HitFrame`/ready
+tracking here.
+
+**Scope note 2026-08-12:** that sentence is the release-timing rule. Sampling attack/ready tags to
+restore `MCO_nextattack` / `MCO_nextpowerattack` across a Driver Cast this mod started is
+ADR-0005's named exception, not a second hold policy. See ticket 12.
 
 One correction to carry across with it, because it cost a build to learn: **`MCO_WinOpen` is not
 proof a swing happened.** On the measured power attack the window opens ~180 ms *before*

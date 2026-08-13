@@ -35,6 +35,9 @@
 				#0259
 <!-- MOD_CODE ~shtb~ OPEN -->
 				#shtb$2
+				#shtb$5
+				#shtb$7
+				#shtb$9
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="wildcardTransitions">#0088</hkparam>

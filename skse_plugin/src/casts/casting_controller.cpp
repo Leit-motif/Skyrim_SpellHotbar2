@@ -6,6 +6,7 @@
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
 #include "msco_cast_driver.h"
+#include "combo_cache.h"
 #include "cast_intent.h"
 
 namespace SpellHotbar::casts::CastingController {
@@ -75,8 +76,31 @@ namespace SpellHotbar::casts::CastingController {
 			   MscoCastDriver::is_active();
 	}
 
+	bool can_accept_hotbar_cast() {
+		return classify_hotbar_cast_press(current_cast != nullptr, is_committed_cast_holding_graph()) !=
+			   HotbarCastPress::refuse;
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
+		current_cast.reset();
+		clear_spellfire();
+	}
+
+	// Ticket 14: a follow-up hotbar press during a committed cast is a combo step. Drop the
+	// live instance without CastExit so begin() can notify the next clip from inside the
+	// current state. Concentration is excluded by the cuttable gate.
+	void cut_committed_cast_for_combo(RE::PlayerCharacter*)
+	{
+		if (!is_committed_cast_holding_graph()) {
+			return;
+		}
+		logger::debug("SH2 cast: follow-up cast on a committed cast; chaining the next clip");
+		if (auto* spell_cast = dynamic_cast<CastingInstance*>(current_cast.get())) {
+			spell_cast->on_reset_keep_graph();
+		} else {
+			current_cast->on_reset();
+		}
 		current_cast.reset();
 		clear_spellfire();
 	}
@@ -242,18 +266,23 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
-	void CastingInstance::on_reset()
+	void CastingInstance::on_reset_keep_graph()
 	{
 		BaseCastingInstance::on_reset();
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (pc) {
 			pc->RemoveSpell(GameData::spellhotbar_castfx_spell);
 		}
-		MscoCastDriver::finish(pc);
 		if (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll) {
 			RE::SpellItem* spell = m_form->As<RE::SpellItem>();
 			GameData::post_cast_mod_callback(spell);
 		}
+	}
+
+	void CastingInstance::on_reset()
+	{
+		on_reset_keep_graph();
+		MscoCastDriver::finish(RE::PlayerCharacter::GetSingleton());
 	}
 
 	bool CastingInstance::is_anim_ok(RE::PlayerCharacter*) const
@@ -649,8 +678,10 @@ namespace SpellHotbar::casts::CastingController {
 
 	start_result start_cast(CastingInstanceSpellData& cast_info)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		const bool chaining = is_committed_cast_holding_graph();
+		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 
 				int anim = cast_info.m_animation;
@@ -667,6 +698,10 @@ namespace SpellHotbar::casts::CastingController {
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				if (chaining) {
+					MscoCastDriver::cancel(pc);
+					return start_result::failed;
+				}
 				return start_result::graph_refused;
 			}
 		}
@@ -730,8 +765,10 @@ namespace SpellHotbar::casts::CastingController {
 
 	start_result start_ritual_cast(CastingInstanceSpellData& cast_info)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		const bool chaining = is_committed_cast_holding_graph();
+		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 				
 				bool is_fast_cast = cast_info.m_casttime <= fast_cast_threshold;
@@ -750,6 +787,10 @@ namespace SpellHotbar::casts::CastingController {
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				if (chaining) {
+					MscoCastDriver::cancel(pc);
+					return start_result::failed;
+				}
 				return start_result::graph_refused;
 			}
 		}
@@ -777,8 +818,14 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
-		if (can_start_new_cast()) {
-			clear_spellfire();
+		const auto press = classify_hotbar_cast_press(
+			current_cast != nullptr, is_committed_cast_holding_graph());
+		if (press != HotbarCastPress::refuse) {
+			// Ticket 14: a chain press still needs the commitment bit when start_cast
+			// runs the cut. Idle starts still drop leftover shout spellfire here.
+			if (!keep_commitment_until_cut(press)) {
+				clear_spellfire();
+			}
 			// This press supersedes any intent still waiting from an earlier one, whether or not
 			// it ends up deferred itself. Withdrawing here keeps a stale payload from surfacing
 			// as a cast the player no longer asked for.
