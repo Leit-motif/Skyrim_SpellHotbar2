@@ -8,7 +8,7 @@ currently fires in the middle of it, which looks wrong.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** claimed
+**Status:** resolved
 
 ## How this showed up
 
@@ -19,8 +19,8 @@ annotation at ~0.92 s — same symptom, now owner-confirmed by eye.
 ADR-0006 says the annotation leads and the authored cast time is the floor. Clip 4 is the case
 where the floor is earlier than the animation's release pose.
 
-- [ ] Clip 4 delivers at the release pose, not during the windup, owner-verified by eye.
-- [ ] Clip 4 does not lock the player out of MSCO left-hand or hotbar casts (sheathe/unsheathe
+- [x] Clip 4 delivers at the release pose, not during the windup, owner-verified by eye.
+- [x] Clip 4 does not lock the player out of MSCO left-hand or hotbar casts (sheathe/unsheathe
       must not be required to continue).
 - [x] Clips 1–3 still deliver at the start of the animation, unchanged.
 - [x] Restore fixtures and close Skyrim after runtime work.
@@ -63,4 +63,11 @@ press (`castSlot` does not reach `DispatchInputEvent`). Pose cell stays open for
 
 `classify_cast_delivery` on `combo_cache.h`; `combo_cache_test` green. Save65 reloaded
 (magicka 1000, health 500, Firebolt left, Iron Rapier); `qqq`; DevBench ping offline.
+
+**2026-08-13 — owner: clip 4 lined up with the throw.** Save65, same loadout, public path
+(key 1). Four clip-4 walks in `SpellHotbar2.log` from 19:24, SpellFire +0.91–0.94s, no timer
+floor. After clip 4: left-hand Firebolt then hotbar clip 1, no sheathe. Owner: "lined up
+perfectly. SH2 looks exactly like a spell being cast from msco." Mixed attack→SH2 chain was
+unchanged this ticket (ticket 13); it felt smoother because clip 4 no longer left the graph
+deaf. Game left running for follow-up.
 
