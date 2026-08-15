@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cmath>
 #include <mutex>
 #include <optional>
+#include <string_view>
 
 namespace SpellHotbar::casts {
 
@@ -118,7 +120,9 @@ private:
 
 // Public hotbar path: a second press during a committed Driver Cast is a combo step, not a
 // refusal. Concentration and pre-spellfire are excluded by the holding flag the caller
-// already computed (is_committed_cast_holding_graph).
+// already computed (is_committed_cast_holding_graph). Ticket 18: the combo step also waits
+// for the clip's MSCO_WinOpen window, so a mash at SpellFire is a GCD refuse rather than
+// a chain.
 enum class HotbarCastPress {
 	start,
 	chain,
@@ -126,15 +130,70 @@ enum class HotbarCastPress {
 };
 
 [[nodiscard]] constexpr HotbarCastPress classify_hotbar_cast_press(
-	bool has_live_cast, bool committed_cuttable_holding_graph) noexcept
+	bool has_live_cast, bool committed_cuttable_holding_graph, bool combo_window_open) noexcept
 {
 	if (!has_live_cast) {
 		return HotbarCastPress::start;
 	}
-	if (committed_cuttable_holding_graph) {
+	if (committed_cuttable_holding_graph && combo_window_open) {
 		return HotbarCastPress::chain;
 	}
 	return HotbarCastPress::refuse;
+}
+
+[[nodiscard]] constexpr bool is_msco_combo_window_event(std::string_view tag) noexcept
+{
+	return tag == "MSCO_WinOpen" || tag == "MCO_WinOpen" || tag == "MSCO_winopen" ||
+		   tag == "MCO_winopen";
+}
+
+// MSCO v2 charge time → clip playback speed. Defaults match the shipped MSCO.ini
+// exponential curve (Nexus 168499 / Desmos px706ivga2).
+struct MscoChargeCurve {
+	bool mechanic_on = true;
+	bool exp_mode = true;
+	float shortest = 0.0f;
+	float longest = 2.0f;
+	float base_time = 0.15f;
+	float min_speed = 0.6f;
+	float max_speed = 1.25f;
+	float exp_factor = 0.17f;
+};
+
+[[nodiscard]] inline float charge_time_to_anim_speed(float charge, const MscoChargeCurve& curve) noexcept
+{
+	if (!curve.mechanic_on) {
+		return 1.0f;
+	}
+	float t = charge;
+	if (t < curve.shortest) {
+		t = curve.shortest;
+	}
+	if (t > curve.longest) {
+		t = curve.longest;
+	}
+	float speed = 1.0f;
+	if (curve.exp_mode) {
+		const float x = t < 1.0e-6f ? 1.0e-6f : t;
+		speed = std::pow(curve.base_time / x, curve.exp_factor);
+	} else {
+		const float o1 = (curve.base_time - curve.shortest) > 1.0e-6f
+			? (curve.base_time - curve.shortest)
+			: 1.0e-6f;
+		const float o2 = (curve.longest - curve.base_time) > 1.0e-6f
+			? (curve.longest - curve.base_time)
+			: 1.0e-6f;
+		const float p1 = 1.0f + (curve.max_speed - 1.0f) * (curve.base_time - t) / o1;
+		const float p2 = 1.0f - (1.0f - curve.min_speed) * (t - curve.base_time) / o2;
+		speed = (t < curve.base_time) ? p1 : p2;
+	}
+	if (speed < curve.min_speed) {
+		return curve.min_speed;
+	}
+	if (speed > curve.max_speed) {
+		return curve.max_speed;
+	}
+	return speed;
 }
 
 // The cut still reads commitment. Clearing spellfire between classify and start_cast

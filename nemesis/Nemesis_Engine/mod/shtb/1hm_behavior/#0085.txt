@@ -573,6 +573,9 @@
 				<hkcstring>bLongKillMove</hkcstring>
 				<hkcstring>IsBleedingOutTransition</hkcstring>
 				<hkcstring>iCrossbowState</hkcstring>
+<!-- MOD_CODE ~shtb~ OPEN -->
+				<hkcstring>MSCO_attackspeed</hkcstring>
+<!-- CLOSE -->
 			</hkparam>
 			<hkparam name="characterPropertyNames" numelements="9">
 				<hkcstring>IsThirdPerson</hkcstring>

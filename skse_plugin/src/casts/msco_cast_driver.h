@@ -11,8 +11,23 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 *
 	 * Every clip in the set raises a LEFT-hand SpellFire (OAR Base-default variants:
 	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
+	 *
+	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
+	 * plays at MSCO's charge-scaled pace (ticket 18).
 	 */
-	bool begin(RE::PlayerCharacter* pc, hand_mode hand);
+	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time);
+
+	/**
+	 * Load MSCO.ini's charge-to-speed curve. Call once at DataLoaded; missing file
+	 * keeps the shipped exponential defaults.
+	 */
+	void load_charge_curve();
+
+	/**
+	 * Has the current Driver Cast clip raised MSCO_WinOpen? The ticket-18 GCD: a
+	 * follow-up hotbar press chains only while this is true.
+	 */
+	bool combo_window_open();
 
 	/**
 	 * Observe the player's animation-event stream. Ends the state on SH2_CastExit,

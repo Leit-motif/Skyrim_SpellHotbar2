@@ -79,8 +79,8 @@ namespace SpellHotbar::casts::CastingController {
 	}
 
 	bool can_accept_hotbar_cast() {
-		return classify_hotbar_cast_press(current_cast != nullptr, is_committed_cast_holding_graph()) !=
-			   HotbarCastPress::refuse;
+		return classify_hotbar_cast_press(current_cast != nullptr, is_committed_cast_holding_graph(),
+				   MscoCastDriver::combo_window_open()) != HotbarCastPress::refuse;
 	}
 
 	void reset_cast() {
@@ -455,7 +455,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	CastingInstanceSpell::CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
-		m_gcd = (used_hand == hand_mode::dual_hand) ? 1.5f : 1.0f;
+		m_gcd = 0.0f;
 	}
 
 	CastingInstanceRitual::CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
@@ -674,11 +674,21 @@ namespace SpellHotbar::casts::CastingController {
 				}
 			}
 			else {
-				//update timer until gcd expires
-				current_cast->advance_time(delta);
-				if (current_cast->is_gcd_expired()) {
-					GameData::reset_animation_vars();
-					reset_cast();
+				// FNF Driver Casts live until the clip ends (ticket 18): no leftover 1.0s/1.5s
+				// tail after CastExit. Potions, shouts, and powers still use their own GCD.
+				if (current_cast->has_cuttable_cast_state()) {
+					if (!MscoCastDriver::is_active()) {
+						GameData::reset_animation_vars();
+						reset_cast();
+					} else {
+						current_cast->advance_time(delta);
+					}
+				} else {
+					current_cast->advance_time(delta);
+					if (current_cast->is_gcd_expired()) {
+						GameData::reset_animation_vars();
+						reset_cast();
+					}
 				}
 			}
 		}
@@ -707,7 +717,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -738,7 +748,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -766,7 +776,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -796,7 +806,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -833,7 +843,8 @@ namespace SpellHotbar::casts::CastingController {
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
 		const auto press = classify_hotbar_cast_press(
-			current_cast != nullptr, is_committed_cast_holding_graph());
+			current_cast != nullptr, is_committed_cast_holding_graph(),
+			MscoCastDriver::combo_window_open());
 		if (press != HotbarCastPress::refuse) {
 			// Ticket 14: a chain press still needs the commitment bit when start_cast
 			// runs the cut. Idle starts still drop leftover shout spellfire here.

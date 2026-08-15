@@ -10,7 +10,9 @@ presses that did not start a cast.
 **Blocked by:** None. Ticket 04 already ships defer→release; this is the recovery-tail cell that
 ticket 04 left failing, now owner-specified as cadence not just "eventually casts."
 
-**Status:** ready-for-agent
+**Status:** superseded 2026-08-13 — do not implement this file. The ask was an input
+buffer / recovery window on SH2 casts, not inbound during MCO recovery. Ticket 14 already
+lets a mash bypass GCD; ticket 18 is the remaining GCD tune.
 
 ## What this is not
 
@@ -55,3 +57,10 @@ ShoutMCO` handles 1–6, then `released cast on slot 0 -> true` often while `IsA
 Capture from ticket 15 swallows key 1 whenever the bind is `handled`, including GCD / teardown
 / refuse. Combined with ticket 04 releasing at `preHitFrame` rather than `inRdy`, the owner
 has to wait for the swing to end and press again.
+
+**2026-08-13 — owner: this ticket misread the recovery ask.** The quote about a recovery
+window and spell queuing was about SH2 casts matching MCO-attack cadence (queue the next
+hotbar cast during the current clip), not about inserting a hotbar cast into an MCO swing's
+recovery. That buffer only mattered while GCD felt hardwired at 1s. Ticket 14 already lets a
+mash chain on SpellFire and skip `m_gcd`; ticket 18 is the remaining "keep a GCD, just
+shorter" tune. This file is not work.

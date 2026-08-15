@@ -15,6 +15,9 @@ using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
 using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
+using SpellHotbar::casts::MscoChargeCurve;
+using SpellHotbar::casts::charge_time_to_anim_speed;
+using SpellHotbar::casts::is_msco_combo_window_event;
 
 namespace {
 
@@ -133,22 +136,84 @@ void cast_index_is_unchanged_by_an_attack_gap()
 
 void idle_press_starts_an_ordinary_cast()
 {
-	expect(classify_hotbar_cast_press(false, false) == HotbarCastPress::start,
+	expect(classify_hotbar_cast_press(false, false, false) == HotbarCastPress::start,
 		"no live cast is an ordinary first press");
-	expect(classify_hotbar_cast_press(false, true) == HotbarCastPress::start,
+	expect(classify_hotbar_cast_press(false, true, true) == HotbarCastPress::start,
 		"a stale holding flag cannot turn an idle press into a chain");
 }
 
 void committed_follow_up_press_chains()
 {
-	expect(classify_hotbar_cast_press(true, true) == HotbarCastPress::chain,
-		"a second press during a committed cuttable Driver Cast is a combo step");
+	expect(classify_hotbar_cast_press(true, true, true) == HotbarCastPress::chain,
+		"a second press during WinOpen on a committed Driver Cast is a combo step");
+}
+
+void committed_press_before_winopen_is_the_gcd()
+{
+	expect(classify_hotbar_cast_press(true, true, false) == HotbarCastPress::refuse,
+		"SpellFire without WinOpen is the GCD lockout, not a mash-through chain");
 }
 
 void live_cast_without_commitment_is_refused()
 {
-	expect(classify_hotbar_cast_press(true, false) == HotbarCastPress::refuse,
+	expect(classify_hotbar_cast_press(true, false, false) == HotbarCastPress::refuse,
 		"before spellfire, or a concentration channel, the second press is refused");
+	expect(classify_hotbar_cast_press(true, false, true) == HotbarCastPress::refuse,
+		"a WinOpen bit without commitment cannot chain");
+}
+
+void msco_winopen_tag_opens_the_combo_window()
+{
+	expect(is_msco_combo_window_event("MSCO_WinOpen"), "live SH2 clips raise MSCO_WinOpen");
+	expect(is_msco_combo_window_event("MCO_winopen"), "base HKX annotations are MCO_winopen");
+	expect(!is_msco_combo_window_event("MSCO_WinClose"), "close is not the chain gate");
+	expect(!is_msco_combo_window_event("MLh_SpellFire_Event"), "SpellFire is not the chain gate");
+}
+
+void shipped_exponential_curve_is_1_at_base_time()
+{
+	const MscoChargeCurve shipped{};
+	expect(charge_time_to_anim_speed(0.15f, shipped) == 1.0f,
+		"base time 0.15s is speed 1.0 on the shipped exponential curve");
+}
+
+void charge_mechanic_off_is_always_one()
+{
+	MscoChargeCurve off{};
+	off.mechanic_on = false;
+	expect(charge_time_to_anim_speed(0.5f, off) == 1.0f, "mechanic off leaves clips at 1.0");
+	expect(charge_time_to_anim_speed(2.0f, off) == 1.0f, "mechanic off ignores long charge");
+}
+
+void firebolt_charge_is_slower_than_base_on_the_shipped_curve()
+{
+	const MscoChargeCurve shipped{};
+	const float speed = charge_time_to_anim_speed(0.5f, shipped);
+	expect(speed > 0.81f && speed < 0.82f,
+		"Firebolt 0.5s is ~0.815 on (0.15/0.5)^0.17");
+}
+
+void zero_charge_clamps_to_max_speed()
+{
+	const MscoChargeCurve shipped{};
+	expect(charge_time_to_anim_speed(0.0f, shipped) == 1.25f,
+		"zero charge would divide by zero; clamp to max speed 1.25");
+}
+
+void two_second_charge_is_near_min_speed()
+{
+	const MscoChargeCurve shipped{};
+	const float speed = charge_time_to_anim_speed(2.0f, shipped);
+	expect(speed > 0.63f && speed < 0.66f, "2s charge is ~0.644 on (0.15/2)^0.17");
+}
+
+void linear_mode_is_1_at_its_base_time()
+{
+	MscoChargeCurve linear{};
+	linear.exp_mode = false;
+	linear.base_time = 0.5f;
+	expect(charge_time_to_anim_speed(0.5f, linear) == 1.0f,
+		"linear mode is speed 1.0 at the authored base time");
 }
 
 void chain_press_keeps_commitment_until_the_cut()
@@ -258,7 +323,15 @@ int main()
 	cast_index_is_unchanged_by_an_attack_gap();
 	idle_press_starts_an_ordinary_cast();
 	committed_follow_up_press_chains();
+	committed_press_before_winopen_is_the_gcd();
 	live_cast_without_commitment_is_refused();
+	msco_winopen_tag_opens_the_combo_window();
+	shipped_exponential_curve_is_1_at_base_time();
+	charge_mechanic_off_is_always_one();
+	firebolt_charge_is_slower_than_base_on_the_shipped_curve();
+	zero_charge_clamps_to_max_speed();
+	two_second_charge_is_near_min_speed();
+	linear_mode_is_1_at_its_base_time();
 	chain_press_keeps_commitment_until_the_cut();
 	handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell();
 	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();

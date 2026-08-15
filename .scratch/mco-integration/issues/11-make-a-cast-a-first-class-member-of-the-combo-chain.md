@@ -266,5 +266,6 @@ still ride `DispatchInputEvent` and stay owner. Mixed-chain close-out
 with no duplicate, hotbar → LH cuts on clips 1–3. Mixed-chain
 `attack1 → attack2 → cast1 → attack3 → cast2` works if you wait for the clip to finish.
 Clip-4 windup + sheathe lockout is [ticket 17](17-do-not-deliver-clip-4-during-its-windup.md).
-Recovery-window cadence is [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md).
+Recovery-window cadence was filed as [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md);
+owner later: that was an SH2-cast buffer vs GCD, superseded by 14 / 18, not MCO-recovery inbound.
 
