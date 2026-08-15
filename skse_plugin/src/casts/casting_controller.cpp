@@ -1094,6 +1094,12 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool is_movement_blocking_cast()
 	{
+		// Two layers, same gate: WASD capture here, bAnimationDriven in the
+		// driver. Both follow the shtb state. Ritual/dual still use their own
+		// instance flag once the state has ended.
+		if (driver_cast_blocks_movement(MscoCastDriver::is_active(), current_cast != nullptr)) {
+			return true;
+		}
 		if (current_cast) {
 			return current_cast->blocks_movement();
 		}

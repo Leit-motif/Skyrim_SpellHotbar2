@@ -39,9 +39,12 @@ tickets 19/20.
 - After `SH2_CastExit`, the instance dies. No leftover 1.0s/1.5s tail. Clip-end as lockout is
   **not** "shorter" (~1.67s ≈ today's 1.5s); WinOpen is the reading that matches last night.
 - Write `MSCO_attackspeed` from `GetChargeTime()` using MSCO.ini's exponential curve. Mechanic
-  off → 1.0. INI is read once at `kDataLoaded`; do not live-read MCM or call MSCO.dll.
-  Owner 2026-08-14: this is good enough; equipped-hand MSCO playing faster than SH2 is an
-  accepted hand-cast advantage (Firebolt tap ≈ 1.25x vs SH2's authored 0.5s → ~0.815x).
+  off → 1.0. INI is read at `kDataLoaded` and again at each `begin()` so a saved MSCO.ini
+  applies without restart. Unsaved menu drags are still MSCO.dll RAM only. Do not call
+  MSCO.dll or Menu Framework (`kCloseMenu` is a host dependency, not this edit).
+  Owner 2026-08-14: equipped-hand MSCO playing faster than SH2 is an accepted hand-cast
+  advantage; MSCO.log later showed the same Firebolt 0.5s → 0.815, so the feel gap is
+  clip/graph not a different curve input.
 - Bind shtb clip `playbackSpeed` to `MSCO_attackspeed` in **both** `magicbehavior` and
   `1hm_behavior`. 1hm does not already have the variable (MSCO only added it to magicbehavior),
   so the 3-list (variableNames + variableInfos + wordVariableValues) is added there. Initial
@@ -53,7 +56,11 @@ tickets 19/20.
 - [x] Equipped-hand MSCO vs SH2 cadence: owner accepts SH2 slower (hand-cast advantage). Do not
   match live MSCO charge input or MCM sliders mid-session.
 - [x] Combo index still walks 1→2→3→4→1. Clips 1–3 / clip-4 delivery unchanged (ticket 17).
-- [ ] Restore fixtures and close Skyrim after runtime work.
+- [x] Restore fixtures and close Skyrim after runtime work. Owner quit 2026-08-14; in-memory
+      fixtures died with the process. DLL copy that failed while locked now landed
+      (`69B0C1F685B3750813ED5E92B69CE1EC422E52CF466BB8E11DF72D8C2B0431E1`).
+- Saved-INI reload at `begin()` is implemented; in-game check rides
+  [ticket 19](19-root-the-player-during-a-driver-cast.md).
 
 ## Comments
 
@@ -100,3 +107,12 @@ equipped-hand MSCO Firebolt, then a slower FNF if one is on the bar.
 authored `GetChargeTime()` + MSCO.ini once at DataLoaded. No MCM live-sync, no MSCO.dll
 path. *"honestly, this is good for now, no need to make it too complex. and i suppose this
 gives casting by hand an advantage."*
+
+**2026-08-14 — owner: re-read MSCO.ini at each begin().** Same session, after the menu-API
+look: `kCloseMenu` is a host dependency, so the no-risk edit is `load_charge_curve()` at
+Driver Cast start. Picks up a saved INI without restart; unsaved sliders still miss.
+Info-log only on first load or a value change.
+
+**2026-08-14 — owner: quit when testing is done.** Leave Skyrim running only when a human
+validation cell is still required to close the ticket. Agent-only close-out is `qqq`.
+DevBench ping offline. DLL with the `begin()` INI reload copied after that quit.

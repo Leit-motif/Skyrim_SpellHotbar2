@@ -13,13 +13,15 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
 	 *
 	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
-	 * plays at MSCO's charge-scaled pace (ticket 18).
+	 * plays at MSCO's charge-scaled pace (ticket 18). A successful entry also
+	 * roots the player until the state ends (ticket 19).
 	 */
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time);
 
 	/**
-	 * Load MSCO.ini's charge-to-speed curve. Call once at DataLoaded; missing file
-	 * keeps the shipped exponential defaults.
+	 * Load MSCO.ini's charge-to-speed curve. Called at DataLoaded and again at each
+	 * begin() so a saved MSCO.ini is picked up without a restart. Missing file keeps
+	 * the shipped exponential defaults. Does not read MSCO.dll or Menu Framework.
 	 */
 	void load_charge_curve();
 

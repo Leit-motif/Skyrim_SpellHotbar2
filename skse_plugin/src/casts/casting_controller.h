@@ -145,7 +145,8 @@ namespace SpellHotbar::casts::CastingController {
 		bool m_last_anim_ok;
 	};
 
-	//Regular spell cast (1h, movement allowed)
+	// Regular FNF spell. Translation is blocked while the shtb state is live
+	// (ticket 19); this class does not override blocks_movement itself.
 	class CastingInstanceSpell : public CastingInstance {
 	public:
 		CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc);

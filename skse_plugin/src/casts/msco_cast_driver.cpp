@@ -15,6 +15,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	namespace {
 		std::atomic<bool> state_active{ false };
 		std::atomic<bool> combo_window{ false };
+		std::atomic<bool> rooted{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
 
@@ -99,8 +100,23 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
+		void set_rooted(RE::Actor* actor, bool should_root)
+		{
+			const bool was = rooted.exchange(should_root, std::memory_order_relaxed);
+			if (was == should_root) {
+				return;
+			}
+			if (!actor) {
+				rooted.store(was, std::memory_order_relaxed);
+				return;
+			}
+			const bool ok = actor->SetGraphVariableBool("bAnimationDriven", should_root);
+			logger::debug("SH2 cast: bAnimationDriven={} wrote={}", should_root, ok);
+		}
+
 		void send_exit(RE::PlayerCharacter* pc)
 		{
+			set_rooted(pc, false);
 			if (pc) {
 				const bool consumed = pc->NotifyAnimationGraph("SH2_CastExit"sv);
 				logger::debug("SH2 cast: notified SH2_CastExit -> {}", consumed);
@@ -114,6 +130,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			const bool sent = pc->NotifyAnimationGraph(event);
 			if (sent) {
 				g_castIndex.advance();
+				set_rooted(pc, true);
 			}
 			state_active.store(sent, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
@@ -150,6 +167,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	{
 		MscoChargeCurve curve{};
 		const char* ini = msco_ini();
+		WritePrivateProfileStringA(nullptr, nullptr, nullptr, nullptr);
 		curve.mechanic_on = GetPrivateProfileIntA("General", "ChargeMechanicOn", 1, ini) != 0;
 		curve.exp_mode = GetPrivateProfileIntA("General", "ExpMode", 1, ini) != 0;
 		curve.shortest = ini_float("ChargeTime", "Shortest", curve.shortest);
@@ -158,11 +176,19 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		curve.min_speed = ini_float("SpeedClamp", "MinSpeed", curve.min_speed);
 		curve.max_speed = ini_float("SpeedClamp", "MaxSpeed", curve.max_speed);
 		curve.exp_factor = ini_float("Exp", "ExpFactor", curve.exp_factor);
+		const bool changed = curve.mechanic_on != g_curve.mechanic_on || curve.exp_mode != g_curve.exp_mode
+			|| curve.shortest != g_curve.shortest || curve.longest != g_curve.longest
+			|| curve.base_time != g_curve.base_time || curve.min_speed != g_curve.min_speed
+			|| curve.max_speed != g_curve.max_speed || curve.exp_factor != g_curve.exp_factor;
+		static bool logged_once = false;
 		g_curve = curve;
-		logger::info(
-			"SH2 cast: MSCO charge curve mechanic={} exp={} base={} short={} long={} min={} max={} p={}",
-			curve.mechanic_on, curve.exp_mode, curve.base_time, curve.shortest, curve.longest,
-			curve.min_speed, curve.max_speed, curve.exp_factor);
+		if (!logged_once || changed) {
+			logged_once = true;
+			logger::info(
+				"SH2 cast: MSCO charge curve mechanic={} exp={} base={} short={} long={} min={} max={} p={}",
+				curve.mechanic_on, curve.exp_mode, curve.base_time, curve.shortest, curve.longest,
+				curve.min_speed, curve.max_speed, curve.exp_factor);
+		}
 	}
 
 	bool combo_window_open()
@@ -186,6 +212,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 			logger::debug("SH2 cast: isolated left-hand caster at Driver Cast start");
 		}
+		load_charge_curve();
 		write_clip_speed(pc, charge_time);
 		return send_entry(pc);
 	}
@@ -212,6 +239,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (is_active()) {
 				arm_restore();
 			}
+			set_rooted(a_player, false);
 			state_active.store(false, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
@@ -260,6 +288,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// Concentration re-entry is not a combo step. Send the original event so a
 		// looping channel does not walk the clip set; ticket 11 leaves channels out.
 		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
+		if (sent) {
+			set_rooted(pc, true);
+		}
 		state_active.store(sent, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
 		return sent;

@@ -57,10 +57,12 @@ Writing `MSCO_attackspeed` is clip playback, not ShoutMCO release. Attack chain-
    `is_gcd_expired()`. Do not OR them — that would kill the instance at 1.5s while clip 1 still
    plays to 1.67s. `CastingInstanceSpell::m_gcd = 0`. Potions/powers/shouts/conc keep their GCD.
 4. `begin(pc, hand, charge_time)` writes `MSCO_attackspeed` before the notify. Curve loaded from
-   `Data/SKSE/Plugins/MSCO.ini` at `kDataLoaded`. Do not re-read per cast, do not call MSCO.dll.
-   Charge input is SH2's authored `GetChargeTime()`, not MSCO's tap-as-shortest (~0 → 1.25x).
-   Owner 2026-08-14 accepted that SH2 plays slower than equipped-hand MSCO as a hand-cast
-   advantage.
+   `Data/SKSE/Plugins/MSCO.ini` at `kDataLoaded` and again at each `begin()` so a saved INI
+   applies without restart. Info-log only on first load or a value change (mash must not
+   spam). Do not call MSCO.dll or Menu Framework. Charge input is SH2's authored
+   `GetChargeTime()`. Owner 2026-08-14 accepted SH2 vs equipped-hand feel as a hand-cast
+   advantage; MSCO.log later showed the same Firebolt 0.5s → 0.815, so that gap is not a
+   different curve input.
 5. magicbehavior: MSCO already registered the variable. Bind clips `$0/$6/$8/$10` to `#shtb$12`.
 6. 1hm_behavior: add the 3-list (`#0085` names, `#0087` infos, `#0086` values). Bind clips
    `$0/$4/$6/$8` to `#shtb$10`. Initial value `1065353216` (IEEE 1.0f).
@@ -70,3 +72,15 @@ Writing `MSCO_attackspeed` is clip playback, not ShoutMCO release. Attack chain-
    INT32), not at the last POINTER before `eventInfos` — that POINTER is a character
    property. Putting it there made Nemesis ERROR(1003) on `1hm_behavior.xml` (infos nested
    into characterPropertyInfos, declared 154 vs 163 types). AMCO's `#0087` is the template.
+
+## Menu Framework is not a settings API
+
+SKSE Menu Framework v3 only hosts ImGui: `AddSectionItem` + open/close/render events.
+MSCO's sliders (`igDragFloat` / `igCheckbox` in `settings.cpp`) mutate MSCO.dll RAM.
+INI persist is CSimpleIni `settings::save()`, behind an **Unsaved changes / Save** button —
+not `WritePrivateProfile`, and not on every drag. No `RequestInterface`. Re-reading
+`MSCO.ini` follows last Save, not the live sliders.
+
+MSCO.log on Save65 (Enable Log on): equipped-hand Firebolt is
+`LeftMSCOStart | chargeTime=0.500 | speed=0.815` — same x and y SH2 writes. The feel
+gap is not a different charge input. Do not treat tap-as-shortest as what MSCO.dll does.
