@@ -17,7 +17,8 @@ using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
 using SpellHotbar::casts::MscoChargeCurve;
 using SpellHotbar::casts::charge_time_to_anim_speed;
-using SpellHotbar::casts::is_msco_combo_window_event;
+using SpellHotbar::casts::is_msco_combo_window_close_event;
+using SpellHotbar::casts::is_msco_combo_window_open_event;
 
 namespace {
 
@@ -145,13 +146,13 @@ void idle_press_starts_an_ordinary_cast()
 void committed_follow_up_press_chains()
 {
 	expect(classify_hotbar_cast_press(true, true, true) == HotbarCastPress::chain,
-		"a second press during WinOpen on a committed Driver Cast is a combo step");
+		"a second press inside the open window on a committed Driver Cast is a combo step");
 }
 
-void committed_press_before_winopen_is_the_gcd()
+void committed_press_after_winclose_is_refused()
 {
 	expect(classify_hotbar_cast_press(true, true, false) == HotbarCastPress::refuse,
-		"SpellFire without WinOpen is the GCD lockout, not a mash-through chain");
+		"after WinClose, a committed Driver Cast refuses a late follow-up until CastExit");
 }
 
 void live_cast_without_commitment_is_refused()
@@ -159,15 +160,43 @@ void live_cast_without_commitment_is_refused()
 	expect(classify_hotbar_cast_press(true, false, false) == HotbarCastPress::refuse,
 		"before spellfire, or a concentration channel, the second press is refused");
 	expect(classify_hotbar_cast_press(true, false, true) == HotbarCastPress::refuse,
-		"a WinOpen bit without commitment cannot chain");
+		"a window bit without commitment cannot chain");
 }
 
-void msco_winopen_tag_opens_the_combo_window()
+void left_spellfire_opens_the_combo_window()
 {
-	expect(is_msco_combo_window_event("MSCO_WinOpen"), "live SH2 clips raise MSCO_WinOpen");
-	expect(is_msco_combo_window_event("MCO_winopen"), "base HKX annotations are MCO_winopen");
-	expect(!is_msco_combo_window_event("MSCO_WinClose"), "close is not the chain gate");
-	expect(!is_msco_combo_window_event("MLh_SpellFire_Event"), "SpellFire is not the chain gate");
+	expect(is_msco_combo_window_open_event("MLh_SpellFire_Event"),
+		"the borrowed left-hand SpellFire opens the combo window");
+	expect(!is_msco_combo_window_open_event("MRh_SpellFire_Event"),
+		"right-hand SpellFire does not open the combo window");
+	expect(!is_msco_combo_window_open_event("MSCO_WinOpen"),
+		"WinOpen does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MCO_WinOpen"),
+		"MCO WinOpen does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MSCO_winopen"),
+		"lowercase MSCO WinOpen does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MCO_winopen"),
+		"lowercase WinOpen does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MSCO_WinClose"),
+		"WinClose does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MCO_WinClose"),
+		"MCO WinClose does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MSCO_winclose"),
+		"lowercase MSCO WinClose does not open the cast combo window");
+	expect(!is_msco_combo_window_open_event("MCO_winclose"),
+		"lowercase WinClose does not open the cast combo window");
+}
+
+void winclose_tags_close_the_combo_window()
+{
+	expect(is_msco_combo_window_close_event("MSCO_WinClose"), "MSCO_WinClose closes the window");
+	expect(is_msco_combo_window_close_event("MCO_WinClose"), "MCO_WinClose closes the window");
+	expect(is_msco_combo_window_close_event("MSCO_winclose"), "MSCO_winclose closes the window");
+	expect(is_msco_combo_window_close_event("MCO_winclose"), "MCO_winclose closes the window");
+	expect(!is_msco_combo_window_close_event("MSCO_WinOpen"), "MSCO_WinOpen does not close the window");
+	expect(!is_msco_combo_window_close_event("MCO_WinOpen"), "MCO_WinOpen does not close the window");
+	expect(!is_msco_combo_window_close_event("MSCO_winopen"), "MSCO_winopen does not close the window");
+	expect(!is_msco_combo_window_close_event("MCO_winopen"), "MCO_winopen does not close the window");
 }
 
 void shipped_exponential_curve_is_1_at_base_time()
@@ -323,9 +352,10 @@ int main()
 	cast_index_is_unchanged_by_an_attack_gap();
 	idle_press_starts_an_ordinary_cast();
 	committed_follow_up_press_chains();
-	committed_press_before_winopen_is_the_gcd();
+	committed_press_after_winclose_is_refused();
 	live_cast_without_commitment_is_refused();
-	msco_winopen_tag_opens_the_combo_window();
+	left_spellfire_opens_the_combo_window();
+	winclose_tags_close_the_combo_window();
 	shipped_exponential_curve_is_1_at_base_time();
 	charge_mechanic_off_is_always_one();
 	firebolt_charge_is_slower_than_base_on_the_shipped_curve();

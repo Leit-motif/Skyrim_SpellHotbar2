@@ -24,7 +24,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void load_charge_curve();
 
 	/**
-	 * Has the current Driver Cast clip raised MSCO_WinOpen? The ticket-18 GCD: a
+	 * Is the current Driver Cast inside its SpellFire-to-WinClose combo window? A
 	 * follow-up hotbar press chains only while this is true.
 	 */
 	bool combo_window_open();
