@@ -8,7 +8,7 @@ itself.
 
 **Blocked by:** None. Ticket 19 is resolved; this is leftover presentation on the same clips.
 
-**Status:** implemented — Nemesis re-run and Save65 visual acceptance pending
+**Status:** implemented — Nemesis rebuilt; agent telemetry green; Save65 visual step still owner eyes
 
 ## How this showed up
 
@@ -90,6 +90,26 @@ files; each state's `generator` is the modifier generator, not the bare clip.
 - [ ] Restore fixtures and close Skyrim after runtime work.
 
 ## Comments
+
+**2026-08-15 — agent: Nemesis rebuild + Save65 telemetry (game left running).**
+Nemesis Update Engine + Build clean (1045 anims, 92s). Post-build XML: zero `#shtb$` /
+`$variableID` leftovers; `SH2_CastRight_State.generator` → `SH2_CastRight_MG` →
+`bAnimationDrivenIsActiveModifier` on both graphs.
+
+Save65 (Xaelle, Iron Rapier, Firebolt left), profile `Nolvus Awakening`. Three
+`castSlot(0)` driver casts via Papyrus; log shows `SH2_CastRight` → `SH2_Cast2` →
+`SH2_Cast3`, all `-> true`, SpellFire left, combo windows open.
+
+| Probe | Result |
+|---|---|
+| `bAnimationDriven` @ +200/+400/+800 ms after cast | **true** (graph wrap; DLL no longer writes) |
+| `bAnimationDriven` at rest after clip | **false** |
+| Pose recording across casts (`max_xy` from anchor) | **0.00** (ticket 19 plant holds) |
+| DevBench pose Z delta during cast | ~3.8 (vertical root bob only in sampled poses) |
+
+The MSCO **step vs native left-hand Firebolt** cell is still visual — compare in-game now
+while Skyrim is up. If the step is missing on `magicbehavior` only, add the third binding
+(`HKSMoveON`) per ticket escalation note.
 
 **2026-08-15 — agent: graph wrap + DLL cleanup shipped; Nemesis not driven (MO2 down).**
 Each cast state's generator is now an `hkbModifierGenerator` with
