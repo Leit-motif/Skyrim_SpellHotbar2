@@ -118,11 +118,10 @@ private:
 	int index_ = 1;
 };
 
-// Public hotbar path: a second press during a committed Driver Cast is a combo step, not a
-// refusal. Concentration and pre-spellfire are excluded by the holding flag the caller
-// already computed (is_committed_cast_holding_graph). Ticket 18: the combo step also waits
-// for the clip's MSCO_WinOpen window, so a mash at SpellFire is a GCD refuse rather than
-// a chain.
+// Public hotbar path: a second press during a committed Driver Cast's SpellFire-to-WinClose
+// window is a combo step, not a refusal. Concentration and pre-spellfire are excluded by the
+// holding flag the caller already computed (is_committed_cast_holding_graph); the separate
+// window bit refuses late presses after WinClose until CastExit ends the instance.
 enum class HotbarCastPress {
 	start,
 	chain,
@@ -141,10 +140,15 @@ enum class HotbarCastPress {
 	return HotbarCastPress::refuse;
 }
 
-[[nodiscard]] constexpr bool is_msco_combo_window_event(std::string_view tag) noexcept
+[[nodiscard]] constexpr bool is_msco_combo_window_open_event(std::string_view tag) noexcept
 {
-	return tag == "MSCO_WinOpen" || tag == "MCO_WinOpen" || tag == "MSCO_winopen" ||
-		   tag == "MCO_winopen";
+	return tag == "MLh_SpellFire_Event";
+}
+
+[[nodiscard]] constexpr bool is_msco_combo_window_close_event(std::string_view tag) noexcept
+{
+	return tag == "MSCO_WinClose" || tag == "MCO_WinClose" || tag == "MSCO_winclose" ||
+		   tag == "MCO_winclose";
 }
 
 // MSCO v2 charge time → clip playback speed. Defaults match the shipped MSCO.ini

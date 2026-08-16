@@ -280,9 +280,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	/**
 	 * May the public hotbar path attempt a Driver Cast right now? True when no cast is live,
-	 * or when a committed cuttable Driver Cast holds the graph *and* MSCO_WinOpen has
-	 * opened (ticket 18). False during the SpellFire-to-WinOpen lockout, pre-spellfire,
-	 * concentration, potions, and shouts.
+	 * or when a committed cuttable Driver Cast holds the graph inside its
+	 * SpellFire-to-WinClose combo window. False pre-spellfire, after WinClose until
+	 * CastExit, during concentration, and for potions and shouts.
 	 */
 	bool can_accept_hotbar_cast();
 

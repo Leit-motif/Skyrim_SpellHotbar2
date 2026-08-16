@@ -8,7 +8,8 @@ window MSCO uses, and the clip plays at MSCO's charge-time → animation-speed c
 
 **Blocked by:** None.
 
-**Status:** claimed
+**Status:** resolved — GCD and clip speed shipped. Window *shape* (open SpellFire / close
+WinClose) is [ticket 22](22-cast-combo-window-spellfire-through-winclose.md).
 
 ## Ruling (2026-08-13, restated 2026-08-14)
 
@@ -52,15 +53,21 @@ tickets 19/20.
 
 - [x] Mash of 1 on Firebolt no longer walks 1→2→3→4 at SpellFire; the next clip starts at WinOpen.
 - [x] Uninterrupted clip 1 has no dead wait after CastExit.
-- [ ] Slower-charge FNF plays a slower clip and later WinOpen than Firebolt (mechanic on).
+- [x] Slower-charge FNF vs Firebolt: not the remaining feel. Owner 2026-08-15 wants a
+      comfortable combo envelope, not a mash / slower-spell discriminating press. That
+      envelope is [ticket 22](22-cast-combo-window-spellfire-through-winclose.md).
 - [x] Equipped-hand MSCO vs SH2 cadence: owner accepts SH2 slower (hand-cast advantage). Do not
   match live MSCO charge input or MCM sliders mid-session.
 - [x] Combo index still walks 1→2→3→4→1. Clips 1–3 / clip-4 delivery unchanged (ticket 17).
 - [x] Restore fixtures and close Skyrim after runtime work. Owner quit 2026-08-14; in-memory
       fixtures died with the process. DLL copy that failed while locked now landed
       (`69B0C1F685B3750813ED5E92B69CE1EC422E52CF466BB8E11DF72D8C2B0431E1`).
-- Saved-INI reload at `begin()` is implemented; in-game check rides
-  [ticket 19](19-root-the-player-during-a-driver-cast.md).
+- [x] Save a changed curve in MSCO's SKSE Menu Framework page (Save, not just drag). Overwrite
+      `MSCO.ini` shows `Longest=1.990000` (MCBO default `2.000000`). `SpellHotbar2.log`
+      2026-08-15 15:41:46: `MSCO charge curve … long=1.99 … p=0.17` on `kDataLoaded`.
+      Implementation shipped in ticket 19's DLL (`load_charge_curve()` at each `begin()`);
+      this log session has no cast lines after Save65 load, so `MSCO_attackspeed=` was not
+      captured here — turn trace/debug on for the next cast if you want the float line.
 
 ## Comments
 
@@ -116,3 +123,24 @@ Info-log only on first load or a value change.
 **2026-08-14 — owner: quit when testing is done.** Leave Skyrim running only when a human
 validation cell is still required to close the ticket. Agent-only close-out is `qqq`.
 DevBench ping offline. DLL with the `begin()` INI reload copied after that quit.
+
+**2026-08-15 — ticket 19 closed without the Save-vs-drag press.** The `begin()` reload stays
+implemented; the in-game cell is back on this ticket (unchecked above).
+
+**2026-08-15 — agent: read log + INI after owner's MSCO Save.** Overwrite
+`New Overwrites\SKSE\Plugins\MSCO.ini`: `Longest=1.990000` (saved; MCBO ships `2.000000`).
+`SpellHotbar2.log` from the 15:38 session logs that curve once at `kDataLoaded` (`long=1.99`).
+No cast/`MSCO_attackspeed=` lines in that file — session ends at Save65 load with trace-only
+after that; rooting playtest may not have hit the log path or debug was off for speed writes.
+Yes, the `begin()` INI reload was rolled into ticket 19's driver work, not a separate ticket.
+
+**2026-08-15 — owner: clip 3 felt slower during curve playtest.** All four `MSCO_left*.hkx`
+are 1.667s with identical WinOpen at 0.8s; `MSCO_attackspeed` binds all clips equally, so
+clip 3 is not authored slower. Likely combo-chain pacing (WinOpen gate each step) or the
+global curve tweak (`long` 2.0→1.99 is a tiny speed *increase* for Firebolt, not slower).
+Not evidence of a per-clip bug; FNF-vs-Firebolt cell still open for a slower-charge spell.
+
+**2026-08-15 — owner: not mash, a comfortable envelope.** Like `MCO_Recovery` on an attack,
+where the combo window is open. Ticket 18's open-at-WinOpen / close-at-CastExit gate is the
+miss. Successor: [ticket 22](22-cast-combo-window-spellfire-through-winclose.md). This
+ticket is resolved on GCD + clip speed.

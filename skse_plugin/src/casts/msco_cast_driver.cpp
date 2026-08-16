@@ -213,9 +213,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
-		if (is_msco_combo_window_event(tag) && is_active()) {
+		if (is_msco_combo_window_open_event(tag) && is_active()) {
 			combo_window.store(true, std::memory_order_relaxed);
 			logger::debug("SH2 cast: combo window open ({})", tag);
+		}
+
+		if (is_msco_combo_window_close_event(tag)) {
+			combo_window.store(false, std::memory_order_relaxed);
+			logger::debug("SH2 cast: combo window closed ({})", tag);
 		}
 
 		if (tag == "SH2_CastExit"sv) {
