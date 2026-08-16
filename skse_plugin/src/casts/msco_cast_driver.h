@@ -13,8 +13,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
 	 *
 	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
-	 * plays at MSCO's charge-scaled pace (ticket 18). A successful entry also
-	 * roots the player until the state ends (ticket 19).
+	 * plays at MSCO's charge-scaled pace (ticket 18). WASD capture during the state
+	 * is ticket 19; bAnimationDriven comes from the shtb graph wrap (ticket 21).
 	 */
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time);
 

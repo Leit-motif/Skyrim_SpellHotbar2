@@ -15,7 +15,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	namespace {
 		std::atomic<bool> state_active{ false };
 		std::atomic<bool> combo_window{ false };
-		std::atomic<bool> rooted{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
 
@@ -100,23 +99,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
-		void set_rooted(RE::Actor* actor, bool should_root)
-		{
-			const bool was = rooted.exchange(should_root, std::memory_order_relaxed);
-			if (was == should_root) {
-				return;
-			}
-			if (!actor) {
-				rooted.store(was, std::memory_order_relaxed);
-				return;
-			}
-			const bool ok = actor->SetGraphVariableBool("bAnimationDriven", should_root);
-			logger::debug("SH2 cast: bAnimationDriven={} wrote={}", should_root, ok);
-		}
-
 		void send_exit(RE::PlayerCharacter* pc)
 		{
-			set_rooted(pc, false);
 			if (pc) {
 				const bool consumed = pc->NotifyAnimationGraph("SH2_CastExit"sv);
 				logger::debug("SH2 cast: notified SH2_CastExit -> {}", consumed);
@@ -130,7 +114,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			const bool sent = pc->NotifyAnimationGraph(event);
 			if (sent) {
 				g_castIndex.advance();
-				set_rooted(pc, true);
 			}
 			state_active.store(sent, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
@@ -239,7 +222,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (is_active()) {
 				arm_restore();
 			}
-			set_rooted(a_player, false);
 			state_active.store(false, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
@@ -288,9 +270,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// Concentration re-entry is not a combo step. Send the original event so a
 		// looping channel does not walk the clip set; ticket 11 leaves channels out.
 		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
-		if (sent) {
-			set_rooted(pc, true);
-		}
 		state_active.store(sent, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
 		return sent;

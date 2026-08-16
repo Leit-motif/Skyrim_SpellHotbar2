@@ -4,7 +4,7 @@
 			<hkparam name="enterNotifyEvents">null</hkparam>
 			<hkparam name="exitNotifyEvents">null</hkparam>
 			<hkparam name="transitions">#shtb$1</hkparam>
-			<hkparam name="generator">#shtb$8</hkparam>
+			<hkparam name="generator">#shtb$22</hkparam>
 			<hkparam name="name">SH2_Cast4_State</hkparam>
 			<hkparam name="stateId">746005</hkparam>
 			<hkparam name="probability">1.000000</hkparam>
