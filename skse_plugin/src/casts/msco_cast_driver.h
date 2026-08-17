@@ -5,7 +5,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	/**
 	 * Enter the shtb cast state. The event is SH2_CastRight for combo step 1 and
-	 * SH2_Cast2/3/4 for the later clips (MSCO_left2/3/4.hkx). Returns the notify
+	 * SH2_Cast2/3/4 for the later clips (SH2_cast2/3/4.hkx). Returns the notify
 	 * result — false means no active listener (no hosting drawn idle: sheathed, or
 	 * mid-swing in AttackState) and the caller tears the cast down.
 	 *

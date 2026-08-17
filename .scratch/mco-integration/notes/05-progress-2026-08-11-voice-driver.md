@@ -41,10 +41,11 @@ almost exactly the moment the T-pose appears.
    `C:\Tools\SkyrimHKX`, probe at `Spell Hotbar 2 - MCBO Cast Animations\...\cast_left_probe`),
    relaunch, cast Incinerate (slot 0 via `SpellHotbar.castSlot(0)` — needs focused window
    or the user pressing "1"), observe.
-2. If still broken: swap probe clips to **Smooth Magic Casting** clips (annotation-free,
-   confirmed clean): `Smooth Magic Casting Animation\...\Nolvus OAR Stance Movement
-   Framework\Magic Movement\mlh_preCharge.hkx` → the 4 `*_shout_inhale` paths,
-   `mlh_Release.HkX` → the 8 `*_shout_exhale*` paths.
+2. ~~If still broken: swap probe clips to Smooth Magic Casting clips…~~ **Withdrawn
+   2026-08-15.** That step was never run. On Nolvus Awakening, `Smooth Magic Casting
+   Animation` (Nexus 45799) is an empty MO2 slot (`meta.ini` only — no meshes). It is not
+   part of the live stack and must not be cited as a clip source or OAR overlay for SH2 or
+   MCBO work.
 3. Polish once a clip plays: map the proxy chargeTime to the spell's cast time, verify
    exhale duration, concentration spells (`replay` path), repeat-cast spam, real shouts
    still SYHO, first person.
