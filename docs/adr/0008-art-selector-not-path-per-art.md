@@ -2,31 +2,30 @@
 
 Date: 2026-08-12
 
-Status: accepted
+Status: accepted (amended by ADR-0009)
+
+The Art Selector is SH2's name for which art is live. It is not Ashes of War's worn-item
+keyword. The graph is not required to play `AABL_Attack_A.hkx`.
 
 ## Context
 
-ADR-0007 names `Animations\AABL_Attack_A.hkx` as the compatibility contract. Something still has
-to choose *which* replacement of that path plays when the player presses a bound slot.
+ADR-0009: the live art is SH2 data, not a hardcoded AABL path. Something still has to name
+*which* art is playing so OAR or PIE conditions can branch.
 
-The fork already runs this mechanism for cast animations: a TESGlobal written natively, read by
-OAR `CompareValues` conditions, with zero as the resting value. Pointing that pattern at attack
-clips is the smallest contract that lets an animation author add an art without touching the fork.
-
-The rejected alternative — one distinct animation path per art — is recorded in ADR-0007.
+The fork already runs a TESGlobal for cast animations. The Art Selector is that pattern for
+Weapon Arts. It is not Ashes of War's worn-item keyword.
 
 ## Decision
 
 A slot holds an art id. Pressing it writes an **Art Selector** TESGlobal in the fork's plugin
-immediately before the entry event is raised, and clears it when the state exits. Zero is the
-resting value and means *no fork art*, so an installed Art Pack's own conditions win unchanged.
+immediately before the entry event is raised, and clears it when the state exits. Zero means no
+SH2 art is live.
 
-Art Packs are OAR submods whose conditions compare the Art Selector, at a priority above the
-packs they coexist with.
+Conditions (OAR or PIE) may read that global. They do not replace SH2's bind/press/state/plant.
 
 ## Consequences
 
-- Binding means something regardless of what the player is wearing: the selector, not a worn
-  keyword, chooses the clip.
-- Worn-item behaviour is exactly preserved when the selector is zero.
-- Extending the set does not require a Nemesis re-run or a fork rebuild.
+- Binding means something because SH2 wrote the selector and will play that art's clip, not
+  because a worn keyword matched.
+- Ashes of War's own hotkey/item path is untouched when SH2 is not in an art.
+- Extending the set is catalogue data plus an existing HKX, not a fork rebuild.

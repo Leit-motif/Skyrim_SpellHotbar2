@@ -29,25 +29,17 @@ A **Weapon Art** becomes a fourth thing a hotbar slot can hold. Binding one to a
 that slot plays the art, from a drawn weapon stance, without equipping anything and without the
 player touching their inventory.
 
-The fork owns the trigger, the state and the rules. It does not own the animations, and does not
-want to: an art is an attack clip that somebody else authored, and the fork's job is to make one
-bindable. Two design commitments follow from that, and everything else in this spec is downstream
-of them.
+The fork owns the trigger, the state and the rules. It does not own the animations: an art is an
+MCO attack clip somebody else authored, and the fork's job is to make one bindable. **Ashes of
+War is the concept** (named special attacks on a button). **It is not the machinery.** We do not
+take its slot-55 items, AABL hotkey, or a requirement that the file be named `AABL_Attack_A.hkx`.
+A Weapon Art is a special MCO animation that plays when the assigned hotbar button is pressed.
+SH2 owns bind, notify, `SH2_Art_State`, Cast Plant, stamina, and cooldown. PIE and the clip's own
+annotations own hits, windows, and motion (ADR-0009).
 
-**The compatibility contract is an animation path, not a mod.** `Ashes of War` is 96 OAR
-replacements of `animations\AABL_Attack_A.hkx`, and no `Ashes of War` submod references
-`Additional Attack By Loop.esp` — only the items plugin that supplies its keywords. Whatever plays
-that path gets the art. The fork's own state therefore plays that path, so the existing pack keeps
-working with no patch, no repack, and no dependency on the mod whose name the file happens to
-carry. This is not a new trick here: the `shtb` cast state already borrows `MSCO_left1.hkx` the
-same way.
-
-**Which art plays is data the fork sets, read by conditions somebody else can author.** A slot
-holds an art id; pressing it sets an **Art Selector** global; OAR conditions on that global choose
-the clip. This is the mechanism the fork already runs for cast animations — 56 submods selected by
-`CompareValues` against globals — pointed at attack clips instead. Selector zero means *no fork
-art*, at which point `Ashes of War`'s own worn-item conditions win on priority and today's
-behaviour is exactly preserved.
+**Clip identity is data**, not a hardcoded path. A catalogue row names whichever HKX to play. The
+Art Selector is SH2's name for which art is live (OAR/PIE can read it). It is not Ashes of War's
+worn keyword. Ticket 01's `AABL_Attack_A` generator is an inert bootstrap, not a contract.
 
 ## User Stories
 
@@ -126,9 +118,9 @@ behaviour is exactly preserved.
 - The fork ships its own state in the weapon behaviour, entered by its own event and exited by its
   own end-of-clip trigger, replicating the shape ticket 08 already proved. It does not reuse
   `Additional Attack by Loop`'s event, state or Papyrus, and does not require that mod.
-- The state's clip generator names `animations\AABL_Attack_A.hkx`. This is the compatibility
-  contract with every existing Art Pack and is the one path in this spec that is deliberately
-  spelled out: renaming it is a breaking change, not a refactor.
+- The state's clip generator currently names `animations\AABL_Attack_A.hkx` as a ticket-01
+  placeholder. ADR-0009: the product clip is whatever the art row names; retargeting that
+  generator is allowed.
 - Entry is appended to the weapon ready state's own transitions, as ticket 08 did. It is **not** a
   local wildcard with its condition disabled. `Additional Attack by Loop` uses a wildcard, which is
   why its hotkey cuts a live swing; the fork refuses mid-swing instead and defers, so that both
@@ -143,15 +135,13 @@ behaviour is exactly preserved.
 
 ### Selection
 
-- The Art Selector is a global in the fork's plugin, written natively immediately before the entry
-  event is raised, and cleared when the state exits. Zero is the resting value and means *no fork
-  art*, so an installed Art Pack's own conditions win unchanged.
-- Art Packs are OAR submods whose conditions compare the Art Selector, at a priority above the
-  packs they coexist with. Adding an art is a folder and a condition file; it requires no change to
-  the fork.
-- Rejected alternative: one distinct animation path per art. It removes the condition file, but
-  fixes the number of arts at Nemesis-patch time, requires shipping an inert placeholder clip per
-  slot, and still needs condition files the moment an art wants to be weapon-specific.
+- The Art Selector is a SH2 global, written natively immediately before entry and cleared on exit.
+  Zero means no SH2 art is live. OAR or PIE may read it. It is not a worn-item keyword.
+- A catalogue row names the clip (any MCO-annotated HKX). Adding an art is a row plus a file
+  already in the load order. How that file is attached to `SH2_Art_State` is ticket 03.
+- Rejected: importing Ashes of War's AABL path, hotkey, or slot-55 identity as SH2 machinery
+  (ADR-0009). One Nemesis generator per art is also rejected unless ticket 03 proves it is the
+  only way to attach arbitrary HKX.
 
 ### Chaining
 
@@ -193,19 +183,12 @@ behaviour is exactly preserved.
 - The graph patch living in the core fork repeats ADR-0006's recorded deviation and is accepted on
   the same terms.
 
-### The `Ashes of War` integration
+### Using Ashes of War as a clip pile
 
-- Ships as OAR user-override files only — no animation files are copied. An override is a
-  full-document shadow of a submod's config, matched by folder path, and can live in a separate mod
-  overlaid by the mod manager. Roughly one per existing submod.
-- The overrides are generated at authoring time by a script that reads an installed `Ashes of War`,
-  and both the generated output and the script ship. The installer gates the group on the presence
-  of the `Ashes of War` items plugin.
-- The installer cannot perform the conversion itself: a FOMOD is declarative and runs no code. It
-  detects and installs; it does not transform. Users on a different `Ashes of War` version
-  regenerate with the shipped script.
-- Overrides match by folder path, so a renamed submod folder misses silently. The script exists
-  precisely to make that recoverable.
+- Concept only: named special attacks. Not its items, hotkey, or AABL-only path.
+- A generator may read an installed Ashes of War folder tree and emit catalogue rows that *point
+  at* those HKX files in the VFS. No copies. Missing/renamed folders fail loudly.
+- People who still use Ashes of War the old way keep that path; SH2 arts do not go through it.
 
 ## Testing Decisions
 
@@ -271,6 +254,6 @@ installed modlist. Recorded so the next agent does not re-derive them:
   entire mechanism becomes redundant for arts the fork binds, and is left alone rather than
   removed.
 
-Two decisions in this spec are architectural and hard to reverse — the animation path as the
-compatibility contract, and selector-keyed rather than path-keyed selection. Both should be
-recorded as ADRs alongside the implementation tickets.
+Architectural decisions: ADR-0009 (any MCO clip; SH2/PIE machinery; Ashes of War is concept not
+system), ADR-0008 (Art Selector is SH2's live-art name). ADR-0007's AABL path contract is
+superseded.

@@ -69,13 +69,21 @@ One pending request to activate a hotbar payload. Spell Hotbar 2 retains and rev
 _Avoid_: Copied spell payload, queued spell object
 
 **Weapon Art**:
-A bindable attack animation played from a hotbar slot without equipping anything. The slot holds an art id, not a FormID. _Avoid_: power attack, additional attack, ash of war.
+A special MCO attack clip bound to a hotbar slot and played on press, without equipping anything.
+The slot holds an art id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and
+cooldown. PIE / clip annotations own hits, windows, and motion. The clip may be any MCO-annotated
+HKX the load order can see — not only `AABL_Attack_A.hkx`. Ashes of War is the concept (named
+special attacks), not the machinery (slot-55 items, AABL hotkey). _Avoid_: power attack, additional
+attack, ash of war (as a system).
 
 **Art Selector**:
-The TESGlobal the fork writes to name which Weapon Art plays; OAR conditions read it. Zero means no fork art is selected. _Avoid_: art keyword, worn art.
+The TESGlobal SH2 writes to name which Weapon Art is live so OAR or PIE conditions can read it.
+Zero means no fork art is selected. _Avoid_: art keyword, worn art, Ashes of War item identity.
 
 **Art Pack**:
-A set of OAR submods keyed to the Art Selector. _Avoid_: animation mod, moveset.
+A folder of MCO attack clips plus catalogue rows that name those files. May be generated from an
+installed Ashes of War tree; it is not that mod's OAR-on-AABL machinery. _Avoid_: animation mod
+as a synonym for the AABL hotkey pack.
 
 **Terminal Art / Chaining Art**:
 An art whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
