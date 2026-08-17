@@ -12,14 +12,17 @@ path is the Papyrus `slotArt` function so the existing `castSlot` seam can drive
 
 **Status:** claimed
 
-- [ ] `slotArt(slot, artId)` then `castSlot(slot)` from drawn 1h idle: notify `SH2_ArtStart`
+- [x] `slotArt(slot, artId)` then `castSlot(slot)` from drawn 1h idle: notify `SH2_ArtStart`
       returns true; Art Selector equals the bound art's selector while the state is live; a
       captured frame shows the art clip (or the inert `AABL_Attack_A` placeholder if no Art Pack
-      won).
-- [ ] Combo counters `MCO_nextattack` and `MCO_nextpowerattack` are 1 after entry.
-- [ ] Art Selector is 0 after the state exits.
+      won). — Save65 2026-08-16, log `SH2_ArtStart -> true`, selector 1 while live. Frames
+      `.scratch/weapon-arts/shots/art-idle-1.png`–`6.png` (owner: confirm the clip, not idle).
+- [x] Combo counters `MCO_nextattack` and `MCO_nextpowerattack` are 1 after entry.
+- [x] Art Selector is 0 after the state exits. — `SH2_ArtExit` at clip end, then selector 0.
 - [ ] A press that cannot enter (sheathed, unknown art id, on cooldown, unaffordable) highlights
-      the slot red and logs the reason; nothing is equipped or unequipped.
+      the slot red and logs the reason; nothing is equipped or unequipped. — unknown id logged
+      at bind (`Unknown weapon art 999`). CD / sheathed / unaffordable reason-logs not captured:
+      a second press while `current_cast` is live never reaches `try_start_art`.
 - [ ] A bar with a bound art survives save/load (serialization version 6).
 - [ ] Existing spell/shout/potion slots are unchanged.
 
@@ -31,21 +34,21 @@ Paused 2026-08-12 before in-game test (owner was mid SH2 casting work). Skeleton
 ticket 21's wrap on `$10`–`$22`. Checkout `weapon-arts` in a new session; do not start
 from `01d68f1`.
 
-### Next steps (resume on `weapon-arts` after the main merge)
+### 2026-08-16 — live proof (Save65, Nolvus Awakening)
 
-1. Compile `papyrus/Scripts/Source/SpellHotbar.psc` so `slotArt` / `getArtSelector` exist
-   in a `.pex`. Land it at `Dev - Spell Hotbar 2\Scripts\SpellHotbar.pex`. The CK compile
-   needs vanilla + SKSE script sources on the import path (last attempt failed on missing
-   `Spell` / `Form` types).
-2. Rebuild the DLL on this merged tree. Copy into `Dev - Spell Hotbar 2`: that DLL,
-   `data/SKSE/Plugins/SpellHotbar/artdata/`, and `nemesis/Nemesis_Engine/mod/shtb/` (plus BDI JSON).
-   Do not use the old `.scratch/weapon-arts-build` binary — it predates tickets 12–22.
-3. Nemesis: `tools/run-nemesis.ps1 -Tick shtb -UpdateEngine -Apply` from the thuum repo.
-   Then hkxc-dissect `1hm_behavior` and confirm `SH2_Art_State` (object `#shtb$25`) / no leftover
-   `#shtb$` tokens.
-4. Live drive on Save65 (or equivalent), 1h drawn: `SpellHotbar.slotArt(0, 1)` then
-   `SpellHotbar.castSlot(0)`. Prove notify `SH2_ArtStart -> true`, selector `1` while live
-   then `0` after exit, `MCO_nextattack`/`MCO_nextpowerattack` = 1, and a captured frame.
-   Sheathed / unknown id / CD / unaffordable → red + log.
-5. Code-review against this ticket + `.scratch/weapon-arts/spec.md`, then mark cells done.
-   When the ticket closes, merge `weapon-arts` into `main` and delete the branch.
+Deployed from `weapon-arts`: DLL SHA-256 `9C0AE942…` (then rebuilt after the occupancy
+fix), `SpellHotbar.pex` with `slotArt`/`getArtSelector`, `artdata/arts.csv`, `shtb`
+Nemesis patch, BDI JSON. Nemesis Update Engine 66s + Build 131s, 1045 animations.
+Merged `1hm_behavior.hkx` contains `SH2_Art_State` / `SH2_ArtStart` / `SH2_ArtExit` /
+`AABL_Attack_A` and zero leftover `#shtb$` tokens.
+
+**Occupancy fix:** `get_skill_in_bar_with_inheritance` used `formID != 0`, so a bound
+art looked empty and `castSlot` saw `skill type=0`. Gate is now `!skill.isEmpty()`.
+
+Happy path (drawn 1h, Iron Rapier + Incinerate, `slotArt(0,1)` then `castSlot(0)`):
+`SH2_ArtStart -> true`, selector 1 while live, both MCO next-attack vars 1, stamina
+115→90, hands unchanged, `SH2_ArtExit` then selector 0. Frames in
+`.scratch/weapon-arts/shots/art-idle-*.png`.
+
+Still open: CD / sheathed / unaffordable reason logs; save/load v6; owner eyes on the
+clip. Game left running on Save65 for that. Do not merge to `main` until those close.

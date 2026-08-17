@@ -285,7 +285,7 @@ namespace SpellHotbar
             }
         }
 
-        if (skill.formID != 0U && this->is_enabled())
+        if (!skill.isEmpty() && this->is_enabled())
         {
             if (hide_clear_spell && GameData::is_clear_spell(skill.formID)) {
                 return std::make_tuple(SlottedSkill(), inherited);
