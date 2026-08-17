@@ -156,6 +156,7 @@ public:
     void clear();
 
     SubBar& get_sub_bar(key_modifier mod);
+    const SubBar& get_sub_bar(key_modifier mod) const;
 
     static ImU32 calculate_potion_color(RE::Effect* effect);
 

@@ -15,6 +15,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	namespace {
 		std::atomic<bool> state_active{ false };
 		std::atomic<bool> combo_window{ false };
+		std::atomic<bool> clip_committed{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
 
@@ -112,11 +113,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			const int index = g_castIndex.current();
 			const auto event = event_for(index);
 			const bool sent = pc->NotifyAnimationGraph(event);
-			if (sent) {
-				g_castIndex.advance();
-			}
 			state_active.store(sent, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
+			clip_committed.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: notified {} (clip {}) -> {}", event, index, sent);
 			return sent;
 		}
@@ -215,6 +214,10 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 		if (is_msco_combo_window_open_event(tag) && is_active()) {
 			combo_window.store(true, std::memory_order_relaxed);
+			bool expected = false;
+			if (clip_committed.compare_exchange_strong(expected, true, std::memory_order_relaxed)) {
+				g_castIndex.advance();
+			}
 			logger::debug("SH2 cast: combo window open ({})", tag);
 		}
 
@@ -227,8 +230,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (is_active()) {
 				arm_restore();
 			}
+			if (!clip_committed.load(std::memory_order_relaxed)) {
+				logger::warn("SH2 cast: graph raised SH2_CastExit before SpellFire (clip {}); press produced no payload",
+					g_castIndex.current());
+				g_castIndex.reset();
+			}
 			state_active.store(false, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
+			clip_committed.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
 		}
 
@@ -299,5 +308,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
+	}
+
+	void reset_session()
+	{
+		state_active.store(false, std::memory_order_relaxed);
+		combo_window.store(false, std::memory_order_relaxed);
+		clip_committed.store(false, std::memory_order_relaxed);
+		trace_budget.store(0, std::memory_order_relaxed);
+		g_castIndex.reset();
 	}
 }

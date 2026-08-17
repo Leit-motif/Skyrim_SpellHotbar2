@@ -53,7 +53,7 @@ The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` /
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Cast Plant**:
-Input lock for a live Driver Cast: WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Tickets 19 (capture + graph wrap) and 21 (making clip translation actually apply).
+Input lock for a live shtb state (Driver Cast or Weapon Art): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Tickets 19 (capture + graph wrap) and 21 (making clip translation actually apply); Weapon Arts reuse the same plant.
 _Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means animation-driven translation, not input lock), freeze the actor in place
 
 **Chain Window**:

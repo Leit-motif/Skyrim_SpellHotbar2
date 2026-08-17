@@ -77,34 +77,36 @@ behaviour is exactly preserved.
     terminal art is not a stutter.
 13. As a player, I want my next ordinary swing after any art to start at the beginning of the
     combo, so that the combo counter never carries over invisibly.
-14. As a player, I want an art pressed in the middle of a swing to land after that swing rather
+14. As a player, I want WASD ignored during an art the same way it is during an MCO attack, so
+    that I cannot walk out of the clip, while the clip's own motion still carries me.
+15. As a player, I want an art pressed in the middle of a swing to land after that swing rather
     than cancelling it, so that a mistimed press costs me nothing.
-15. As a player, I want an art to hit and damage what it visibly strikes, so that the animation and
+16. As a player, I want an art to hit and damage what it visibly strikes, so that the animation and
     the outcome agree.
-16. As a player who already runs `Ashes of War`, I want my existing arts available on the bar, so
+17. As a player who already runs `Ashes of War`, I want my existing arts available on the bar, so
     that adopting this costs me nothing I already had.
-17. As a player who already runs `Ashes of War`, I want the worn-item behaviour to keep working
+18. As a player who already runs `Ashes of War`, I want the worn-item behaviour to keep working
     untouched when no fork art is selected, so that nothing I rely on regresses.
-18. As a player who does not run `Ashes of War`, I want the feature to install and behave sanely,
+19. As a player who does not run `Ashes of War`, I want the feature to install and behave sanely,
     so that the fork does not require a mod I do not have.
-19. As a player, I want the installer to detect whether `Ashes of War` is present and configure
+20. As a player, I want the installer to detect whether `Ashes of War` is present and configure
     accordingly, so that I am not asked a question the installer can answer itself.
-20. As a player running MCBO, I want nothing here to disturb it, so that both continue to work.
-21. As an animation author, I want to add a new art by dropping a clip and a condition file, so
+21. As a player running MCBO, I want nothing here to disturb it, so that both continue to work.
+22. As an animation author, I want to add a new art by dropping a clip and a condition file, so
     that extending the set does not require touching the fork.
-22. As an animation author, I want to use any MCO attack clip as an art, so that the set is not
+23. As an animation author, I want to use any MCO attack clip as an art, so that the set is not
     limited to one pack.
-23. As a modlist maintainer, I want the `Ashes of War` integration to ship as metadata rather than
+24. As a modlist maintainer, I want the `Ashes of War` integration to ship as metadata rather than
     copied animations, so that no redistribution question arises.
-24. As a modlist maintainer, I want to regenerate that integration against a different
+25. As a modlist maintainer, I want to regenerate that integration against a different
     `Ashes of War` version, so that a future update does not silently stop working.
-25. As the fork maintainer, I want a Weapon Art press to be drivable from a script, so that runtime
+26. As the fork maintainer, I want a Weapon Art press to be drivable from a script, so that runtime
     verification does not depend on OS input reaching a focused window.
-26. As the fork maintainer, I want art definitions to live in data rather than code, so that
+27. As the fork maintainer, I want art definitions to live in data rather than code, so that
     balancing costs and cooldowns is not a rebuild.
-27. As the fork maintainer, I want a bar containing arts to survive a save/load round trip, so that
+28. As the fork maintainer, I want a bar containing arts to survive a save/load round trip, so that
     bindings are durable.
-28. As the fork maintainer, I want a missing or broken art to degrade loudly, so that a silent dead
+29. As the fork maintainer, I want a missing or broken art to degrade loudly, so that a silent dead
     button is never the failure mode.
 
 ## Implementation Decisions
@@ -135,6 +137,9 @@ behaviour is exactly preserved.
   not, and it contradicts ADR-0005.
 - Exit blending is the fork's own transition effect. The perceived abruptness of a Terminal Art is
   tuned here, and is independent of whether the clip opens a chain window.
+- `SH2_Art_State` reuses **Cast Plant**: WASD capture follows `ArtDriver::is_active()`, and the
+  clip generator is wrapped with the same `bAnimationDrivenIsActiveModifier` as the Driver Cast
+  states. This is input lock, not a freeze — AMR / clip translation still apply.
 
 ### Selection
 

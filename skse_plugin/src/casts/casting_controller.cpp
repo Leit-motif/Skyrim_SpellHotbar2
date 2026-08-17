@@ -90,6 +90,15 @@ namespace SpellHotbar::casts::CastingController {
 		clear_spellfire();
 	}
 
+	void drop_live_cast()
+	{
+		current_cast.reset();
+		clear_spellfire();
+		ArtDriver::reset_session();
+		MscoCastDriver::reset_session();
+		logger::info("SH2: dropped live cast for game load");
+	}
+
 	// Ticket 14: a follow-up hotbar press during a committed cast is a combo step. Drop the
 	// live instance without CastExit so begin() can notify the next clip from inside the
 	// current state. Concentration is excluded by the cuttable gate.
@@ -1096,8 +1105,9 @@ namespace SpellHotbar::casts::CastingController {
 	bool is_movement_blocking_cast()
 	{
 		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
-		// owned by the graph wrap (ticket 21), not the DLL.
-		if (driver_cast_blocks_movement(MscoCastDriver::is_active(), current_cast != nullptr)) {
+		// owned by the graph wrap (ticket 21), not the DLL. Weapon Arts reuse
+		// the same plant: input lock, clip motion still applies.
+		if (shtb_state_blocks_movement(MscoCastDriver::is_active() || ArtDriver::is_active())) {
 			return true;
 		}
 		if (current_cast) {
@@ -1304,10 +1314,18 @@ namespace SpellHotbar::casts::CastingController {
 		m_gcd = gcd > 0.0f ? gcd : 1.0f;
 	}
 
-	bool CastingInstanceWeaponArt::update(RE::PlayerCharacter*, float delta)
+	bool CastingInstanceWeaponArt::update(RE::PlayerCharacter* pc, float delta)
 	{
 		advance_time(delta);
+		if (pc && !pc->AsActorState()->IsWeaponDrawn()) {
+			ArtDriver::cancel(pc);
+			return true;
+		}
 		if (ArtDriver::is_active()) {
+			if (m_cast_timer > 8.0f) {
+				ArtDriver::cancel(pc);
+				return true;
+			}
 			return false;
 		}
 		return is_gcd_expired();

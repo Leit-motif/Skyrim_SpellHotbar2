@@ -113,6 +113,10 @@ add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_d
 target_compile_features(art_data_test PRIVATE cxx_std_23)
 target_include_directories(art_data_test PRIVATE src/game_data)
 
+add_executable(art_bind_record_test src/storage/art_bind_record_test.cpp)
+target_compile_features(art_bind_record_test PRIVATE cxx_std_23)
+target_include_directories(art_bind_record_test PRIVATE src/storage)
+
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/PCH.h)

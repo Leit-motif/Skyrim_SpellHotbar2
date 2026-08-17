@@ -48,6 +48,12 @@ namespace SpellHotbar::Input {
         const bool accept = skill.type == slot_type::spell
             ? casts::CastingController::can_accept_hotbar_cast()
             : casts::CastingController::can_start_new_cast();
+        if (!accept) {
+            logger::info("SH2: slot {} refused, live cast instance still held (type={})", i,
+                static_cast<int>(skill.type));
+            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+            return;
+        }
         if (allowed_to_instantcast(skill.formID) && accept) {
             if (skill.type == slot_type::weapon_art) {
                 bool success = casts::CastingController::try_start_art(skill.art_id, i);

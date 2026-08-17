@@ -94,12 +94,9 @@ namespace SpellHotbar
                     logger::error("Failed to load Hotbar {}!", name);
                     break;
                 }
-                if (GameData::get_art(read_art)) {
-                    bar.m_slotted_skills[read_slot].update_art_assignment(read_art);
-                }
-                else {
-                    logger::info("Removing art {} from bar, id is unknown.", read_art);
-                    bar.m_slotted_skills[read_slot].clear();
+                bar.m_slotted_skills[read_slot].update_art_assignment(read_art);
+                if (!GameData::get_art(read_art)) {
+                    logger::info("Restored unknown art {} on slot {}; bind kept for a later data load.", read_art, read_slot);
                 }
             } else {
                 if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
@@ -202,6 +199,11 @@ namespace SpellHotbar
             default:
                 return m_bar;
         }
+    }
+
+    const SubBar& Hotbar::get_sub_bar(key_modifier mod) const
+    {
+        return const_cast<Hotbar*>(this)->get_sub_bar(mod);
     }
 
     ImU32 Hotbar::calculate_potion_color(RE::Effect* effect)

@@ -49,10 +49,11 @@ namespace SpellHotbar::casts::ArtDriver {
 	void observe_graph_event(RE::Actor*, const RE::BSFixedString& a_tag)
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
-		if (tag == "SH2_ArtExit"sv) {
+		if (tag == "SH2_ArtExit"sv ||
+			(is_active() && (tag == "MCO_AttackEnterNotify"sv || tag == "MCO_AttackInitiate"sv))) {
 			state_active.store(false, std::memory_order_relaxed);
 			GameData::reset_art_selector();
-			logger::debug("SH2 art: state exiting (clip end or cancel)");
+			logger::debug("SH2 art: state exiting ({})", tag);
 		}
 	}
 
@@ -89,6 +90,13 @@ namespace SpellHotbar::casts::ArtDriver {
 	{
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
+		GameData::reset_art_selector();
+	}
+
+	void reset_session()
+	{
+		state_active.store(false, std::memory_order_relaxed);
+		trace_budget.store(0, std::memory_order_relaxed);
 		GameData::reset_art_selector();
 	}
 }

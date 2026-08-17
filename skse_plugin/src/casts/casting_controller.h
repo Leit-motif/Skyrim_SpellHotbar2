@@ -316,6 +316,8 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool can_start_new_cast();
 
+	void drop_live_cast();
+
 	/*
 	* check if a power is currently tracked as casting instance, and finish it.
 	*/

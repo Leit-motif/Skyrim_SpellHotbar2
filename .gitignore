@@ -5,7 +5,15 @@ vcpkg_installed
 /python_scripts/.idea
 /SWF_Generator/.idea
 
-# Runtime evidence (frames, captures, session artifacts) stays local — never on the remote
+# Runtime evidence (frames, captures, dumps) stays local — never on the remote
 .scratch/evidence/
 .scratch/mco-integration/evidence/
 .scratch/**/evidence/
+.scratch/**/shots/
+.scratch/**/*.png
+.scratch/**/*.jpg
+.scratch/**/*.jpeg
+.scratch/**/*.gif
+.scratch/**/*.webp
+.scratch/**/*.xml
+.scratch/papyrus-stubs/

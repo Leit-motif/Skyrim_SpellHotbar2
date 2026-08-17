@@ -9,6 +9,7 @@
 #include "events/animationeventhook.h"
 #include "events/gameloop_hook.h"
 #include "casts/cast_intent.h"
+#include "casts/casting_controller.h"
 #include "casts/msco_cast_driver.h"
 
 
@@ -33,6 +34,10 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
             SpellHotbar::GameData::onDataLoad();
             SpellHotbar::casts::MscoCastDriver::load_charge_curve();
             logger::info("SpellHotbar2 GameData loaded!");
+        }
+        else if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
+                 message->type == SKSE::MessagingInterface::kNewGame) {
+            SpellHotbar::casts::CastingController::drop_live_cast();
         }
      });
 

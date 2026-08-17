@@ -1,54 +1,61 @@
 # 01 — Play a bound Weapon Art from drawn-weapon idle
 
-**What to build:** Binding a Weapon Art to a hotbar slot and pressing that slot, from a drawn
-weapon idle, plays the art without equipping or unequipping anything. The Art Selector is written
-before entry, MCO combo counters are normalised to first-attack, and the state exits at clip end.
-A missing art or a refused press (wrong stance, unaffordable, on cooldown) highlights the slot
-red and logs why.
+Bind an art to a hotbar slot. Press that slot with a weapon drawn. The art plays. Nothing
+equips or unequips. Ashes of War packs and the bind menu are later tickets.
 
-**Blocked by:** None — can start immediately. Mid-swing deferral is later (needs mco-integration
-ticket 04). The `Ashes of War` OAR overrides are later. Bind-menu UI is later; this ticket's bind
-path is the Papyrus `slotArt` function so the existing `castSlot` seam can drive it.
+**Status:** resolved — owner 1–3 passed; agent 3–7 passed
 
-**Status:** claimed
+## You test this
 
-- [x] `slotArt(slot, artId)` then `castSlot(slot)` from drawn 1h idle: notify `SH2_ArtStart`
-      returns true; Art Selector equals the bound art's selector while the state is live; a
-      captured frame shows the art clip (or the inert `AABL_Attack_A` placeholder if no Art Pack
-      won). — Save65 2026-08-16, log `SH2_ArtStart -> true`, selector 1 while live. Frames
-      `.scratch/weapon-arts/shots/art-idle-1.png`–`6.png` (owner: confirm the clip, not idle).
-- [x] Combo counters `MCO_nextattack` and `MCO_nextpowerattack` are 1 after entry.
-- [x] Art Selector is 0 after the state exits. — `SH2_ArtExit` at clip end, then selector 0.
-- [ ] A press that cannot enter (sheathed, unknown art id, on cooldown, unaffordable) highlights
-      the slot red and logs the reason; nothing is equipped or unequipped. — unknown id logged
-      at bind (`Unknown weapon art 999`). CD / sheathed / unaffordable reason-logs not captured:
-      a second press while `current_cast` is live never reaches `try_start_art`.
-- [ ] A bar with a bound art survives save/load (serialization version 6).
-- [ ] Existing spell/shout/potion slots are unchanged.
+Weapon drawn, 1h, standing still. Bind Test Art to a slot (agent can do the bind).
 
-## Comments
+1. **Press the art slot.** You should see a special-attack animation, not idle and not a
+   spell cast. Hands stay the same (same weapon, same spell).
+2. **When it ends, left-click attack.** That swing should be the first hit of a combo, not
+   hit 2 or 3.
+3. **During the art, hold WASD.** You should not walk or strafe out of the clip. If the
+   animation itself steps or lunges, you still move with it.
 
-Paused 2026-08-12 before in-game test (owner was mid SH2 casting work). Skeleton is
-`01d68f1`. **2026-08-16:** `main` (Driver Cast through ticket 22) was merged into
-`weapon-arts`. Art graph objects moved to `#shtb$23`–`$26` so they do not collide with
-ticket 21's wrap on `$10`–`$22`. Checkout `weapon-arts` in a new session; do not start
-from `01d68f1`.
+If 1 looks like idle or a twitch, it fails. If 2 chains from the wrong combo step, it fails.
+If WASD walks you out of the clip, it fails.
 
-### 2026-08-16 — live proof (Save65, Nolvus Awakening)
+## Agent tests the rest
 
-Deployed from `weapon-arts`: DLL SHA-256 `9C0AE942…` (then rebuilt after the occupancy
-fix), `SpellHotbar.pex` with `slotArt`/`getArtSelector`, `artdata/arts.csv`, `shtb`
-Nemesis patch, BDI JSON. Nemesis Update Engine 66s + Build 131s, 1045 animations.
-Merged `1hm_behavior.hkx` contains `SH2_Art_State` / `SH2_ArtStart` / `SH2_ArtExit` /
-`AABL_Attack_A` and zero leftover `#shtb$` tokens.
+3. **Sheathe, press the art slot.** Slot goes red. Log says sheathed. Hands unchanged.
+4. **Drain stamina, press the art slot.** Slot goes red. Log says unaffordable. Hands
+   unchanged.
+5. **Press the art slot twice in a row.** First press plays. Second press (on cooldown)
+   goes red. Log says cooldown. Hands unchanged.
+6. **Bind an art, save, load that save.** The same slot still has the art. Pressing it
+   still plays it.
+7. **A spell on another slot.** Press it. The spell still casts. The art slot is untouched.
 
-**Occupancy fix:** `get_skill_in_bar_with_inheritance` used `formID != 0`, so a bound
-art looked empty and `castSlot` saw `skill type=0`. Gate is now `!skill.isEmpty()`.
+## Proven 2026-08-17 (Prisoner, Noble Rapier + Ice Spike)
 
-Happy path (drawn 1h, Iron Rapier + Incinerate, `slotArt(0,1)` then `castSlot(0)`):
-`SH2_ArtStart -> true`, selector 1 while live, both MCO next-attack vars 1, stamina
-115→90, hands unchanged, `SH2_ArtExit` then selector 0. Frames in
-`.scratch/weapon-arts/shots/art-idle-*.png`.
+Owner, live:
 
-Still open: CD / sheathed / unaffordable reason logs; save/load v6; owner eyes on the
-clip. Game left running on Save65 for that. Do not merge to `main` until those close.
+- [x] Case 1 — special-attack clip, not idle/twitch/spell; hands unchanged.
+- [x] Case 2 — next left-click is combo hit 1.
+- [x] Case 3 (WASD / Cast Plant) — owner after plant DLL + `SH2_Art_MG` wrap: WASD does not walk/strafe out of the clip.
+
+Agent, SpellHotbar2.log:
+
+- [x] Case 3 — sheathed press: `SH2_ArtStart not consumed (sheathed, mid-swing, or patch missing)` at 08:45:17. Reconfirmed 15:33:13 after persistence load.
+- [x] Case 4 — `player.forceav stamina 0` then press: `SH2 art: unaffordable (need 25 stamina)` at 08:50:41. Hands unchanged. Stamina stayed 0.
+- [x] Case 5 — play, wait for `SH2_ArtExit`, press again: `SH2 art: art 1 on cooldown` at 08:41:27. Hands unchanged. Owner also hit this live (the 8s Test Art CD).
+- [x] Case 6 — `slotArt(0,1)` 15:31:39, save `SH2ArtBind03` 15:31:46 (`Saved 2 weapon art bind(s)`), load 15:31:51 (`WART: restored art 1`), `castSlot(0)` 15:32:17 skill type=8, `SH2_ArtStart` consumed, `SH2_ArtExit` 15:32:20. Hands still Noble Rapier + Ice Spike.
+- [x] Case 7 — art bind does not overwrite other slots (`castSlot(1)`/`castSlot(2)` stayed empty type=0). Driver Cast SpellFire after the MSCO_left restore: 15:00:31 and 15:09:25 `SH2_CastEnter` / `MLh_SpellFire_Event` on this character.
+
+Earlier agent proof (Save65) still stands: `SH2_ArtStart` consumed, selector 1 while live, MCO next-attack vars 1, stamina spent, selector 0 after exit.
+
+## Notes
+
+Test Art is 25 stamina and 8s cooldown (`GREATER_POWER` icon). That CD overlay is the intended “ability” read.
+
+`AABL_Attack_A` is the placeholder clip until an Ashes of War pack is wired.
+
+Art binds also persist through a dedicated SKSE `WART` record (bar id + slot + modifier + art id) so a 1h+spell bar does not fall back to an inherited spell after load.
+
+## Answer
+
+A bound Weapon Art plays from drawn idle without equipping, plants WASD like a Driver Cast, refuses sheathe/stamina/cooldown correctly, and survives save/load on `SH2ArtBind03`.
