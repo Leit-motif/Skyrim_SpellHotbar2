@@ -2,7 +2,7 @@
 			<hkparam name="variableBindingSet">#shtb$12</hkparam>
 			<hkparam name="userData">0</hkparam>
 			<hkparam name="name">SH2_Cast2_Clip</hkparam>
-			<hkparam name="animationName">Animations\SH2_cast2.hkx</hkparam>
+			<hkparam name="animationName">Animations\MSCO_left2.hkx</hkparam>
 			<hkparam name="triggers">#shtb$5</hkparam>
 			<hkparam name="cropStartAmountLocalTime">0.000000</hkparam>
 			<hkparam name="cropEndAmountLocalTime">0.000000</hkparam>
