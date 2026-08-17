@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: ready-for-agent
+Status: in progress — ticket 01 resolved on `weapon-arts`; bind menu and Art Packs are next
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
