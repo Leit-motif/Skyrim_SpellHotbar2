@@ -49,8 +49,12 @@ The traceable runtime record supporting acceptance, tied to the tested source an
 _Avoid_: Build success, undocumented smoke test
 
 **Driver Cast**:
-The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `MSCO_left1` through `left4`, walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Combo-position restore for a Driver Cast this mod started is this mod's work (ADR-0005 named exception), not ShoutMCO's release-timing API. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
+The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `SH2_cast1.hkx` through `SH2_cast4.hkx` (shipped in `Spell Hotbar 2 - MCBO Cast Animations`), walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Combo-position restore for a Driver Cast this mod started is this mod's work (ADR-0005 named exception), not ShoutMCO's release-timing API. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
+
+**Cast Plant**:
+Input lock for a live Driver Cast: WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Tickets 19 (capture + graph wrap) and 21 (making clip translation actually apply).
+_Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means animation-driven translation, not input lock), freeze the actor in place
 
 **Chain Window**:
 The interval late in a shout exhale during which attack input is honored, letting the animation hand off to an MCO attack. Owned by the separate MCO shout behavior engine, not by this mod — and it governs **shouts only**. A driver cast has no window: an attack press past its commitment point ends the cast state directly, on this side (ticket 10).
@@ -333,6 +337,13 @@ nothing. Every claim above is engine-side — no arm, no press taken, no cut. **
 not driven at all**, nor anything beyond one spell in one slot in one configuration.
 
 ### Open question
+
+> **Superseded 2026-08-12.** Both questions below interrogate the retired voice-path entry
+> (`ShoutStart` notify). The shipped mechanism is the mod's own `shtb` states (see **Hotbar
+> Cast** above): entry from drawn idles is owner-verified, mid-swing entry is refused by the
+> graph by design, and a cast no longer stakes its life on `IsShouting` — it commits at
+> spellfire (ADR-0004, ticket 07). Kept for the record of how the question narrowed; ticket 01
+> is closed as superseded.
 
 Whether `ShoutStart` is honored while the player is inside an MCO attack state. If the graph
 refuses the transition, the liveness check in finding 4 fails on the first update and the cast is

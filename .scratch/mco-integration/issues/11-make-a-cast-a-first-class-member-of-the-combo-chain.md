@@ -8,7 +8,7 @@ in **both** directions.
 
 **Blocked by:** Nothing. Ticket 10 shipped the cut this builds on.
 
-**Status:** split — do not implement this file; work 12–15. Acceptance stays open on the children.
+**Status:** resolved
 
 ## State this ticket starts from
 
@@ -165,15 +165,16 @@ variable itself, we need to be sure the two never both write.
 
 ## Acceptance
 
-- [ ] attack1 → cast → attack continues at the next combo position, owner-verified by eye.
-- [ ] Two casts in a row play different clips and read as a combo, not a repeat.
-- [ ] MSCO hand cast → hotbar cast chains, with no regression from today.
-- [ ] Hotbar cast → MSCO hand cast chains.
-- [ ] Power attack chains in every case above, not only the light attack.
-- [ ] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
-- [ ] Close-out, after 13 and 14: `attack1 → attack2 → cast1 → attack3 → cast2` — both counters
-      independent. Not its own ticket; it is the joint demo of those two.
-- [ ] Restore fixtures and close Skyrim after runtime work.
+- [x] attack1 → cast → attack continues at the next combo position, owner-verified by eye.
+- [x] Two casts in a row play different clips and read as a combo, not a repeat.
+- [x] MSCO hand cast → hotbar cast chains, with no regression from today.
+- [x] Hotbar cast → MSCO hand cast chains.
+- [x] Power attack chains in every case above, not only the light attack.
+- [x] A real MCO swing, a real shout, and an ordinary uninterrupted cast are all unchanged.
+- [x] Close-out, after 13 and 14: `attack1 → attack2 → cast1 → attack3 → cast2` — both counters
+      independent. Owner 2026-08-15: parent can close.
+- [x] Restore fixtures and close Skyrim after runtime work. Children 13–15 closed with owner
+      verification; parent close-out does not reopen teardown.
 
 ## Out of scope, and this time deliberately rather than by deferral
 
@@ -241,3 +242,39 @@ Playtest items, siblings not children: 17 clip-4 windup delivery, 18 GCD vs MSCO
 
 **2026-08-12 — ticket 12 resolved.** ADR-0005 now names combo-position restore as an exception,
 not a second timing cache. Ticket 13 is unblocked. 14 and 15 remain frontier.
+
+**2026-08-13 — ticket 13 resolved.** Combo-position restore across a Driver Cast is closed:
+light and power cells owner-verified 2026-08-12; negative controls (swing / shout /
+uninterrupted cast) observed 2026-08-13; fixtures restored and Skyrim closed. 14 and 15
+remain frontier. The mixed-chain close-out still waits on 14.
+
+**2026-08-13 — ticket 14 resolved.** Consecutive Driver Casts walk SH2's own 1→2→3→4→1 index
+through the public `castSlot` path: a follow-up during a committed cast cuts without
+`CastExit` and notifies the next clip in-place. Observed on Save65 (clip 2→3→4→1 wrap, no
+intervening CastExit; uninterrupted clip 1 unchanged; next cast after an attack gap was clip
+2). Ritual shares `start_ritual_cast`'s same cut. Concentration stays out. 15 remains
+frontier; the mixed-chain close-out `attack1 → attack2 → cast1 → attack3 → cast2` is unblocked
+on the cast-index half. See [ticket 14](14-consecutive-hotbar-casts-walk-the-cast-combo.md).
+
+**2026-08-13 — ticket 15 dual-fire closed; chain cells need owner presses.** Dual-fire of an
+equipped left-hand spell with a Driver Cast is closed on the public `castSlot` path (one
+magicka cost on Save65; capture + left-caster isolate). The two MSCO ↔ hotbar chain cells
+still ride `DispatchInputEvent` and stay owner. Mixed-chain close-out
+`attack1 → attack2 → cast1 → attack3 → cast2` still waits on those presses. See
+[ticket 15](15-chain-msco-and-hotbar-casts-both-directions.md).
+
+**2026-08-13 evening — ticket 15 resolved.** Owner: dual-fire closed, LH → slot 0 chains
+with no duplicate, hotbar → LH cuts on clips 1–3. Mixed-chain
+`attack1 → attack2 → cast1 → attack3 → cast2` works if you wait for the clip to finish.
+Clip-4 windup + sheathe lockout is [ticket 17](17-do-not-deliver-clip-4-during-its-windup.md).
+Recovery-window cadence was filed as [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md);
+owner later: that was an SH2-cast buffer vs GCD, superseded by 14 / 18, not MCO-recovery inbound.
+
+**2026-08-15 — ticket 19 resolved.** Owner: a Driver Cast roots (left hand, Save65). The
+missing MSCO animmotion on those same clips is
+[ticket 21](21-apply-msco-animmotion-on-a-driver-cast.md).
+
+**2026-08-15 — owner: close parent ticket 11.** Children 12–15 already resolved; acceptance
+cells checked on owner verification across those sessions (combo restore, cast walk, both
+chain directions, power-attack cases, mixed-chain demo when waiting for clip end).
+

@@ -5,14 +5,31 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	/**
 	 * Enter the shtb cast state. The event is SH2_CastRight for combo step 1 and
-	 * SH2_Cast2/3/4 for the later clips (MSCO_left2/3/4.hkx). Returns the notify
+	 * SH2_Cast2/3/4 for the later clips (SH2_cast2/3/4.hkx). Returns the notify
 	 * result — false means no active listener (no hosting drawn idle: sheathed, or
 	 * mid-swing in AttackState) and the caller tears the cast down.
 	 *
 	 * Every clip in the set raises a LEFT-hand SpellFire (OAR Base-default variants:
 	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
+	 *
+	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
+	 * plays at MSCO's charge-scaled pace (ticket 18). WASD capture during the state
+	 * is ticket 19; bAnimationDriven comes from the shtb graph wrap (ticket 21).
 	 */
-	bool begin(RE::PlayerCharacter* pc, hand_mode hand);
+	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time);
+
+	/**
+	 * Load MSCO.ini's charge-to-speed curve. Called at DataLoaded and again at each
+	 * begin() so a saved MSCO.ini is picked up without a restart. Missing file keeps
+	 * the shipped exponential defaults. Does not read MSCO.dll or Menu Framework.
+	 */
+	void load_charge_curve();
+
+	/**
+	 * Is the current Driver Cast inside its SpellFire-to-WinClose combo window? A
+	 * follow-up hotbar press chains only while this is true.
+	 */
+	bool combo_window_open();
 
 	/**
 	 * Observe the player's animation-event stream. Ends the state on SH2_CastExit,

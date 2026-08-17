@@ -174,3 +174,11 @@ cast normally.
 A save copied to a new filename (`SH2_T04_CastIntent.ess` / `.skse`) wedges this modlist on the
 Loading Menu indefinitely — reproduced twice, while the original `Save63…` loads normally every
 time. Test on the latest save read-only and never save over it, rather than on a renamed copy.
+
+**2026-08-13 evening — owner mixed-chain: buffer exists, recovery window does not.**
+`attack1 → attack2 → cast1 → attack3 → cast2` works if the clip is allowed to finish. A
+press during `MCO_AllowRecovery` / `MCO_WinOpen` is captured and dropped (no `begin()`, no
+new defer). ShoutMCO still defers mid-swing and releases while `IsAttacking=1` (handles 1–6
+this session). Recovery-tail cadence is now
+[ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md). Early-press `released -> false`
+at `preHitFrame` remains this ticket's ShoutMCO ordering bug.

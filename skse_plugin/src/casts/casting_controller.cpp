@@ -7,6 +7,7 @@
 #include "spell_proc.h"
 #include "msco_cast_driver.h"
 #include "art_driver.h"
+#include "combo_cache.h"
 #include "cast_intent.h"
 
 namespace SpellHotbar::casts::CastingController {
@@ -24,7 +25,9 @@ namespace SpellHotbar::casts::CastingController {
 	//
 	// The annotation leads, the authored cast time is the floor (ADR 0006): if the event never
 	// arrives — clip replaced by an override without the annotation, graph rebuilt wrong — the
-	// cast still delivers when its timer expires, instead of silently delivering nothing.
+	// cast still delivers when its timer expires *and the clip has ended*, instead of silently
+	// delivering nothing. Timer expiry while the clip is still playing is not that fallback
+	// (clip 4's SpellFire is at ~0.92s, past a 0.5s floor).
 	//
 	// File-scope and atomic rather than a member, because the animation-event hook runs on the
 	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
@@ -76,23 +79,33 @@ namespace SpellHotbar::casts::CastingController {
 			   MscoCastDriver::is_active();
 	}
 
+	bool can_accept_hotbar_cast() {
+		return classify_hotbar_cast_press(current_cast != nullptr, is_committed_cast_holding_graph(),
+				   MscoCastDriver::combo_window_open()) != HotbarCastPress::refuse;
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
 		current_cast.reset();
 		clear_spellfire();
 	}
 
-	// Ticket 11 cell 2: a follow-up hotbar press during a committed cast is a combo step,
-	// the way an attack press is a chain-out. End the live state so the new begin() can
-	// enter the next clip from ready. Concentration is excluded by the cuttable gate.
-	void cut_committed_cast_for_combo(RE::PlayerCharacter* pc)
+	// Ticket 14: a follow-up hotbar press during a committed cast is a combo step. Drop the
+	// live instance without CastExit so begin() can notify the next clip from inside the
+	// current state. Concentration is excluded by the cuttable gate.
+	void cut_committed_cast_for_combo(RE::PlayerCharacter*)
 	{
 		if (!is_committed_cast_holding_graph()) {
 			return;
 		}
-		logger::debug("SH2 cast: follow-up cast on a committed cast; ending the state");
-		MscoCastDriver::cancel(pc);
-		reset_cast();
+		logger::debug("SH2 cast: follow-up cast on a committed cast; chaining the next clip");
+		if (auto* spell_cast = dynamic_cast<CastingInstance*>(current_cast.get())) {
+			spell_cast->on_reset_keep_graph();
+		} else {
+			current_cast->on_reset();
+		}
+		current_cast.reset();
+		clear_spellfire();
 	}
 
 	//Play sound on actor and return soundhandle
@@ -256,18 +269,23 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
-	void CastingInstance::on_reset()
+	void CastingInstance::on_reset_keep_graph()
 	{
 		BaseCastingInstance::on_reset();
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (pc) {
 			pc->RemoveSpell(GameData::spellhotbar_castfx_spell);
 		}
-		MscoCastDriver::finish(pc);
 		if (m_form->GetFormType() == RE::FormType::Spell || m_form->GetFormType() == RE::FormType::Scroll) {
 			RE::SpellItem* spell = m_form->As<RE::SpellItem>();
 			GameData::post_cast_mod_callback(spell);
 		}
+	}
+
+	void CastingInstance::on_reset()
+	{
+		on_reset_keep_graph();
+		MscoCastDriver::finish(RE::PlayerCharacter::GetSingleton());
 	}
 
 	bool CastingInstance::is_anim_ok(RE::PlayerCharacter*) const
@@ -337,6 +355,28 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
+	void CastingInstance::deliver_payload(RE::PlayerCharacter* pc)
+	{
+		if (m_spell_started) {
+			return;
+		}
+		if (!is_cast_committed()) {
+			logger::warn("SH2 cast: no SpellFire event; delivering after the clip ended past the authored cast time");
+		}
+		m_spell_started = true;
+		stop_charge_sound();
+		play_release_sound();
+		if (cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc)) {
+			if (m_spell_proc) {
+				casts::SpellProc::consume_proc();
+			}
+			apply_cooldown();
+			pc->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -m_manacost);
+			consume_items();
+		}
+		set_casted();
+	}
+
 	bool CastingInstance::update(RE::PlayerCharacter* pc, float delta)
 	{
 		const bool anim_ok = is_anim_ok(pc);
@@ -346,7 +386,9 @@ namespace SpellHotbar::casts::CastingController {
 		}
 
 		// Past spellfire the cast is committed and delivers regardless of the casting state
-		// (ADR 0004). Before it, losing the state cancels exactly as it always has.
+		// (ADR 0004). The annotation leads (ADR 0006); the authored cast time is only the
+		// missing-annotation fallback, not an early trigger. Clip 4's SpellFire is past
+		// that authored time, so a live clip waits for the pose instead of the windup.
 		if (anim_ok || is_cast_committed()) {
 			// The grace only bridges the send frame: the driver's flag is set from the
 			// notify's own return, so a live state reads active immediately and losing
@@ -358,28 +400,11 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::start_cast_timer();
 			}
 
-			// The clip's spellfire annotation leads; the authored cast time is the
-			// delivery floor (ADR 0006), so a clip that lost its annotation still casts.
 			const bool timer_expired = advance_time(delta);
 			GameData::advance_cast_timer(delta);
-
-			if (timer_expired && !is_cast_committed() && !m_spell_started) {
-				logger::warn("SH2 cast: no SpellFire event by the authored cast time; delivering on the timer floor");
-			}
-
-			if ((is_cast_committed() || timer_expired) && !m_spell_started) {
-				m_spell_started = true;
-				stop_charge_sound();
-				play_release_sound();
-				if (cast_spell(get_spell(), m_used_hand == hand_mode::dual_hand, m_spell_proc)) {
-					if (m_spell_proc) {
-						casts::SpellProc::consume_proc();
-					}
-					apply_cooldown();
-					pc->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -m_manacost);
-					consume_items();
-				}
-				set_casted();
+			if (classify_cast_delivery(m_spell_started, timer_expired, is_cast_committed(), anim_ok) ==
+				CastDelivery::deliver) {
+				deliver_payload(pc);
 			}
 		}
 		else if (m_entry_grace > 0.0f) {
@@ -389,6 +414,11 @@ namespace SpellHotbar::casts::CastingController {
 			m_entry_grace -= delta;
 		}
 		else {
+			const bool timer_expired = m_cast_timer <= 0.0f;
+			if (classify_cast_delivery(m_spell_started, timer_expired, is_cast_committed(), anim_ok) ==
+				CastDelivery::deliver) {
+				deliver_payload(pc);
+			}
 			GameData::reset_animation_vars();
 			return true;
 		}
@@ -426,7 +456,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	CastingInstanceSpell::CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
-		m_gcd = (used_hand == hand_mode::dual_hand) ? 1.5f : 1.0f;
+		m_gcd = 0.0f;
 	}
 
 	CastingInstanceRitual::CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
@@ -645,11 +675,21 @@ namespace SpellHotbar::casts::CastingController {
 				}
 			}
 			else {
-				//update timer until gcd expires
-				current_cast->advance_time(delta);
-				if (current_cast->is_gcd_expired()) {
-					GameData::reset_animation_vars();
-					reset_cast();
+				// FNF Driver Casts live until the clip ends (ticket 18): no leftover 1.0s/1.5s
+				// tail after CastExit. Potions, shouts, and powers still use their own GCD.
+				if (current_cast->has_cuttable_cast_state()) {
+					if (!MscoCastDriver::is_active()) {
+						GameData::reset_animation_vars();
+						reset_cast();
+					} else {
+						current_cast->advance_time(delta);
+					}
+				} else {
+					current_cast->advance_time(delta);
+					if (current_cast->is_gcd_expired()) {
+						GameData::reset_animation_vars();
+						reset_cast();
+					}
 				}
 			}
 		}
@@ -664,6 +704,7 @@ namespace SpellHotbar::casts::CastingController {
 	start_result start_cast(CastingInstanceSpellData& cast_info)
 	{
 		auto pc = RE::PlayerCharacter::GetSingleton();
+		const bool chaining = is_committed_cast_holding_graph();
 		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
 			if (pc) {
@@ -677,11 +718,15 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				if (chaining) {
+					MscoCastDriver::cancel(pc);
+					return start_result::failed;
+				}
 				return start_result::graph_refused;
 			}
 		}
@@ -704,7 +749,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -732,7 +777,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -746,6 +791,7 @@ namespace SpellHotbar::casts::CastingController {
 	start_result start_ritual_cast(CastingInstanceSpellData& cast_info)
 	{
 		auto pc = RE::PlayerCharacter::GetSingleton();
+		const bool chaining = is_committed_cast_holding_graph();
 		cut_committed_cast_for_combo(pc);
 		if (!current_cast) {
 			if (pc) {
@@ -761,11 +807,15 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
 					return start_result::started;
 				}
 				current_cast.reset();
 				GameData::reset_animation_vars();
+				if (chaining) {
+					MscoCastDriver::cancel(pc);
+					return start_result::failed;
+				}
 				return start_result::graph_refused;
 			}
 		}
@@ -793,8 +843,15 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
-		if (can_start_new_cast()) {
-			clear_spellfire();
+		const auto press = classify_hotbar_cast_press(
+			current_cast != nullptr, is_committed_cast_holding_graph(),
+			MscoCastDriver::combo_window_open());
+		if (press != HotbarCastPress::refuse) {
+			// Ticket 14: a chain press still needs the commitment bit when start_cast
+			// runs the cut. Idle starts still drop leftover shout spellfire here.
+			if (!keep_commitment_until_cut(press)) {
+				clear_spellfire();
+			}
 			// This press supersedes any intent still waiting from an earlier one, whether or not
 			// it ends up deferred itself. Withdrawing here keeps a stale payload from surfacing
 			// as a cast the player no longer asked for.
@@ -1038,6 +1095,11 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool is_movement_blocking_cast()
 	{
+		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
+		// owned by the graph wrap (ticket 21), not the DLL.
+		if (driver_cast_blocks_movement(MscoCastDriver::is_active(), current_cast != nullptr)) {
+			return true;
+		}
 		if (current_cast) {
 			return current_cast->blocks_movement();
 		}

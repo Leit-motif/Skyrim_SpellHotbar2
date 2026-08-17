@@ -2,22 +2,145 @@
 
 **Type:** defect (driver timing)
 
-**What to build:** The hotbar global cooldown follows the pace of the MSCO clips, rather than
-feeling like its own timer. It may need to read MSCO's variable cooldown logic instead of keeping
-an independent GCD.
+**What to build:** Keep a GCD. Make it follow MSCO clip pace instead of SH2's hardcoded 1.0s/1.5s
+timer, and instead of mash-through. Consecutive hotbar casts chain at `MSCO_WinOpen`, the same
+window MSCO uses, and the clip plays at MSCO's charge-time → animation-speed curve.
 
-**Blocked by:** None — can start immediately.
+**Blocked by:** None.
 
-**Status:** ready-for-agent
+**Status:** resolved — GCD and clip speed shipped. Window *shape* (open SpellFire / close
+WinClose) is [ticket 22](22-cast-combo-window-spellfire-through-winclose.md).
 
-## How this showed up
+## Ruling (2026-08-13, restated 2026-08-14)
 
-Owner playtest, 2026-08-12, during ticket 11. Not combo membership. Not a child of ticket 11.
-Recorded so it is not forgotten; the exact MSCO variable and whether SH2 should adopt it or only
-match its duration are for the implementing session to settle against ADR-0005 (do not grow a
-second MCO timing policy for release).
+Last night, during ticket 17 close-out: *"i still wanted the GCD, just wanted it shorter than
+whatever is baseline in SH2 natively."* A mash of **1** walked 1→2→3→4 with no stop — that was
+ticket 14 chaining at SpellFire, not a missing GCD.
 
-- [ ] Consecutive hotbar casts follow MSCO clip cadence closely enough that the owner does not
-      feel a separate GCD.
-- [ ] The change does not become a second ShoutMCO release-timing cache (ADR-0005).
-- [ ] Restore fixtures and close Skyrim after runtime work.
+Today: keep a GCD; follow MSCO clip pace; **not** 1.0s/1.5s; **not** mash-through. The 2026-08-12
+checkbox *"owner does not feel a separate GCD"* is stale wording and is not the gate.
+
+Ticket 20 is superseded: the recovery-window ask was this GCD tune, not inbound during an MCO
+swing.
+
+## What this is not
+
+Not a second ShoutMCO release-timing cache (ADR-0005). Observing `MSCO_WinOpen` on a Driver Cast
+this mod started is the same class as observing SpellFire (ADR-0004). Writing `MSCO_attackspeed`
+is clip playback, not a release policy. Attack chain-out (ticket 10) still uses
+`is_committed_cast_holding_graph()` without the WinOpen bit.
+
+Out of scope: concentration, potions, ritual GCD as its own feature, CSV/spell-editor GCD column,
+tickets 19/20.
+
+## Behaviour
+
+- Ticket 14's combo walk stays: cut without CastExit, in-place next clip. Gate it on WinOpen,
+  not SpellFire.
+- After `SH2_CastExit`, the instance dies. No leftover 1.0s/1.5s tail. Clip-end as lockout is
+  **not** "shorter" (~1.67s ≈ today's 1.5s); WinOpen is the reading that matches last night.
+- Write `MSCO_attackspeed` from `GetChargeTime()` using MSCO.ini's exponential curve. Mechanic
+  off → 1.0. INI is read at `kDataLoaded` and again at each `begin()` so a saved MSCO.ini
+  applies without restart. Unsaved menu drags are still MSCO.dll RAM only. Do not call
+  MSCO.dll or Menu Framework (`kCloseMenu` is a host dependency, not this edit).
+  Owner 2026-08-14: equipped-hand MSCO playing faster than SH2 is an accepted hand-cast
+  advantage; MSCO.log later showed the same Firebolt 0.5s → 0.815, so the feel gap is
+  clip/graph not a different curve input.
+- Bind shtb clip `playbackSpeed` to `MSCO_attackspeed` in **both** `magicbehavior` and
+  `1hm_behavior`. 1hm does not already have the variable (MSCO only added it to magicbehavior),
+  so the 3-list (variableNames + variableInfos + wordVariableValues) is added there. Initial
+  value is 1.0f so a missed write does not freeze the clip.
+
+- [x] Mash of 1 on Firebolt no longer walks 1→2→3→4 at SpellFire; the next clip starts at WinOpen.
+- [x] Uninterrupted clip 1 has no dead wait after CastExit.
+- [x] Slower-charge FNF vs Firebolt: not the remaining feel. Owner 2026-08-15 wants a
+      comfortable combo envelope, not a mash / slower-spell discriminating press. That
+      envelope is [ticket 22](22-cast-combo-window-spellfire-through-winclose.md).
+- [x] Equipped-hand MSCO vs SH2 cadence: owner accepts SH2 slower (hand-cast advantage). Do not
+  match live MSCO charge input or MCM sliders mid-session.
+- [x] Combo index still walks 1→2→3→4→1. Clips 1–3 / clip-4 delivery unchanged (ticket 17).
+- [x] Restore fixtures and close Skyrim after runtime work. Owner quit 2026-08-14; in-memory
+      fixtures died with the process. DLL copy that failed while locked now landed
+      (`69B0C1F685B3750813ED5E92B69CE1EC422E52CF466BB8E11DF72D8C2B0431E1`).
+- [x] Save a changed curve in MSCO's SKSE Menu Framework page (Save, not just drag). Overwrite
+      `MSCO.ini` shows `Longest=1.990000` (MCBO default `2.000000`). `SpellHotbar2.log`
+      2026-08-15 15:41:46: `MSCO charge curve … long=1.99 … p=0.17` on `kDataLoaded`.
+      Implementation shipped in ticket 19's DLL (`load_charge_curve()` at each `begin()`);
+      this log session has no cast lines after Save65 load, so `MSCO_attackspeed=` was not
+      captured here — turn trace/debug on for the next cast if you want the float line.
+
+## Comments
+
+**2026-08-14 — agent: GCD is WinOpen, clip plays at MSCO charge speed.** Profile `Nolvus Awakening`,
+Save65 (Xaelle, Iron Rapier, Firebolt left). DLL SHA-256
+`F90BF05E330E5CF01D28DF7DDA695E6CD82827EE89B774C8D97A2A0D0920818A`. Log
+`SpellHotbar2.log` from 21:43. `combo_cache_test` green. Nemesis rebuild 21:38:44 (1045
+anims) after a first-pass ERROR(1003): variableInfos MOD_CODE had landed in
+`characterPropertyInfos`; moved to the end of `variableInfos` (AMCO's `#0087` layout).
+Zero `#shtb$` / `$variableID` leftovers; clip bind `variableIndex` 142 = `MSCO_attackspeed`.
+
+Curve loaded from MSCO.ini (`mechanic=true exp=true base=0.15 p=0.17`). Every begin wrote
+`MSCO_attackspeed=0.81491184` (`wrote=true`) for Firebolt 0.5s.
+
+Uninterrupted clip 1 (`t18-uninterrupted`):
+```
+SH2_CastRight (clip 1) -> true
+MSCO_attackspeed=0.815 wrote=true
+SpellFire +0.535s
+MSCO_WinOpen +0.793s
+SH2_CastExit +2.000s
+```
+Clip is slower than last night's ~1.50s at speed 1.0 (1.667/0.815 ≈ 2.05s). Instance died at
+CastExit; no 1.0s/1.5s tail. Clip 4 CastExit → next start was 77ms later.
+
+600ms mash (`t18-mash-600`), the last-night walk:
+```
+clip 4 start
++0.600s  refuse (clip-4 windup, before SpellFire)
++1.154s  SpellFire
++1.200s  refuse (46ms after SpellFire, 175ms before WinOpen)
++1.375s  MSCO_WinOpen
++1.892s  chain → clip 1
+```
+Last night this interval chained at SpellFire. It does not now. Combo still walks when the
+press lands after WinOpen (clip 1→2→3 on the 1s chain; wrap 4→1). Clip 4 still delivers at
+SpellFire +1.13s, not the 0.5s timer floor.
+
+Slower-charge FNF and MSCO-vs-SH2 feel need an owner press. Save65 reloaded (magicka 1000,
+health 500, Firebolt left, Iron Rapier). **Game left running** for that — mash 1, then an
+equipped-hand MSCO Firebolt, then a slower FNF if one is on the bar.
+
+**2026-08-14 — owner: keep the simple curve; hand-cast advantage is fine.** SH2 stays on
+authored `GetChargeTime()` + MSCO.ini once at DataLoaded. No MCM live-sync, no MSCO.dll
+path. *"honestly, this is good for now, no need to make it too complex. and i suppose this
+gives casting by hand an advantage."*
+
+**2026-08-14 — owner: re-read MSCO.ini at each begin().** Same session, after the menu-API
+look: `kCloseMenu` is a host dependency, so the no-risk edit is `load_charge_curve()` at
+Driver Cast start. Picks up a saved INI without restart; unsaved sliders still miss.
+Info-log only on first load or a value change.
+
+**2026-08-14 — owner: quit when testing is done.** Leave Skyrim running only when a human
+validation cell is still required to close the ticket. Agent-only close-out is `qqq`.
+DevBench ping offline. DLL with the `begin()` INI reload copied after that quit.
+
+**2026-08-15 — ticket 19 closed without the Save-vs-drag press.** The `begin()` reload stays
+implemented; the in-game cell is back on this ticket (unchecked above).
+
+**2026-08-15 — agent: read log + INI after owner's MSCO Save.** Overwrite
+`New Overwrites\SKSE\Plugins\MSCO.ini`: `Longest=1.990000` (saved; MCBO ships `2.000000`).
+`SpellHotbar2.log` from the 15:38 session logs that curve once at `kDataLoaded` (`long=1.99`).
+No cast/`MSCO_attackspeed=` lines in that file — session ends at Save65 load with trace-only
+after that; rooting playtest may not have hit the log path or debug was off for speed writes.
+Yes, the `begin()` INI reload was rolled into ticket 19's driver work, not a separate ticket.
+
+**2026-08-15 — owner: clip 3 felt slower during curve playtest.** All four `MSCO_left*.hkx`
+are 1.667s with identical WinOpen at 0.8s; `MSCO_attackspeed` binds all clips equally, so
+clip 3 is not authored slower. Likely combo-chain pacing (WinOpen gate each step) or the
+global curve tweak (`long` 2.0→1.99 is a tiny speed *increase* for Firebolt, not slower).
+Not evidence of a per-clip bug; FNF-vs-Firebolt cell still open for a slower-charge spell.
+
+**2026-08-15 — owner: not mash, a comfortable envelope.** Like `MCO_Recovery` on an attack,
+where the combo window is open. Ticket 18's open-at-WinOpen / close-at-CastExit gate is the
+miss. Successor: [ticket 22](22-cast-combo-window-spellfire-through-winclose.md). This
+ticket is resolved on GCD + clip speed.

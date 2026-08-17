@@ -7,6 +7,7 @@
 #include <imgui_impl_win32.h>
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
+#include "../casts/combo_cache.h"
 #include "../casts/msco_cast_driver.h"
 #include "../storage/storage.h"
 #include "keycode_helper.h"
@@ -251,11 +252,11 @@ namespace SpellHotbar::Input {
         // actually start an MSCO hand cast.
         bool is_left_hand_cast_press(RE::PlayerCharacter* pc, uint32_t key_code, RE::INPUT_DEVICE key_device)
         {
-            if (!left_hand_holds_spell(pc)) {
-                return false;
-            }
             const uint32_t left_key = get_left_attack_key(key_device);
-            return left_key != RE::ControlMap::kInvalid && key_code == left_key;
+            return casts::cut_committed_cast_for_left_hand_press(
+                casts::CastingController::is_committed_cast_holding_graph(),
+                left_hand_holds_spell(pc),
+                left_key != RE::ControlMap::kInvalid && key_code == left_key);
         }
     }
 
@@ -509,6 +510,13 @@ namespace SpellHotbar::Input {
                                         if (handled && (mod_1.isDown() || mod_2.isDown() || mod_3.isDown())) {
                                             //Do not forward keypress to game if modifier was used, this allows easy double binding with modifiers
                                             captureEvent = true;
+                                        } else if (handled && in_ingame_state()) {
+                                            const auto skill = GameData::get_current_spell_info_in_slot(i);
+                                            if (casts::capture_hotbar_press_to_prevent_dual_fire(
+                                                    skill.type == slot_type::spell, left_hand_holds_spell(pc))) {
+                                                captureEvent = true;
+                                                logger::debug("SH2 cast: captured hotbar press to prevent dual fire");
+                                            }
                                         }
                                     }
                                 }

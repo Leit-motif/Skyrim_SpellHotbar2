@@ -3,6 +3,9 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstdlib>
+#include <string>
+#include <Windows.h>
 #include "../logger/logger.h"
 
 using namespace std::literals;
@@ -11,9 +14,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	namespace {
 		std::atomic<bool> state_active{ false };
+		std::atomic<bool> combo_window{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
 
+		MscoChargeCurve g_curve{};
 		RollingMcoCombo g_rolling;
 		CastComboIndex g_castIndex;
 
@@ -111,18 +116,87 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				g_castIndex.advance();
 			}
 			state_active.store(sent, std::memory_order_relaxed);
+			combo_window.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: notified {} (clip {}) -> {}", event, index, sent);
 			return sent;
 		}
+
+		void write_clip_speed(RE::PlayerCharacter* pc, float charge_time)
+		{
+			const float speed = charge_time_to_anim_speed(charge_time, g_curve);
+			const bool ok = pc->SetGraphVariableFloat("MSCO_attackspeed", speed);
+			logger::debug("SH2 cast: MSCO_attackspeed={} charge={} wrote={}", speed, charge_time, ok);
+		}
+
+		const char* msco_ini()
+		{
+			return "Data\\SKSE\\Plugins\\MSCO.ini";
+		}
+
+		float ini_float(const char* section, const char* key, float fallback)
+		{
+			char buf[64]{};
+			GetPrivateProfileStringA(section, key, "", buf, static_cast<DWORD>(sizeof(buf)), msco_ini());
+			if (buf[0] == '\0') {
+				return fallback;
+			}
+			char* end = nullptr;
+			const float v = std::strtof(buf, &end);
+			return end != buf ? v : fallback;
+		}
 	}
 
-	bool begin(RE::PlayerCharacter* pc, hand_mode hand)
+	void load_charge_curve()
+	{
+		MscoChargeCurve curve{};
+		const char* ini = msco_ini();
+		WritePrivateProfileStringA(nullptr, nullptr, nullptr, nullptr);
+		curve.mechanic_on = GetPrivateProfileIntA("General", "ChargeMechanicOn", 1, ini) != 0;
+		curve.exp_mode = GetPrivateProfileIntA("General", "ExpMode", 1, ini) != 0;
+		curve.shortest = ini_float("ChargeTime", "Shortest", curve.shortest);
+		curve.longest = ini_float("ChargeTime", "Longest", curve.longest);
+		curve.base_time = ini_float("ChargeTime", "BaseTime", curve.base_time);
+		curve.min_speed = ini_float("SpeedClamp", "MinSpeed", curve.min_speed);
+		curve.max_speed = ini_float("SpeedClamp", "MaxSpeed", curve.max_speed);
+		curve.exp_factor = ini_float("Exp", "ExpFactor", curve.exp_factor);
+		const bool changed = curve.mechanic_on != g_curve.mechanic_on || curve.exp_mode != g_curve.exp_mode
+			|| curve.shortest != g_curve.shortest || curve.longest != g_curve.longest
+			|| curve.base_time != g_curve.base_time || curve.min_speed != g_curve.min_speed
+			|| curve.max_speed != g_curve.max_speed || curve.exp_factor != g_curve.exp_factor;
+		static bool logged_once = false;
+		g_curve = curve;
+		if (!logged_once || changed) {
+			logged_once = true;
+			logger::info(
+				"SH2 cast: MSCO charge curve mechanic={} exp={} base={} short={} long={} min={} max={} p={}",
+				curve.mechanic_on, curve.exp_mode, curve.base_time, curve.shortest, curve.longest,
+				curve.min_speed, curve.max_speed, curve.exp_factor);
+		}
+	}
+
+	bool combo_window_open()
+	{
+		return combo_window.load(std::memory_order_relaxed);
+	}
+
+	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time)
 	{
 		if (!pc) {
 			return false;
 		}
 		(void)hand;
 		trace_budget.store(0, std::memory_order_relaxed);
+		auto* left = pc->GetEquippedObject(true);
+		const bool left_holds_spell =
+			left && (left->Is(RE::FormType::Spell) || left->Is(RE::FormType::Scroll));
+		if (isolate_left_hand_caster_for_driver_cast(left_holds_spell)) {
+			if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
+				caster->InterruptCast(true);
+			}
+			logger::debug("SH2 cast: isolated left-hand caster at Driver Cast start");
+		}
+		load_charge_curve();
+		write_clip_speed(pc, charge_time);
 		return send_entry(pc);
 	}
 
@@ -139,11 +213,22 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
+		if (is_msco_combo_window_open_event(tag) && is_active()) {
+			combo_window.store(true, std::memory_order_relaxed);
+			logger::debug("SH2 cast: combo window open ({})", tag);
+		}
+
+		if (is_msco_combo_window_close_event(tag)) {
+			combo_window.store(false, std::memory_order_relaxed);
+			logger::debug("SH2 cast: combo window closed ({})", tag);
+		}
+
 		if (tag == "SH2_CastExit"sv) {
 			if (is_active()) {
 				arm_restore();
 			}
 			state_active.store(false, std::memory_order_relaxed);
+			combo_window.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
 		}
 
@@ -191,6 +276,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// looping channel does not walk the clip set; ticket 11 leaves channels out.
 		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
 		state_active.store(sent, std::memory_order_relaxed);
+		combo_window.store(false, std::memory_order_relaxed);
 		return sent;
 	}
 
@@ -202,6 +288,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
+		combo_window.store(false, std::memory_order_relaxed);
 	}
 
 	void finish(RE::PlayerCharacter* pc)
@@ -211,5 +298,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
+		combo_window.store(false, std::memory_order_relaxed);
 	}
 }

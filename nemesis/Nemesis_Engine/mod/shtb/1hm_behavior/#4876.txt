@@ -38,7 +38,7 @@
 				#shtb$5
 				#shtb$7
 				#shtb$9
-				#shtb$12
+				#shtb$25
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="wildcardTransitions">#0088</hkparam>

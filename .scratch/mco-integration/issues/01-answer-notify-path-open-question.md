@@ -7,7 +7,14 @@ enough that tickets 03 and 04 can be designed against it rather than around it.
 
 **Blocked by:** None.
 
-**Status:** claimed
+**Status:** ~~claimed~~ **superseded 2026-08-12, recorded during the 2026-08-12 cleanup.** The
+voice-path entry this question interrogates (`ShoutStart` notify, no shout equipped) was retired
+by tickets 07–08: the mod now enters its own `shtb` states (`SH2_CastRight` and siblings), whose
+entry from drawn idles is owner-verified and whose mid-swing refusal is graph-designed. Finding
+4's liveness exposure is answered by design rather than by measurement — a cast commits at
+spellfire (ADR-0004) instead of staking its life on `IsShouting`. CONTEXT.md's "Open question"
+block carries the same supersession note. The cells below are kept for the record of how the
+question narrowed; none of them is runnable against an entry path that no longer exists.
 
 Baseline `795fb5f`. Session A also carries two riders, agreed 2026-08-03, because the game
 has to be loaded for this ticket anyway and a Nolvus launch costs ~4 minutes:

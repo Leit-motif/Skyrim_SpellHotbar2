@@ -7,7 +7,11 @@ an MCO chain without the cut destroying the spell — followed by its implementa
 
 **Blocked by:** 01 — Answer the open question; 02 — Make the cast release event stance-aware.
 
-**Status:** claimed (grilling, 2026-08-05)
+**Status:** ~~claimed (grilling, 2026-08-05)~~ **open — claim released 2026-08-12 during
+cleanup.** The grilling ended and its outcome is recorded in the body (ADR-0004, the ticket 07
+split, and the 2026-08-12 supersession of the engine-arm item). What remains is the live
+verification in "What remains here", which rides the ticket 10–15 drives rather than a claim on
+this file.
 
 ## The premise changed on 2026-08-05. Read this before the rest.
 
