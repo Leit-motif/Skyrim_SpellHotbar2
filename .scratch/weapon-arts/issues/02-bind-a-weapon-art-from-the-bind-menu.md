@@ -3,7 +3,7 @@
 Ticket 01 plays an art through `slotArt` / `castSlot`. Players bind spells by opening the bind
 menu and dropping a form onto a slot. Arts have to work the same way, without Papyrus.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Blocked by:** 01
 
@@ -39,3 +39,15 @@ exists (ticket 03). This ticket only binds catalogue rows onto slots.
 
 `Dragged_skill` currently holds `const RE::TESForm*`. It will need a parallel art-id path, or a
 small tagged payload, so a drag can be either a form or an art.
+
+## Comments
+
+Claimed 2026-08-17. Bind menu gained an **Arts** tab that lists `ArtDefinition` rows by art id
+(not `TESForm*`). Drag payload carries `art_id` beside the form; drop uses `apply_bind_drop` so
+an art bind clears FormID and a form bind clears art id. Slot icon/name resolve through
+`draw_art_icon` / `resolve_slot_name`.
+
+Unit tests (`bind_drop_test`, `art_data_test`, `art_bind_record_test`, `combo_cache_test`) green.
+Plugin Release built to `Dev - Spell Hotbar 2`.
+
+Owner cells 1–4 still open (menu bind, play, mixed spell slot). Agent 5–7 wait on that bind.

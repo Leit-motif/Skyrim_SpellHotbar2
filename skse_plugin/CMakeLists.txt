@@ -99,6 +99,7 @@ set(source_files src/plugin.cpp
                  src/rendering/bar_dragging_config_window.cpp
                  src/rendering/advanced_bind_menu.h
                  src/rendering/advanced_bind_menu.cpp
+                 src/rendering/bind_drop.h
                  src/rendering/gui_tab_button.h
                  src/rendering/gui_tab_button.cpp
                  src/game_data/localization.h
@@ -116,6 +117,10 @@ target_include_directories(art_data_test PRIVATE src/game_data)
 add_executable(art_bind_record_test src/storage/art_bind_record_test.cpp)
 target_compile_features(art_bind_record_test PRIVATE cxx_std_23)
 target_include_directories(art_bind_record_test PRIVATE src/storage)
+
+add_executable(bind_drop_test src/rendering/bind_drop_test.cpp)
+target_compile_features(bind_drop_test PRIVATE cxx_std_23)
+target_include_directories(bind_drop_test PRIVATE src/rendering)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)

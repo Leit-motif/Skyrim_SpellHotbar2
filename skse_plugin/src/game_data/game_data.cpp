@@ -13,6 +13,7 @@
 #include "spell_cast_data.h"
 #include "../input/modes.h"
 
+#include <algorithm>
 #include <random>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -877,6 +878,17 @@ namespace SpellHotbar::GameData {
         }
     }
 
+    std::string resolve_slot_name(const SlottedSkill& skill) {
+        if (skill.type == slot_type::weapon_art) {
+            const ArtDefinition* art = get_art(skill.art_id);
+            if (art == nullptr) {
+                return "<INVALID>";
+            }
+            return art->display_name;
+        }
+        return resolve_spellname(skill.formID);
+    }
+
     std::tuple<bool, float> shouldShowHUDBar() {
         constexpr float fast_fade = 0.1f;
         constexpr float slow_fade = 0.5f;
@@ -1350,6 +1362,17 @@ namespace SpellHotbar::GameData {
             return nullptr;
         }
         return &it->second;
+    }
+
+    std::vector<uint32_t> list_art_ids()
+    {
+        std::vector<uint32_t> ids;
+        ids.reserve(art_cast_info.size());
+        for (const auto& entry : art_cast_info) {
+            ids.push_back(entry.first);
+        }
+        std::sort(ids.begin(), ids.end());
+        return ids;
     }
 
     void set_art_selector(int value)

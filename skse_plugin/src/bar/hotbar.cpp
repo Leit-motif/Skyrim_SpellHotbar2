@@ -381,7 +381,10 @@ namespace SpellHotbar
                 p = ImGui::GetCursorScreenPos();
             }
 
-            if (!RenderManager::draw_skill(skill.formID, icon_size, skill.color)) {
+            const bool drew_icon = (skill.type == slot_type::weapon_art)
+                ? RenderManager::draw_art_icon(skill.art_id, icon_size, skill.color)
+                : RenderManager::draw_skill(skill.formID, icon_size, skill.color);
+            if (!drew_icon) {
                 RenderManager::draw_bg(icon_size);
             } else {
                 if (RenderManager::should_overlay_be_rendered(skill_dat.overlay_icon)) {
@@ -432,7 +435,7 @@ namespace SpellHotbar
                 ImGui::GetWindowDrawList()->AddText(count_text_pos, ImColor(255, 255, 255), text.c_str());
             }
 
-            std::string text = GameData::resolve_spellname(skill.formID);
+            std::string text = GameData::resolve_slot_name(skill);
 
             //draw text in grey if it was inherited from parent bar
             int grey_val = inherited ? 127 : 255;
