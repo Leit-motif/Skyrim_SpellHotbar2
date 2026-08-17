@@ -1,4 +1,5 @@
 #include "storage.h"
+#include "art_bind_record.h"
 #include "../logger/logger.h"
 #include "../rendering/render_manager.h"
 #include "../bar/hotbars.h"
@@ -6,8 +7,52 @@
 #include "../input/keybinds.h"
 #include "../input/modes.h"
 #include "../casts/cast_intent.h"
+#include "../casts/casting_controller.h"
 
 namespace SpellHotbar::Storage {
+
+    std::vector<ArtBind> collect_art_binds()
+    {
+        std::vector<ArtBind> binds;
+        const key_modifier mods[] = {
+            key_modifier::none, key_modifier::ctrl, key_modifier::shift, key_modifier::alt
+        };
+        for (auto& [bar_id, bar] : SpellHotbar::Bars::hotbars) {
+            for (auto mod : mods) {
+                const auto& sub = bar.get_sub_bar(mod);
+                for (uint8_t slot = 0; slot < sub.m_slotted_skills.size(); ++slot) {
+                    const auto& skill = sub.m_slotted_skills[slot];
+                    if (skill.type == slot_type::weapon_art && skill.art_id != 0) {
+                        binds.push_back(ArtBind{
+                            .bar_id = bar_id,
+                            .slot = slot,
+                            .modifier = static_cast<uint8_t>(mod),
+                            .art_id = skill.art_id,
+                        });
+                    }
+                }
+            }
+        }
+        return binds;
+    }
+
+    void apply_art_binds(const std::vector<ArtBind>& binds)
+    {
+        for (const auto& bind : binds) {
+            if (!SpellHotbar::Bars::hotbars.contains(bind.bar_id) || bind.slot >= max_bar_size) {
+                logger::warn("WART: dropping art {} (bar {:08x} slot {})", bind.art_id, bind.bar_id, bind.slot);
+                continue;
+            }
+            if (bind.modifier > static_cast<uint8_t>(key_modifier::alt)) {
+                logger::warn("WART: dropping art {} with modifier {}", bind.art_id, bind.modifier);
+                continue;
+            }
+            auto& skill = SpellHotbar::Bars::hotbars.at(bind.bar_id).get_skill_in_bar_by_ref(
+                bind.slot, static_cast<key_modifier>(bind.modifier));
+            skill.update_art_assignment(bind.art_id);
+            logger::info("WART: restored art {} on bar {:08x} slot {}", bind.art_id, bind.bar_id, bind.slot);
+        }
+    }
 
     void SaveCallback(SKSE::SerializationInterface* a_intfc)
     {
@@ -124,6 +169,18 @@ namespace SpellHotbar::Storage {
         }
         GameData::oblivion_bar.serialize(a_intfc, 'OBLB');
 
+        const auto art_binds = collect_art_binds();
+        if (!a_intfc->OpenRecord(wart_record, Storage::save_format)) {
+            logger::error("Could not store weapon art binds!");
+        } else {
+            const auto bytes = encode_art_binds(art_binds);
+            if (!a_intfc->WriteRecordData(bytes.data(), static_cast<uint32_t>(bytes.size()))) {
+                logger::error("Failed to write weapon art binds");
+            } else {
+                logger::info("Saved {} weapon art bind(s)", art_binds.size());
+            }
+        }
+
         // Save GameData values
         if (!a_intfc->OpenRecord('GDAT', Storage::save_format)) {
             logger::error("Could not store game_data values!");
@@ -175,6 +232,7 @@ namespace SpellHotbar::Storage {
         //about to be replaced. ShoutMCO abandons it on a game load too; withdrawing here does not
         //depend on that.
         casts::CastIntent::cancel();
+        casts::CastingController::drop_live_cast();
 
         //clear all bars
         SpellHotbar::Bars::clear_bars();
@@ -499,6 +557,19 @@ namespace SpellHotbar::Storage {
             else if (type == 'OBLB') {
                 logger::trace("Reading 'OBLB' data from save...");
                 GameData::oblivion_bar.deserialize(a_intfc, type, version, length);
+            }
+            else if (type == wart_record) {
+                std::vector<uint8_t> bytes(length);
+                if (length > 0 && !a_intfc->ReadRecordData(bytes.data(), length)) {
+                    logger::error("Failed to read weapon art binds");
+                } else {
+                    std::vector<ArtBind> binds;
+                    if (!decode_art_binds(bytes, binds)) {
+                        logger::error("Weapon art bind record was truncated");
+                    } else {
+                        apply_art_binds(binds);
+                    }
+                }
             }
             else if (SpellHotbar::Bars::hotbars.contains(type))
             {

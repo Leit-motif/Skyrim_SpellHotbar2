@@ -2,6 +2,7 @@
 #include "../casts/casting_controller.h"
 #include "../casts/combo_cache.h"
 #include "../casts/msco_cast_driver.h"
+#include "../casts/art_driver.h"
 #include "../logger/logger.h"
 
 using namespace std::literals;
@@ -54,12 +55,15 @@ namespace SpellHotbar::events {
 			if (eventHolder->IsPlayerRef()) {
 				// Traced before the observer runs, so the event that ends the state appears in
 				// its own trace rather than being swallowed by the state it closes.
-				if (is_traced_tag(a_event->tag) && casts::MscoCastDriver::should_trace_graph_events()) {
+				if (is_traced_tag(a_event->tag) &&
+					(casts::MscoCastDriver::should_trace_graph_events() ||
+					 casts::ArtDriver::should_trace_graph_events())) {
 					logger::trace("SH2 graph event: {}", a_event->tag.c_str());
 				}
 
-				// The driver's active flag is cleared from here, on SH2_CastExit.
+				// The driver's active flag is cleared from here, on SH2_CastExit / SH2_ArtExit.
 				casts::MscoCastDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
+				casts::ArtDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_event->tag == "MLh_SpellFire_Event"sv) {
 					casts::CastingController::notify_spellfire(true);

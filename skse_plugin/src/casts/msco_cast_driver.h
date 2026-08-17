@@ -72,4 +72,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * The state also exits itself through an end-of-clip trigger raising SH2_CastExit.
 	 */
 	void finish(RE::PlayerCharacter* pc);
+
+	void reset_session();
 }

@@ -114,6 +114,8 @@ public:
 
 	void advance() { index_ = index_ % kLength + 1; }
 
+	void reset() { index_ = 1; }
+
 private:
 	int index_ = 1;
 };
@@ -247,12 +249,18 @@ struct MscoChargeCurve {
 // WASD capture follows the shtb state, not the cast instance. A ticket-10 cut
 // ends the state while the instance may still be alive for a frame; translation
 // must resume then so the swing can travel. Consecutive clips never send
-// CastExit, so they stay rooted.
+// CastExit, so they stay planted. Weapon Arts reuse this plant: SH2_Art_State
+// is an shtb state the same way the cast clips are.
+[[nodiscard]] constexpr bool shtb_state_blocks_movement(bool shtb_state_active) noexcept
+{
+	return shtb_state_active;
+}
+
 [[nodiscard]] constexpr bool driver_cast_blocks_movement(
 	bool shtb_state_active, bool has_live_cast_instance) noexcept
 {
 	(void)has_live_cast_instance;
-	return shtb_state_active;
+	return shtb_state_blocks_movement(shtb_state_active);
 }
 
 // ADR-0006: the SpellFire annotation leads; the authored cast time is the

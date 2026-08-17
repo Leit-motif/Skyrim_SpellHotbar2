@@ -8,6 +8,7 @@
 #include "spell_casteffect_csv_loader.h"
 #include "custom_transform_csv_loader.h"
 #include "animation_data_csv_loader.h"
+#include "art_data_csv_loader.h"
 #include "keynames_csv_loader.h"
 #include "spell_cast_data.h"
 #include "../input/modes.h"
@@ -27,6 +28,7 @@ namespace SpellHotbar::GameData {
     constexpr std::string_view spell_casteffects_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\effectdata\\";
     constexpr std::string_view custom_transformations_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\transformdata\\";
     constexpr std::string_view animation_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\animationdata\\";
+    constexpr std::string_view art_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\artdata\\";
 
     inline const std::string keynames_csv_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\keynames\\keynames.csv";
     inline const std::string translation_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\localization\\translation.txt";
@@ -43,6 +45,7 @@ namespace SpellHotbar::GameData {
     RE::TESGlobal* global_vampire_lord_equip_mode = nullptr;
     RE::TESGlobal* global_casting_timer = nullptr;
     RE::TESGlobal* global_casting_conc_spell = nullptr;
+    RE::TESGlobal* global_art_selector = nullptr;
 
     RE::SpellItem* spellhotbar_castfx_spell = nullptr;
     RE::SpellItem* spellhotbar_unbind_slot = nullptr;
@@ -95,6 +98,8 @@ namespace SpellHotbar::GameData {
 
     std::vector<std::tuple<RE::BGSArtObject*, RE::BGSArtObject*, const std::string>> spell_casteffect_art;
     std::unordered_map<RE::FormID, Gametime_cooldown_value> gametime_cooldowns;
+    std::unordered_map<uint32_t, ArtDefinition> art_cast_info;
+    std::unordered_map<uint32_t, Gametime_cooldown_value> art_cooldowns;
 
     std::unique_ptr<std::unordered_map<std::string, size_t>> spell_effects_key_indices{nullptr};
 
@@ -350,6 +355,7 @@ namespace SpellHotbar::GameData {
         load_form_from_game(0xCDD84, "Skyrim.esm", &werewolf_beast_race, "Werewolf Beast Race", RE::FormType::Race);
 
         load_form_from_game(0x815, "SpellHotbar.esp", &global_animation_type, "SpellHotbar_SpellAnimationType", RE::FormType::Global);
+        load_form_from_game(0xD63, "SpellHotbar.esp", &global_art_selector, "SpellHotbar_ArtSelector", RE::FormType::Global);
 
         load_form_from_game(0x835, "SpellHotbar.esp", &global_casting_source, "SpellHotbar_CastingSource", RE::FormType::Global);
 
@@ -416,6 +422,7 @@ namespace SpellHotbar::GameData {
         SpellCastEffectCSVLoader::load_spell_casteffects(std::filesystem::path(spell_casteffects_root));
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
+        ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
 
         spell_effects_key_indices = nullptr; //no longer need this
 
@@ -505,6 +512,7 @@ namespace SpellHotbar::GameData {
         spell_cd_magiceffect_tracking.clear();
         spell_casteffect_art.clear();
         animation_names.clear();
+        art_cast_info.clear();
 
         load_translations(std::filesystem::path(translation_path));
 
@@ -512,6 +520,7 @@ namespace SpellHotbar::GameData {
         SpellCastEffectCSVLoader::load_spell_casteffects(std::filesystem::path(spell_casteffects_root));
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
+        ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         spell_effects_key_indices = nullptr;  // no longer need this
     }
 
@@ -1328,6 +1337,73 @@ namespace SpellHotbar::GameData {
         return ret;
     }
 
+    void set_art(ArtDefinition art)
+    {
+        const uint32_t id = art.id;
+        art_cast_info.insert_or_assign(id, std::move(art));
+    }
+
+    const ArtDefinition* get_art(uint32_t art_id)
+    {
+        auto it = art_cast_info.find(art_id);
+        if (it == art_cast_info.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
+    void set_art_selector(int value)
+    {
+        if (global_art_selector) {
+            global_art_selector->value = static_cast<float>(value);
+        }
+    }
+
+    void reset_art_selector()
+    {
+        set_art_selector(0);
+    }
+
+    void add_art_cooldown(uint32_t art_id, float days)
+    {
+        auto cal = RE::Calendar::GetSingleton();
+        if (!cal || days <= 0.0f) {
+            return;
+        }
+        float curr_time = cal->GetCurrentGameTime();
+        float gt_value = days * cal->GetTimescale() * 24.0f;
+        float hours = gt_value;
+        float duration_days = hours / 24.0f;
+        art_cooldowns.insert_or_assign(art_id, Gametime_cooldown_value(curr_time + duration_days, duration_days));
+    }
+
+    bool is_art_on_cd(uint32_t art_id)
+    {
+        auto cal = RE::Calendar::GetSingleton();
+        if (!cal) {
+            return false;
+        }
+        float game_time = cal->GetCurrentGameTime();
+        auto it = art_cooldowns.find(art_id);
+        if (it == art_cooldowns.end()) {
+            return false;
+        }
+        return !it->second.is_expired(game_time);
+    }
+
+    std::tuple<float, float> get_art_gametime_cooldown(float curr_game_time, uint32_t art_id)
+    {
+        auto it = art_cooldowns.find(art_id);
+        if (it == art_cooldowns.end()) {
+            return std::make_tuple(0.0f, 0.0f);
+        }
+        if (it->second.readytime <= curr_game_time) {
+            art_cooldowns.erase(it);
+            return std::make_tuple(0.0f, 0.0f);
+        }
+        return std::make_tuple(it->second.get_progress(curr_game_time), it->second.duration);
+    }
+
     std::tuple<float, float> get_gametime_cooldown(float curr_game_time, RE::FormID skill)
     {
         if (gametime_cooldowns.contains(skill)) {
@@ -1607,6 +1683,9 @@ namespace SpellHotbar::GameData {
      {
          if (global_animation_type) {
              global_animation_type->value = 0.0f;
+         }
+         if (global_art_selector) {
+             global_art_selector->value = 0.0f;
          }
          if (global_casting_source) {
              global_casting_source->value = 0.0f;

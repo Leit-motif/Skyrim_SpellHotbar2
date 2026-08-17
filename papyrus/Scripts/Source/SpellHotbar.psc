@@ -2,6 +2,8 @@ scriptName SpellHotbar hidden
 
 ; Test seam: trigger a hotbar slot exactly like its bound keypress (runtime verification)
 function castSlot(int slot_index) global native
+function slotArt(int slot_index, int art_id) global native
+int function getArtSelector() global native
 int function getNumberOfSlots() global native
 int function setNumberOfSlots(int num) global native
 float function getSlotScale() global native

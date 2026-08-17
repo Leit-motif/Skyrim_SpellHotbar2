@@ -6,6 +6,7 @@
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
 #include "msco_cast_driver.h"
+#include "art_driver.h"
 #include "combo_cache.h"
 #include "cast_intent.h"
 
@@ -87,6 +88,15 @@ namespace SpellHotbar::casts::CastingController {
 		current_cast->on_reset();
 		current_cast.reset();
 		clear_spellfire();
+	}
+
+	void drop_live_cast()
+	{
+		current_cast.reset();
+		clear_spellfire();
+		ArtDriver::reset_session();
+		MscoCastDriver::reset_session();
+		logger::info("SH2: dropped live cast for game load");
 	}
 
 	// Ticket 14: a follow-up hotbar press during a committed cast is a combo step. Drop the
@@ -1095,8 +1105,9 @@ namespace SpellHotbar::casts::CastingController {
 	bool is_movement_blocking_cast()
 	{
 		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
-		// owned by the graph wrap (ticket 21), not the DLL.
-		if (driver_cast_blocks_movement(MscoCastDriver::is_active(), current_cast != nullptr)) {
+		// owned by the graph wrap (ticket 21), not the DLL. Weapon Arts reuse
+		// the same plant: input lock, clip motion still applies.
+		if (shtb_state_blocks_movement(MscoCastDriver::is_active() || ArtDriver::is_active())) {
 			return true;
 		}
 		if (current_cast) {
@@ -1295,6 +1306,76 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		advance_time(delta);
 		return is_gcd_expired();
+	}
+
+	CastingInstanceWeaponArt::CastingInstanceWeaponArt(uint32_t art_id, float gcd)
+		: BaseCastingInstance(nullptr, 0.0f), m_art_id(art_id)
+	{
+		m_gcd = gcd > 0.0f ? gcd : 1.0f;
+	}
+
+	bool CastingInstanceWeaponArt::update(RE::PlayerCharacter* pc, float delta)
+	{
+		advance_time(delta);
+		if (pc && !pc->AsActorState()->IsWeaponDrawn()) {
+			ArtDriver::cancel(pc);
+			return true;
+		}
+		if (ArtDriver::is_active()) {
+			if (m_cast_timer > 8.0f) {
+				ArtDriver::cancel(pc);
+				return true;
+			}
+			return false;
+		}
+		return is_gcd_expired();
+	}
+
+	void CastingInstanceWeaponArt::on_reset()
+	{
+		ArtDriver::finish(RE::PlayerCharacter::GetSingleton());
+		BaseCastingInstance::on_reset();
+	}
+
+	bool try_start_art(uint32_t art_id, size_t)
+	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc) {
+			logger::warn("SH2 art: no player");
+			return false;
+		}
+		const ArtDefinition* art = GameData::get_art(art_id);
+		if (!art) {
+			logger::warn("SH2 art: unknown art id {}", art_id);
+			return false;
+		}
+		if (GameData::is_art_on_cd(art_id)) {
+			logger::info("SH2 art: art {} on cooldown", art_id);
+			return false;
+		}
+		auto* av = pc->AsActorValueOwner();
+		if (art->stamina_cost > 0.0f && av && av->GetActorValue(RE::ActorValue::kStamina) < art->stamina_cost) {
+			logger::info("SH2 art: unaffordable (need {} stamina)", art->stamina_cost);
+			RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+
+		GameData::set_art_selector(art->selector);
+		current_cast = std::make_unique<CastingInstanceWeaponArt>(art_id, art->gcd);
+		if (!ArtDriver::begin(pc)) {
+			logger::info("SH2 art: SH2_ArtStart not consumed (sheathed, mid-swing, or patch missing)");
+			current_cast.reset();
+			GameData::reset_art_selector();
+			return false;
+		}
+		if (art->stamina_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina, -art->stamina_cost);
+		}
+		if (art->cooldown_days > 0.0f) {
+			GameData::add_art_cooldown(art_id, art->cooldown_days);
+		}
+		return true;
 	}
 
 }

@@ -48,7 +48,7 @@ namespace SpellHotbar::Bars {
 		}
 	}
 
-	void OblivionBar::deserialize(SKSE::SerializationInterface* serializer, uint32_t type, uint32_t /*version*/, uint32_t /*length*/)
+	void OblivionBar::deserialize(SKSE::SerializationInterface* serializer, uint32_t type, uint32_t version, uint32_t /*length*/)
 	{
 		uint8_t slots{ 0Ui8 };
 		if (!serializer->ReadRecordData(&slots, sizeof(uint8_t))) {
@@ -57,7 +57,9 @@ namespace SpellHotbar::Bars {
 
 		for (uint8_t i = 0U; i < slots; i++) {
 			uint8_t read_slot{ 0Ui8 };
+			uint8_t read_kind{ 0Ui8 };
 			RE::FormID read_id{ 0U };
+			uint32_t read_art{ 0U };
 			uint8_t read_hand{ 0Ui8 };
 
 			if (!serializer->ReadRecordData(&read_slot, sizeof(uint8_t))) {
@@ -68,30 +70,45 @@ namespace SpellHotbar::Bars {
 				read_slot = std::clamp(read_slot, 0Ui8, static_cast<uint8_t>(max_bar_size));
 			}
 
-			if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
-				logger::error("Failed to load oblivion_bar!");
-				break;
+			if (version >= 6) {
+				if (!serializer->ReadRecordData(&read_kind, sizeof(uint8_t))) {
+					logger::error("Failed to load oblivion_bar!");
+					break;
+				}
 			}
-			else {
-				RE::FormID resolved_id{ 0 };
-				serializer->ResolveFormID(read_id, resolved_id);
-				RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
-				if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
 
-					if (read_slot == 0Ui8) {
-						m_spell_slot = resolved_id;
-					}
-					else if (read_slot == 1Ui8) {
-						m_potion_slot = resolved_id;
-					}
+			if (version >= 6 && read_kind == 1) {
+				if (!serializer->ReadRecordData(&read_art, sizeof(uint32_t))) {
+					logger::error("Failed to load oblivion_bar!");
+					break;
+				}
+				logger::info("Skipping art {} on oblivion bar (arts are not slotted there)", read_art);
+			} else {
+				if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
+					logger::error("Failed to load oblivion_bar!");
+					break;
 				}
 				else {
-					logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
-					if (read_slot == 0Ui8) {
-						m_spell_slot = 0;
+					RE::FormID resolved_id{ 0 };
+					serializer->ResolveFormID(read_id, resolved_id);
+					RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
+					if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
+
+						if (read_slot == 0Ui8) {
+							m_spell_slot = resolved_id;
+						}
+						else if (read_slot == 1Ui8) {
+							m_potion_slot = resolved_id;
+						}
 					}
-					else if (read_slot == 1Ui8) {
-						m_potion_slot = 0;
+					else {
+						logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
+						if (read_slot == 0Ui8) {
+							m_spell_slot = 0;
+						}
+						else if (read_slot == 1Ui8) {
+							m_potion_slot = 0;
+						}
 					}
 				}
 			}

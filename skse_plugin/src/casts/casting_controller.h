@@ -227,6 +227,17 @@ namespace SpellHotbar::casts::CastingController {
 	protected:
 	};
 
+	class CastingInstanceWeaponArt : public BaseCastingInstance {
+	public:
+		CastingInstanceWeaponArt(uint32_t art_id, float gcd);
+		virtual ~CastingInstanceWeaponArt() = default;
+
+		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
+		virtual void on_reset() override;
+	protected:
+		uint32_t m_art_id;
+	};
+
 	/**
 	* Wraps the shared information needed for all spell cast types
 	*/
@@ -287,6 +298,8 @@ namespace SpellHotbar::casts::CastingController {
 	bool can_accept_hotbar_cast();
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
+
+	bool try_start_art(uint32_t art_id, size_t slot);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
@@ -302,6 +315,8 @@ namespace SpellHotbar::casts::CastingController {
 	float get_current_casttime();
 
 	bool can_start_new_cast();
+
+	void drop_live_cast();
 
 	/*
 	* check if a power is currently tracked as casting instance, and finish it.

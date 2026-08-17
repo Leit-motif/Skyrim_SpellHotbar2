@@ -13,6 +13,7 @@ using SpellHotbar::casts::classify_cast_delivery;
 using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
 using SpellHotbar::casts::driver_cast_blocks_movement;
+using SpellHotbar::casts::shtb_state_blocks_movement;
 using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
@@ -352,6 +353,14 @@ void ticket_10_cut_unroots_even_if_the_instance_is_still_alive()
 		"idle is not rooted");
 }
 
+void live_art_state_plants_wasd()
+{
+	expect(shtb_state_blocks_movement(true),
+		"a live SH2_Art_State plants WASD the same way a Driver Cast does");
+	expect(!shtb_state_blocks_movement(false),
+		"idle does not plant");
+}
+
 }  // namespace
 
 int main()
@@ -392,6 +401,7 @@ int main()
 	left_hand_press_cuts_a_committed_hotbar_cast();
 	driver_cast_roots_while_the_shtb_state_is_live();
 	ticket_10_cut_unroots_even_if_the_instance_is_still_alive();
+	live_art_state_plants_wasd();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";
