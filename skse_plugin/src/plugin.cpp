@@ -10,6 +10,7 @@
 #include "events/gameloop_hook.h"
 #include "casts/cast_intent.h"
 #include "casts/casting_controller.h"
+#include "casts/clip_translation_driver.h"
 #include "casts/msco_cast_driver.h"
 
 
@@ -44,6 +45,7 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
     //Install animationeventhook -- needed again as of ADR 0004: the cast's commitment point is
     //the clip's own `MLh/MRh_SpellFire_Event`, and this hook is how we hear it.
     SpellHotbar::events::install();
+    SpellHotbar::casts::ClipTranslationDriver::install();
     SpellHotbar::events::GameLoopHook::hook();
 
     auto event_listener = SpellHotbar::events::EventListener::GetSingleton();

@@ -70,6 +70,9 @@ set(source_files src/plugin.cpp
                  src/casts/msco_cast_driver.cpp
                  src/casts/art_driver.h
                  src/casts/art_driver.cpp
+                 src/casts/clip_translation.h
+                 src/casts/clip_translation_driver.h
+                 src/casts/clip_translation_driver.cpp
                  src/casts/combo_cache.h
                  src/casts/cast_intent.h
                  src/casts/cast_intent.cpp
@@ -109,6 +112,10 @@ set(source_files src/plugin.cpp
 add_executable(combo_cache_test src/casts/combo_cache_test.cpp)
 target_compile_features(combo_cache_test PRIVATE cxx_std_23)
 target_include_directories(combo_cache_test PRIVATE src/casts)
+
+add_executable(clip_translation_test src/casts/clip_translation_test.cpp)
+target_compile_features(clip_translation_test PRIVATE cxx_std_23)
+target_include_directories(clip_translation_test PRIVATE src/casts)
 
 add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)

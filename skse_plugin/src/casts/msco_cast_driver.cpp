@@ -1,4 +1,5 @@
 #include "msco_cast_driver.h"
+#include "clip_translation_driver.h"
 #include "combo_cache.h"
 #include <array>
 #include <atomic>
@@ -317,5 +318,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		clip_committed.store(false, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
+		ClipTranslationDriver::reset();
 	}
 }

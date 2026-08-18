@@ -1,4 +1,5 @@
 #include "art_driver.h"
+#include "clip_translation_driver.h"
 #include <atomic>
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
@@ -98,5 +99,6 @@ namespace SpellHotbar::casts::ArtDriver {
 		state_active.store(false, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		GameData::reset_art_selector();
+		ClipTranslationDriver::reset();
 	}
 }
