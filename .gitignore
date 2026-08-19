@@ -17,3 +17,10 @@ vcpkg_installed
 .scratch/**/*.webp
 .scratch/**/*.xml
 .scratch/papyrus-stubs/
+
+__pycache__/
+*.py[cod]
+
+# One-off classifier / scratch scripts
+**/_tmp_*
+python_scripts/_tmp_*.py

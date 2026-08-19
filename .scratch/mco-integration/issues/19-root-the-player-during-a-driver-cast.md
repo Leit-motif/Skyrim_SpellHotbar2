@@ -23,7 +23,8 @@ An SH2 cast is supposed to root; it does not.
       game was left running on Save65 for the playtest that closed this.
 
 The small MSCO clip step that this plant does **not** apply is
-[ticket 21](21-apply-msco-animmotion-on-a-driver-cast.md), not a miss of this ticket.
+[weapon-arts ticket 05](../../weapon-arts/issues/05-consume-clip-translation-on-shtb-states.md)
+(supersedes [ticket 21](21-apply-msco-animmotion-on-a-driver-cast.md)).
 
 ## Addon — ticket 18 leftover (2026-08-14)
 
@@ -62,5 +63,6 @@ The walk-during-cast cell is closed for that case. The implementation is not han
 host graph disagrees.
 
 **2026-08-15 — owner: close ticket 19.** Plant is accepted. The missing MSCO animmotion on
-the same clips is [ticket 21](21-apply-msco-animmotion-on-a-driver-cast.md). The saved-curve
-cell returns to [ticket 18](18-pace-the-hotbar-gcd-with-msco-clip-cadence.md).
+the same clips is now [weapon-arts ticket 05](../../weapon-arts/issues/05-consume-clip-translation-on-shtb-states.md)
+([ticket 21](21-apply-msco-animmotion-on-a-driver-cast.md) is the exhausted wrap, superseded).
+The saved-curve cell returns to [ticket 18](18-pace-the-hotbar-gcd-with-msco-clip-cadence.md).

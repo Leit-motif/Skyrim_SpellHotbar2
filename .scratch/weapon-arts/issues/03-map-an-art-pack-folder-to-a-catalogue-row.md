@@ -4,7 +4,7 @@ Players will want each Ashes of War (or any OAR folder that replaces `AABL_Attac
 up as its own named art in Spell Hotbar 2. Ticket 01 has one hardcoded Test Art in `arts.csv`.
 This ticket grows the catalogue from folders, without copying animation files.
 
-**Status:** ready-for-agent
+**Status:** resolved — catalogue + bound-art selection passed; pack *shape* is ticket 04
 
 **Blocked by:** 01
 
@@ -36,11 +36,36 @@ is the Art Selector global, via OAR conditions at higher priority than worn-item
 
 Do **not** add one Nemesis path per art. Do **not** redistribute Ashes of War clips.
 
-Authoring-time script (spec “The Ashes of War integration”): read installed OAR submods, emit
-(1) `arts.csv` rows (id, name, icon, selector, stamina, cooldown) and (2) OAR user-override
-configs that `CompareValues` the Art Selector. The installer gates the group on the items plugin;
-it does not run the script.
+Authoring-time script: read installed OAR submods, emit (1) catalogue rows and (2) OAR
+selector conditions. 03’s emit was `user.json` shadows on their folders. That shape is
+wrong long-term (it breaks story 18 at selector 0). Ticket 04 owns the replacement.
 
 Custom spell registration is FormID-keyed overrides of existing spells. An art is not a spell
 form. Mapping a folder → catalogue row + selector + OAR override is the registration path.
 An in-game “add custom art” dialog can wait until this generator has proved the data shape.
+
+## Comments
+
+2026-08-17: Generator lives at `python_scripts/generate_art_pack.py`. Fixture tests in
+`python_scripts/generate_art_pack_test.py` (5 passing). Scan of Nolvus Stance Framework + AoW
+items pack emitted 57 named ashes (stance-default `Ashes of War *` folders skipped — they have
+no items-plugin keyword). Overlay: `Dev - Spell Hotbar 2 - Art Pack` (`user.json` only, 0 `.hkx`).
+Catalogue also in `data/SKSE/Plugins/SpellHotbar/artdata/arts_ashes.csv`. Live: SH2ArtBind04
+loaded 58 arts (Test Art + 57); `getArtSelector` is 0 at rest; slot 0 bound Elegant Slash (id 20),
+slot 1 Heart Strike (id 31); `SH2_ArtStart`/`SH2_ArtExit` fired with no slot-55 AoW clothing
+equipped.
+
+2026-08-17: Clip selection is the 03 baseline (priority bump + stripped weapon gates). Remaining
+pack-shape work — SH2-owned `config.json` instead of `user.json` shadows on their folders — is
+ticket 04. Rooted-in-place Disengage is ticket 05, not a 03 miss.
+
+Owner later the same day: after those two generator fixes, bound ashes played their own clips
+(Elegant Slash 20, Heart Strike 31, Crane Style 8, Disengage 12) rather than Sword Neutral /
+Dante. Arts list named the pack. Cell 5’s worn-item path at selector 0 was not re-proven and
+is ticket 04’s reason to exist.
+
+## Answer
+
+A folder that replaces `AABL_Attack_A.hkx` becomes a named catalogue row. Binding it sets the
+Art Selector and plays that Ash without slot-55 clothing and without copying `.hkx`. The emit
+that does this is still `user.json` on their folders; replacing that emit is ticket 04.

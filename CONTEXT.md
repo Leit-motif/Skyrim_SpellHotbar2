@@ -53,7 +53,7 @@ The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` /
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Cast Plant**:
-Input lock for a live shtb state (Driver Cast or Weapon Art): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Tickets 19 (capture + graph wrap) and 21 (making clip translation actually apply); Weapon Arts reuse the same plant.
+Input lock for a live shtb state (Driver Cast or Weapon Art): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Ticket 19 is the plant; weapon-arts ticket 05 applies clip translation from the playing file’s `animmotion` (supersedes the deferred mco-integration ticket 21). Weapon Arts reuse the same plant.
 _Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means animation-driven translation, not input lock), freeze the actor in place
 
 **Chain Window**:
@@ -76,6 +76,12 @@ The TESGlobal the fork writes to name which Weapon Art plays; OAR conditions rea
 
 **Art Pack**:
 A set of OAR submods keyed to the Art Selector. _Avoid_: animation mod, moveset.
+
+**Art Class**:
+The coarse weapon-class tag on a Weapon Art used for gray-out and refuse: **1H**, **2H**, **Dual**, or **Generic**. Live when the player's current `EquippedType` matches that tag; otherwise the slot is gray and the press is refused. Not OAR `IsEquippedType` and not a worn keyword. _Avoid_: weapon type, ash keyword, stance.
+
+**Custom Art Folder**:
+A Spell Hotbar 2–owned OAR submod the player fills (`Weapon_Art_1` … `N`, plus extras). Drop in `AABL_Attack_A.hkx` and optional display name / icon files. A catalogue row, not a hotbar slot index. _Avoid_: slot folder, moveset slot.
 
 **Terminal Art / Chaining Art**:
 An art whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.

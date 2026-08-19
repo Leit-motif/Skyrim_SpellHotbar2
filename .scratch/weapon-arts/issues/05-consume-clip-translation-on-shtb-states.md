@@ -6,7 +6,7 @@ translation from the clip's own `animmotion` keys.
 
 **Blocked by:** None
 
-**Status:** claimed
+**Status:** resolved — owner 1–3 passed; agent 4–6 passed
 
 ## You test this
 
@@ -106,5 +106,12 @@ Live on `Nolvus Awakening` / `SH2ArtBind04` / Prisoner / QASmoke / Noble Rapier 
   `SH2_CastRight_Clip` (4 animmotion keys). XY `-1590.63, 1863.44` → `-1590.17, 1867.80`
   (Δ ≈ **4.4** units). Ticket 21's wrap was `max_xy = 0`.
 
-Owner cells 1–3 still need eyes. Fixture left running: Disengage on slot 1 (index 0), Ice
-Spike on slot 3, rapier drawn, selector 0, original QASmoke position. Do not quit.
+Owner 2026-08-17: cells 1–3 passed on `SH2ArtBind04`. Disengage leaps back; WASD stays planted;
+Ice Spike Driver Cast matches native MSCO motion (same clip `animmotion`).
+
+## Answer
+
+shtb clips consume their own `animmotion`. While `ArtDriver` / `MscoCastDriver` is live, SH2
+reads the keys from the bound animation (OAR-replaced file) and applies XY deltas. Disengage
+leaps ~3 m; Ice Spike takes the small MSCO_left step. Cast Plant still blocks WASD. No
+MSCO/AABL notify or ownership vars.

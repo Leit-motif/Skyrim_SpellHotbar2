@@ -1,0 +1,299 @@
+# Animation: AABL_Attack_A.HKX
+#
+# duration: 2.333333
+# numberOfTransformTracks: 99
+# annotations: 293
+#
+0.149999 CastOKStart
+0.149999 preHitFrame
+0.149999 weaponSwing
+0.149999 weaponLeftSwing
+0.249999 HitFrame
+0.249999 HitFrame
+0.316666 SpecialFrames_Invincible{"Duration":0.9}
+0.700000 PIE.@SGVI|MCO_nextattack|1
+0.700000 PIE.@SGVI|MCO_nextpowerattack|2
+1.249999 MCO_WinOpen
+2.000000 MCO_WinClose
+1.249999 MCO_PowerWinOpen
+2.000000 MCO_PowerWinClose
+0.016700 animmotion 0.0 4.375 0.0
+0.033300 animmotion 0.0 15.183 0.0
+0.050000 animmotion 0.0 28.945 0.0
+0.066700 animmotion 0.0 42.184999999999995 0.0
+0.083300 animmotion 0.0 51.42400000000001 0.0
+0.100000 animmotion 0.0 56.368 0.0
+0.116700 animmotion 0.0 59.367000000000004 0.0
+0.133300 animmotion 0.0 60.907 0.0
+0.150000 animmotion 0.0 61.475 0.0
+0.166700 animmotion 0.0 61.556 0.0
+0.183300 animmotion 0.0 61.556 0.0
+0.200000 animmotion 0.0 61.556 0.0
+0.216700 animmotion 0.0 61.556 0.0
+0.233300 animmotion 0.0 61.556 0.0
+0.250000 animmotion 0.0 61.556 0.0
+0.266700 animmotion 0.0 59.675000000000004 0.0
+0.283300 animmotion 0.0 54.56 0.0
+0.300000 animmotion 0.0 47.004000000000005 0.0
+0.316700 animmotion 0.0 37.711 0.0
+0.333300 animmotion 0.0 27.05 0.0
+0.350000 animmotion 0.0 15.299 0.0
+0.366700 animmotion 0.0 2.74 0.0
+0.383300 animmotion 0.0 -10.350999999999999 0.0
+0.400000 animmotion 0.0 -23.708999999999996 0.0
+0.416700 animmotion 0.0 -37.075 0.0
+0.433300 animmotion 0.0 -50.231 0.0
+0.450000 animmotion 0.0 -63.131 0.0
+0.466700 animmotion 0.0 -75.77 0.0
+0.483300 animmotion 0.0 -88.143 0.0
+0.500000 animmotion 0.0 -100.246 0.0
+0.516700 animmotion 0.0 -112.074 0.0
+0.533300 animmotion 0.0 -123.62299999999999 0.0
+0.550000 animmotion 0.0 -134.888 0.0
+0.566700 animmotion 0.0 -145.86499999999998 0.0
+0.583300 animmotion 0.0 -156.549 0.0
+0.600000 animmotion 0.0 -166.935 0.0
+0.616700 animmotion 0.0 -177.02 0.0
+0.633300 animmotion 0.0 -186.798 0.0
+0.650000 animmotion 0.0 -196.264 0.0
+0.666700 animmotion 0.0 -205.415 0.0
+0.683300 animmotion 0.0 -214.246 0.0
+0.700000 animmotion 0.0 -222.75300000000001 0.0
+0.716700 animmotion 0.0 -230.93 0.0
+0.733300 animmotion 0.0 -238.77300000000002 0.0
+0.750000 animmotion 0.0 -246.27800000000002 0.0
+0.766700 animmotion 0.0 -253.44 0.0
+0.783300 animmotion 0.0 -260.255 0.0
+0.800000 animmotion 0.0 -266.717 0.0
+0.816700 animmotion 0.0 -272.824 0.0
+0.833300 animmotion 0.0 -278.569 0.0
+0.850000 animmotion 0.0 -283.948 0.0
+0.866700 animmotion 0.0 -288.958 0.0
+0.883300 animmotion 0.0 -293.593 0.0
+0.900000 animmotion 0.0 -297.848 0.0
+0.916700 animmotion 0.0 -301.72 0.0
+0.933300 animmotion 0.0 -305.204 0.0
+0.950000 animmotion 0.0 -308.295 0.0
+0.966700 animmotion 0.0 -310.988 0.0
+0.983300 animmotion 0.0 -313.279 0.0
+1.000000 animmotion 0.0 -315.165 0.0
+1.016700 animmotion 0.0 -316.639 0.0
+1.033300 animmotion 0.0 -317.697 0.0
+1.050000 animmotion 0.0 -318.33500000000004 0.0
+1.066700 animmotion 0.0 -318.549 0.0
+1.083300 animmotion 0.0 -318.549 0.0
+1.100000 animmotion 0.0 -318.549 0.0
+1.116700 animmotion 0.0 -318.549 0.0
+1.133300 animmotion 0.0 -318.549 0.0
+1.150000 animmotion 0.0 -318.549 0.0
+1.166700 animmotion 0.0 -318.549 0.0
+1.183300 animmotion 0.0 -318.549 0.0
+1.200000 animmotion 0.0 -318.549 0.0
+1.216700 animmotion 0.0 -318.549 0.0
+1.233300 animmotion 0.0 -318.549 0.0
+1.250000 animmotion 0.0 -318.549 0.0
+1.266700 animmotion 0.0 -318.549 0.0
+1.283300 animmotion 0.0 -318.549 0.0
+1.300000 animmotion 0.0 -318.549 0.0
+1.316700 animmotion 0.0 -318.549 0.0
+1.333300 animmotion 0.0 -318.549 0.0
+1.350000 animmotion 0.0 -318.549 0.0
+1.366700 animmotion 0.0 -318.549 0.0
+1.383300 animmotion 0.0 -318.549 0.0
+1.400000 animmotion 0.0 -318.549 0.0
+1.416700 animmotion 0.0 -318.549 0.0
+1.433300 animmotion 0.0 -318.549 0.0
+1.450000 animmotion 0.0 -318.549 0.0
+1.466700 animmotion 0.0 -318.549 0.0
+1.483300 animmotion 0.0 -318.549 0.0
+1.500000 animmotion 0.0 -318.549 0.0
+1.516700 animmotion 0.0 -318.549 0.0
+1.533300 animmotion 0.0 -318.549 0.0
+1.550000 animmotion 0.0 -318.549 0.0
+1.566700 animmotion 0.0 -318.549 0.0
+1.583300 animmotion 0.0 -318.549 0.0
+1.600000 animmotion 0.0 -318.549 0.0
+1.616700 animmotion 0.0 -318.549 0.0
+1.633300 animmotion 0.0 -318.461 0.0
+1.650000 animmotion 0.0 -318.205 0.0
+1.666700 animmotion 0.0 -317.791 0.0
+1.683300 animmotion 0.0 -317.23199999999997 0.0
+1.700000 animmotion 0.0 -316.538 0.0
+1.716700 animmotion 0.0 -315.71999999999997 0.0
+1.733300 animmotion 0.0 -314.78999999999996 0.0
+1.750000 animmotion 0.0 -313.759 0.0
+1.766700 animmotion 0.0 -312.638 0.0
+1.783300 animmotion 0.0 -311.438 0.0
+1.800000 animmotion 0.0 -310.171 0.0
+1.816700 animmotion 0.0 -308.84799999999996 0.0
+1.833300 animmotion 0.0 -307.48 0.0
+1.850000 animmotion 0.0 -306.07800000000003 0.0
+1.866700 animmotion 0.0 -304.654 0.0
+1.883300 animmotion 0.0 -303.219 0.0
+1.900000 animmotion 0.0 -301.784 0.0
+1.916700 animmotion 0.0 -300.35900000000004 0.0
+1.933300 animmotion 0.0 -298.958 0.0
+1.950000 animmotion 0.0 -297.59000000000003 0.0
+1.966700 animmotion 0.0 -296.267 0.0
+1.983300 animmotion 0.0 -295.0 0.0
+2.000000 animmotion 0.0 -293.8 0.0
+2.016700 animmotion 0.0 -292.67900000000003 0.0
+2.033300 animmotion 0.0 -291.648 0.0
+2.050000 animmotion 0.0 -290.718 0.0
+2.066700 animmotion 0.0 -289.9 0.0
+2.083300 animmotion 0.0 -289.206 0.0
+2.100000 animmotion 0.0 -288.646 0.0
+2.116700 animmotion 0.0 -288.233 0.0
+2.133300 animmotion 0.0 -287.976 0.0
+2.150000 animmotion 0.0 -287.888 0.0
+2.166700 animmotion 0.0 -287.888 0.0
+2.183300 animmotion 0.0 -287.888 0.0
+2.200000 animmotion 0.0 -287.888 0.0
+2.216700 animmotion 0.0 -287.888 0.0
+2.233300 animmotion 0.0 -287.888 0.0
+2.250000 animmotion 0.0 -287.888 0.0
+2.266700 animmotion 0.0 -287.888 0.0
+2.283300 animmotion 0.0 -287.888 0.0
+2.300000 animmotion 0.0 -287.888 0.0
+2.316700 animmotion 0.0 -287.888 0.0
+2.333300 animmotion 0.0 -287.888 0.0
+0.016700 animrotation 0.0
+0.033300 animrotation 0.0
+0.050000 animrotation 0.0
+0.066700 animrotation 0.0
+0.083300 animrotation 0.0
+0.100000 animrotation 0.0
+0.116700 animrotation 0.0
+0.133300 animrotation 0.0
+0.150000 animrotation 0.0
+0.166700 animrotation 0.0
+0.183300 animrotation 0.0
+0.200000 animrotation 0.0
+0.216700 animrotation 0.0
+0.233300 animrotation 0.0
+0.250000 animrotation 0.0
+0.266700 animrotation 0.0
+0.283300 animrotation 0.0
+0.300000 animrotation 0.0
+0.316700 animrotation 0.0
+0.333300 animrotation 0.0
+0.350000 animrotation 0.0
+0.366700 animrotation 0.0
+0.383300 animrotation 0.0
+0.400000 animrotation 0.0
+0.416700 animrotation 0.0
+0.433300 animrotation 0.0
+0.450000 animrotation 0.0
+0.466700 animrotation 0.0
+0.483300 animrotation 0.0
+0.500000 animrotation 0.0
+0.516700 animrotation 0.0
+0.533300 animrotation 0.0
+0.550000 animrotation 0.0
+0.566700 animrotation 0.0
+0.583300 animrotation 0.0
+0.600000 animrotation 0.0
+0.616700 animrotation 0.0
+0.633300 animrotation 0.0
+0.650000 animrotation 0.0
+0.666700 animrotation 0.0
+0.683300 animrotation 0.0
+0.700000 animrotation 0.0
+0.716700 animrotation 0.0
+0.733300 animrotation 0.0
+0.750000 animrotation 0.0
+0.766700 animrotation 0.0
+0.783300 animrotation 0.0
+0.800000 animrotation 0.0
+0.816700 animrotation 0.0
+0.833300 animrotation 0.0
+0.850000 animrotation 0.0
+0.866700 animrotation 0.0
+0.883300 animrotation 0.0
+0.900000 animrotation 0.0
+0.916700 animrotation 0.0
+0.933300 animrotation 0.0
+0.950000 animrotation 0.0
+0.966700 animrotation 0.0
+0.983300 animrotation 0.0
+1.000000 animrotation 0.0
+1.016700 animrotation 0.0
+1.033300 animrotation 0.0
+1.050000 animrotation 0.0
+1.066700 animrotation 0.0
+1.083300 animrotation 0.0
+1.100000 animrotation 0.0
+1.116700 animrotation 0.0
+1.133300 animrotation 0.0
+1.150000 animrotation 0.0
+1.166700 animrotation 0.0
+1.183300 animrotation 0.0
+1.200000 animrotation 0.0
+1.216700 animrotation 0.0
+1.233300 animrotation 0.0
+1.250000 animrotation 0.0
+1.266700 animrotation 0.0
+1.283300 animrotation 0.0
+1.300000 animrotation 0.0
+1.316700 animrotation 0.0
+1.333300 animrotation 0.0
+1.350000 animrotation 0.0
+1.366700 animrotation 0.0
+1.383300 animrotation 0.0
+1.400000 animrotation 0.0
+1.416700 animrotation 0.0
+1.433300 animrotation 0.0
+1.450000 animrotation 0.0
+1.466700 animrotation 0.0
+1.483300 animrotation 0.0
+1.500000 animrotation 0.0
+1.516700 animrotation 0.0
+1.533300 animrotation 0.0
+1.550000 animrotation 0.0
+1.566700 animrotation 0.0
+1.583300 animrotation 0.0
+1.600000 animrotation 0.0
+1.616700 animrotation 0.0
+1.633300 animrotation 0.0
+1.650000 animrotation 0.0
+1.666700 animrotation 0.0
+1.683300 animrotation 0.0
+1.700000 animrotation 0.0
+1.716700 animrotation 0.0
+1.733300 animrotation 0.0
+1.750000 animrotation 0.0
+1.766700 animrotation 0.0
+1.783300 animrotation 0.0
+1.800000 animrotation 0.0
+1.816700 animrotation 0.0
+1.833300 animrotation 0.0
+1.850000 animrotation 0.0
+1.866700 animrotation 0.0
+1.883300 animrotation 0.0
+1.900000 animrotation 0.0
+1.916700 animrotation 0.0
+1.933300 animrotation 0.0
+1.950000 animrotation 0.0
+1.966700 animrotation 0.0
+1.983300 animrotation 0.0
+2.000000 animrotation 0.0
+2.016700 animrotation 0.0
+2.033300 animrotation 0.0
+2.050000 animrotation 0.0
+2.066700 animrotation 0.0
+2.083300 animrotation 0.0
+2.100000 animrotation 0.0
+2.116700 animrotation 0.0
+2.133300 animrotation 0.0
+2.150000 animrotation 0.0
+2.166700 animrotation 0.0
+2.183300 animrotation 0.0
+2.200000 animrotation 0.0
+2.216700 animrotation 0.0
+2.233300 animrotation 0.0
+2.250000 animrotation 0.0
+2.266700 animrotation 0.0
+2.283300 animrotation 0.0
+2.300000 animrotation 0.0
+2.316700 animrotation 0.0
+2.333300 animrotation 0.0
