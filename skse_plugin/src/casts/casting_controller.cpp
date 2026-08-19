@@ -1349,6 +1349,11 @@ namespace SpellHotbar::casts::CastingController {
 			logger::warn("SH2 art: unknown art id {}", art_id);
 			return false;
 		}
+		if (!art_class_is_live(art->art_class, GameData::art_stance_of(GameData::getPlayerEquipmentType()))) {
+			logger::info("SH2 art: art {} refused, Art Class mismatch", art_id);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
 		if (GameData::is_art_on_cd(art_id)) {
 			logger::info("SH2 art: art {} on cooldown", art_id);
 			return false;

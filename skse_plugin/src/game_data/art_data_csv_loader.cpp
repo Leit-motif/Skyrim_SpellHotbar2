@@ -23,7 +23,8 @@ namespace SpellHotbar::ArtDataCSVLoader {
 			return;
 		}
 		for (auto& art : arts) {
-			logger::info("Loaded weapon art {} '{}' selector={}", art.id, art.display_name, art.selector);
+			logger::info("Loaded weapon art {} '{}' selector={} class={}", art.id, art.display_name, art.selector,
+				art_class_label(art.art_class));
 			GameData::set_art(std::move(art));
 		}
 	}

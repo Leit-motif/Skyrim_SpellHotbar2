@@ -113,6 +113,20 @@ std::optional<float> parse_art_duration_days(std::string_view time_str)
 	return -1.0f;
 }
 
+ArtClass parse_art_class(std::string_view text)
+{
+	if (text == "1H") {
+		return ArtClass::OneHand;
+	}
+	if (text == "2H") {
+		return ArtClass::TwoHand;
+	}
+	if (text == "Dual") {
+		return ArtClass::Dual;
+	}
+	return ArtClass::Generic;
+}
+
 std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 {
 	std::vector<ArtDefinition> arts;
@@ -133,8 +147,8 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 
 	const bool ok = index.contains("ArtID") && index.contains("DisplayName") &&
 					index.contains("Icon") && index.contains("Selector") &&
-					index.contains("StaminaCost") && index.contains("Cooldown") &&
-					index.contains("GlobalCooldown");
+					index.contains("ArtClass") && index.contains("StaminaCost") &&
+					index.contains("Cooldown") && index.contains("GlobalCooldown");
 	if (!ok) {
 		return arts;
 	}
@@ -159,6 +173,7 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 		}
 		art.icon = cell(cols, index, "Icon");
 		art.selector = to_int(cell(cols, index, "Selector")).value_or(0);
+		art.art_class = parse_art_class(cell(cols, index, "ArtClass"));
 		art.stamina_cost = to_float(cell(cols, index, "StaminaCost")).value_or(0.0f);
 		art.gcd = to_float(cell(cols, index, "GlobalCooldown")).value_or(1.0f);
 		if (const auto cd = parse_art_duration_days(cell(cols, index, "Cooldown"))) {

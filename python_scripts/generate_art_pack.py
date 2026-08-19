@@ -35,8 +35,10 @@ DEFAULT_ICON = "GREATER_POWER"
 DEFAULT_STAMINA = "25"
 DEFAULT_COOLDOWN = "8s"
 DEFAULT_GCD = "1.0"
-CSV_HEADER = "ArtID\tDisplayName\tIcon\tSelector\tStaminaCost\tCooldown\tGlobalCooldown"
+CSV_HEADER = "ArtID\tDisplayName\tIcon\tSelector\tArtClass\tStaminaCost\tCooldown\tGlobalCooldown"
 OAR_PREFIX = Path("meshes") / "actors" / "character" / "animations" / "OpenAnimationReplacer"
+OAR_1H_TYPES = {1.0, 2.0, 3.0, 4.0}
+OAR_2H_TYPES = {5.0, 6.0}
 
 LogFn = Callable[[str], None]
 
@@ -54,6 +56,7 @@ class Submod:
     config_path: Path
     overlay_rel: Path
     has_clip: bool
+    art_class: str = "Generic"
 
 
 def generate(
@@ -117,6 +120,7 @@ def generate(
                     sub.name,
                     DEFAULT_ICON,
                     str(art_id),
+                    sub.art_class,
                     DEFAULT_STAMINA,
                     DEFAULT_COOLDOWN,
                     DEFAULT_GCD,
@@ -162,6 +166,7 @@ def _discover(scan_roots: Iterable[Path]) -> list[Submod]:
                     config_path=config_path,
                     overlay_rel=overlay_rel,
                     has_clip=_clip_in_scan_roots(overlay_rel, config, roots),
+                    art_class=classify_art_class(config),
                 )
             )
     found.sort(key=lambda sub: (sub.name.lower(), sub.rel_key.lower()))
@@ -245,6 +250,51 @@ def _mentions_aow_items_plugin(node) -> bool:
     elif isinstance(node, list):
         return any(_mentions_aow_items_plugin(item) for item in node)
     return False
+
+
+def classify_art_class(config: dict) -> str:
+    """Collapse the author's OAR IsEquippedType ORs into 1H / 2H / Dual / Generic."""
+    right: set[float] = set()
+    left: set[float] = set()
+    _collect_equipped_types(config, right, left)
+    if (right & OAR_1H_TYPES) and (left & OAR_1H_TYPES):
+        return "Dual"
+    melee = (right | left) & (OAR_1H_TYPES | OAR_2H_TYPES)
+    if not melee:
+        return "Generic"
+    if melee <= OAR_1H_TYPES:
+        return "1H"
+    if melee <= OAR_2H_TYPES:
+        return "2H"
+    return "Generic"
+
+
+def _collect_equipped_types(node, right: set[float], left: set[float]) -> None:
+    if isinstance(node, dict):
+        if node.get("condition") == "IsEquippedType":
+            type_value = _equipped_type_value(node)
+            if type_value is not None:
+                if node.get("Left hand") is True:
+                    left.add(type_value)
+                else:
+                    right.add(type_value)
+        for value in node.values():
+            _collect_equipped_types(value, right, left)
+    elif isinstance(node, list):
+        for item in node:
+            _collect_equipped_types(item, right, left)
+
+
+def _equipped_type_value(node: dict) -> float | None:
+    raw = node.get("Type")
+    if isinstance(raw, dict) and "value" in raw:
+        try:
+            return float(raw["value"])
+        except (TypeError, ValueError):
+            return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    return None
 
 
 def _pack_config() -> dict:

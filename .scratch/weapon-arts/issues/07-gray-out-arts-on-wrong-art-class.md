@@ -6,7 +6,7 @@ fall-through.
 
 **Blocked by:** 03 (resolved)
 
-**Status:** ready-for-agent
+**Status:** claimed — agent 4–7 passed
 
 ## You test this
 
@@ -64,3 +64,5 @@ highlight).
 ## Comments
 
 Grill 2026-08-18: W chosen after costing it against fall-through. Dual is its own tag (MVP).
+
+2026-08-19: Agent 4–7. `ArtDefinition.art_class` + required `ArtClass` TSV column (`1H`/`2H`/`Dual`/`Generic`; empty → Generic). `art_class_is_live` is the refuse/gray policy. `generate_art_pack.py` collapses author `IsEquippedType` ORs (Dual-both-hands → Dual; mixed 1H+2H → Generic; keyword-only / unarmed → Generic); SH2 `config.json` still selector + player only. `try_start_art` refuses mismatch with MagFail **before** `set_art_selector`. HUD uses existing `draw_cd_overlay(0)` keyed off one `getPlayerEquipmentType()` per bar draw. Catalogue stamped (Blood Flurry 2H, Dual Flurry Dual, Disengage Generic, Elegant Slash Generic). Tests: `art_data_test` + `generate_art_pack_test` green. Owner cells 1–3 remain.

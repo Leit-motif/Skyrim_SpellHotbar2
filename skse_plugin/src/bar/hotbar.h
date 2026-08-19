@@ -4,6 +4,7 @@
 #include <imgui_impl_win32.h>
 #include <rapidjson/document.h>
 #include "../game_data/localization.h"
+#include "../game_data/art_definition.h"
 
 namespace SpellHotbar
 {
@@ -125,6 +126,7 @@ public:
                                 RE::PlayerCharacter* pc,
                                 int slot_index,
                                 ImVec2 p, //ImGui Cursor pos
+                                ArtStance art_stance,
                                 bool new_line = false);
 
     inline bool is_enabled() const;

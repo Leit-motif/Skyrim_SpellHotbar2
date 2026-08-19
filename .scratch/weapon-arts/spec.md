@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 06–09 opened 2026-08-18 (grill).
+Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 07 agent-done (owner cells 1–3 open); 06, 08–09 remain.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -345,6 +345,6 @@ and ADR-0008.
 | [04](issues/04-own-the-art-pack-in-sh2-oar-directories.md) | claimed — agent 3–6 passed | Art Pack lives in SH2 OAR directories |
 | [05](issues/05-consume-clip-translation-on-shtb-states.md) | resolved | shtb states consume clip translation |
 | [06](issues/06-procure-weapon-art-icons.md) | ready-for-agent | Distinct icon per named ash |
-| [07](issues/07-gray-out-arts-on-wrong-art-class.md) | ready-for-agent | Art Class gray-out / refuse |
+| [07](issues/07-gray-out-arts-on-wrong-art-class.md) | claimed — agent 4–7 passed | Art Class gray-out / refuse |
 | [08](issues/08-ship-custom-art-folder-templates.md) | ready-for-agent | `Weapon_Art_1`…`12` drop-in folders |
 | [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |

@@ -26,6 +26,24 @@ namespace SpellHotbar::GameData {
         STAFF_SHIELD
     };
 
+    inline ArtStance art_stance_of(EquippedType t)
+    {
+        switch (t) {
+        case EquippedType::FIST:
+            return ArtStance::Fist;
+        case EquippedType::ONEHAND_EMPTY:
+        case EquippedType::ONEHAND_SHIELD:
+        case EquippedType::ONEHAND_SPELL:
+            return ArtStance::OneHand;
+        case EquippedType::TWOHAND:
+            return ArtStance::TwoHand;
+        case EquippedType::DUAL_WIELD:
+            return ArtStance::Dual;
+        default:
+            return ArtStance::None;
+        }
+    }
+
     enum class DefaultIconType : uint32_t {
         UNKNOWN = 0U,
         BAR_EMPTY,

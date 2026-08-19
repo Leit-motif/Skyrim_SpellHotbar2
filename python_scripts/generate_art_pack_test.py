@@ -43,7 +43,24 @@ def _sh2_config_path(overlay: Path, name: str) -> Path:
     return _submod(overlay, SH2_PACK, name) / "config.json"
 
 
-def _worn_config(name: str, priority: int = 103900002, *, extra_conditions=None) -> dict:
+def _equipped_type(type_value: float, *, left_hand: bool) -> dict:
+    return {
+        "condition": "IsEquippedType",
+        "requiredVersion": "1.0.0.0",
+        "Type": {"value": type_value},
+        "Left hand": left_hand,
+    }
+
+
+def _or_types(type_values: list[float], *, left_hand: bool) -> dict:
+    return {
+        "condition": "OR",
+        "requiredVersion": "1.0.0.0",
+        "Conditions": [_equipped_type(v, left_hand=left_hand) for v in type_values],
+    }
+
+
+def _worn_config(name: str, priority: int = 103900002, *, extra_conditions=None, equipped=True) -> dict:
     conditions = [
         {
             "condition": "IsActorBase",
@@ -57,13 +74,9 @@ def _worn_config(name: str, priority: int = 103900002, *, extra_conditions=None)
                 "form": {"pluginName": AOW_PLUGIN, "formID": "836"},
             },
         },
-        {
-            "condition": "IsEquippedType",
-            "requiredVersion": "1.0.0.0",
-            "Type": {"value": 1.0},
-            "Left hand": False,
-        },
     ]
+    if equipped:
+        conditions.append(_equipped_type(1.0, left_hand=False))
     if extra_conditions:
         conditions.extend(extra_conditions)
     return {
@@ -128,12 +141,17 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertEqual(result.emitted, 1)
         text = self.arts_csv.read_text(encoding="utf-8")
         self.assertIn("Flurry Strike", text)
-        self.assertTrue(text.startswith("ArtID\tDisplayName\tIcon\tSelector\tStaminaCost\tCooldown\tGlobalCooldown"))
+        self.assertTrue(
+            text.startswith(
+                "ArtID\tDisplayName\tIcon\tSelector\tArtClass\tStaminaCost\tCooldown\tGlobalCooldown"
+            )
+        )
         row = [line for line in text.splitlines() if "Flurry Strike" in line][0]
         cols = row.split("\t")
         self.assertEqual(cols[0], "2")
         self.assertEqual(cols[1], "Flurry Strike")
         self.assertEqual(cols[3], "2")
+        self.assertEqual(cols[4], "1H")
 
         self._assert_sh2_art("Flurry Strike", 2.0)
         foreign_user = _submod(self.overlay, "AoW Pack", "Flurry Strike") / "user.json"
@@ -286,6 +304,91 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertFalse(leftover.exists())
         self.assertFalse(stale_sh2.exists())
         self._assert_sh2_art("Flurry Strike", 2.0)
+
+    def _art_class_of(self, name: str) -> str:
+        row = [line for line in self.arts_csv.read_text(encoding="utf-8").splitlines() if name in line][0]
+        return row.split("\t")[4]
+
+    def test_two_hand_type_collapses_to_2h(self):
+        sub = _submod(self.scan, "AoW Pack", "Blood Flurry")
+        _write(
+            sub / "config.json",
+            json.dumps(_worn_config("Blood Flurry", equipped=False, extra_conditions=[_equipped_type(5.0, left_hand=False)])),
+        )
+        _write(sub / "animations" / AABL, "clip")
+
+        self._generate()
+
+        self.assertEqual(self._art_class_of("Blood Flurry"), "2H")
+        self._assert_sh2_art("Blood Flurry", 2.0)
+
+    def test_mixed_one_hand_or_two_hand_collapses_to_generic(self):
+        sub = _submod(self.scan, "AoW Pack", "Elegant Slash")
+        _write(
+            sub / "config.json",
+            json.dumps(
+                _worn_config(
+                    "Elegant Slash",
+                    equipped=False,
+                    extra_conditions=[_or_types([1.0, 5.0], left_hand=False)],
+                )
+            ),
+        )
+        _write(sub / "animations" / AABL, "clip")
+
+        self._generate()
+
+        self.assertEqual(self._art_class_of("Elegant Slash"), "Generic")
+        self._assert_sh2_art("Elegant Slash", 2.0)
+
+    def test_dual_both_hands_collapses_to_dual(self):
+        sub = _submod(self.scan, "AoW Pack", "Dual Flurry")
+        _write(
+            sub / "config.json",
+            json.dumps(
+                _worn_config(
+                    "Dual Flurry",
+                    equipped=False,
+                    extra_conditions=[
+                        _or_types([1.0, 2.0, 3.0, 4.0], left_hand=False),
+                        _or_types([1.0, 2.0, 3.0, 4.0], left_hand=True),
+                    ],
+                )
+            ),
+        )
+        _write(sub / "animations" / AABL, "clip")
+
+        self._generate()
+
+        self.assertEqual(self._art_class_of("Dual Flurry"), "Dual")
+        self._assert_sh2_art("Dual Flurry", 2.0)
+
+    def test_keyword_only_and_unarmed_punch_collapse_to_generic(self):
+        keyword = _submod(self.scan, "AoW Pack", "Disengage")
+        _write(keyword / "config.json", json.dumps(_worn_config("Disengage", equipped=False)))
+        _write(keyword / "animations" / AABL, "clip")
+        punch = _submod(self.scan, "AoW Pack", "Crane Style")
+        _write(
+            punch / "config.json",
+            json.dumps(
+                _worn_config(
+                    "Crane Style",
+                    equipped=False,
+                    extra_conditions=[
+                        _equipped_type(0.0, left_hand=False),
+                        _equipped_type(0.0, left_hand=True),
+                    ],
+                )
+            ),
+        )
+        _write(punch / "animations" / AABL, "clip")
+
+        self._generate()
+
+        self.assertEqual(self._art_class_of("Disengage"), "Generic")
+        self.assertEqual(self._art_class_of("Crane Style"), "Generic")
+        kinds = json.loads(_sh2_config_path(self.overlay, "Disengage").read_text(encoding="utf-8"))["conditions"]
+        self.assertEqual([c["condition"] for c in kinds], ["CompareValues", "IsActorBase"])
 
 
 if __name__ == "__main__":
