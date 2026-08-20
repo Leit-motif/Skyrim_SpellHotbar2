@@ -37,8 +37,16 @@ The independently validated Installed Configuration before any behavior customiz
 _Avoid_: Build success, provisional smoke test
 
 **Dual-Input Compatibility**:
-Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them.
+Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them. That bar includes configuring binds and using the bind menu, not only Direct Cast.
 _Avoid_: Controller-only support, keyboard-only support
+
+**Mod Control Panel**:
+SKSE Menu Framework's in-game menu that hosts this fork's configuration pages and native editor windows after ADR-0010.
+_Avoid_: MCM, SkyUI config, Prisma menu
+
+**ImGui Host**:
+The single plugin allowed to own the Dear ImGui context and the presentation and UI-input hooks. This fork is a guest of SKSE Menu Framework, not a second host.
+_Avoid_: Shared imgui, dual overlay, SH2 renderer as host
 
 **Material Interaction**:
 A repeatable Nolvus-specific conflict, regression, stability problem, or meaningful behavioral deviation from normal upstream expectations that prevents acceptance.
