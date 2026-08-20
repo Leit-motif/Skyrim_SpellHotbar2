@@ -4,26 +4,14 @@
 #include "spell_cast_data.h"
 #include "user_custom_spelldata.h"
 #include "../bar/oblivion_bar.h"
+#include "equipped_type.h"
 #include "art_definition.h"
 #include <optional>
+#include <vector>
 
 namespace SpellHotbar::GameData {
 
     class User_custom_spelldata; //forward declaration
-
-    enum class EquippedType
-    {
-        FIST,
-        ONEHAND_EMPTY,
-        ONEHAND_SHIELD,
-        ONEHAND_SPELL,
-        DUAL_WIELD,
-        TWOHAND,
-        BOW,
-        SPELL,
-        CROSSBOW,
-        STAFF_SHIELD
-    };
 
     enum class DefaultIconType : uint32_t {
         UNKNOWN = 0U,
@@ -253,6 +241,7 @@ namespace SpellHotbar::GameData {
 
     void set_art(ArtDefinition art);
     const ArtDefinition* get_art(uint32_t art_id);
+    std::vector<uint32_t> list_art_ids();
     void set_art_selector(int value);
     void reset_art_selector();
     void add_art_cooldown(uint32_t art_id, float days);
@@ -271,6 +260,8 @@ namespace SpellHotbar::GameData {
     std::tuple<float, float> get_gametime_cooldown(float curr_game_time, RE::FormID skill);
 
     std::string resolve_spellname(RE::FormID formID);
+
+    std::string resolve_slot_name(const SlottedSkill& skill);
 
     EquippedType getPlayerEquipmentType();
     bool isVampireLord();

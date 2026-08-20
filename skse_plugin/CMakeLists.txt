@@ -70,6 +70,9 @@ set(source_files src/plugin.cpp
                  src/casts/msco_cast_driver.cpp
                  src/casts/art_driver.h
                  src/casts/art_driver.cpp
+                 src/casts/clip_translation.h
+                 src/casts/clip_translation_driver.h
+                 src/casts/clip_translation_driver.cpp
                  src/casts/combo_cache.h
                  src/casts/cast_intent.h
                  src/casts/cast_intent.cpp
@@ -99,6 +102,7 @@ set(source_files src/plugin.cpp
                  src/rendering/bar_dragging_config_window.cpp
                  src/rendering/advanced_bind_menu.h
                  src/rendering/advanced_bind_menu.cpp
+                 src/rendering/bind_drop.h
                  src/rendering/gui_tab_button.h
                  src/rendering/gui_tab_button.cpp
                  src/game_data/localization.h
@@ -109,6 +113,10 @@ add_executable(combo_cache_test src/casts/combo_cache_test.cpp)
 target_compile_features(combo_cache_test PRIVATE cxx_std_23)
 target_include_directories(combo_cache_test PRIVATE src/casts)
 
+add_executable(clip_translation_test src/casts/clip_translation_test.cpp)
+target_compile_features(clip_translation_test PRIVATE cxx_std_23)
+target_include_directories(clip_translation_test PRIVATE src/casts)
+
 add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)
 target_include_directories(art_data_test PRIVATE src/game_data)
@@ -116,6 +124,10 @@ target_include_directories(art_data_test PRIVATE src/game_data)
 add_executable(art_bind_record_test src/storage/art_bind_record_test.cpp)
 target_compile_features(art_bind_record_test PRIVATE cxx_std_23)
 target_include_directories(art_bind_record_test PRIVATE src/storage)
+
+add_executable(bind_drop_test src/rendering/bind_drop_test.cpp)
+target_compile_features(bind_drop_test PRIVATE cxx_std_23)
+target_include_directories(bind_drop_test PRIVATE src/rendering)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)

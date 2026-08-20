@@ -1,14 +1,21 @@
 #include "advanced_bind_menu.h"
+#include "bind_drop.h"
 #include <imgui.h>
 #include "render_manager.h"
 #include "../input/keybinds.h"
 #include "gui_tab_button.h"
 #include "../bar/hotbars.h"
+#include "../game_data/game_data.h"
 #include "../game_data/localization.h"
 
 namespace SpellHotbar::BindMenu {
 
     bool show_frame = false;
+
+    const char* art_row_type_key(uint32_t)
+    {
+        return "$TYPE_ABILITY";
+    }
 
     constexpr int filter_buf_size = 256;
     char filter_buf[filter_buf_size] = "";
@@ -16,14 +23,16 @@ namespace SpellHotbar::BindMenu {
 
     std::vector<RE::TESForm*> list_of_skills;
     std::vector<RE::TESForm*> list_of_skills_filtered;
+    std::vector<uint32_t> list_of_arts;
+    std::vector<uint32_t> list_of_arts_filtered;
 
     std::array<std::string, 6> rank_texts = { "$DASH", "$RANK_NOVICE", "$RANK_APPRENTICE", "$RANK_ADEPT", "$RANK_EXPERT", "$RANK_MASTER"};
     std::array<std::string, 4> rank_texts_shout = { "$WORDS_0", "$WORDS_1", "$WORDS_2", "$WORDS_3" };
     std::array<std::string, 6> school_texts = { "$DASH", "$TAB_TEXT_ALTERATION", "$TAB_TEXT_CONJURATION", "$TAB_TEXT_DESTRUCTION", "$TAB_TEXT_ILLUSION", "$TAB_TEXT_RESTORATION"};
 
-    std::array<std::string, 9> type_texts = { "$TYPE_POTION", "$TYPE_SPELL", "$TYPE_LESSER_POWER", "$TYPE_GREATER_POWER", "$TYPE_SHOUT", "$TYPE_SCROLL", "$TYPE_POISON", "$TYPE_FOOD", "$DASH" };
+    std::array<std::string, 10> type_texts = { "$TYPE_POTION", "$TYPE_SPELL", "$TYPE_LESSER_POWER", "$TYPE_GREATER_POWER", "$TYPE_SHOUT", "$TYPE_SCROLL", "$TYPE_POISON", "$TYPE_FOOD", "$TYPE_ABILITY", "$DASH" };
 
-    std::array<std::string, 13> tab_texts = {
+    std::array<std::string, 14> tab_texts = {
         "$TAB_TEXT_ALL",
         "$TAB_TEXT_SPELLS",
         "$TAB_TEXT_ALTERATION",
@@ -37,6 +46,7 @@ namespace SpellHotbar::BindMenu {
         "$TAB_TEXT_POTIONS",
         "$TAB_TEXT_POISONS",
         "$TAB_TEXT_FOOD",
+        "$TAB_TEXT_ARTS",
     };
 
     enum tab_index : uint8_t {
@@ -52,33 +62,50 @@ namespace SpellHotbar::BindMenu {
         TabIndex_Scrolls,
         TabIndex_Potions,
         TabIndex_Poisons,
-        TabIndex_Food
+        TabIndex_Food,
+        TabIndex_Arts
     };
 
     struct Dragged_skill {
         const RE::TESForm* form;
+        uint32_t art_id;
         SlottedSkill* source_slot;
 
-        Dragged_skill() : form(nullptr), source_slot(nullptr) {};
-        //Dragged_skill(const RE::TESForm* tesform) : form(tesform), source_slot(nullptr) {};
-        //Dragged_skill(const RE::TESForm* tesform, SlottedSkill* source) : form(tesform), source_slot(source) {};
+        Dragged_skill() : form(nullptr), art_id(0), source_slot(nullptr) {};
 
         void set_dragged(const RE::TESForm* tesform) {
             form = tesform;
+            art_id = 0;
             source_slot = nullptr;
         }
         void set_dragged(const RE::TESForm* tesform, SlottedSkill* source) {
             form = tesform;
+            art_id = 0;
+            source_slot = source;
+        }
+        void set_dragged_art(uint32_t id, SlottedSkill* source = nullptr) {
+            form = nullptr;
+            art_id = id;
             source_slot = source;
         }
 
         inline bool has_dragged_from() const {
-            return form != nullptr;
+            return form != nullptr || art_id != 0;
         }
 
         inline RE::FormID get_form_id() const
         {
-            return form->GetFormID();
+            return form != nullptr ? form->GetFormID() : 0;
+        }
+
+        inline BindPayload to_payload() const {
+            if (art_id != 0) {
+                return art_bind(art_id);
+            }
+            if (form != nullptr) {
+                return form_bind(form->GetFormID());
+            }
+            return empty_bind();
         }
     };
 
@@ -117,17 +144,29 @@ namespace SpellHotbar::BindMenu {
 
         list_of_skills.clear();
         list_of_skills_filtered.clear();
+        list_of_arts.clear();
+        list_of_arts_filtered.clear();
+    }
+
+    void load_arts() {
+        list_of_arts = GameData::list_art_ids();
+        list_of_arts_filtered.clear();
     }
 
     void load_spells() {
         list_of_skills.clear();
         list_of_skills_filtered.clear();
+        load_arts();
 
         RE::PlayerCharacter* pc = RE::PlayerCharacter::GetSingleton();
         if (pc && pc->GetActorBase() != nullptr) {
             GameData::get_player_known_spells(pc, list_of_skills, false);
             GameData::add_player_owned_bindable_items(pc, list_of_skills);
 
+            filter_buf[0] = '\0';
+            update_filter("", 0Ui8);
+        }
+        else {
             filter_buf[0] = '\0';
             update_filter("", 0Ui8);
         }
@@ -221,7 +260,7 @@ namespace SpellHotbar::BindMenu {
                 }
             }
         }
-        return type_texts[8].c_str();;
+        return type_texts[9].c_str();;
     }
 
     std::tuple<int, RE::ActorValue, int, float, int> get_rank_school_time_mag_count(const RE::TESForm* item) {
@@ -290,7 +329,27 @@ namespace SpellHotbar::BindMenu {
         return std::make_tuple(rank, school, time, mag, count);
     }
 
+    void update_art_filter(const std::string& filter_text) {
+        list_of_arts_filtered.clear();
+        list_of_arts_filtered.reserve(list_of_arts.size());
+        for (uint32_t id : list_of_arts) {
+            const ArtDefinition* art = GameData::get_art(id);
+            if (art == nullptr) {
+                continue;
+            }
+            if (filter_text.empty() || art->display_name.find(filter_text) != std::string::npos) {
+                list_of_arts_filtered.push_back(id);
+            }
+        }
+    }
+
     void update_filter(const std::string filter_text, uint8_t tab_ind) {
+        if (tab_ind == TabIndex_Arts) {
+            list_of_skills_filtered.clear();
+            update_art_filter(filter_text);
+            return;
+        }
+        list_of_arts_filtered.clear();
         if (filter_text.empty() && tab_ind == 0Ui8) {
             list_of_skills_filtered = list_of_skills;
         }
@@ -461,6 +520,51 @@ namespace SpellHotbar::BindMenu {
         }
     }
 
+    void set_drag_source_art(uint32_t art_id, float scale_factor, SlottedSkill* source = nullptr) {
+        if (art_id == 0) {
+            return;
+        }
+        const ArtDefinition* art = GameData::get_art(art_id);
+        if (art == nullptr) {
+            return;
+        }
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+        {
+            current_dragged_skill.set_dragged_art(art_id, source);
+            ImGui::SetDragDropPayload("SPELL_SLOT", &current_dragged_skill, sizeof(Dragged_skill));
+            int icon_size = static_cast<int>(std::round(60.0f * scale_factor));
+            RenderManager::draw_art_icon(art_id, icon_size);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(art->display_name.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+
+    void apply_payload_to_skill(SlottedSkill& skill, BindPayload payload)
+    {
+        const SlotBind next = apply_bind_drop(SlotBind{ .form_id = skill.formID, .art_id = skill.art_id }, payload);
+        if (next.art_id != 0) {
+            skill.update_art_assignment(next.art_id);
+        }
+        else if (next.form_id != 0) {
+            skill.update_skill_assignment(next.form_id);
+        }
+        else {
+            skill.clear();
+        }
+    }
+
+    BindPayload payload_from_skill(const SlottedSkill& skill)
+    {
+        if (skill.type == slot_type::weapon_art) {
+            return art_bind(skill.art_id);
+        }
+        if (skill.formID != 0) {
+            return form_bind(skill.formID);
+        }
+        return empty_bind();
+    }
+
     /*
     * Check if the current tab index is active and if not use the first valid one
     */
@@ -546,7 +650,8 @@ namespace SpellHotbar::BindMenu {
         Rendering::GuiTabButton::draw("##TabScrolls", TabIndex_Scrolls, GameData::DefaultIconType::TAB_SCROLLS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Scrolls])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabPotions", TabIndex_Potions, GameData::DefaultIconType::TAB_POTIONS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Potions])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabPoisons", TabIndex_Poisons, GameData::DefaultIconType::TAB_POISONS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Poisons])); ImGui::SameLine();
-        Rendering::GuiTabButton::draw("##TabFood", TabIndex_Food, GameData::DefaultIconType::TAB_FOOD, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Food]));
+        Rendering::GuiTabButton::draw("##TabFood", TabIndex_Food, GameData::DefaultIconType::TAB_FOOD, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Food])); ImGui::SameLine();
+        Rendering::GuiTabButton::draw("##TabAbilities", TabIndex_Arts, GameData::DefaultIconType::GREATER_POWER, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Arts]));
         ImGui::PopStyleVar();
 
         int bsize = static_cast<int>(30.0f * scale_factor);
@@ -625,7 +730,9 @@ namespace SpellHotbar::BindMenu {
                 if (sort_specs->SpecsDirty)
                 {
                     s_current_sort_specs = sort_specs;
-                    std::sort(list_of_skills.begin(), list_of_skills.end(), compare_entries_for_sort);
+                    if (tab_index != TabIndex_Arts && !list_of_skills.empty()) {
+                        std::sort(list_of_skills.begin(), list_of_skills.end(), compare_entries_for_sort);
+                    }
                     sort_specs->SpecsDirty = false;
 
                     update_filter(filter_buf, static_cast<uint8_t>(tab_index));
@@ -639,6 +746,53 @@ namespace SpellHotbar::BindMenu {
                 filter_dirty = false;
             }
 
+            if (tab_index == TabIndex_Arts) {
+                ImGuiListClipper clipper;
+                clipper.Begin(static_cast<int>(list_of_arts_filtered.size()));
+                while (clipper.Step())
+                {
+                    for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
+                    {
+                        const uint32_t art_id = list_of_arts_filtered[static_cast<size_t>(row_n)];
+                        const ArtDefinition* art = GameData::get_art(art_id);
+                        if (art == nullptr) {
+                            continue;
+                        }
+                        ImGui::PushID("ability");
+                        ImGui::PushID(static_cast<int>(art_id));
+                        ImGui::TableNextRow();
+
+                        ImGui::TableNextColumn();
+                        RenderManager::draw_art_icon(art_id, table_icon_size);
+                        if (ImGui::IsItemHovered()) {
+                            RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
+                        }
+                        set_drag_source_art(art_id, scale_factor);
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(art->display_name.c_str());
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted("-");
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted("-");
+
+                        ImGui::PopID();
+                        ImGui::PopID();
+                    }
+                }
+            }
+            else {
             ImGuiListClipper clipper;
             clipper.Begin(static_cast<int>(list_of_skills_filtered.size()));
             while (clipper.Step())
@@ -716,6 +870,7 @@ namespace SpellHotbar::BindMenu {
 
                     ImGui::PopID();
                 }
+            }
             }
             ImGui::EndTable();
 
@@ -932,7 +1087,12 @@ namespace SpellHotbar::BindMenu {
                 }
             }
             else {
-                drawn_skill = RenderManager::draw_skill_in_editor(skill.formID, bpos, icon_size, skill.color);
+                if (skill.type == slot_type::weapon_art) {
+                    drawn_skill = RenderManager::draw_art_icon_in_editor(skill.art_id, bpos, icon_size, skill.color);
+                }
+                else {
+                    drawn_skill = RenderManager::draw_skill_in_editor(skill.formID, bpos, icon_size, skill.color);
+                }
                 if (!drawn_skill) {
                     RenderManager::draw_default_icon_in_editor(GameData::DefaultIconType::BAR_EMPTY, bpos, icon_size, skill.color);
                 }
@@ -943,7 +1103,12 @@ namespace SpellHotbar::BindMenu {
                 if (!skill.isEmpty()) {
                     source_skill = bar.get_skill_in_bar_ptr(i, mod);
                 }
-                set_drag_source(form, scale_factor, source_skill);
+                if (skill.type == slot_type::weapon_art) {
+                    set_drag_source_art(skill.art_id, scale_factor, source_skill);
+                }
+                else {
+                    set_drag_source(form, scale_factor, source_skill);
+                }
             }
             if (ImGui::BeginDragDropTarget())
             {
@@ -953,28 +1118,24 @@ namespace SpellHotbar::BindMenu {
                     Dragged_skill payload_n = *(const Dragged_skill*)payload->Data;
                     if (payload_n.has_dragged_from()) {
                         auto& target = bar.get_skill_in_bar_by_ref(i, mod);
-
+                        const hand_mode target_hand = target.hand;
                         std::optional<hand_mode> source_hand(std::nullopt);
+                        BindPayload previous = empty_bind();
+                        if (!target.isEmpty() && !GameData::is_clear_spell(target.formID)) {
+                            previous = payload_from_skill(target);
+                        }
                         if (payload_n.source_slot != nullptr) {
                             source_hand = payload_n.source_slot->hand;
-                            if (!target.isEmpty() && !GameData::is_clear_spell(target.formID)) {
-                                payload_n.source_slot->update_skill_assignment(target.formID);
-                                payload_n.source_slot->hand = target.hand;
-                            }
-                            else {
-                                payload_n.source_slot->clear();
+                            apply_payload_to_skill(*payload_n.source_slot, previous);
+                            if (previous.form_id != 0) {
+                                payload_n.source_slot->hand = target_hand;
                             }
                         }
 
-                        if (payload_n.get_form_id() != 0U) {
-                            target.update_skill_assignment(payload_n.get_form_id());
-                            if (source_hand.has_value()) {
-                                target.hand = source_hand.value();
-                            }
-                        }
-                        else
-                        {
-                            target.clear();
+                        const BindPayload incoming = payload_n.to_payload();
+                        apply_payload_to_skill(target, incoming);
+                        if (incoming.form_id != 0 && source_hand.has_value()) {
+                            target.hand = source_hand.value();
                         }
                         RE::PlaySound(Input::sound_UISkillsFocus);
                     }
@@ -1016,6 +1177,12 @@ namespace SpellHotbar::BindMenu {
                     RenderManager::show_skill_tooltip(form);
                 }
             }
+            else if (button_hovered && skill.type == slot_type::weapon_art) {
+                const ArtDefinition* art = GameData::get_art(skill.art_id);
+                if (art != nullptr) {
+                    RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(skill.art_id)));
+                }
+            }
             ImGui::SameLine();
 
             if (!Bars::use_keybind_icons()) {
@@ -1047,7 +1214,7 @@ namespace SpellHotbar::BindMenu {
                 ImGui::GetWindowDrawList()->AddText(count_text_pos, ImColor(255, 255, 255), text.c_str());
             }
 
-            std::string text = GameData::resolve_spellname(skill.formID);
+            std::string text = GameData::resolve_slot_name(skill);
 
             //draw text in grey if it was inherited from parent bar
             int grey_val = inherited ? 127 : 255;

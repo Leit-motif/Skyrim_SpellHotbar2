@@ -1336,6 +1336,26 @@ bool RenderManager::draw_art_icon(uint32_t art_id, int size, ImU32 col)
     return true;
 }
 
+bool RenderManager::draw_art_icon_in_editor(uint32_t art_id, ImVec2 pos, int size, ImU32 col)
+{
+    const ArtDefinition* art = GameData::get_art(art_id);
+    if (!art) {
+        return false;
+    }
+    GameData::DefaultIconType type = GameData::DefaultIconType::UNKNOWN;
+    if (TextureCSVLoader::default_icon_names.contains(art->icon)) {
+        type = TextureCSVLoader::default_icon_names.at(art->icon);
+    }
+    if (!default_icons.contains(type)) {
+        return false;
+    }
+    auto& img = default_icons.at(type);
+    ImGui::GetWindowDrawList()->AddImage(img.get_res(), ImVec2(pos.x, pos.y), ImVec2(pos.x + size, pos.y + size),
+        img.uv0, img.uv1, col);
+    draw_slot_overlay(pos, size);
+    return true;
+}
+
 bool RenderManager::draw_skill_in_editor(RE::FormID formID, ImVec2 pos, int size, ImU32 col)
 {
     SubTextureImage* img = get_tex_for_skill_internal(formID);

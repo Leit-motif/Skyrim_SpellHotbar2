@@ -1,6 +1,7 @@
 #include "gameloop_hook.h"
 #include "../logger/logger.h"
 #include "../casts/casting_controller.h"
+#include "../casts/clip_translation_driver.h"
 #include "../casts/spell_proc.h"
 #include "../game_data/game_data.h"
 #include "../bar/hotbars.h"
@@ -12,13 +13,14 @@ namespace SpellHotbar::events {
 	void GameLoopHook::Timinghook()
 	{
         _Timinghook();
+        auto pc = RE::PlayerCharacter::GetSingleton();
         auto ui = RE::UI::GetSingleton();
         if (ui && !ui->GameIsPaused()) {
             casts::CastingController::update_cast(deltaTime);
             casts::SpellProc::update_timer(deltaTime);
+            casts::ClipTranslationDriver::apply(pc);
         }
         Bars::update_oblivion_bar_press_show_timer(deltaTime);
-        auto pc = RE::PlayerCharacter::GetSingleton();
         if (pc) {
             bool blocking = pc->IsBlocking();
             if (blocking) {

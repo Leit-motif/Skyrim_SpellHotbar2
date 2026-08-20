@@ -171,13 +171,13 @@ namespace SpellHotbar::Storage {
 
         const auto art_binds = collect_art_binds();
         if (!a_intfc->OpenRecord(wart_record, Storage::save_format)) {
-            logger::error("Could not store weapon art binds!");
+            logger::error("Could not store ability binds!");
         } else {
             const auto bytes = encode_art_binds(art_binds);
             if (!a_intfc->WriteRecordData(bytes.data(), static_cast<uint32_t>(bytes.size()))) {
-                logger::error("Failed to write weapon art binds");
+                logger::error("Failed to write ability binds");
             } else {
-                logger::info("Saved {} weapon art bind(s)", art_binds.size());
+                logger::info("Saved {} ability bind(s)", art_binds.size());
             }
         }
 
@@ -561,7 +561,7 @@ namespace SpellHotbar::Storage {
             else if (type == wart_record) {
                 std::vector<uint8_t> bytes(length);
                 if (length > 0 && !a_intfc->ReadRecordData(bytes.data(), length)) {
-                    logger::error("Failed to read weapon art binds");
+                    logger::error("Failed to read ability binds");
                 } else {
                     std::vector<ArtBind> binds;
                     if (!decode_art_binds(bytes, binds)) {

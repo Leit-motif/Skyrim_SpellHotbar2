@@ -13,6 +13,7 @@
 #include "spell_cast_data.h"
 #include "../input/modes.h"
 
+#include <algorithm>
 #include <random>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -29,6 +30,8 @@ namespace SpellHotbar::GameData {
     constexpr std::string_view custom_transformations_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\transformdata\\";
     constexpr std::string_view animation_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\animationdata\\";
     constexpr std::string_view art_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\artdata\\";
+    constexpr std::string_view custom_art_pack_root =
+        ".\\data\\meshes\\actors\\character\\animations\\OpenAnimationReplacer\\SpellHotbar2Arts\\";
 
     inline const std::string keynames_csv_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\keynames\\keynames.csv";
     inline const std::string translation_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\localization\\translation.txt";
@@ -423,6 +426,7 @@ namespace SpellHotbar::GameData {
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
+        ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
 
         spell_effects_key_indices = nullptr; //no longer need this
 
@@ -521,6 +525,7 @@ namespace SpellHotbar::GameData {
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
+        ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
         spell_effects_key_indices = nullptr;  // no longer need this
     }
 
@@ -875,6 +880,17 @@ namespace SpellHotbar::GameData {
         } else {
             return form->GetName();
         }
+    }
+
+    std::string resolve_slot_name(const SlottedSkill& skill) {
+        if (skill.type == slot_type::weapon_art) {
+            const ArtDefinition* art = get_art(skill.art_id);
+            if (art == nullptr) {
+                return "<INVALID>";
+            }
+            return art->display_name;
+        }
+        return resolve_spellname(skill.formID);
     }
 
     std::tuple<bool, float> shouldShowHUDBar() {
@@ -1350,6 +1366,17 @@ namespace SpellHotbar::GameData {
             return nullptr;
         }
         return &it->second;
+    }
+
+    std::vector<uint32_t> list_art_ids()
+    {
+        std::vector<uint32_t> ids;
+        ids.reserve(art_cast_info.size());
+        for (const auto& entry : art_cast_info) {
+            ids.push_back(entry.first);
+        }
+        std::sort(ids.begin(), ids.end());
+        return ids;
     }
 
     void set_art_selector(int value)

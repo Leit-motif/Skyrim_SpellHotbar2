@@ -9,7 +9,7 @@ namespace SpellHotbar::Storage {
     * 3 - SpellHotbar2, alpha 0.0.5
     * 4 - SpellHotbar2, alpha 0.0.7
     * 5 - SpellHotbar2, alpha 0.0.13
-    * 6 - Weapon Art slots (kind byte + art_id payload)
+    * 6 - Ability slots (kind byte + art_id payload)
     */
     constexpr uint32_t save_format = 6U;
 

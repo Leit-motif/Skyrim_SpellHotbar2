@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — ticket 01 resolved on `weapon-arts`; bind menu and Art Packs are next
+Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 07 agent-done (owner cells 1–3 open); 06, 08–09 remain.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -100,17 +100,26 @@ worn keyword. Ticket 01's `AABL_Attack_A` generator is an inert bootstrap, not a
     bindings are durable.
 29. As the fork maintainer, I want a missing or broken art to degrade loudly, so that a silent dead
     button is never the failure mode.
+30. As a player, I want a bound art to sit on the bar even when my weapon class does not match, and
+    to gray out and refuse until it does, so a dead press is explained rather than playing a different
+    clip.
+31. As a player, I want empty numbered art folders I can drop a clip (and name/icon) into, so adding
+    an art does not require editing the fork.
+32. As a player who does not customize, I want the Ashes of War catalogue when that mod is installed,
+    so I have a baseline set without copying anyone's `.hkx`.
 
 ## Implementation Decisions
 
 ### Vocabulary (belongs in `CONTEXT.md`; proposed here)
 
-- **Weapon Art** — a bindable attack animation played from a hotbar slot without equipping
-  anything. _Avoid_: power attack, additional attack, ash of war.
-- **Art Selector** — the global the fork sets to name which Weapon Art plays; OAR conditions read
-  it. Zero means no fork art is selected. _Avoid_: art keyword, worn art.
-- **Art Pack** — a set of OAR submods keyed to the Art Selector. _Avoid_: animation mod, moveset.
-- **Terminal Art / Chaining Art** — an art whose clip does not, or does, carry MCO window
+- **Ability** — a bindable animation played from a hotbar slot without equipping
+  anything. _Avoid_: weapon art, art (product name), power attack, additional attack, ash of war.
+- **Ability Selector** — the global the fork sets to name which Ability plays; OAR conditions read
+  it. Zero means no fork ability is selected. ESP form remains `SpellHotbar_ArtSelector`.
+- **Ability Pack** — a set of OAR submods keyed to the Ability Selector. _Avoid_: animation mod, moveset.
+- **Ability Class** — 1H / 2H / Dual / Generic; gray-out and refuse. Catalogue column is still `ArtClass`.
+- **Custom Ability Folder** — SH2-owned `Custom_Ability_N` drop-in; a catalogue row, not a slot index.
+- **Terminal Ability / Chaining Ability** — an ability whose clip does not, or does, carry MCO window
   annotations. A property of the clip, never of the binding.
 
 ### The graph
@@ -131,16 +140,26 @@ worn keyword. Ticket 01's `AABL_Attack_A` generator is an inert bootstrap, not a
   tuned here, and is independent of whether the clip opens a chain window.
 - `SH2_Art_State` reuses **Cast Plant**: WASD capture follows `ArtDriver::is_active()`, and the
   clip generator is wrapped with the same `bAnimationDrivenIsActiveModifier` as the Driver Cast
-  states. This is input lock, not a freeze — AMR / clip translation still apply.
+  states. That wrap plants against WASD. Clip `animmotion` is consumed by SH2 (ticket 05): the
+  bound file’s keys are applied as XY while the shtb driver is live. The fork does not enter
+  another mod’s moving state to get that motion.
 
 ### Selection
 
-- The Art Selector is a SH2 global, written natively immediately before entry and cleared on exit.
-  Zero means no SH2 art is live. OAR or PIE may read it. It is not a worn-item keyword.
-- A catalogue row names the clip (any MCO-annotated HKX). Adding an art is a row plus a file
+- The Ability Selector is a SH2 global, written natively immediately before entry and cleared on exit.
+  Zero means no SH2 ability is live. OAR or PIE may read it. It is not a worn-item keyword.
+- A catalogue row names the clip (any MCO-annotated HKX). Adding an ability is a row plus a file
   already in the load order. How that file is attached to `SH2_Art_State` is ticket 03.
+- Ability Packs are **this fork’s** OAR submods. Conditions compare the Ability Selector (plus player);
+  worn keywords and fine OAR weapon-type gates stay on the author’s configs. SH2 does **not**
+  copy those ORs onto its `config.json`. Priority is a reserved SH2 band that wins over stance
+  defaults, including Sword Neutral (`1001002544`). Ticket 04’s emit is SH2-owned `config.json` under
+  `OpenAnimationReplacer/SpellHotbar2Arts/<Art>/`.
+- **Ability Class** is data on the catalogue row, not an OAR condition. Values: **1H**, **2H**,
+  **Dual**, **Generic** as ticket 07. Wrong class: the ability **binds anyway**. The slot is gray;
+  a press is refused (WoW dead-ability pattern).
 - Rejected: importing Ashes of War's AABL path, hotkey, or slot-55 identity as SH2 machinery
-  (ADR-0009). One Nemesis generator per art is also rejected unless ticket 03 proves it is the
+  (ADR-0009). One Nemesis generator per ability is also rejected unless ticket 03 proves it is the
   only way to attach arbitrary HKX.
 
 ### Chaining
@@ -160,13 +179,16 @@ worn keyword. Ticket 01's `AABL_Attack_A` generator is an inert bootstrap, not a
   assignment, serialisation, icon resolution, the bind menu — needs an identity for it. Serialised
   bar data gains a version.
 - Art definitions are data, following the existing spell-data loader precedent: id, display name,
-  icon, Art Selector value, stamina cost, cooldown, and global cooldown. Balancing is a data edit.
+  icon, Art Selector value, Art Class, stamina cost, cooldown, and global cooldown. Balancing is a
+  data edit. Distinct per-art icons are ticket 06 (extra atlas, original glyphs, sample first).
 - The press routes through the existing input-mode dispatch, so the existing Papyrus slot-activation
-  function drives it unchanged.
+  function drives it unchanged. `try_start_art` refuses on cooldown, unaffordable stamina, or Art
+  Class mismatch **before** writing the selector.
 - Cost and cooldown are the fork's, using its existing casting-instance machinery, so the hotbar can
-  render the cooldown. `Additional Attack by Loop`'s spells and perks are not consulted.
-- A refused press — unaffordable, on cooldown, wrong stance — highlights the slot in the error state
-  the other slot kinds already use.
+  render the cooldown. `Additional Attack by Loop`'s spells and perks are not consulted. This fork
+  does not require that mod's hotkey or Stances perks for bound arts.
+- A refused press — unaffordable, on cooldown, wrong Art Class — highlights the slot in the error
+  state the other slot kinds already use, and grays the icon while the mismatch holds.
 
 ### Mid-swing
 
@@ -176,19 +198,38 @@ worn keyword. Ticket 01's `AABL_Attack_A` generator is an inert bootstrap, not a
 
 ### Ownership (ADR-0001)
 
-- **Core Fork**: the slot kind, the art data loader, the Art Selector write, the graph patch, the
-  normalise policy, the deferral adapter.
-- **Compatibility Package**: the `Ashes of War` integration, and any Nolvus-specific gating such as
-  the per-weapon-class perk checks that modlist's own script adds.
+- **Core Fork**: the slot kind, the art data loader, Art Class gray-out, the Art Selector write,
+  the graph patch, the normalise policy, the deferral adapter, and the empty `Custom_Ability_1`…`N`
+  Custom Ability folders (`N` = `max_bar_size` = 12; extra numbered folders still scan).
+- **Compatibility Package**: the `Ashes of War` **pointer** pack (catalogue + SH2 `config.json`
+  with `overrideAnimationsFolder`, no copied `.hkx`), and any Nolvus-specific gating. Installer
+  gates that group on the items plugin.
 - The graph patch living in the core fork repeats ADR-0006's recorded deviation and is accepted on
   the same terms.
 
 ### Using Ashes of War as a clip pile
 
 - Concept only: named special attacks. Not its items, hotkey, or AABL-only path.
-- A generator may read an installed Ashes of War folder tree and emit catalogue rows that *point
-  at* those HKX files in the VFS. No copies. Missing/renamed folders fail loudly.
-- People who still use Ashes of War the old way keep that path; SH2 arts do not go through it.
+- **Pointer pack**, not a redistributed overlay. Ships as Spell Hotbar 2 OAR submods —
+  `config.json` under this fork’s Ability Pack tree, no animation files copied. Each submod points
+  at the author’s existing clip (`overrideAnimationsFolder`). Authoring-time scan of their
+  folders is data, not a runtime call.
+- Generated by a script that reads an installed `Ashes of War`; both the output and the script
+  ship. The installer gates the group on the items plugin. A FOMOD cannot run the conversion.
+- Ticket 04 landed the SH2-owned pack: `config.json` only, `overrideAnimationsFolder`
+  aimed at the author’s folder, reserved priority `2000000000 + selector`.
+- Custom abilities do **not** live in `Animations - Rapier M` or the stance-default `Ashes of War *`
+  folders. Players drop clips into SH2 Custom Ability Folders (ticket 08).
+
+### Custom Ability Folders
+
+- Core ships `Custom_Ability_1` … `Custom_Ability_12` under `SpellHotbar2Arts`, each a catalogue row
+  the bind menu lists. Folder index is not a hotbar slot index.
+- The player drops `AABL_Attack_A.hkx` (and optional display-name / icon files) into a folder.
+  Extra numbered folders (`Custom_Ability_13`, …) still scan in. Default Ability Class is Generic.
+- In-game rename / icon pick waits with the editor (ticket 09). V1 is folder files.
+- A dummy template clip may carry a PIE / `SH2_ArtEffect` placeholder if that is cheap; pointed
+  AoW `.hkx` files are not annotated. The editor later assigns a spell/MGEF onto that marker.
 
 ## Testing Decisions
 
@@ -222,16 +263,25 @@ normalise policy, and no amount of per-art measurement adds to it.
 ## Out of Scope
 
 - Authoring or editing animations. The fork plays clips; it does not make them.
-- Redistributing `Ashes of War`'s clips, or any other Art Pack's.
+- Redistributing `Ashes of War`'s clips, or any other Art Pack's. The public optional pack is a
+  pointer; a user who wants copies drops files into Custom Art Folders themselves.
+- Runtime notifies, DLL calls, or ownership variables of MSCO, Additional Attack, or Ashes of
+  War. The fork plays clips from its own shtb states and its own OAR directories.
 - Reimplementing `Additional Attack by Loop`'s stamina spells, sweep perks or damage perks. The
   fork's own cost and cooldown replace them for arts it drives; that mod's own hotkey is untouched.
 - Weapon arts for NPCs. Player only.
-- Arts outside melee. The weapon behaviour is the only graph in scope; sheathed, bow and staff
-  stances have no state to enter and are not given one.
-- Editing the sibling MCO shout behaviour engine from this repository. Consuming its published
+- Arts outside melee **in this effort**. Sheathed, bow, and staff have no shtb art state yet; those
+  slots gray. A later SH2.mco staff path (Dragon Age-style MCO staff, integrated here) can un-gray
+  staff arts; it is not this spec.
+- Fine OAR `IsEquippedType` gates on SH2 `config.json`. Art Class is catalogue data.
+- Slot-locked folders (`Custom_Ability_1` is not key 1).
+- In-game Weapon Arts editor (pick clip, assign PIE spell/MGEF, rename, pick icon). Folder files
+  are v1; ticket 09 is the enhancement.
+- Editing the sibling MCO shout behavior engine from this repository. Consuming its published
   cast-intent API is in scope.
 - Per-art tuning of release timing beyond the clip's own annotations.
 - Publishing modified binaries.
+- Nordic UI second icon tint (later).
 
 ## Further Notes
 
@@ -249,11 +299,34 @@ installed modlist. Recorded so the next agent does not re-derive them:
 - Clip motion comes from Animation Motion Revolution annotations, not from the behaviour project's
   registered motion data, so arts sharing one registered path is a small risk rather than a large
   one. Animation Motion Revolution, Precision and Payload Interpreter are all present in the
-  target modlist and the clips depend on them.
+  target modlist and the clips depend on them. Disengage’s playing file already carries ~3 m of
+  Y `animmotion`; AMR parses it; SH2 consumes it on shtb clips (ticket 05). Dumps:
+  `.scratch/weapon-arts/disengage-aow.txt` and `disengage-delia.txt`.
 - `Ashes of War` art identity is currently a slot-55 clothing item's keyword across 57 items; that
   entire mechanism becomes redundant for arts the fork binds, and is left alone rather than
   removed.
+- Nolvus AoW is two layers: stance-default AA (High/Mid/Low/Neutral × weapon class, Stances perks)
+  and 57 named ashes (worn KYWD + often fine type ORs). Wrong weapon on the AA hotkey **falls
+  through** to the stance default. SH2 bound arts do not: they gray/refuse (ticket 07). Generator
+  skips `Ashes of War *` stance-default folders (no items-plugin keyword).
+- Grill 2026-08-18: pointer pack + Custom Art Folders; Art Class 1H/2H/Dual/Generic; WoW gray-out;
+  editor later; icons original/hybrid/extra-atlas/sample-first. Dual is its own tag.
 
 Architectural decisions: ADR-0009 (any MCO clip; SH2/PIE machinery; Ashes of War is concept not
-system), ADR-0008 (Art Selector is SH2's live-art name). ADR-0007's AABL path contract is
+system), ADR-0008 (Ability Selector is SH2's live-ability name). ADR-0007's AABL path contract is
 superseded.
+
+## Tickets
+
+| # | Status | What |
+|---|---|---|
+| [01](issues/01-play-a-bound-weapon-art-from-drawn-idle.md) | resolved | Play a bound art from drawn idle |
+| [02](issues/02-bind-a-weapon-art-from-the-bind-menu.md) | resolved | Bind an art from the Binding Menu |
+| [03](issues/03-map-an-art-pack-folder-to-a-catalogue-row.md) | resolved | Folder → catalogue row + selector |
+| [04](issues/04-own-the-art-pack-in-sh2-oar-directories.md) | claimed — agent 3–6 passed | Art Pack lives in SH2 OAR directories |
+| [05](issues/05-consume-clip-translation-on-shtb-states.md) | resolved | shtb states consume clip translation |
+| [06](issues/06-procure-weapon-art-icons.md) | ready-for-agent | Distinct icon per named ash |
+| [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
+| [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
+| [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |
+| [10](issues/10-queue-arts-into-and-out-of-attacks.md) | needs-triage | Queue arts into / out of attacks |

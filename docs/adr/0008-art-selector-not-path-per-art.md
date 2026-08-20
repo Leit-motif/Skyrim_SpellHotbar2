@@ -1,4 +1,4 @@
-# Which Weapon Art plays is an Art Selector global, not a path per art
+# Which Ability plays is an Ability Selector global, not a path per art
 
 Date: 2026-08-12
 
@@ -12,14 +12,14 @@ keyword. The graph is not required to play `AABL_Attack_A.hkx`.
 ADR-0009: the live art is SH2 data, not a hardcoded AABL path. Something still has to name
 *which* art is playing so OAR or PIE conditions can branch.
 
-The fork already runs a TESGlobal for cast animations. The Art Selector is that pattern for
-Weapon Arts. It is not Ashes of War's worn-item keyword.
+The fork already runs a TESGlobal for cast animations. The Ability Selector is that pattern for
+Abilities. It is not Ashes of War's worn-item keyword. Conditions (OAR or PIE) may read it.
 
 ## Decision
 
-A slot holds an art id. Pressing it writes an **Art Selector** TESGlobal in the fork's plugin
+A slot holds an ability id. Pressing it writes an **Ability Selector** TESGlobal in the fork's plugin
 immediately before the entry event is raised, and clears it when the state exits. Zero means no
-SH2 art is live.
+SH2 ability is live. The ESP form remains `SpellHotbar_ArtSelector`.
 
 Conditions (OAR or PIE) may read that global. They do not replace SH2's bind/press/state/plant.
 

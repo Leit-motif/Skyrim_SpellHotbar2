@@ -8,7 +8,7 @@ itself.
 
 **Blocked by:** None. Ticket 19 is resolved; this is leftover presentation on the same clips.
 
-**Status:** deferred — cosmetic only; graph-wrap path exhausted (see 2026-08-16). Revisit via HKX animmotion spike or magic-graph bridge if product cares.
+**Status:** deferred — superseded by `.scratch/weapon-arts/issues/05-consume-clip-translation-on-shtb-states.md`. Graph-wrap path exhausted (see 2026-08-16). Do not reopen the MSCO-bridge or copied-HKX options; 05 forbids both.
 
 ## How this showed up
 
@@ -135,6 +135,12 @@ Ice Spike. Agent agrees ROI on current path is poor.
 1. HKX — embed animmotion on SH2-owned copies; one-clip in-game test before batching four.
 2. Architecture — bridge Driver Cast into nested magic MSCO path without stealing ownership vars.
 3. Accept gap — document known cosmetic difference vs native LH when weapon drawn.
+
+**2026-08-17 — superseded.** Owner: motion is product-critical for Weapon Arts (Disengage),
+and SH2 must not call MSCO / AoW / other mods. Follow-up is weapon-arts ticket 05 (consume
+clip translation on shtb states, arts and casts together). Options 1 and 2 above are
+**closed**. Ticket 21 findings (HKS wrap plants, never translates; native step is MSCO.dll
+nest) still stand — do not re-derive.
 
 
 Save72, rapier drawn, Ice Spike left. Native left-hand cast: small forward move. SH2

@@ -1,0 +1,29 @@
+{
+    "name": "Custom Ability 5",
+    "priority": 2000001005,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "D63"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1005.0
+            }
+        },
+        {
+            "condition": "IsActorBase",
+            "requiredVersion": "1.0.0.0",
+            "Actor base": {
+                "pluginName": "Skyrim.esm",
+                "formID": "7"
+            }
+        }
+    ]
+}

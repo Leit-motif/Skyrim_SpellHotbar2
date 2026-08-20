@@ -381,7 +381,10 @@ namespace SpellHotbar
                 p = ImGui::GetCursorScreenPos();
             }
 
-            if (!RenderManager::draw_skill(skill.formID, icon_size, skill.color)) {
+            const bool drew_icon = (skill.type == slot_type::weapon_art)
+                ? RenderManager::draw_art_icon(skill.art_id, icon_size, skill.color)
+                : RenderManager::draw_skill(skill.formID, icon_size, skill.color);
+            if (!drew_icon) {
                 RenderManager::draw_bg(icon_size);
             } else {
                 if (RenderManager::should_overlay_be_rendered(skill_dat.overlay_icon)) {
@@ -432,7 +435,7 @@ namespace SpellHotbar
                 ImGui::GetWindowDrawList()->AddText(count_text_pos, ImColor(255, 255, 255), text.c_str());
             }
 
-            std::string text = GameData::resolve_spellname(skill.formID);
+            std::string text = GameData::resolve_slot_name(skill);
 
             //draw text in grey if it was inherited from parent bar
             int grey_val = inherited ? 127 : 255;
@@ -570,6 +573,8 @@ namespace SpellHotbar
             time_scale = cal->GetTimescale();
         }
         auto pc = RE::PlayerCharacter::GetSingleton();
+        const auto equipped_type =
+            pc ? GameData::getPlayerEquipmentType() : GameData::EquippedType::SPELL;
 
         if (Bars::layout == Bars::bar_layout::CIRCLE && m_barsize >= 3) {
             float w = ImGui::GetWindowWidth();
@@ -591,7 +596,7 @@ namespace SpellHotbar
                 
                 ImVec2 p2 = ImVec2(p.x + center.x + offset.x, p.y + center.y + offset.y);
                 ImGui::SetCursorScreenPos(p2);
-                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, i, p2, false);
+                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, i, p2, equipped_type, false);
                 offset = rotate_around_origin(offset, _sin, _cos);
             }
         }
@@ -608,7 +613,7 @@ namespace SpellHotbar
                 int ind = cross * 4;
                 auto [skill, inherited] = get_skill_in_bar_with_inheritance(ind, mod, true);
                 ImVec2 p = ImGui::GetCursorScreenPos();
-                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, false);
+                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, equipped_type, false);
                 ImGui::Dummy(ImVec2(static_cast<float>(icon_size), static_cast<float>(icon_size)));
                 if (cross < numcrosses - 1) {
                     ImGui::SameLine();
@@ -622,14 +627,14 @@ namespace SpellHotbar
                 int ind = 1 + cross * 4;
                 auto [skill, inherited] = get_skill_in_bar_with_inheritance(ind, mod, true);
                 ImVec2 p = ImGui::GetCursorScreenPos();
-                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, false);
+                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, equipped_type, false);
                 ImGui::Dummy(ImVec2(static_cast<float>(icon_size), static_cast<float>(icon_size)));
                 ImGui::SameLine();
                 ind++;
                 bool new_line = !(cross < numcrosses - 1);
                 auto [skill2, inherited2] = get_skill_in_bar_with_inheritance(ind, mod, true);
                 p = ImGui::GetCursorScreenPos();
-                draw_single_skill(skill2, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, new_line);
+                draw_single_skill(skill2, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, equipped_type, new_line);
             }
             for (int cross = 0; cross < numcrosses; cross++) {
                 if (cross != 0) {
@@ -641,7 +646,7 @@ namespace SpellHotbar
                 int ind = 3 + cross * 4;
                 auto [skill, inherited] = get_skill_in_bar_with_inheritance(ind, mod, true);
                 ImVec2 p = ImGui::GetCursorScreenPos();
-                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, false);
+                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, ind, p, equipped_type, false);
                 ImGui::Dummy(ImVec2(static_cast<float>(icon_size), static_cast<float>(icon_size)));
                 if (cross < numcrosses - 1) {
                     ImGui::SameLine();
@@ -663,7 +668,7 @@ namespace SpellHotbar
                     c = 0;
                 }
                 ImVec2 p = ImGui::GetCursorScreenPos();
-                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, i, p, new_line);
+                draw_single_skill(skill, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur, game_time, time_scale, highlight_slot, highlight_factor, highlight_isred, mod, this->get_name(), pc, i, p, equipped_type, new_line);
 
             }
             if (Bars::use_keybind_icons()) {
@@ -694,6 +699,7 @@ namespace SpellHotbar
         RE::PlayerCharacter* pc,
         int slot_index,
         ImVec2 p,
+        GameData::EquippedType equipped_type,
         bool new_line)
     {
         GameData::Spell_cast_data skill_dat;
@@ -761,21 +767,27 @@ namespace SpellHotbar
                 RenderManager::draw_highlight_overlay(p, icon_size, IM_COL32(127, 127, 255, alpha_i));
             }
 
-            if (skill.type != slot_type::weapon_art && ((has_charges && count == 0) || GameData::is_on_binary_cd(skill.formID))) {
-                RenderManager::draw_cd_overlay(p, icon_size, 0.0f, IM_COL32(255, 255, 255, alpha_i));
-            }
-            else {
-                float cd_prog{0.0f};
-                if (skill.type == slot_type::weapon_art) {
+            if (skill.type == slot_type::weapon_art) {
+                const ArtDefinition* art = GameData::get_art(skill.art_id);
+                if (art && !art_class_is_live(art->art_class, equipped_type)) {
+                    RenderManager::draw_cd_overlay(p, icon_size, 0.0f, IM_COL32(255, 255, 255, alpha_i));
+                } else {
+                    float cd_prog{0.0f};
                     auto [gt_prog, gt_dur] = GameData::get_art_gametime_cooldown(game_time, skill.art_id);
                     if (gt_dur > 0.0f) {
                         cd_prog = gt_prog;
                     } else if (gcd_prog > 0.0f) {
                         cd_prog = gcd_prog;
                     }
-                } else {
-                    cd_prog = determine_cd(skill.formID, skill.type, game_time, time_scale, gcd_prog, gcd_dur, shout_cd, shout_cd_dur);
+                    if (cd_prog > 0.0f) {
+                        RenderManager::draw_cd_overlay(p, icon_size, cd_prog, IM_COL32(255, 255, 255, alpha_i));
+                    }
                 }
+            } else if ((has_charges && count == 0) || GameData::is_on_binary_cd(skill.formID)) {
+                RenderManager::draw_cd_overlay(p, icon_size, 0.0f, IM_COL32(255, 255, 255, alpha_i));
+            }
+            else {
+                float cd_prog = determine_cd(skill.formID, skill.type, game_time, time_scale, gcd_prog, gcd_dur, shout_cd, shout_cd_dur);
                 if (cd_prog > 0.0f) {
                     RenderManager::draw_cd_overlay(p, icon_size, cd_prog, IM_COL32(255, 255, 255, alpha_i));
                 }
@@ -901,7 +913,7 @@ namespace SpellHotbar
             return;
         }
         if (art_id != 0 && !GameData::get_art(art_id)) {
-            logger::error("Unknown weapon art {}", art_id);
+            logger::error("Unknown ability {}", art_id);
             return;
         }
         auto& skill = get_skill_in_bar_by_ref(static_cast<int>(index), modifier);

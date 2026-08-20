@@ -53,7 +53,7 @@ The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` /
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Cast Plant**:
-Input lock for a live shtb state (Driver Cast or Weapon Art): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Tickets 19 (capture + graph wrap) and 21 (making clip translation actually apply); Weapon Arts reuse the same plant.
+Input lock for a live shtb state (Driver Cast or Ability): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Ticket 19 is the plant; abilities ticket 05 applies clip translation from the playing file’s `animmotion` (supersedes the deferred mco-integration ticket 21). Abilities reuse the same plant.
 _Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means animation-driven translation, not input lock), freeze the actor in place
 
 **Chain Window**:
@@ -68,25 +68,37 @@ _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
 One pending request to activate a hotbar payload. Spell Hotbar 2 retains and revalidates it; ShoutMCO owns only its release or abandonment timing.
 _Avoid_: Copied spell payload, queued spell object
 
-**Weapon Art**:
-A special MCO attack clip bound to a hotbar slot and played on press, without equipping anything.
-The slot holds an art id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and
+**Ability**:
+A special animation bound to a hotbar slot and played on press, without equipping anything.
+The slot holds an ability id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and
 cooldown. PIE / clip annotations own hits, windows, and motion. The clip may be any MCO-annotated
 HKX the load order can see — not only `AABL_Attack_A.hkx`. Ashes of War is the concept (named
-special attacks), not the machinery (slot-55 items, AABL hotkey). _Avoid_: power attack, additional
-attack, ash of war (as a system).
+special attacks), not the machinery (slot-55 items, AABL hotkey). Pointer-pack ashes and Custom
+Abilities are both Abilities. _Avoid_: weapon art, art (as the product name), power attack,
+additional attack, ash of war (as a system).
 
-**Art Selector**:
-The TESGlobal SH2 writes to name which Weapon Art is live so OAR or PIE conditions can read it.
-Zero means no fork art is selected. _Avoid_: art keyword, worn art, Ashes of War item identity.
+**Ability Selector**:
+The TESGlobal SH2 writes to name which Ability is live so OAR or PIE conditions can read it.
+Zero means no fork ability is selected. The ESP form is still `SpellHotbar_ArtSelector` (form
+`D63`); that identifier is load-order wiring, not the UI name. _Avoid_: art keyword, worn art,
+Ashes of War item identity.
 
-**Art Pack**:
-A folder of MCO attack clips plus catalogue rows that name those files. May be generated from an
-installed Ashes of War tree; it is not that mod's OAR-on-AABL machinery. _Avoid_: animation mod
-as a synonym for the AABL hotkey pack.
+**Ability Pack**:
+A folder of clips plus catalogue rows that name those files, keyed to the Ability Selector. May be
+generated from an installed Ashes of War tree; it is not that mod's OAR-on-AABL machinery. The
+on-disk pack folder remains `SpellHotbar2Arts`. _Avoid_: animation mod, moveset.
 
-**Terminal Art / Chaining Art**:
-An art whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
+**Ability Class**:
+The coarse weapon-class tag on an Ability used for gray-out and refuse: **1H**, **2H**, **Dual**, or **Generic**. Live when the player's current `EquippedType` matches that tag; otherwise the slot is gray and the press is refused. Catalogue files still use an `ArtClass` column. Not OAR `IsEquippedType` and not a worn keyword. _Avoid_: weapon type, ash keyword, stance.
+
+**Custom Ability**:
+An Ability the player fills. Core ships drop-in folders `Custom_Ability_1` … `N` (plus extras). Catalogue name is **Custom Ability N** unless `name.txt` is present. A catalogue row, not a hotbar slot index. _Avoid_: slot folder, moveset slot.
+
+**Custom Ability Folder**:
+The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key.
+
+**Terminal Ability / Chaining Ability**:
+An ability whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
 
 ## Findings
 

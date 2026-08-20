@@ -1105,7 +1105,7 @@ namespace SpellHotbar::casts::CastingController {
 	bool is_movement_blocking_cast()
 	{
 		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
-		// owned by the graph wrap (ticket 21), not the DLL. Weapon Arts reuse
+		// owned by the graph wrap (ticket 21), not the DLL. Abilities reuse
 		// the same plant: input lock, clip motion still applies.
 		if (shtb_state_blocks_movement(MscoCastDriver::is_active() || ArtDriver::is_active())) {
 			return true;
@@ -1347,6 +1347,16 @@ namespace SpellHotbar::casts::CastingController {
 		const ArtDefinition* art = GameData::get_art(art_id);
 		if (!art) {
 			logger::warn("SH2 art: unknown art id {}", art_id);
+			return false;
+		}
+		if (!art->has_clip) {
+			logger::warn("SH2 art: empty Custom Ability '{}' (no AABL_Attack_A.hkx)", art->display_name);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+		if (!art_class_is_live(art->art_class, GameData::getPlayerEquipmentType())) {
+			logger::info("SH2 art: art {} refused, Art Class mismatch", art_id);
+			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
 		if (GameData::is_art_on_cd(art_id)) {
