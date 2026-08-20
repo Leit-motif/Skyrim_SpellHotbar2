@@ -63,7 +63,7 @@ namespace SpellHotbar::ArtDataCSVLoader {
 			return;
 		}
 		for (auto& art : arts) {
-			logger::info("Loaded weapon art {} '{}' selector={} class={}", art.id, art.display_name, art.selector,
+			logger::info("Loaded ability {} '{}' selector={} class={}", art.id, art.display_name, art.selector,
 				art_class_label(art.art_class));
 			GameData::set_art(std::move(art));
 		}
@@ -72,7 +72,7 @@ namespace SpellHotbar::ArtDataCSVLoader {
 	void load_art_data(std::filesystem::path folder)
 	{
 		if (!std::filesystem::exists(folder)) {
-			logger::warn("Art data folder '{}' is missing; no Weapon Arts loaded", folder.string());
+			logger::warn("Ability data folder '{}' is missing; no Abilities loaded", folder.string());
 			return;
 		}
 		csv::load_folder(folder, "artdata", load_art_file);
@@ -97,7 +97,7 @@ namespace SpellHotbar::ArtDataCSVLoader {
 			const auto art = custom_art_from_folder(*number, name, read_text(entry.path() / "name.txt"),
 				read_text(entry.path() / "icon.txt"), folder_has_aabl(entry.path()));
 			if (!art.has_clip) {
-				logger::warn("SH2 art: empty Custom Art Folder {} (no AABL_Attack_A.hkx)", name);
+				logger::warn("SH2 art: empty Custom Ability {} (no AABL_Attack_A.hkx)", name);
 			}
 			logger::info("Loaded custom art {} '{}' selector={} clip={}", art.id, art.display_name, art.selector,
 				art.has_clip);

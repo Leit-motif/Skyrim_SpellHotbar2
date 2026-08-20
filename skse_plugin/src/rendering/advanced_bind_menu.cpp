@@ -12,6 +12,11 @@ namespace SpellHotbar::BindMenu {
 
     bool show_frame = false;
 
+    const char* art_row_type_key(uint32_t)
+    {
+        return "$TYPE_ABILITY";
+    }
+
     constexpr int filter_buf_size = 256;
     char filter_buf[filter_buf_size] = "";
     int tab_index{ 0 };
@@ -25,7 +30,7 @@ namespace SpellHotbar::BindMenu {
     std::array<std::string, 4> rank_texts_shout = { "$WORDS_0", "$WORDS_1", "$WORDS_2", "$WORDS_3" };
     std::array<std::string, 6> school_texts = { "$DASH", "$TAB_TEXT_ALTERATION", "$TAB_TEXT_CONJURATION", "$TAB_TEXT_DESTRUCTION", "$TAB_TEXT_ILLUSION", "$TAB_TEXT_RESTORATION"};
 
-    std::array<std::string, 10> type_texts = { "$TYPE_POTION", "$TYPE_SPELL", "$TYPE_LESSER_POWER", "$TYPE_GREATER_POWER", "$TYPE_SHOUT", "$TYPE_SCROLL", "$TYPE_POISON", "$TYPE_FOOD", "$TYPE_WEAPON_ART", "$DASH" };
+    std::array<std::string, 10> type_texts = { "$TYPE_POTION", "$TYPE_SPELL", "$TYPE_LESSER_POWER", "$TYPE_GREATER_POWER", "$TYPE_SHOUT", "$TYPE_SCROLL", "$TYPE_POISON", "$TYPE_FOOD", "$TYPE_ABILITY", "$DASH" };
 
     std::array<std::string, 14> tab_texts = {
         "$TAB_TEXT_ALL",
@@ -646,7 +651,7 @@ namespace SpellHotbar::BindMenu {
         Rendering::GuiTabButton::draw("##TabPotions", TabIndex_Potions, GameData::DefaultIconType::TAB_POTIONS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Potions])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabPoisons", TabIndex_Poisons, GameData::DefaultIconType::TAB_POISONS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Poisons])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabFood", TabIndex_Food, GameData::DefaultIconType::TAB_FOOD, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Food])); ImGui::SameLine();
-        Rendering::GuiTabButton::draw("##TabArts", TabIndex_Arts, GameData::DefaultIconType::GREATER_POWER, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Arts]));
+        Rendering::GuiTabButton::draw("##TabAbilities", TabIndex_Arts, GameData::DefaultIconType::GREATER_POWER, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Arts]));
         ImGui::PopStyleVar();
 
         int bsize = static_cast<int>(30.0f * scale_factor);
@@ -753,14 +758,14 @@ namespace SpellHotbar::BindMenu {
                         if (art == nullptr) {
                             continue;
                         }
-                        ImGui::PushID("weapon_art");
+                        ImGui::PushID("ability");
                         ImGui::PushID(static_cast<int>(art_id));
                         ImGui::TableNextRow();
 
                         ImGui::TableNextColumn();
                         RenderManager::draw_art_icon(art_id, table_icon_size);
                         if (ImGui::IsItemHovered()) {
-                            RenderManager::show_tooltip(art->display_name, translate("$TYPE_WEAPON_ART"));
+                            RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
                         set_drag_source_art(art_id, scale_factor);
 
@@ -768,7 +773,7 @@ namespace SpellHotbar::BindMenu {
                         ImGui::TextUnformatted(art->display_name.c_str());
 
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(translate_c("$TYPE_WEAPON_ART"));
+                        ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c("$DASH"));
@@ -1175,7 +1180,7 @@ namespace SpellHotbar::BindMenu {
             else if (button_hovered && skill.type == slot_type::weapon_art) {
                 const ArtDefinition* art = GameData::get_art(skill.art_id);
                 if (art != nullptr) {
-                    RenderManager::show_tooltip(art->display_name, translate("$TYPE_WEAPON_ART"));
+                    RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(skill.art_id)));
                 }
             }
             ImGui::SameLine();

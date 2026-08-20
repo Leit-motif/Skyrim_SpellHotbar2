@@ -27,11 +27,11 @@ void a_row_loads_every_art_field()
 {
 	const char* tsv =
 		"ArtID\tDisplayName\tIcon\tSelector\tArtClass\tStaminaCost\tCooldown\tGlobalCooldown\n"
-		"1\tTest Art\tGREATER_POWER\t1\tGeneric\t25\t8s\t1.0\n";
+		"1\tTest Ability\tGREATER_POWER\t1\tGeneric\t25\t8s\t1.0\n";
 	const auto arts = parse_art_tsv(tsv);
 	expect(arts.size() == 1, "one data row loads");
 	expect(arts.size() == 1 && arts[0].id == 1, "ArtID is 1");
-	expect(arts.size() == 1 && arts[0].display_name == "Test Art", "DisplayName is Test Art");
+	expect(arts.size() == 1 && arts[0].display_name == "Test Ability", "DisplayName is Test Ability");
 	expect(arts.size() == 1 && arts[0].icon == "GREATER_POWER", "Icon is GREATER_POWER");
 	expect(arts.size() == 1 && arts[0].selector == 1, "Selector is 1");
 	expect(arts.size() == 1 && arts[0].art_class == ArtClass::Generic, "ArtClass Generic is Generic");
@@ -85,7 +85,7 @@ void non_positive_cooldown_means_none()
 
 void missing_header_loads_nothing()
 {
-	const auto arts = parse_art_tsv("1\tTest Art\tGREATER_POWER\t1\tGeneric\t25\t8s\t1.0\n");
+	const auto arts = parse_art_tsv("1\tTest Ability\tGREATER_POWER\t1\tGeneric\t25\t8s\t1.0\n");
 	expect(arts.empty(), "a file without the required header is not an art catalogue");
 }
 
@@ -93,7 +93,7 @@ void header_without_art_class_loads_nothing()
 {
 	const auto arts = parse_art_tsv(
 		"ArtID\tDisplayName\tIcon\tSelector\tStaminaCost\tCooldown\tGlobalCooldown\n"
-		"1\tTest Art\tGREATER_POWER\t1\t25\t8s\t1.0\n");
+		"1\tTest Ability\tGREATER_POWER\t1\t25\t8s\t1.0\n");
 	expect(arts.empty(), "a catalogue without an ArtClass column is not loaded");
 }
 
@@ -151,14 +151,16 @@ void generic_art_is_live_on_melee_and_fists_only()
 
 void custom_folder_number_is_not_a_slot_index()
 {
-	const auto n = SpellHotbar::parse_custom_art_folder_number("Weapon_Art_3");
-	expect(n.has_value() && *n == 3, "Weapon_Art_3 is folder 3");
+	const auto n = SpellHotbar::parse_custom_art_folder_number("Custom_Ability_3");
+	expect(n.has_value() && *n == 3, "Custom_Ability_3 is folder 3");
 	expect(!SpellHotbar::parse_custom_art_folder_number("Ashes of War Sword Neutral").has_value(),
 		"stance-default folders are not custom templates");
-	const auto art = SpellHotbar::custom_art_from_folder(3, "Weapon_Art_3", "", "", false);
+	const auto art = SpellHotbar::custom_art_from_folder(3, "Custom_Ability_3", "", "", false);
 	expect(art.id == 1003, "ArtID is 1000 + folder number");
 	expect(art.selector == 1003, "selector is not hotbar slot 3");
-	expect(art.display_name == "Weapon_Art_3", "empty name file uses the folder name");
+	expect(art.display_name == "Custom Ability 3", "empty name file uses Custom Ability N");
+	expect(SpellHotbar::is_custom_ability(art.id), "Custom Ability ids sit above the ash band");
+	expect(!SpellHotbar::is_custom_ability(1), "Test Ability is not a Custom Ability");
 	expect(art.icon == "GREATER_POWER", "empty icon file uses GREATER_POWER");
 	expect(art.art_class == ArtClass::Generic, "custom folders are Generic");
 	expect(!art.has_clip, "empty template has no clip");
@@ -167,7 +169,7 @@ void custom_folder_number_is_not_a_slot_index()
 void custom_folder_files_override_name_and_icon()
 {
 	const auto art = SpellHotbar::custom_art_from_folder(
-		13, "Weapon_Art_13", "Rapier Lunge\n", "FLAMES\n", true);
+		13, "Custom_Ability_13", "Rapier Lunge\n", "FLAMES\n", true);
 	expect(art.id == 1013, "extra numbered folders still get an id");
 	expect(art.display_name == "Rapier Lunge", "name.txt first line is the display name");
 	expect(art.icon == "FLAMES", "icon.txt first line is the icon key");

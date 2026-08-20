@@ -249,7 +249,7 @@ struct MscoChargeCurve {
 // WASD capture follows the shtb state, not the cast instance. A ticket-10 cut
 // ends the state while the instance may still be alive for a frame; translation
 // must resume then so the swing can travel. Consecutive clips never send
-// CastExit, so they stay planted. Weapon Arts reuse this plant: SH2_Art_State
+// CastExit, so they stay planted. Abilities reuse this plant: SH2_Art_State
 // is an shtb state the same way the cast clips are.
 [[nodiscard]] constexpr bool shtb_state_blocks_movement(bool shtb_state_active) noexcept
 {

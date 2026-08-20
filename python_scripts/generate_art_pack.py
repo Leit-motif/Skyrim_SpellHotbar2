@@ -3,7 +3,7 @@
 Reads OpenAnimationReplacer folders that replace AABL_Attack_A.hkx (or that
 gate on the Ashes of War items plugin) and emits:
 
-1. arts.csv rows for the Weapon Art catalogue
+1. arts.csv rows for the Ability catalogue
 2. Spell Hotbar 2 OAR submods (config.json only) that CompareValues
    SpellHotbar_ArtSelector and point at the author's clip via
    overrideAnimationsFolder
@@ -11,7 +11,7 @@ gate on the Ashes of War items plugin) and emits:
 Never copies .hkx files. Never writes user.json onto foreign folders.
 Selector 0 is left to the original worn-item configs.
 
-Custom Art Folders (Weapon_Art_1..N) are emitted into the core tree with selector
+Custom Ability folders (`Custom_Ability_1`..N) are emitted into the core tree with selector
 conditions only — they own a dropped (or missing) AABL_Attack_A.hkx and do not
 use overrideAnimationsFolder. Ash regen preserves those folders.
 """
@@ -38,7 +38,8 @@ PRIORITY_BASE = 2_000_000_000
 FIRST_ART_ID = 2
 CUSTOM_ART_ID_BASE = 1000
 CUSTOM_TEMPLATE_COUNT = 12
-CUSTOM_FOLDER_RE = re.compile(r"^Weapon_Art_(\d+)$", re.IGNORECASE)
+CUSTOM_FOLDER_PREFIX = "Custom_Ability"
+CUSTOM_FOLDER_RE = re.compile(rf"^{CUSTOM_FOLDER_PREFIX}_(\d+)$", re.IGNORECASE)
 DEFAULT_ICON = "GREATER_POWER"
 DEFAULT_STAMINA = "25"
 DEFAULT_COOLDOWN = "8s"
@@ -306,9 +307,9 @@ def _equipped_type_value(node: dict) -> float | None:
 
 def _pack_config() -> dict:
     return {
-        "name": "Spell Hotbar 2 Weapon Arts",
+        "name": "Spell Hotbar 2 Abilities",
         "author": "Spell Hotbar 2",
-        "description": "Art Selector replacements: Custom Art Folders in this pack, and pointer configs for author clips.",
+        "description": "Ability Selector replacements: Custom Ability folders in this pack, and pointer configs for author clips.",
     }
 
 
@@ -357,8 +358,8 @@ def emit_custom_art_templates(core_root: Path, count: int = CUSTOM_TEMPLATE_COUN
     )
     rows: list[dict] = []
     for n in range(1, count + 1):
-        _write_custom_config(pack_root / f"Weapon_Art_{n}", n)
-        rows.append(_custom_row_from_folder(pack_root / f"Weapon_Art_{n}", n))
+        _write_custom_config(pack_root / f"{CUSTOM_FOLDER_PREFIX}_{n}", n)
+        rows.append(_custom_row_from_folder(pack_root / f"{CUSTOM_FOLDER_PREFIX}_{n}", n))
     return rows
 
 
@@ -399,11 +400,18 @@ def write_custom_arts_csv(path: Path, rows: Iterable[dict]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _custom_art_label(number: int) -> str:
+    return f"Custom Ability {number}"
+
+
 def _write_custom_config(folder: Path, number: int) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / "config.json"
     dest.write_text(
-        json.dumps(_custom_config(name=folder.name, selector=CUSTOM_ART_ID_BASE + number), indent=4)
+        json.dumps(
+            _custom_config(name=_custom_art_label(number), selector=CUSTOM_ART_ID_BASE + number),
+            indent=4,
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -419,7 +427,7 @@ def _custom_config(*, name: str, selector: int) -> dict:
 
 
 def _custom_row_from_folder(folder: Path, number: int) -> dict:
-    display = _first_line(folder / "name.txt") or folder.name
+    display = _first_line(folder / "name.txt") or _custom_art_label(number)
     icon = _first_line(folder / "icon.txt") or DEFAULT_ICON
     return {
         "folder": folder.name,
@@ -509,7 +517,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--emit-templates",
         action="store_true",
-        help="Write Weapon_Art_1..N Custom Art Folder templates into --core.",
+        help="Write Custom_Ability_1..N drop-in templates into --core.",
     )
     parser.add_argument(
         "--core",

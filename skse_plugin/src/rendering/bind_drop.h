@@ -4,7 +4,7 @@
 
 namespace SpellHotbar::BindMenu {
 
-// A bind-menu drop is either a TESForm FormID, a Weapon Art id, or empty.
+// A bind-menu drop is either a TESForm FormID, an Ability id, or empty.
 // The two identities must not share a slot: applying one clears the other.
 struct SlotBind {
 	uint32_t form_id{ 0 };

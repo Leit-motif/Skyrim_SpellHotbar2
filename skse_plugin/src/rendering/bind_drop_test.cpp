@@ -24,7 +24,7 @@ void expect(bool cond, const char* msg)
 void dropping_test_art_onto_empty_binds_the_art_id()
 {
 	const SlotBind next = apply_bind_drop(SlotBind{}, art_bind(1));
-	expect(next.art_id == 1, "Test Art id 1 is bound");
+	expect(next.art_id == 1, "Test Ability id 1 is bound");
 	expect(next.form_id == 0, "an art bind has no FormID");
 }
 
@@ -40,7 +40,7 @@ void dropping_an_art_onto_a_form_replaces_the_kind()
 {
 	SlotBind slot{ .form_id = 0x00012FCD, .art_id = 0 };
 	const SlotBind next = apply_bind_drop(slot, art_bind(1));
-	expect(next.art_id == 1, "Test Art replaces the spell");
+	expect(next.art_id == 1, "Test Ability replaces the spell");
 	expect(next.form_id == 0, "the previous FormID is cleared");
 }
 

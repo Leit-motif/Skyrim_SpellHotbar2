@@ -34,7 +34,7 @@ void a_weapon_art_bind_survives_encode_decode()
 	expect(restored.size() == 1 && restored[0].bar_id == '1HSP', "bar id is the 1h+spell bar");
 	expect(restored.size() == 1 && restored[0].slot == 0, "slot 0");
 	expect(restored.size() == 1 && restored[0].modifier == 0, "no modifier");
-	expect(restored.size() == 1 && restored[0].art_id == 1, "Test Art id 1");
+	expect(restored.size() == 1 && restored[0].art_id == 1, "Test Ability id 1");
 }
 
 void an_empty_list_is_a_valid_blob()

@@ -120,14 +120,14 @@ behaviour is exactly preserved.
 
 ### Vocabulary (belongs in `CONTEXT.md`; proposed here)
 
-- **Weapon Art** — a bindable attack animation played from a hotbar slot without equipping
-  anything. _Avoid_: power attack, additional attack, ash of war.
-- **Art Selector** — the global the fork sets to name which Weapon Art plays; OAR conditions read
-  it. Zero means no fork art is selected. _Avoid_: art keyword, worn art.
-- **Art Pack** — a set of OAR submods keyed to the Art Selector. _Avoid_: animation mod, moveset.
-- **Art Class** — 1H / 2H / Dual / Generic; gray-out and refuse. _Avoid_: weapon type, ash keyword.
-- **Custom Art Folder** — SH2-owned `Weapon_Art_N` drop-in; a catalogue row, not a slot index.
-- **Terminal Art / Chaining Art** — an art whose clip does not, or does, carry MCO window
+- **Ability** — a bindable animation played from a hotbar slot without equipping
+  anything. _Avoid_: weapon art, art (product name), power attack, additional attack, ash of war.
+- **Ability Selector** — the global the fork sets to name which Ability plays; OAR conditions read
+  it. Zero means no fork ability is selected. ESP form remains `SpellHotbar_ArtSelector`.
+- **Ability Pack** — a set of OAR submods keyed to the Ability Selector. _Avoid_: animation mod, moveset.
+- **Ability Class** — 1H / 2H / Dual / Generic; gray-out and refuse. Catalogue column is still `ArtClass`.
+- **Custom Ability Folder** — SH2-owned `Custom_Ability_N` drop-in; a catalogue row, not a slot index.
+- **Terminal Ability / Chaining Ability** — an ability whose clip does not, or does, carry MCO window
   annotations. A property of the clip, never of the binding.
 
 ### The graph
@@ -214,8 +214,8 @@ behaviour is exactly preserved.
 ### Ownership (ADR-0001)
 
 - **Core Fork**: the slot kind, the art data loader, Art Class gray-out, the Art Selector write,
-  the graph patch, the normalise policy, the deferral adapter, and the empty `Weapon_Art_1`…`N`
-  Custom Art Folders (`N` = `max_bar_size` = 12; extra numbered folders still scan).
+  the graph patch, the normalise policy, the deferral adapter, and the empty `Custom_Ability_1`…`N`
+  Custom Ability folders (`N` = `max_bar_size` = 12; extra numbered folders still scan).
 - **Compatibility Package**: the `Ashes of War` **pointer** pack (catalogue + SH2 `config.json`
   with `overrideAnimationsFolder`, no copied `.hkx`), and any Nolvus-specific gating. Installer
   gates that group on the items plugin.
@@ -242,10 +242,10 @@ behaviour is exactly preserved.
 
 ### Custom Art Folders
 
-- Core ships `Weapon_Art_1` … `Weapon_Art_12` under `SpellHotbar2Arts`, each a catalogue row
+- Core ships `Custom_Ability_1` … `Custom_Ability_12` under `SpellHotbar2Arts`, each a catalogue row
   the bind menu lists. Folder index is not a hotbar slot index.
 - The player drops `AABL_Attack_A.hkx` (and optional display-name / icon files) into a folder.
-  Extra numbered folders (`Weapon_Art_13`, …) still scan in. Default Art Class is Generic.
+  Extra numbered folders (`Custom_Ability_13`, …) still scan in. Default Art Class is Generic.
 - In-game rename / icon pick waits with the Weapon Arts editor (ticket 09). V1 is folder files.
 - A dummy template clip may carry a PIE / `SH2_ArtEffect` placeholder if that is cheap; pointed
   AoW `.hkx` files are not annotated. The editor later assigns a spell/MGEF onto that marker.
@@ -293,7 +293,7 @@ normalise policy, and no amount of per-art measurement adds to it.
   slots gray. A later SH2.mco staff path (Dragon Age-style MCO staff, integrated here) can un-gray
   staff arts; it is not this spec.
 - Fine OAR `IsEquippedType` gates on SH2 `config.json`. Art Class is catalogue data.
-- Slot-locked folders (`Weapon_Art_1` is not key 1).
+- Slot-locked folders (`Custom_Ability_1` is not key 1).
 - In-game Weapon Arts editor (pick clip, assign PIE spell/MGEF, rename, pick icon). Folder files
   are v1; ticket 09 is the enhancement.
 - Editing the sibling MCO shout behavior engine from this repository. Consuming its published
@@ -346,6 +346,6 @@ and ADR-0008.
 | [05](issues/05-consume-clip-translation-on-shtb-states.md) | resolved | shtb states consume clip translation |
 | [06](issues/06-procure-weapon-art-icons.md) | ready-for-agent | Distinct icon per named ash |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
-| [08](issues/08-ship-custom-art-folder-templates.md) | claimed — agent 4–7 passed | `Weapon_Art_1`…`12` drop-in folders |
+| [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
 | [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | needs-triage | Queue arts into / out of attacks |

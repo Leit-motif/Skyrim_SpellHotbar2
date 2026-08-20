@@ -1,4 +1,4 @@
-# Which Weapon Art plays is an Art Selector global, not a path per art
+# Which Ability plays is an Ability Selector global, not a path per art
 
 Date: 2026-08-12
 
@@ -11,18 +11,18 @@ to choose *which* replacement of that path plays when the player presses a bound
 
 The fork already runs this mechanism for cast animations: a TESGlobal written natively, read by
 OAR `CompareValues` conditions, with zero as the resting value. Pointing that pattern at attack
-clips is the smallest contract that lets an animation author add an art without touching the fork.
+clips is the smallest contract that lets an animation author add an ability without touching the fork.
 
 The rejected alternative — one distinct animation path per art — is recorded in ADR-0007.
 
 ## Decision
 
-A slot holds an art id. Pressing it writes an **Art Selector** TESGlobal in the fork's plugin
+A slot holds an ability id. Pressing it writes an **Ability Selector** TESGlobal in the fork's plugin
 immediately before the entry event is raised, and clears it when the state exits. Zero is the
-resting value and means *no fork art*, so an installed Art Pack's own conditions win unchanged.
+resting value and means *no fork ability*, so an installed Ability Pack's own conditions win unchanged.
 
-Art Packs are OAR submods whose conditions compare the Art Selector, at a priority above the
-packs they coexist with.
+Ability Packs are OAR submods whose conditions compare the Ability Selector, at a priority above the
+packs they coexist with. The ESP form remains `SpellHotbar_ArtSelector`.
 
 ## Consequences
 

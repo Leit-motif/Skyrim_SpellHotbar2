@@ -31,9 +31,14 @@ struct ArtDefinition {
 
 constexpr std::uint32_t custom_art_id_base = 1000;
 
-// Custom Art Folder catalogue row. Display name / icon come from optional name.txt and
-// icon.txt first lines; otherwise the folder name and GREATER_POWER. Art Class is Generic.
-// ArtID and selector are custom_art_id_base + folder number (not a hotbar slot).
+[[nodiscard]] constexpr bool is_custom_ability(std::uint32_t art_id) noexcept
+{
+	return art_id >= custom_art_id_base;
+}
+
+// Custom Ability catalogue row from a numbered drop-in folder. Display name / icon come from
+// optional name.txt and icon.txt first lines; otherwise "Custom Ability N" and GREATER_POWER.
+// Art Class is Generic. ArtID and selector are custom_art_id_base + folder number (not a hotbar slot).
 ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_name,
 	std::string_view name_file, std::string_view icon_file, bool has_clip);
 

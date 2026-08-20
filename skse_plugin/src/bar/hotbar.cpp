@@ -913,7 +913,7 @@ namespace SpellHotbar
             return;
         }
         if (art_id != 0 && !GameData::get_art(art_id)) {
-            logger::error("Unknown weapon art {}", art_id);
+            logger::error("Unknown ability {}", art_id);
             return;
         }
         auto& skill = get_skill_in_bar_by_ref(static_cast<int>(index), modifier);

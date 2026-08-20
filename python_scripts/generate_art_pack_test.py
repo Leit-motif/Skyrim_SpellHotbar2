@@ -413,12 +413,12 @@ class CustomArtFolderTest(unittest.TestCase):
         rows = emit_custom_art_templates(self.core, count=CUSTOM_TEMPLATE_COUNT)
 
         self.assertEqual(len(rows), 12)
-        pack = _submod(self.core, SH2_PACK, "Weapon_Art_1").parent
+        pack = _submod(self.core, SH2_PACK, "Custom_Ability_1").parent
         self.assertTrue((pack / "config.json").is_file())
         for n in range(1, 13):
-            name = f"Weapon_Art_{n}"
+            name = f"Custom_Ability_{n}"
             config = json.loads(_sh2_config_path(self.core, name).read_text(encoding="utf-8"))
-            self.assertEqual(config["name"], name)
+            self.assertEqual(config["name"], f"Custom Ability {n}")
             self.assertNotIn("overrideAnimationsFolder", config)
             kinds = [c["condition"] for c in config["conditions"]]
             self.assertEqual(kinds, ["CompareValues", "IsActorBase"])
@@ -426,7 +426,7 @@ class CustomArtFolderTest(unittest.TestCase):
             self.assertNotIn("ashes of war additional attack v items.esp", blob)
             self.assertEqual(config["Value B"]["value"] if False else config["conditions"][0]["Value B"]["value"], float(CUSTOM_ART_ID_BASE + n))
             self.assertFalse(any(p.name.lower() == AABL.lower() for p in _submod(self.core, SH2_PACK, name).rglob("*")))
-        self.assertEqual(rows[2]["display_name"], "Weapon_Art_3")
+        self.assertEqual(rows[2]["display_name"], "Custom Ability 3")
         self.assertEqual(rows[2]["icon"], "GREATER_POWER")
         self.assertEqual(rows[2]["art_class"], "Generic")
         self.assertEqual(rows[2]["art_id"], CUSTOM_ART_ID_BASE + 3)
@@ -434,48 +434,48 @@ class CustomArtFolderTest(unittest.TestCase):
 
     def test_folder_files_and_extra_number_scan_into_catalogue(self):
         emit_custom_art_templates(self.core)
-        extra = _submod(self.core, SH2_PACK, "Weapon_Art_13")
+        extra = _submod(self.core, SH2_PACK, "Custom_Ability_13")
         extra.mkdir(parents=True)
         _write(extra / "name.txt", "Rapier Lunge\n")
         _write(extra / "icon.txt", "FIREBOLT\n")
         _write(extra / "animations" / AABL, "player-dropped-clip")
-        named = _submod(self.core, SH2_PACK, "Weapon_Art_3")
+        named = _submod(self.core, SH2_PACK, "Custom_Ability_3")
         _write(named / "name.txt", "My Third Art\n")
         _write(named / "icon.txt", "FLAMES\n")
 
         scanned = scan_custom_art_folders([self.core])
 
         by_name = {row["folder"]: row for row in scanned}
-        self.assertIn("Weapon_Art_3", by_name)
-        self.assertIn("Weapon_Art_13", by_name)
-        self.assertEqual(by_name["Weapon_Art_3"]["display_name"], "My Third Art")
-        self.assertEqual(by_name["Weapon_Art_3"]["icon"], "FLAMES")
-        self.assertEqual(by_name["Weapon_Art_13"]["display_name"], "Rapier Lunge")
-        self.assertEqual(by_name["Weapon_Art_13"]["icon"], "FIREBOLT")
-        self.assertTrue(by_name["Weapon_Art_13"]["has_clip"])
-        self.assertFalse(by_name["Weapon_Art_1"]["has_clip"])
-        extra_config = json.loads(_sh2_config_path(self.core, "Weapon_Art_13").read_text(encoding="utf-8"))
+        self.assertIn("Custom_Ability_3", by_name)
+        self.assertIn("Custom_Ability_13", by_name)
+        self.assertEqual(by_name["Custom_Ability_3"]["display_name"], "My Third Art")
+        self.assertEqual(by_name["Custom_Ability_3"]["icon"], "FLAMES")
+        self.assertEqual(by_name["Custom_Ability_13"]["display_name"], "Rapier Lunge")
+        self.assertEqual(by_name["Custom_Ability_13"]["icon"], "FIREBOLT")
+        self.assertTrue(by_name["Custom_Ability_13"]["has_clip"])
+        self.assertFalse(by_name["Custom_Ability_1"]["has_clip"])
+        extra_config = json.loads(_sh2_config_path(self.core, "Custom_Ability_13").read_text(encoding="utf-8"))
         self.assertNotIn("overrideAnimationsFolder", extra_config)
 
     def test_ash_regen_keeps_templates_and_still_points_ashes(self):
         emit_custom_art_templates(self.overlay)
-        _write(_submod(self.overlay, SH2_PACK, "Weapon_Art_3") / AABL, "dummy")
+        _write(_submod(self.overlay, SH2_PACK, "Custom_Ability_3") / AABL, "dummy")
         sub = _submod(self.scan, "AoW Pack", "Flurry Strike")
         _write(sub / "config.json", json.dumps(_worn_config("Flurry Strike")))
         _write(sub / "animations" / AABL, "clip")
 
         generate(scan_roots=[self.scan], arts_csv=self.arts_csv, overlay_root=self.overlay)
 
-        self.assertTrue(_sh2_config_path(self.overlay, "Weapon_Art_3").is_file())
-        self.assertTrue((_submod(self.overlay, SH2_PACK, "Weapon_Art_3") / AABL).is_file())
+        self.assertTrue(_sh2_config_path(self.overlay, "Custom_Ability_3").is_file())
+        self.assertTrue((_submod(self.overlay, SH2_PACK, "Custom_Ability_3") / AABL).is_file())
         ash = json.loads(_sh2_config_path(self.overlay, "Flurry Strike").read_text(encoding="utf-8"))
         self.assertEqual(ash["overrideAnimationsFolder"], "../AoW Pack/Flurry Strike")
-        custom = json.loads(_sh2_config_path(self.overlay, "Weapon_Art_1").read_text(encoding="utf-8"))
+        custom = json.loads(_sh2_config_path(self.overlay, "Custom_Ability_1").read_text(encoding="utf-8"))
         self.assertNotIn("overrideAnimationsFolder", custom)
         self.assertFalse(any("gild" in p.name.lower() for p in self.overlay.rglob("*.hkx")))
         text = self.arts_csv.read_text(encoding="utf-8")
         self.assertIn("Flurry Strike", text)
-        self.assertNotIn("Weapon_Art_1", text)
+        self.assertNotIn("Custom_Ability_1", text)
 
 
 if __name__ == "__main__":

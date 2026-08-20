@@ -206,7 +206,7 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 
 std::optional<int> parse_custom_art_folder_number(std::string_view folder_name)
 {
-	static const std::regex re(R"(^Weapon_Art_(\d+)$)", std::regex::icase);
+	static const std::regex re(R"(^Custom_Ability_(\d+)$)", std::regex::icase);
 	std::string input{folder_name};
 	std::smatch m;
 	if (!std::regex_match(input, m, re) || m.size() < 2) {
@@ -215,7 +215,7 @@ std::optional<int> parse_custom_art_folder_number(std::string_view folder_name)
 	return to_int(m[1].str());
 }
 
-ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_name,
+ArtDefinition custom_art_from_folder(int folder_number, std::string_view /*folder_name*/,
 	std::string_view name_file, std::string_view icon_file, bool has_clip)
 {
 	ArtDefinition art;
@@ -228,7 +228,7 @@ ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_
 	art.has_clip = has_clip;
 	art.display_name = first_nonempty_line(name_file);
 	if (art.display_name.empty()) {
-		art.display_name = std::string{folder_name};
+		art.display_name = "Custom Ability " + std::to_string(folder_number);
 	}
 	art.icon = first_nonempty_line(icon_file);
 	if (art.icon.empty()) {

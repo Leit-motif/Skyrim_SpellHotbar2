@@ -1,4 +1,4 @@
-# The Weapon Art clip path is the compatibility contract
+# The Ability clip path is the compatibility contract
 
 Date: 2026-08-12
 
@@ -6,7 +6,8 @@ Status: accepted
 
 ## Context
 
-A Weapon Art is a bindable attack animation played from a hotbar slot without equipping anything.
+An Ability is a bindable animation played from a hotbar slot without equipping anything
+(formerly called a Weapon Art).
 Existing Art Packs — `Ashes of War` is the concrete case — are OAR replacements of
 `animations\AABL_Attack_A.hkx`. No `Ashes of War` submod references `Additional Attack By Loop.esp`;
 only the items plugin that supplies keywords. Whatever plays that path gets the art.
@@ -17,10 +18,10 @@ and still needs condition files the moment an art wants to be weapon-specific.
 
 ## Decision
 
-The fork's Weapon Art state plays `Animations\AABL_Attack_A.hkx`. That path is the compatibility
-contract with every existing Art Pack. Renaming it is a breaking change, not a refactor.
+The fork's Ability state plays `Animations\AABL_Attack_A.hkx`. That path is the compatibility
+contract with every existing Ability Pack. Renaming it is a breaking change, not a refactor.
 
-Which art plays is not encoded in the path. An Art Selector global, written immediately before
+Which ability plays is not encoded in the path. An Ability Selector global, written immediately before
 entry and cleared on exit, is read by OAR conditions (ADR-0008).
 
 ## Consequences

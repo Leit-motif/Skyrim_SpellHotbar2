@@ -1,6 +1,6 @@
 {
-    "name": "Weapon_Art_1",
-    "priority": 2000001001,
+    "name": "Custom Ability 3",
+    "priority": 2000001003,
     "ignoreNoTriggersFlag": true,
     "conditions": [
         {
@@ -14,7 +14,7 @@
             },
             "Comparison": "==",
             "Value B": {
-                "value": 1001.0
+                "value": 1003.0
             }
         },
         {
