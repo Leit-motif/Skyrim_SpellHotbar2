@@ -150,7 +150,8 @@ namespace SpellHotbar::Bars {
 			time_scale = cal->GetTimescale();
 		}
 		auto pc = RE::PlayerCharacter::GetSingleton();
-		const ArtStance art_stance = pc ? GameData::art_stance_of(GameData::getPlayerEquipmentType()) : ArtStance::None;
+		const auto equipped_type =
+			pc ? GameData::getPlayerEquipmentType() : GameData::EquippedType::SPELL;
 		//end dupe
 
 		if (pc) {
@@ -189,17 +190,17 @@ namespace SpellHotbar::Bars {
 			bool show_power = Bars::oblivion_bar_show_power;
 
 			Hotbar::draw_single_skill(m_spell_slot, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur,
-				game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::oblivion_cast), p, art_stance, vertical && (draw_potion || show_power));
+				game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::oblivion_cast), p, equipped_type, vertical && (draw_potion || show_power));
 
 			if (draw_potion) {
 				p = ImGui::GetCursorScreenPos();
 				Hotbar::draw_single_skill(m_potion_slot, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur,
-					game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::oblivion_potion), p, art_stance, vertical && show_power);
+					game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::oblivion_potion), p, equipped_type, vertical && show_power);
 			}
 			if (show_power) {
 				p = ImGui::GetCursorScreenPos();
 				Hotbar::draw_single_skill(m_power_slot, alpha, icon_size, text_offset_x, text_offset_y, gcd_prog, gcd_dur, shout_cd, shout_cd_dur,
-					game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::dummy_key_vanilla_shout), p, art_stance);
+					game_time, time_scale, highlight_slot, highlight_factor, hightlight_isred, mod, oblivion_bar_name, pc, static_cast<int>(Input::keybind_id::dummy_key_vanilla_shout), p, equipped_type);
 			}
 
 		}

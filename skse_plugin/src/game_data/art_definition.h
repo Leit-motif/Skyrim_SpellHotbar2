@@ -1,5 +1,7 @@
 #pragma once
 
+#include "equipped_type.h"
+
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -13,16 +15,6 @@ enum class ArtClass {
 	TwoHand,
 	Dual,
 	Generic
-};
-
-// Combat posture the HUD and press policy compare against. None is bow / staff / magic /
-// crossbow — no shtb art state, so every class is dead.
-enum class ArtStance {
-	None,
-	Fist,
-	OneHand,
-	TwoHand,
-	Dual
 };
 
 struct ArtDefinition {
@@ -61,18 +53,21 @@ ArtClass parse_art_class(std::string_view text);
 	return "Generic";
 }
 
-[[nodiscard]] constexpr bool art_class_is_live(ArtClass art_class, ArtStance stance) noexcept
+[[nodiscard]] constexpr bool art_class_is_live(ArtClass art_class, GameData::EquippedType equipped) noexcept
 {
+	using GameData::EquippedType;
 	switch (art_class) {
 	case ArtClass::OneHand:
-		return stance == ArtStance::OneHand;
+		return equipped == EquippedType::ONEHAND_EMPTY || equipped == EquippedType::ONEHAND_SHIELD ||
+			   equipped == EquippedType::ONEHAND_SPELL;
 	case ArtClass::TwoHand:
-		return stance == ArtStance::TwoHand;
+		return equipped == EquippedType::TWOHAND;
 	case ArtClass::Dual:
-		return stance == ArtStance::Dual;
+		return equipped == EquippedType::DUAL_WIELD;
 	case ArtClass::Generic:
-		return stance == ArtStance::Fist || stance == ArtStance::OneHand ||
-			   stance == ArtStance::TwoHand || stance == ArtStance::Dual;
+		return equipped == EquippedType::FIST || art_class_is_live(ArtClass::OneHand, equipped) ||
+			   art_class_is_live(ArtClass::TwoHand, equipped) ||
+			   art_class_is_live(ArtClass::Dual, equipped);
 	}
 	return false;
 }

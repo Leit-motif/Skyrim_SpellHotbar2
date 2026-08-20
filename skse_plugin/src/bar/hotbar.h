@@ -126,7 +126,7 @@ public:
                                 RE::PlayerCharacter* pc,
                                 int slot_index,
                                 ImVec2 p, //ImGui Cursor pos
-                                ArtStance art_stance,
+                                GameData::EquippedType equipped_type,
                                 bool new_line = false);
 
     inline bool is_enabled() const;

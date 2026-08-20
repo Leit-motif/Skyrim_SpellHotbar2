@@ -6,7 +6,7 @@
 
 using SpellHotbar::ArtClass;
 using SpellHotbar::ArtDefinition;
-using SpellHotbar::ArtStance;
+using SpellHotbar::GameData::EquippedType;
 using SpellHotbar::art_class_is_live;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
@@ -111,35 +111,42 @@ void zero_id_and_empty_name_are_skipped()
 
 void two_hand_art_is_live_only_on_two_hand()
 {
-	expect(art_class_is_live(ArtClass::TwoHand, ArtStance::TwoHand), "2H live on greatsword");
-	expect(!art_class_is_live(ArtClass::TwoHand, ArtStance::OneHand), "2H dead on rapier");
-	expect(!art_class_is_live(ArtClass::TwoHand, ArtStance::Dual), "2H dead on dual 1H");
-	expect(!art_class_is_live(ArtClass::TwoHand, ArtStance::Fist), "2H dead on fists");
-	expect(!art_class_is_live(ArtClass::TwoHand, ArtStance::None), "2H dead on bow/staff/magic");
+	expect(art_class_is_live(ArtClass::TwoHand, EquippedType::TWOHAND), "2H live on greatsword");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::ONEHAND_EMPTY), "2H dead on rapier");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::DUAL_WIELD), "2H dead on dual 1H");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::FIST), "2H dead on fists");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::BOW), "2H dead on bow");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::SPELL), "2H dead on magic");
+	expect(!art_class_is_live(ArtClass::TwoHand, EquippedType::STAFF_SHIELD), "2H dead on staff");
 }
 
 void one_hand_art_is_live_on_one_hand_variants()
 {
-	expect(art_class_is_live(ArtClass::OneHand, ArtStance::OneHand), "1H live on rapier");
-	expect(!art_class_is_live(ArtClass::OneHand, ArtStance::TwoHand), "1H dead on greatsword");
-	expect(!art_class_is_live(ArtClass::OneHand, ArtStance::Dual), "1H dead on dual 1H");
-	expect(!art_class_is_live(ArtClass::OneHand, ArtStance::None), "1H dead on bow");
+	expect(art_class_is_live(ArtClass::OneHand, EquippedType::ONEHAND_EMPTY), "1H live on rapier");
+	expect(art_class_is_live(ArtClass::OneHand, EquippedType::ONEHAND_SHIELD), "1H live with shield");
+	expect(art_class_is_live(ArtClass::OneHand, EquippedType::ONEHAND_SPELL), "1H live with spell");
+	expect(!art_class_is_live(ArtClass::OneHand, EquippedType::TWOHAND), "1H dead on greatsword");
+	expect(!art_class_is_live(ArtClass::OneHand, EquippedType::DUAL_WIELD), "1H dead on dual 1H");
+	expect(!art_class_is_live(ArtClass::OneHand, EquippedType::BOW), "1H dead on bow");
 }
 
 void dual_art_is_live_only_on_dual_wield()
 {
-	expect(art_class_is_live(ArtClass::Dual, ArtStance::Dual), "Dual live on two melee 1H");
-	expect(!art_class_is_live(ArtClass::Dual, ArtStance::OneHand), "Dual dead on rapier");
-	expect(!art_class_is_live(ArtClass::Dual, ArtStance::TwoHand), "Dual dead on greatsword");
+	expect(art_class_is_live(ArtClass::Dual, EquippedType::DUAL_WIELD), "Dual live on two melee 1H");
+	expect(!art_class_is_live(ArtClass::Dual, EquippedType::ONEHAND_EMPTY), "Dual dead on rapier");
+	expect(!art_class_is_live(ArtClass::Dual, EquippedType::TWOHAND), "Dual dead on greatsword");
 }
 
 void generic_art_is_live_on_melee_and_fists_only()
 {
-	expect(art_class_is_live(ArtClass::Generic, ArtStance::OneHand), "Generic live on rapier");
-	expect(art_class_is_live(ArtClass::Generic, ArtStance::TwoHand), "Generic live on greatsword");
-	expect(art_class_is_live(ArtClass::Generic, ArtStance::Dual), "Generic live on dual 1H");
-	expect(art_class_is_live(ArtClass::Generic, ArtStance::Fist), "Generic live on fists");
-	expect(!art_class_is_live(ArtClass::Generic, ArtStance::None), "Generic dead on bow/staff/magic");
+	expect(art_class_is_live(ArtClass::Generic, EquippedType::ONEHAND_EMPTY), "Generic live on rapier");
+	expect(art_class_is_live(ArtClass::Generic, EquippedType::TWOHAND), "Generic live on greatsword");
+	expect(art_class_is_live(ArtClass::Generic, EquippedType::DUAL_WIELD), "Generic live on dual 1H");
+	expect(art_class_is_live(ArtClass::Generic, EquippedType::FIST), "Generic live on fists");
+	expect(!art_class_is_live(ArtClass::Generic, EquippedType::BOW), "Generic dead on bow");
+	expect(!art_class_is_live(ArtClass::Generic, EquippedType::CROSSBOW), "Generic dead on crossbow");
+	expect(!art_class_is_live(ArtClass::Generic, EquippedType::SPELL), "Generic dead on magic");
+	expect(!art_class_is_live(ArtClass::Generic, EquippedType::STAFF_SHIELD), "Generic dead on staff");
 }
 
 }  // namespace
