@@ -6,7 +6,7 @@ do not customize still get the Ashes of War pointer pack when that mod is instal
 
 **Blocked by:** 04 (pack shape)
 
-**Status:** ready-for-agent
+**Status:** claimed — agent 4–7 passed; owner 1–3 open
 
 ## You test this
 
@@ -57,3 +57,10 @@ Installer: templates always; AoW pointer group gated on `Ashes of War Additional
 
 Grill 2026-08-18: both baseline pointer pack and numbered custom folders. Folder-only name/icon
 for v1.
+
+2026-08-19: Agent 4–7. Core ships `data/meshes/.../SpellHotbar2Arts/Weapon_Art_1`…`12` with selector
+`1000+N` + player, no `overrideAnimationsFolder`, no dummy `.hkx`. Loader scans those folders
+(and extras) at data load; `name.txt` / `icon.txt` override display; empty folders warn and
+`try_start_art` MagFails (story 29). Ash regen keeps `Weapon_Art_*`. Tests: `generate_art_pack_test`
++ `art_data_test` green. Owner 1–3 still open (Arts tab + drop clip + empty press). FOMOD gate
+not wired — this fork deploys via Dev mod, not the ADT installer.

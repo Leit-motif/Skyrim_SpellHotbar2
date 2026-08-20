@@ -346,6 +346,6 @@ and ADR-0008.
 | [05](issues/05-consume-clip-translation-on-shtb-states.md) | resolved | shtb states consume clip translation |
 | [06](issues/06-procure-weapon-art-icons.md) | ready-for-agent | Distinct icon per named ash |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
-| [08](issues/08-ship-custom-art-folder-templates.md) | ready-for-agent | `Weapon_Art_1`…`12` drop-in folders |
+| [08](issues/08-ship-custom-art-folder-templates.md) | claimed — agent 4–7 passed | `Weapon_Art_1`…`12` drop-in folders |
 | [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | needs-triage | Queue arts into / out of attacks |

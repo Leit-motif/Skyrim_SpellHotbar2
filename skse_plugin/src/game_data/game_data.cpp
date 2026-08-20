@@ -30,6 +30,8 @@ namespace SpellHotbar::GameData {
     constexpr std::string_view custom_transformations_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\transformdata\\";
     constexpr std::string_view animation_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\animationdata\\";
     constexpr std::string_view art_data_root = ".\\data\\SKSE\\Plugins\\SpellHotbar\\artdata\\";
+    constexpr std::string_view custom_art_pack_root =
+        ".\\data\\meshes\\actors\\character\\animations\\OpenAnimationReplacer\\SpellHotbar2Arts\\";
 
     inline const std::string keynames_csv_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\keynames\\keynames.csv";
     inline const std::string translation_path = ".\\data\\SKSE\\Plugins\\SpellHotbar\\localization\\translation.txt";
@@ -424,6 +426,7 @@ namespace SpellHotbar::GameData {
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
+        ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
 
         spell_effects_key_indices = nullptr; //no longer need this
 
@@ -522,6 +525,7 @@ namespace SpellHotbar::GameData {
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
+        ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
         spell_effects_key_indices = nullptr;  // no longer need this
     }
 

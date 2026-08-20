@@ -1349,6 +1349,11 @@ namespace SpellHotbar::casts::CastingController {
 			logger::warn("SH2 art: unknown art id {}", art_id);
 			return false;
 		}
+		if (!art->has_clip) {
+			logger::warn("SH2 art: empty Custom Art Folder '{}' (no AABL_Attack_A.hkx)", art->display_name);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
 		if (!art_class_is_live(art->art_class, GameData::getPlayerEquipmentType())) {
 			logger::info("SH2 art: art {} refused, Art Class mismatch", art_id);
 			RE::PlaySound(Input::sound_MagFail);

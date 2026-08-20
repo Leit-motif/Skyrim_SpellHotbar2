@@ -26,7 +26,18 @@ struct ArtDefinition {
 	float stamina_cost{0.0f};
 	float cooldown_days{-1.0f};
 	float gcd{1.0f};
+	bool has_clip{true};
 };
+
+constexpr std::uint32_t custom_art_id_base = 1000;
+
+// Custom Art Folder catalogue row. Display name / icon come from optional name.txt and
+// icon.txt first lines; otherwise the folder name and GREATER_POWER. Art Class is Generic.
+// ArtID and selector are custom_art_id_base + folder number (not a hotbar slot).
+ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_name,
+	std::string_view name_file, std::string_view icon_file, bool has_clip);
+
+std::optional<int> parse_custom_art_folder_number(std::string_view folder_name);
 
 // Parse a tab-separated art catalogue. Header row required. Rows whose ArtID is 0 or whose
 // DisplayName is empty are skipped. Cooldown uses the same 30s / 1.5h / 12m grammar as spell

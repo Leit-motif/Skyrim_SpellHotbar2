@@ -78,6 +78,24 @@ std::string cell(const std::vector<std::string>& cols,
 	return cols[it->second];
 }
 
+std::string first_nonempty_line(std::string_view text)
+{
+	std::istringstream stream{std::string{text}};
+	std::string line;
+	while (std::getline(stream, line)) {
+		if (!line.empty() && line.back() == '\r') {
+			line.pop_back();
+		}
+		const auto start = line.find_first_not_of(" \t");
+		if (start == std::string::npos) {
+			continue;
+		}
+		const auto end = line.find_last_not_of(" \t");
+		return line.substr(start, end - start + 1);
+	}
+	return {};
+}
+
 }  // namespace
 
 std::optional<float> parse_art_duration_days(std::string_view time_str)
@@ -184,6 +202,39 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 		arts.push_back(std::move(art));
 	}
 	return arts;
+}
+
+std::optional<int> parse_custom_art_folder_number(std::string_view folder_name)
+{
+	static const std::regex re(R"(^Weapon_Art_(\d+)$)", std::regex::icase);
+	std::string input{folder_name};
+	std::smatch m;
+	if (!std::regex_match(input, m, re) || m.size() < 2) {
+		return std::nullopt;
+	}
+	return to_int(m[1].str());
+}
+
+ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_name,
+	std::string_view name_file, std::string_view icon_file, bool has_clip)
+{
+	ArtDefinition art;
+	art.id = custom_art_id_base + static_cast<std::uint32_t>(folder_number);
+	art.selector = static_cast<int>(art.id);
+	art.art_class = ArtClass::Generic;
+	art.stamina_cost = 25.0f;
+	art.cooldown_days = parse_art_duration_days("8s").value_or(-1.0f);
+	art.gcd = 1.0f;
+	art.has_clip = has_clip;
+	art.display_name = first_nonempty_line(name_file);
+	if (art.display_name.empty()) {
+		art.display_name = std::string{folder_name};
+	}
+	art.icon = first_nonempty_line(icon_file);
+	if (art.icon.empty()) {
+		art.icon = "GREATER_POWER";
+	}
+	return art;
 }
 
 }  // namespace SpellHotbar

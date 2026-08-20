@@ -149,6 +149,31 @@ void generic_art_is_live_on_melee_and_fists_only()
 	expect(!art_class_is_live(ArtClass::Generic, EquippedType::STAFF_SHIELD), "Generic dead on staff");
 }
 
+void custom_folder_number_is_not_a_slot_index()
+{
+	const auto n = SpellHotbar::parse_custom_art_folder_number("Weapon_Art_3");
+	expect(n.has_value() && *n == 3, "Weapon_Art_3 is folder 3");
+	expect(!SpellHotbar::parse_custom_art_folder_number("Ashes of War Sword Neutral").has_value(),
+		"stance-default folders are not custom templates");
+	const auto art = SpellHotbar::custom_art_from_folder(3, "Weapon_Art_3", "", "", false);
+	expect(art.id == 1003, "ArtID is 1000 + folder number");
+	expect(art.selector == 1003, "selector is not hotbar slot 3");
+	expect(art.display_name == "Weapon_Art_3", "empty name file uses the folder name");
+	expect(art.icon == "GREATER_POWER", "empty icon file uses GREATER_POWER");
+	expect(art.art_class == ArtClass::Generic, "custom folders are Generic");
+	expect(!art.has_clip, "empty template has no clip");
+}
+
+void custom_folder_files_override_name_and_icon()
+{
+	const auto art = SpellHotbar::custom_art_from_folder(
+		13, "Weapon_Art_13", "Rapier Lunge\n", "FLAMES\n", true);
+	expect(art.id == 1013, "extra numbered folders still get an id");
+	expect(art.display_name == "Rapier Lunge", "name.txt first line is the display name");
+	expect(art.icon == "FLAMES", "icon.txt first line is the icon key");
+	expect(art.has_clip, "a dropped AABL clip marks the folder as playable");
+}
+
 }  // namespace
 
 int main()
@@ -165,6 +190,8 @@ int main()
 	one_hand_art_is_live_on_one_hand_variants();
 	dual_art_is_live_only_on_dual_wield();
 	generic_art_is_live_on_melee_and_fists_only();
+	custom_folder_number_is_not_a_slot_index();
+	custom_folder_files_override_name_and_icon();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

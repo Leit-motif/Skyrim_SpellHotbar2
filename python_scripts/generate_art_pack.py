@@ -10,12 +10,17 @@ gate on the Ashes of War items plugin) and emits:
 
 Never copies .hkx files. Never writes user.json onto foreign folders.
 Selector 0 is left to the original worn-item configs.
+
+Custom Art Folders (Weapon_Art_1..N) are emitted into the core tree with selector
+conditions only — they own a dropped (or missing) AABL_Attack_A.hkx and do not
+use overrideAnimationsFolder. Ash regen preserves those folders.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from dataclasses import dataclass, field
@@ -31,6 +36,9 @@ SH2_PACK_NAME = "SpellHotbar2Arts"
 # band above 2e9 beats that without depending on their numbers.
 PRIORITY_BASE = 2_000_000_000
 FIRST_ART_ID = 2
+CUSTOM_ART_ID_BASE = 1000
+CUSTOM_TEMPLATE_COUNT = 12
+CUSTOM_FOLDER_RE = re.compile(r"^Weapon_Art_(\d+)$", re.IGNORECASE)
 DEFAULT_ICON = "GREATER_POWER"
 DEFAULT_STAMINA = "25"
 DEFAULT_COOLDOWN = "8s"
@@ -86,8 +94,7 @@ def generate(
         return result
 
     pack_root = overlay_root / OAR_PREFIX / SH2_PACK_NAME
-    if pack_root.exists():
-        shutil.rmtree(pack_root)
+    _wipe_generated_ashes(pack_root)
     pack_root.mkdir(parents=True, exist_ok=True)
     (pack_root / "config.json").write_text(
         json.dumps(_pack_config(), indent=4) + "\n",
@@ -301,7 +308,7 @@ def _pack_config() -> dict:
     return {
         "name": "Spell Hotbar 2 Weapon Arts",
         "author": "Spell Hotbar 2",
-        "description": "Art Selector replacements. Animation files stay in the author's folders.",
+        "description": "Art Selector replacements: Custom Art Folders in this pack, and pointer configs for author clips.",
     }
 
 
@@ -341,6 +348,123 @@ def _selector_condition(selector: float) -> dict:
     }
 
 
+def emit_custom_art_templates(core_root: Path, count: int = CUSTOM_TEMPLATE_COUNT) -> list[dict]:
+    pack_root = Path(core_root) / OAR_PREFIX / SH2_PACK_NAME
+    pack_root.mkdir(parents=True, exist_ok=True)
+    (pack_root / "config.json").write_text(
+        json.dumps(_pack_config(), indent=4) + "\n",
+        encoding="utf-8",
+    )
+    rows: list[dict] = []
+    for n in range(1, count + 1):
+        _write_custom_config(pack_root / f"Weapon_Art_{n}", n)
+        rows.append(_custom_row_from_folder(pack_root / f"Weapon_Art_{n}", n))
+    return rows
+
+
+def scan_custom_art_folders(scan_roots: Iterable[Path]) -> list[dict]:
+    found: dict[int, dict] = {}
+    for root in scan_roots:
+        pack_root = Path(root) / OAR_PREFIX / SH2_PACK_NAME
+        if not pack_root.is_dir():
+            continue
+        for child in pack_root.iterdir():
+            match = CUSTOM_FOLDER_RE.match(child.name)
+            if not match or not child.is_dir():
+                continue
+            n = int(match.group(1))
+            _write_custom_config(child, n)
+            found[n] = _custom_row_from_folder(child, n)
+    return [found[n] for n in sorted(found)]
+
+
+def write_custom_arts_csv(path: Path, rows: Iterable[dict]) -> None:
+    lines = [CSV_HEADER]
+    for row in rows:
+        lines.append(
+            "\t".join(
+                (
+                    str(row["art_id"]),
+                    row["display_name"],
+                    row["icon"],
+                    str(row["selector"]),
+                    row["art_class"],
+                    DEFAULT_STAMINA,
+                    DEFAULT_COOLDOWN,
+                    DEFAULT_GCD,
+                )
+            )
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_custom_config(folder: Path, number: int) -> None:
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = folder / "config.json"
+    dest.write_text(
+        json.dumps(_custom_config(name=folder.name, selector=CUSTOM_ART_ID_BASE + number), indent=4)
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _custom_config(*, name: str, selector: int) -> dict:
+    return {
+        "name": name,
+        "priority": PRIORITY_BASE + selector,
+        "ignoreNoTriggersFlag": True,
+        "conditions": [_selector_condition(float(selector)), _player_actor_base()],
+    }
+
+
+def _custom_row_from_folder(folder: Path, number: int) -> dict:
+    display = _first_line(folder / "name.txt") or folder.name
+    icon = _first_line(folder / "icon.txt") or DEFAULT_ICON
+    return {
+        "folder": folder.name,
+        "art_id": CUSTOM_ART_ID_BASE + number,
+        "selector": CUSTOM_ART_ID_BASE + number,
+        "display_name": display,
+        "icon": icon,
+        "art_class": "Generic",
+        "has_clip": _folder_has_aabl(folder),
+    }
+
+
+def _first_line(path: Path) -> str:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped
+    return ""
+
+
+def _folder_has_aabl(folder: Path) -> bool:
+    for path in folder.rglob("*"):
+        if path.is_file() and path.name.lower() == AABL_CLIP:
+            return True
+    return False
+
+
+def _wipe_generated_ashes(pack_root: Path) -> None:
+    if not pack_root.exists():
+        return
+    for child in pack_root.iterdir():
+        if child.is_dir() and CUSTOM_FOLDER_RE.match(child.name):
+            continue
+        if child.is_file() and child.name.lower() == "config.json":
+            continue
+        if child.is_dir():
+            shutil.rmtree(child)
+        elif child.is_file():
+            child.unlink()
+
+
 def _delete_user_json(overlay_root: Path) -> None:
     if not overlay_root.exists():
         return
@@ -368,11 +492,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--scan",
         action="append",
         dest="scan",
-        required=True,
         type=Path,
         help="Mod folder (or mods root) to scan. Repeatable.",
     )
-    parser.add_argument("--arts-csv", required=True, type=Path, help="Output arts.csv path.")
+    parser.add_argument("--arts-csv", type=Path, help="Output arts.csv path for the pointer pack.")
     parser.add_argument(
         "--previous-csv",
         type=Path,
@@ -380,15 +503,42 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--overlay",
-        required=True,
         type=Path,
         help="MO2 overlay mod root that will receive SH2 OAR config.json files only.",
+    )
+    parser.add_argument(
+        "--emit-templates",
+        action="store_true",
+        help="Write Weapon_Art_1..N Custom Art Folder templates into --core.",
+    )
+    parser.add_argument(
+        "--core",
+        type=Path,
+        help="Core mod root for Custom Art Folder templates.",
+    )
+    parser.add_argument(
+        "--custom-csv",
+        type=Path,
+        help="Optional arts.csv for scanned/emitted Custom Art Folders.",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
+    if args.emit_templates:
+        if args.core is None:
+            print("--core is required with --emit-templates", file=sys.stderr)
+            return 2
+        rows = emit_custom_art_templates(args.core)
+        rows = scan_custom_art_folders([args.core]) or rows
+        if args.custom_csv:
+            write_custom_arts_csv(args.custom_csv, rows)
+        print(f"emitted {len(rows)} custom art folders")
+        return 0
+    if not args.scan or args.arts_csv is None or args.overlay is None:
+        print("--scan, --arts-csv, and --overlay are required unless --emit-templates", file=sys.stderr)
+        return 2
     previous_paths = _previous_from_csv(args.previous_csv) if args.previous_csv else None
     result = generate(
         scan_roots=args.scan,
