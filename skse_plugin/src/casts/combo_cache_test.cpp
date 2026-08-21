@@ -28,7 +28,9 @@ using SpellHotbar::casts::is_ability_latch_event;
 using SpellHotbar::casts::is_ability_win_open_event;
 using SpellHotbar::casts::should_capture_attack_during_ability;
 using SpellHotbar::casts::should_cut_ability_for_attack;
+using SpellHotbar::casts::should_record_mco_combo_sample;
 using SpellHotbar::casts::should_retain_local_cast_intent;
+using SpellHotbar::casts::should_yield_shtb_before_hotbar_shout;
 
 namespace {
 
@@ -429,6 +431,24 @@ void attack_after_the_ability_latch_cuts_and_is_not_captured()
 		"an unrelated key is not captured as an Ability mash-through");
 }
 
+void ability_hitframe_does_not_replace_the_mco_combo_sample()
+{
+	expect(!should_record_mco_combo_sample(true),
+		"HitFrame on our Ability or Driver Cast must not stomp the sampled combo");
+	expect(should_record_mco_combo_sample(false),
+		"someone else's MCO swing still samples combo position");
+}
+
+void a_legal_hotbar_shout_yields_the_live_shtb_clip()
+{
+	expect(should_yield_shtb_before_hotbar_shout(true, true),
+		"once the latch is open a shout must stop the Ability or Driver Cast first");
+	expect(!should_yield_shtb_before_hotbar_shout(true, false),
+		"before the latch the shout is queued, not overlapped");
+	expect(!should_yield_shtb_before_hotbar_shout(false, true),
+		"idle has no shtb clip to stop");
+}
+
 }  // namespace
 
 int main()
@@ -474,6 +494,8 @@ int main()
 	ability_latch_events_match_the_classified_kind();
 	a_press_behind_our_shtb_is_retained_until_the_latch_opens();
 	attack_after_the_ability_latch_cuts_and_is_not_captured();
+	ability_hitframe_does_not_replace_the_mco_combo_sample();
+	a_legal_hotbar_shout_yields_the_live_shtb_clip();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

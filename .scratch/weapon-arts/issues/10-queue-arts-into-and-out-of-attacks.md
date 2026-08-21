@@ -10,7 +10,7 @@ and 09.
 
 **Blocked by:** 01 (resolved)
 
-**Status:** agent-done
+**Status:** resolved — owner 1, 2, 6, 7 passed; agent 3–5 passed
 
 **Type:** task (Core Fork)
 
@@ -96,3 +96,43 @@ and Ability (WinOpen else HitFrame else `SH2_ArtExit`). ShoutMCO for someone els
 shout. Hotbar shout ButtonEvent waits until fire. Ability entry no longer writes `MCO_nextattack=1`;
 combo restore reuses `RollingMcoCombo`. `combo_cache_test` + plugin Release build green. Owner cells
 1–7 still open (Nolvus Awakening, weapon drawn).
+
+**2026-08-21 playtest script** (owner cells). Profile `Nolvus Awakening`. 1H drawn. Bar: an Ability,
+a fire-and-forget spell (Firebolt), a hotbar shout (not the Z key).
+
+1. Mid-swing Ability — light attack, tap Ability during the swing. Pass: swing finishes its hit,
+   Ability starts after, no cancel to idle.
+2. Combo out — from attack **2**, Ability, left-click in recovery (after the latch, not before the
+   hit). Pass: next light is **3**, not 1, no full idle.
+3. Ability → Ability — during Ability 1, tap Ability 2 early. Pass: one start at the latch, last
+   tap wins, Ability 1’s hit still happens.
+4. Ability → spell — during Ability, tap Firebolt. Pass: one Driver Cast at the Ability latch.
+5. Spell → spell — during Driver Cast **before SpellFire**, tap Firebolt again (or another FNF).
+   Pass: current hit still fires; one chain at SpellFire; last tap wins. Fail: second clip starts
+   in the windup.
+6. Hotbar shout behind ours — during Ability or Driver Cast, tap the shout slot. Pass: one shout
+   at that latch, not dropped, no second overlapping thuum hold.
+7. Hotbar shout behind MCO — mid-swing, tap the shout slot. Pass: shout after HitFrame, swing not
+   cancelled. Fail: dead press or shout on top of the swing.
+
+Fail any cell that still needs a full return to idle. Do not use vanilla Z; that key is thuum.
+
+**2026-08-21 owner playtest** (Save10, rapier drawn):
+1. Pass — Ability after recovery window opens, swing not cancelled.
+2. Fail — no combo continuation (recovery light is not 3).
+6. Shout works; too-early press overlapped Ability clip + shout clip. Owner: legal shout cancel must stop the previous clip.
+7. Pass — shout after HitFrame, swing cancelled when legal.
+
+**2026-08-21 agent drive** (Save10 last-save, CS-Test, Noble Rapier drawn, Nolvus Awakening).
+Slots: 1 and 3–7 Ability, 2 Ice Spike, no shout on the bar. Cold boot ~6 min to Main Menu.
+
+- Cell 3 log pass: Ability 1 start, slot 3 retained on local latch, one fire at latch.
+- Cell 4 log pass on a WinOpen art (slot 3). Slot 1 art (latch = `SH2_ArtExit` only) retained the spell then `fired … type 3 -> false` at ArtExit — owner: use an art that has WinOpen/HitFrame.
+- Cell 5: first run discarded on `allowed_to_cast` (live MagicCaster during our Driver Cast). Skip that check when releasing behind our Driver Cast/Ability. Retest: retained before SpellFire, `chaining the next clip`, `fired slot 2 type 3 -> true`. Uncommitted `cast_intent.cpp` change is in the live DLL.
+- Cell 1 log half: `attackStart` then Ability → `deferred to ShoutMCO` while `IsAttacking=1`, then fire. Visual “after the hit” still owner (real LMB).
+- Cells 2, 6, 7 not closed: 2 needs a real recovery click; 6–7 need a hotbar shout bind (not Z).
+Skyrim left running for owner playtest.
+
+**2026-08-21 follow-up:** Owner closed 1 and 7; 3–5 were agent-log. Cell 2 failed (no combo out). Cell 6 shout works but overlapped the Ability clip if pressed early. Fix in flight: do not record MCO combo on our shtb HitFrame; write the sampled index on ArtExit/cancel before the recovery press; `shoutStart` leaves `SH2_Art_State` / Driver Cast so a legal shout stops the previous 1hm clip. Graph change needs a Nemesis rebuild.
+
+**2026-08-21 owner retest** (Save11, post-deploy + Nemesis): combo continued (cell 2); shouts chained with the previous clip stopped (cell 6). Cells 1–7 closed.

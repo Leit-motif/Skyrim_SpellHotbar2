@@ -112,8 +112,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	void yield_if_our_latch_is_open()
 	{
-		if ((ArtDriver::is_active() && ArtDriver::latch_open()) ||
-			(MscoCastDriver::is_active() && MscoCastDriver::combo_window_open())) {
+		if (should_yield_shtb_before_hotbar_shout(ArtDriver::is_active(), ArtDriver::latch_open()) ||
+			should_yield_shtb_before_hotbar_shout(
+				MscoCastDriver::is_active(), MscoCastDriver::combo_window_open())) {
 			yield_shtb_for_non_chain_start();
 		}
 	}

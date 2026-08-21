@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 06 agent-done (owner cells 1–2 open); 07 agent-done (owner cells 1–3 open); 08–09 remain.
+Status: in progress — 01–05, 07–08, and 10 resolved; 06 agent-done; 09 ready-for-agent; 11 needs-triage.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -73,10 +73,10 @@ behaviour is exactly preserved.
     explained rather than silent.
 11. As a player, I want an art that chains into my next swing to keep chaining, so that combat flow
     is unbroken where the animation was authored for it.
-12. As a player, I want an art that does not chain to end cleanly and leave me ready, so that a
-    terminal art is not a stutter.
-13. As a player, I want my next ordinary swing after any art to start at the beginning of the
-    combo, so that the combo counter never carries over invisibly.
+12. As a player, I want a Terminal Ability to remain cuttable after its hit, so I am not trapped in
+    a flourish until idle (HitFrame fallback when the clip has no WinOpen).
+13. As a player, I want my next ordinary swing after an Ability to continue the combo, so attack 2
+    → Ability → attack 3, never a silent reset to hit 1.
 14. As a player, I want WASD ignored during an art the same way it is during an MCO attack, so
     that I cannot walk out of the clip, while the clip's own motion still carries me.
 15. As a player, I want an art pressed in the middle of a swing to land after that swing rather
@@ -127,8 +127,9 @@ behaviour is exactly preserved.
 - **Ability Pack** — a set of OAR submods keyed to the Ability Selector. _Avoid_: animation mod, moveset.
 - **Ability Class** — 1H / 2H / Dual / Generic; gray-out and refuse. Catalogue column is still `ArtClass`.
 - **Custom Ability Folder** — SH2-owned `Custom_Ability_N` drop-in; a catalogue row, not a slot index.
-- **Terminal Ability / Chaining Ability** — an ability whose clip does not, or does, carry MCO window
-  annotations. A property of the clip, never of the binding.
+- **Ability Editor** / **Custom Ability Spell** / **Ability Cost** — see `CONTEXT.md`. Ticket 09.
+- **Terminal Ability / Chaining Ability** — an ability whose clip does not, or does, carry `MCO_WinOpen`.
+  A property of the clip, never of the binding. Chain-out uses WinOpen when present, otherwise HitFrame.
 
 ### The graph
 
@@ -179,14 +180,12 @@ behaviour is exactly preserved.
 
 ### Chaining
 
-- On state entry the fork normalises MCO's combo counter variables to their first-attack value,
-  then leaves the clip's own annotations to decide everything else.
-- This is deliberately uniform and requires no per-art classification. A Chaining Art writes the
-  same value a fraction of a second later, so the normalise is idempotent; a Terminal Art writes
-  nothing, so the normalise is the only thing that prevents a stale combo step surviving into the
-  next ordinary swing.
-- Rejected alternative: recording terminal-vs-chaining per art and guarding only the terminal ones.
-  It duplicates a fact the clip already states, and a wrong flag fails silently.
+- An Ability is a combo member. The fork samples `MCO_nextattack` / `MCO_nextpowerattack` and
+  restores them on exit (ADR-0005 named exception, same preserve-never-derive rule as Driver
+  Casts). It does **not** write 1 on entry. Ticket 01’s “next swing is hit 1” is revoked by
+  ticket 10.
+- Rejected alternative: the old uniform normalise-to-1. It made every ash a combo reset, which is
+  what the 2026-08-19 playtest called a hard stop.
 
 ### Slot and binding
 
@@ -197,24 +196,32 @@ behaviour is exactly preserved.
   icon, Art Selector value, Art Class, stamina cost, cooldown, and global cooldown. Balancing is a
   data edit. Distinct per-art icons are ticket 06 (extra-atlas picker + optional CSV bake).
 - The press routes through the existing input-mode dispatch, so the existing Papyrus slot-activation
-  function drives it unchanged. `try_start_art` refuses on cooldown, unaffordable stamina, or Art
+  function drives it unchanged. `try_start_art` refuses on cooldown, unaffordable stamina/magicka/
+  health, or Art
   Class mismatch **before** writing the selector.
 - Cost and cooldown are the fork's, using its existing casting-instance machinery, so the hotbar can
   render the cooldown. `Additional Attack by Loop`'s spells and perks are not consulted. This fork
-  does not require that mod's hotkey or Stances perks for bound arts.
+  does not require that mod's hotkey or Stances perks for bound arts. Payload Interpreter does not
+  charge resources for a Custom Ability Spell.
 - A refused press — unaffordable, on cooldown, wrong Art Class — highlights the slot in the error
   state the other slot kinds already use, and grays the icon while the mismatch holds.
 
-### Mid-swing
+### Mid-swing and queue
 
-- A press during a live MCO attack is refused by the graph, exactly as a cast press is, and the
-  intent is handed to ShoutMCO's cast-intent API under ADR-0005, revalidated and executed once on
-  release. This is the same seam ticket 04 builds; the payload differs, the policy does not.
+- A press during a live MCO attack is refused by the graph and stored as a Cast Intent. If the
+  busy clip is someone else’s swing (or a real shout), ShoutMCO releases it (ADR-0005 / HitFrame).
+  If the busy clip is our Driver Cast or Ability, this mod’s latch releases it. Payload may be a
+  spell, Ability, or hotbar shout. Last tap wins. Not hold-the-key. Not mash-through.
+- While `SH2_Art_State` is live, an **attack** press is uncaptured after the Ability latch: WinOpen
+  if the bound clip’s annotations include it, else HitFrame, else `SH2_ArtExit`. Send `SH2_ArtExit`
+  and let the press through (same cut as a committed Driver Cast).
+- Driver Cast latch remains ticket 22 (SpellFire → WinClose). Consecutive spell taps use the same
+  Cast Intent, not a second buffer. The vanilla shout key stays thuum.
 
 ### Ownership (ADR-0001)
 
 - **Core Fork**: the slot kind, the art data loader, Art Class gray-out, the Art Selector write,
-  the graph patch, the normalise policy, the deferral adapter, and the empty `Custom_Ability_1`…`N`
+  the graph patch, combo restore, the deferral adapter, and the empty `Custom_Ability_1`…`N`
   Custom Ability folders (`N` = `max_bar_size` = 12; extra numbered folders still scan).
 - **Compatibility Package**: the `Ashes of War` **pointer** pack (catalogue + SH2 `config.json`
   with `overrideAnimationsFolder`, no copied `.hkx`), and any Nolvus-specific gating. Installer
@@ -244,11 +251,13 @@ behaviour is exactly preserved.
 
 - Core ships `Custom_Ability_1` … `Custom_Ability_12` under `SpellHotbar2Arts`, each a catalogue row
   the bind menu lists. Folder index is not a hotbar slot index.
-- The player drops `AABL_Attack_A.hkx` (and optional display-name / icon files) into a folder.
-  Extra numbered folders (`Custom_Ability_13`, …) still scan in. Default Art Class is Generic.
-- In-game rename / icon pick waits with the Weapon Arts editor (ticket 09). V1 is folder files.
-- A dummy template clip may carry a PIE / `SH2_ArtEffect` placeholder if that is cheap; pointed
-  AoW `.hkx` files are not annotated. The editor later assigns a spell/MGEF onto that marker.
+- The player drops `AABL_Attack_A.hkx` into a folder. Extra numbered folders (`Custom_Ability_13`, …)
+  still scan in and use the same Ability Editor. Default Art Class is Generic until the editor sets
+  another.
+- Ticket 09 is the Ability Editor (name, atlas icon, Custom Ability Spell, class, costs, CD, GCD).
+  Configuration is a sidecar in the folder (ADR-0009), not `name.txt` / `icon.txt`. PIE marker is
+  stamped HitFrame else 5% of duration when missing. Pointed AoW files are never annotated. Fire-time
+  override is ticket 11. No dummy `.hkx`.
 
 ## Testing Decisions
 
@@ -275,9 +284,9 @@ Papyrus, read the notify return, confirm with the owner's eyes on a frame — an
 carry over unchanged (the owner's latest save used read-only, the fingerprinted profile, fixtures
 restored and the game closed afterwards).
 
-Proportion the evidence. One discriminating control beats many absolute measurements: a single
-paired press — one Terminal Art, one Chaining Art, combo counter read after each — settles the
-normalise policy, and no amount of per-art measurement adds to it.
+Proportion the evidence. One discriminating control beats many absolute measurements: attack 2 →
+Ability → next light reads 3 (restore), not 1 (old normalise). A second press: one clip with
+WinOpen tags vs one without, latch opens on the matching event.
 
 ## Out of Scope
 
@@ -294,11 +303,14 @@ normalise policy, and no amount of per-art measurement adds to it.
   staff arts; it is not this spec.
 - Fine OAR `IsEquippedType` gates on SH2 `config.json`. Art Class is catalogue data.
 - Slot-locked folders (`Custom_Ability_1` is not key 1).
-- In-game Weapon Arts editor (pick clip, assign PIE spell/MGEF, rename, pick icon). Folder files
-  are v1; ticket 09 is the enhancement.
+- Instantiate-from-ash / pick a catalogue clip in ImGui (09 is folder overlay only).
+- Ability Editor fire-time slider (ticket 11).
 - Editing the sibling MCO shout behavior engine from this repository. Consuming its published
   cast-intent API is in scope.
-- Per-art tuning of release timing beyond the clip's own annotations.
+- Consecutive Driver Cast one-slot buffer as its own ticket (folded into 10). Real-shout **key**
+  buffering (thuum). Hotbar shouts are in 10.
+- Per-art tuning of release timing beyond the clip's own annotations, 09's HitFrame / 5% stamp, and
+  ticket 10's WinOpen-else-HitFrame latch.
 - Publishing modified binaries.
 - Nordic UI second icon tint (later).
 
@@ -313,8 +325,8 @@ installed modlist. Recorded so the next agent does not re-derive them:
 - A named art (`Blood Flurry`, 9.0s, 1120 annotations) carries **no MCO window annotations** — it
   is Terminal. A stance-framework default (`Ashes of War Sword Mid`, 2.17s) carries the full
   chaining set plus a payload that sets the combo counter to its first value at 0.06s. **Both
-  kinds ship in the same pack**, which is why the normalise policy is uniform rather than
-  per-art.
+  kinds ship in the same pack.** Ticket 10 classifies the live clip: WinOpen latch vs HitFrame
+  fallback. Combo index is restored from the sample, not from that 0.06s write.
 - Clip motion comes from Animation Motion Revolution annotations, not from the behaviour project's
   registered motion data, so arts sharing one registered path is a small risk rather than a large
   one. Animation Motion Revolution, Precision and Payload Interpreter are all present in the
@@ -330,6 +342,10 @@ installed modlist. Recorded so the next agent does not re-derive them:
   skips `Ashes of War *` stance-default folders (no items-plugin keyword).
 - Grill 2026-08-18: pointer pack + Custom Art Folders; Art Class 1H/2H/Dual/Generic; WoW gray-out;
   editor later; icons original/hybrid/extra-atlas/sample-first. Dual is its own tag.
+- Grill 2026-08-21: Ability Editor (ticket 09) un-parked — Custom Ability folders only; sidecar;
+  Firebolt placeholder; SH2 stam/magicka/health; HitFrame else 5%; ticket 11 for fire-time UI.
+- Grill 2026-08-21 (ticket 10): one Cast Intent for Ability, spell, and hotbar shout; two clocks
+  (ShoutMCO vs our latch); combo continues; WinOpen else HitFrame else ArtExit; 23 and 09 folded in.
 
 Two decisions in this spec are architectural and hard to reverse — the animation path as the
 compatibility contract, and selector-keyed rather than path-keyed selection. Both are ADR-0007
@@ -347,5 +363,6 @@ and ADR-0008.
 | [06](issues/06-procure-weapon-art-icons.md) | agent-done | Atlas icon picker + extra-atlas draw path |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
 | [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
-| [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |
-| [10](issues/10-queue-arts-into-and-out-of-attacks.md) | needs-triage | Queue arts into / out of attacks |
+| [09](issues/09-weapon-arts-editor.md) | ready-for-agent | Ability Editor |
+| [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
+| [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 09) |

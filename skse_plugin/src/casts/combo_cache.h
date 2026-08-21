@@ -354,4 +354,20 @@ enum class AbilityLatch {
 	return art_active && !latch_open && is_attack_press;
 }
 
+// HitFrame / AttackInitiate on our Driver Cast or Ability are not a new MCO
+// swing. Recording them would replace the pre-Ability sample with 1 and the
+// recovery attack would restart the combo.
+[[nodiscard]] constexpr bool should_record_mco_combo_sample(bool our_shtb_busy) noexcept
+{
+	return !our_shtb_busy;
+}
+
+// A hotbar shout that is allowed to start must leave SH2_Art_State / the
+// Driver Cast before the Shout ButtonEvent, or both clips play together.
+[[nodiscard]] constexpr bool should_yield_shtb_before_hotbar_shout(
+	bool our_shtb_busy, bool local_latch_open) noexcept
+{
+	return our_shtb_busy && local_latch_open;
+}
+
 }  // namespace SpellHotbar::casts

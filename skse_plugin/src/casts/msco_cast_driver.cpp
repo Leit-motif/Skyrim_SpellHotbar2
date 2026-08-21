@@ -1,4 +1,5 @@
 #include "msco_cast_driver.h"
+#include "art_driver.h"
 #include "clip_translation_driver.h"
 #include "combo_cache.h"
 #include <array>
@@ -98,6 +99,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (const auto combo = g_rolling.arm(now_ms())) {
 				logger::debug("SH2 cast: combo restore armed next={} power={}", combo->nextAttack,
 					combo->nextPowerAttack);
+				// Write now so a same-frame recovery attack (Ability latch cut) sees the
+				// sampled index. PIE / MagicReady still peek/consume to survive #0006's stomp.
+				write_mco(RE::PlayerCharacter::GetSingleton(), *combo);
 			}
 		}
 
@@ -204,7 +208,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
 
-		if (is_attack_time(tag)) {
+		if (is_attack_time(tag) &&
+			should_record_mco_combo_sample(is_active() || ArtDriver::is_active())) {
 			McoCombo sample{};
 			if (sample_mco(a_player, sample)) {
 				g_rolling.record(sample, now_ms());

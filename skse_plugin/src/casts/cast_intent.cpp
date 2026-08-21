@@ -156,7 +156,13 @@ namespace SpellHotbar::casts::CastIntent {
 				RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, true);
 				return;
 			}
-			if (p.type == slot_type::spell && !Input::allowed_to_cast(skill.formID)) {
+			// allowed_to_cast treats a live MagicCaster as busy. That is correct for a ShoutMCO
+			// release into idle, but wrong when we are releasing into our own Driver Cast latch:
+			// IsCasting is still true for the clip that just opened the window.
+			const bool releasing_behind_our_shtb =
+				ArtDriver::is_active() || MscoCastDriver::is_active();
+			if (p.type == slot_type::spell && !releasing_behind_our_shtb &&
+				!Input::allowed_to_cast(skill.formID)) {
 				logger::debug("SH2 cast intent: spell restrictions no longer met on release, discarded");
 				RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, true);
 				return;
