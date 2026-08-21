@@ -764,13 +764,17 @@ namespace SpellHotbar::BindMenu {
                         ImGui::TableNextRow();
 
                         ImGui::TableNextColumn();
-                        RenderManager::draw_art_icon(art_id, table_icon_size);
+                        ImVec2 icon_pos = ImGui::GetCursorScreenPos();
+                        const ImVec2 icon_btn_size(static_cast<float>(table_icon_size),
+                            static_cast<float>(table_icon_size));
+                        ImGui::InvisibleButton("##art_icon", icon_btn_size);
                         if (ImGui::IsItemHovered()) {
                             RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
                             ArtIconEditor::open(art_id);
                         }
+                        RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
                         if (!ArtIconEditor::is_open()) {
                             set_drag_source_art(art_id, scale_factor);
                         }
