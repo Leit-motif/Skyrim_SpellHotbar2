@@ -12,6 +12,7 @@
 #include "keynames_csv_loader.h"
 #include "spell_cast_data.h"
 #include "../input/modes.h"
+#include "../storage/user_data_io.h"
 
 #include <algorithm>
 #include <random>
@@ -435,6 +436,7 @@ namespace SpellHotbar::GameData {
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
+        load_user_art_icons();
 
         spell_effects_key_indices = nullptr; //no longer need this
 
@@ -535,6 +537,7 @@ namespace SpellHotbar::GameData {
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
+        load_user_art_icons();
         spell_effects_key_indices = nullptr;  // no longer need this
     }
 
@@ -1408,6 +1411,56 @@ namespace SpellHotbar::GameData {
         return true;
     }
 
+    std::filesystem::path user_art_icons_path()
+    {
+        return Storage::IO::get_icon_edits_user_dir() / "art_icons.json";
+    }
+
+    void write_art_icons_member(rj::Document& d)
+    {
+        rj::Value art_icons_node(rj::kArrayType);
+        for (auto& [art_id, icon_data] : art_icon_overrides) {
+            rj::Value entry(rj::kObjectType);
+            entry.AddMember("art_id", art_id, d.GetAllocator());
+            entry.AddMember("icon", rj::Value(icon_data.icon.c_str(), d.GetAllocator()), d.GetAllocator());
+            entry.AddMember("icon_form", icon_data.icon_form, d.GetAllocator());
+            art_icons_node.PushBack(entry, d.GetAllocator());
+        }
+        d.AddMember("art_icons", art_icons_node, d.GetAllocator());
+    }
+
+    bool persist_user_art_icons()
+    {
+        const auto path = user_art_icons_path();
+        logger::info("Persisting ability icon assignments to {}", path.string());
+        std::filesystem::create_directories(path.parent_path());
+
+        rj::Document d;
+        d.SetObject();
+        d.AddMember("version", 1, d.GetAllocator());
+        write_art_icons_member(d);
+
+        std::ofstream ofs(path, std::ofstream::out);
+        if (!ofs.is_open()) {
+            logger::error("Could not open '{}' for writing", path.string());
+            return false;
+        }
+        rj::OStreamWrapper osw(ofs);
+        rj::PrettyWriter<rj::OStreamWrapper> writer(osw);
+        writer.SetIndent(' ', 4);
+        d.Accept(writer);
+        return true;
+    }
+
+    bool load_user_art_icons()
+    {
+        const auto path = user_art_icons_path();
+        if (!std::filesystem::exists(path)) {
+            return true;
+        }
+        return load_icon_edits_from_json(path.string());
+    }
+
     const ArtDefinition* get_art(uint32_t art_id)
     {
         auto it = art_cast_info.find(art_id);
@@ -2278,16 +2331,7 @@ namespace SpellHotbar::GameData {
              }
 
              d.AddMember("items", items_node, d.GetAllocator());
-
-             rj::Value art_icons_node(rj::kArrayType);
-             for (auto& [art_id, icon_data] : art_icon_overrides) {
-                 rj::Value entry(rj::kObjectType);
-                 entry.AddMember("art_id", art_id, d.GetAllocator());
-                 entry.AddMember("icon", rj::Value(icon_data.icon.c_str(), d.GetAllocator()), d.GetAllocator());
-                 entry.AddMember("icon_form", icon_data.icon_form, d.GetAllocator());
-                 art_icons_node.PushBack(entry, d.GetAllocator());
-             }
-             d.AddMember("art_icons", art_icons_node, d.GetAllocator());
+             write_art_icons_member(d);
 
              rj::PrettyWriter<rj::OStreamWrapper> writer(osw);
              writer.SetIndent(' ', 4);
@@ -2357,6 +2401,7 @@ namespace SpellHotbar::GameData {
                      }
                      set_art_icon(art_id, icon, icon_form);
                  }
+                 persist_user_art_icons();
              }
              else {
                  errors = true;

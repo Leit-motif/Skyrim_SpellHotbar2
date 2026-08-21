@@ -243,6 +243,8 @@ namespace SpellHotbar::GameData {
     const ArtDefinition* get_art(uint32_t art_id);
     void set_art_icon(uint32_t art_id, std::string icon, std::uint32_t icon_form = 0);
     void reset_art_icon(uint32_t art_id);
+    bool persist_user_art_icons();
+    bool load_user_art_icons();
     bool get_art_catalogue_icon(uint32_t art_id, std::string& out_icon, std::uint32_t& out_icon_form);
     std::vector<uint32_t> list_art_ids();
     void set_art_selector(int value);

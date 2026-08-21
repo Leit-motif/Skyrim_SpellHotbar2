@@ -141,6 +141,7 @@ namespace SpellHotbar::BindMenu {
 
     void hide()
     {
+        ArtIconEditor::close();
         show_frame = false;
 
         list_of_skills.clear();
@@ -610,6 +611,11 @@ namespace SpellHotbar::BindMenu {
 
 
 	void drawFrame(ImFont* font_text, ImFont* font_text_big, ImFont* font_title) {
+        if (ArtIconEditor::is_open()) {
+            ArtIconEditor::draw();
+            return;
+        }
+
         ImGui::PushFont(font_text);
         static constexpr ImGuiWindowFlags window_flag = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground;
 
@@ -1270,10 +1276,6 @@ namespace SpellHotbar::BindMenu {
 
         ImGui::End();
 
-        if (ArtIconEditor::is_open()) {
-            ArtIconEditor::draw();
-        } else {
-            RenderManager::draw_custom_mouse_cursor();
-        }
+        RenderManager::draw_custom_mouse_cursor();
     }
 }

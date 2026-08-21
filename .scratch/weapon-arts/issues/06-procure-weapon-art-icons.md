@@ -49,9 +49,9 @@ in-game editor (09). Not Nordic UI second tint.
 ## Notes
 
 Shipped 2026-08-21: `draw_art_icon` resolves form / extra-atlas / default / UNKNOWN;
-`ArtIconEditor` in Binding Menu Arts tab (right-click row icon); `art_icons` in icon-edits JSON;
-`generate_art_pack` preserves Icon by DisplayName on regen. No new PNG glyphs in repo — picker
-uses existing SH2 atlases only.
+`ArtIconEditor` in Binding Menu Arts tab (right-click row icon). Picker Save writes
+`Documents/.../SpellHotbar/icon_edits/art_icons.json` immediately; that file is loaded after
+the catalogue on launch. MCM Save/Load Icon Edits remains optional export/import.
 
 Prior: `python_scripts/generate_art_pack.py` wrote `DEFAULT_ICON = "GREATER_POWER"` on every row;
 `draw_art_icon` resolved only `TextureCSVLoader::default_icon_names`.

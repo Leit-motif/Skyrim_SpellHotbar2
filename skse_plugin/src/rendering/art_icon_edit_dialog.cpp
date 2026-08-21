@@ -209,6 +209,7 @@ namespace SpellHotbar::ArtIconEditor {
 			} else {
 				GameData::set_art_icon(editing_art_id, draft_icon, draft_icon_form);
 			}
+			GameData::persist_user_art_icons();
 			close();
 		}
 		if (!save_enabled) {
