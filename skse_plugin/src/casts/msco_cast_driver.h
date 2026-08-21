@@ -68,6 +68,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void cancel(RE::PlayerCharacter* pc);
 
 	/**
+	 * Arm the last sampled MCO combo so the next ready/PIE write restores it.
+	 * Abilities reuse this (ADR-0005 named exception); they must not write
+	 * MCO_nextattack=1 on entry.
+	 */
+	void arm_combo_restore();
+
+	/**
 	 * End-of-cast cleanup; same send as cancel(), kept separate for call-site intent.
 	 * The state also exits itself through an end-of-clip trigger raising SH2_CastExit.
 	 */

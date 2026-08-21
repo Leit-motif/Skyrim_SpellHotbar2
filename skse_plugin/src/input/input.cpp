@@ -9,6 +9,7 @@
 #include "../casts/casting_controller.h"
 #include "../casts/combo_cache.h"
 #include "../casts/msco_cast_driver.h"
+#include "../casts/art_driver.h"
 #include "../storage/storage.h"
 #include "keycode_helper.h"
 #include "modes.h"
@@ -449,6 +450,22 @@ namespace SpellHotbar::Input {
                         } else if (is_left_hand_cast_press(pc, key_code, key_device)) {
                             logger::debug("SH2 cast: left-hand cast pressed on a committed cast; ending the state");
                             casts::MscoCastDriver::cancel(pc);
+                        }
+                    }
+
+                    if (!captureEvent && pc && bEvent->IsDown() && in_ingame_state() &&
+                        casts::ArtDriver::is_active())
+                    {
+                        const uint32_t attack_key = get_attack_key(key_device);
+                        const bool attack = is_attack_press(key_code, key_device, attack_key);
+                        if (casts::should_capture_attack_during_ability(
+                                true, casts::ArtDriver::latch_open(), attack)) {
+                            captureEvent = true;
+                            logger::debug("SH2 art: captured attack before Ability latch");
+                        } else if (casts::should_cut_ability_for_attack(
+                                       true, casts::ArtDriver::latch_open(), attack)) {
+                            logger::debug("SH2 art: attack pressed after Ability latch; ending the state");
+                            casts::ArtDriver::cancel(pc);
                         }
                     }
 

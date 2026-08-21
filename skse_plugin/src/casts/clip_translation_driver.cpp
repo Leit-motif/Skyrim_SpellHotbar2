@@ -2,6 +2,7 @@
 #include "clip_translation.h"
 #include "art_driver.h"
 #include "msco_cast_driver.h"
+#include "combo_cache.h"
 #include "../logger/logger.h"
 
 #include <algorithm>
@@ -81,7 +82,30 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 			if (!is_shtb_clip(raw)) {
 				return;
 			}
-			auto parsed = parse_keys(bound_animation(clip));
+			const auto* animation = bound_animation(clip);
+			auto parsed = parse_keys(animation);
+			if (std::string_view{ raw } == "SH2_Art_Clip"sv) {
+				bool has_win_open{ false };
+				bool has_hit_frame{ false };
+				if (animation) {
+					for (const auto& track : animation->annotationTracks) {
+						for (std::int32_t i = 0; i < track.annotations.size(); ++i) {
+							const char* text = track.annotations[i].text.c_str();
+							if (!text) {
+								continue;
+							}
+							const std::string_view tag{ text };
+							if (is_ability_win_open_event(tag)) {
+								has_win_open = true;
+							}
+							if (is_ability_hit_frame_event(tag)) {
+								has_hit_frame = true;
+							}
+						}
+					}
+				}
+				ArtDriver::bind_latch(has_win_open, has_hit_frame);
+			}
 			std::lock_guard lock{ mutex };
 			bound_clip = clip;
 			keys = std::move(parsed);

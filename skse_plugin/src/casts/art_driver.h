@@ -12,6 +12,12 @@ namespace SpellHotbar::casts::ArtDriver {
 	// not the casting instance — same rule as MscoCastDriver::is_active().
 	bool is_active();
 
+	// Classify the live clip's latch from its annotations (WinOpen else HitFrame
+	// else SH2_ArtExit). Called when SH2_Art_Clip activates.
+	void bind_latch(bool has_win_open, bool has_hit_frame);
+
+	bool latch_open();
+
 	bool should_trace_graph_events();
 
 	void cancel(RE::PlayerCharacter* pc);

@@ -84,6 +84,40 @@ namespace SpellHotbar::casts::CastingController {
 				   MscoCastDriver::combo_window_open()) != HotbarCastPress::refuse;
 	}
 
+	bool is_live_concentration()
+	{
+		return current_cast && dynamic_cast<CastingInstanceSpellConcentration*>(current_cast.get());
+	}
+
+	bool our_latch_is_closed()
+	{
+		return CastIntent::should_retain_now();
+	}
+
+	void yield_shtb_for_non_chain_start()
+	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (ArtDriver::is_active()) {
+			ArtDriver::cancel(pc);
+		}
+		if (MscoCastDriver::is_active()) {
+			MscoCastDriver::cancel(pc);
+		}
+		if (current_cast) {
+			current_cast->on_reset();
+			current_cast.reset();
+			clear_spellfire();
+		}
+	}
+
+	void yield_if_our_latch_is_open()
+	{
+		if ((ArtDriver::is_active() && ArtDriver::latch_open()) ||
+			(MscoCastDriver::is_active() && MscoCastDriver::combo_window_open())) {
+			yield_shtb_for_non_chain_start();
+		}
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
 		current_cast.reset();
@@ -96,6 +130,7 @@ namespace SpellHotbar::casts::CastingController {
 		clear_spellfire();
 		ArtDriver::reset_session();
 		MscoCastDriver::reset_session();
+		CastIntent::cancel();
 		logger::info("SH2: dropped live cast for game load");
 	}
 
@@ -672,6 +707,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
+		CastIntent::poll_local_release();
 		if (current_cast) {
 			if (!current_cast->casted()) {
 				auto pc = RE::PlayerCharacter::GetSingleton();
@@ -852,6 +888,12 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
+		if (our_latch_is_closed()) {
+			return CastIntent::offer(slot, keybind);
+		}
+		if (ArtDriver::is_active() && ArtDriver::latch_open()) {
+			yield_shtb_for_non_chain_start();
+		}
 		const auto press = classify_hotbar_cast_press(
 			current_cast != nullptr, is_committed_cast_holding_graph(),
 			MscoCastDriver::combo_window_open());
@@ -867,10 +909,7 @@ namespace SpellHotbar::casts::CastingController {
 			CastIntent::cancel();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
-				bool is_shouting{ false };
-				pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
-
-				if (!is_shouting && (form->GetFormType() == RE::FormType::Spell || form->GetFormType() == RE::FormType::Scroll)) {
+				if (form->GetFormType() == RE::FormType::Spell || form->GetFormType() == RE::FormType::Scroll) {
 					RE::SpellItem* spell = form->As<RE::SpellItem>();
 
 					//check if spell is still known/enough scrolls in inv
@@ -963,7 +1002,7 @@ namespace SpellHotbar::casts::CastingController {
 						RE::PlaySound(Input::sound_MagFail);
 					}
 				}
-				else if (!is_shouting && (form->GetFormType() == RE::FormType::AlchemyItem)) {
+				else if (form->GetFormType() == RE::FormType::AlchemyItem) {
 					return start_potion_use(form);
 				}
 			}
@@ -993,18 +1032,26 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		bool is_shouting{ false };
+		if (pc) {
+			pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
+		}
+		const bool is_shout = form && form->GetFormType() == RE::FormType::Shout;
+		if (is_shout && !CastIntent::is_firing() && (our_latch_is_closed() || is_shouting)) {
+			return CastIntent::offer(slot, keybind);
+		}
+		if (is_shout) {
+			yield_if_our_latch_is_open();
+		}
 		if (can_start_new_cast()) {
 			clear_spellfire();
 			// A power or shout press is a newer input too, so it supersedes a waiting intent. A
 			// real shout also reaches ShoutMCO's own hook and would displace it there, but a
 			// voice-slot power never does — nothing on that path touches the driver at all.
 			CastIntent::cancel();
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
-				bool is_shouting{ false };
-				pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
-
-				if (!is_shouting && form->GetFormType() == RE::FormType::Shout) {
+				if (form->GetFormType() == RE::FormType::Shout) {
 
 					if (GameData::individual_shout_cooldowns || pc->GetVoiceRecoveryTime() <= 0.0f) {
 
@@ -1337,7 +1384,7 @@ namespace SpellHotbar::casts::CastingController {
 		BaseCastingInstance::on_reset();
 	}
 
-	bool try_start_art(uint32_t art_id, size_t)
+	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind)
 	{
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (!pc) {
@@ -1351,6 +1398,11 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		if (!art->has_clip) {
 			logger::warn("SH2 art: empty Custom Ability '{}' (no AABL_Attack_A.hkx)", art->display_name);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+		if (!pc->AsActorState()->IsWeaponDrawn()) {
+			logger::info("SH2 art: refused, weapon sheathed");
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
@@ -1371,13 +1423,22 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
+		if (our_latch_is_closed()) {
+			return CastIntent::offer(slot, keybind);
+		}
+		yield_if_our_latch_is_open();
+
+		CastIntent::cancel();
 		GameData::set_art_selector(art->selector);
 		current_cast = std::make_unique<CastingInstanceWeaponArt>(art_id, art->gcd);
 		if (!ArtDriver::begin(pc)) {
-			logger::info("SH2 art: SH2_ArtStart not consumed (sheathed, mid-swing, or patch missing)");
+			logger::info("SH2 art: SH2_ArtStart not consumed (mid-swing or patch missing)");
 			current_cast.reset();
 			GameData::reset_art_selector();
-			return false;
+			if (CastIntent::is_firing()) {
+				return false;
+			}
+			return CastIntent::offer(slot, keybind);
 		}
 		if (art->stamina_cost > 0.0f && av) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina, -art->stamina_cost);

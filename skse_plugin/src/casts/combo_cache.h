@@ -288,4 +288,70 @@ enum class CastDelivery {
 	return timer_expired ? CastDelivery::deliver : CastDelivery::cancel;
 }
 
+// Ability latch: WinOpen if the bound clip carries it, else HitFrame, else SH2_ArtExit.
+enum class AbilityLatch {
+	winOpen,
+	hitFrame,
+	artExit,
+};
+
+[[nodiscard]] constexpr AbilityLatch classify_ability_latch(
+	bool has_win_open, bool has_hit_frame) noexcept
+{
+	if (has_win_open) {
+		return AbilityLatch::winOpen;
+	}
+	if (has_hit_frame) {
+		return AbilityLatch::hitFrame;
+	}
+	return AbilityLatch::artExit;
+}
+
+[[nodiscard]] constexpr bool is_ability_win_open_event(std::string_view tag) noexcept
+{
+	return tag == "MSCO_WinOpen" || tag == "MCO_WinOpen" || tag == "MSCO_winopen" ||
+		   tag == "MCO_winopen";
+}
+
+[[nodiscard]] constexpr bool is_ability_hit_frame_event(std::string_view tag) noexcept
+{
+	return tag == "HitFrame";
+}
+
+[[nodiscard]] constexpr bool is_ability_latch_event(AbilityLatch latch, std::string_view tag) noexcept
+{
+	switch (latch) {
+	case AbilityLatch::winOpen:
+		return is_ability_win_open_event(tag);
+	case AbilityLatch::hitFrame:
+		return is_ability_hit_frame_event(tag);
+	case AbilityLatch::artExit:
+		return tag == "SH2_ArtExit";
+	}
+	return false;
+}
+
+// Our Driver Cast or Ability owns release until its latch opens. Concentration is
+// excluded. Someone else's swing is ShoutMCO's clock (ADR-0005).
+[[nodiscard]] constexpr bool should_retain_local_cast_intent(
+	bool our_shtb_busy, bool local_latch_open, bool concentration_live) noexcept
+{
+	if (concentration_live || !our_shtb_busy) {
+		return false;
+	}
+	return !local_latch_open;
+}
+
+[[nodiscard]] constexpr bool should_cut_ability_for_attack(
+	bool art_active, bool latch_open, bool is_attack_press) noexcept
+{
+	return art_active && latch_open && is_attack_press;
+}
+
+[[nodiscard]] constexpr bool should_capture_attack_during_ability(
+	bool art_active, bool latch_open, bool is_attack_press) noexcept
+{
+	return art_active && !latch_open && is_attack_press;
+}
+
 }  // namespace SpellHotbar::casts

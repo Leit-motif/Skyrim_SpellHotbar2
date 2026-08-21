@@ -1,7 +1,10 @@
 #include "cast_intent.h"
 #include <array>
 #include <string>
+#include "art_driver.h"
 #include "casting_controller.h"
+#include "combo_cache.h"
+#include "msco_cast_driver.h"
 #include "../extern/ShoutMCO_CastIntent.h"
 #include "../game_data/game_data.h"
 #include "../logger/logger.h"
@@ -15,6 +18,7 @@ namespace SpellHotbar::casts::CastIntent {
 		struct Payload {
 			size_t slot;
 			RE::FormID formID;
+			uint32_t art_id;
 			slot_type type;
 			hand_mode hand;
 			// Points into Input::key_spells / key_oblivion_*, which are globals: safe to keep.
@@ -82,6 +86,52 @@ namespace SpellHotbar::casts::CastIntent {
 			return out.empty() ? "no readable graph vars" : out;
 		}
 
+		void inject_hotbar_shout_button()
+		{
+			auto queue = RE::BSInputEventQueue::GetSingleton();
+			auto user_events = RE::UserEvents::GetSingleton();
+			if (!queue || !user_events) {
+				logger::warn("SH2 cast intent: cannot inject shout button (no queue)");
+				return;
+			}
+			auto [device, key] = Input::get_shout_key_and_device();
+			auto event = RE::ButtonEvent::Create(device, user_events->shout, key, 1.0f, 0.0f);
+			if (!event) {
+				return;
+			}
+			queue->PushOntoInputQueue(event);
+			logger::debug("SH2 cast intent: injected shout ButtonEvent on release");
+		}
+
+		bool payload_still_bound(const Payload& p, const SlottedSkill& skill)
+		{
+			return skill.formID == p.formID && skill.type == p.type && skill.hand == p.hand &&
+				   skill.art_id == p.art_id;
+		}
+
+		void fire_payload(const Payload& p)
+		{
+			if (!p.keybind) {
+				return;
+			}
+			bool success{ false };
+			if (p.type == slot_type::weapon_art) {
+				success = CastingController::try_start_art(p.art_id, p.slot, *p.keybind);
+			} else if (p.type == slot_type::shout) {
+				auto form = RE::TESForm::LookupByID(p.formID);
+				success = CastingController::try_cast_power(form, *p.keybind, p.slot, p.hand);
+				if (success && !payload_retained) {
+					inject_hotbar_shout_button();
+				}
+			} else {
+				auto form = RE::TESForm::LookupByID(p.formID);
+				success = CastingController::try_start_cast(form, *p.keybind, p.slot, p.hand);
+			}
+			logger::debug("SH2 cast intent: fired slot {} type {} -> {}", p.slot,
+				static_cast<int>(p.type), success);
+			RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, !success);
+		}
+
 		/**
 		 * The release attempt. The intent may have waited hundreds of milliseconds, so every
 		 * precondition the original press passed is checked again here, and a payload that no
@@ -95,36 +145,28 @@ namespace SpellHotbar::casts::CastIntent {
 				return;
 			}
 
-			// Slot assignment: the bar may have switched (sneak) or the slot been rebound.
 			auto skill = GameData::get_current_spell_info_in_slot(p.slot);
-			if (skill.formID != p.formID || skill.type != p.type || skill.hand != p.hand) {
+			if (!payload_still_bound(p, skill)) {
 				logger::debug("SH2 cast intent: slot {} no longer holds the pressed skill, discarded", p.slot);
 				return;
 			}
 
-			// The same gates InputModeCast applies to a live keypress: cooldown, 3D, controls,
-			// furniture, mount, no cast already running, and the cast-only restrictions.
-			if (!Input::allowed_to_instantcast(skill.formID) ||
-				!CastingController::can_start_new_cast() ||
-				!Input::allowed_to_cast(skill.formID)) {
+			if (!Input::allowed_to_instantcast(skill.formID)) {
 				logger::debug("SH2 cast intent: preconditions no longer met on release, discarded");
 				RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, true);
 				return;
 			}
-
-			auto form = RE::TESForm::LookupByID(skill.formID);
-			if (!form) {
+			if (p.type == slot_type::spell && !Input::allowed_to_cast(skill.formID)) {
+				logger::debug("SH2 cast intent: spell restrictions no longer met on release, discarded");
+				RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, true);
 				return;
 			}
 
 			logger::debug("SH2 cast intent: graph at release: {}", graph_snapshot(pc));
 
 			attempting_release = true;
-			const bool success = CastingController::try_start_cast(form, *p.keybind, p.slot, skill.hand);
+			fire_payload(p);
 			attempting_release = false;
-
-			logger::debug("SH2 cast intent: released cast on slot {} -> {}", p.slot, success);
-			RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, !success);
 		}
 
 		/**
@@ -186,14 +228,46 @@ namespace SpellHotbar::casts::CastIntent {
 		}
 	}
 
+	bool is_pending()
+	{
+		return payload_retained;
+	}
+
+	bool is_firing()
+	{
+		return attempting_release;
+	}
+
+	bool should_retain_now()
+	{
+		return should_retain_local_cast_intent(
+			ArtDriver::is_active() || MscoCastDriver::is_active(),
+			ArtDriver::is_active() ? ArtDriver::latch_open() : MscoCastDriver::combo_window_open(),
+			CastingController::is_live_concentration());
+	}
+
 	bool offer(size_t slot, const Input::KeyBind& keybind)
 	{
-		if (!api || attempting_release) {
+		if (attempting_release) {
 			return false;
 		}
 
-		// Snapshot the slot as the press saw it, before handing the intent over.
 		const auto skill = GameData::get_current_spell_info_in_slot(slot);
+		if (should_retain_now()) {
+			if (api && live_handle != SHOUTMCO_CAST_HANDLE_INVALID) {
+				api->Cancel(live_handle);
+			}
+			live_handle = SHOUTMCO_CAST_HANDLE_INVALID;
+			payload = Payload{ slot, skill.formID, skill.art_id, skill.type, skill.hand, &keybind };
+			payload_retained = true;
+			logger::debug("SH2 cast intent: slot {} retained on local latch (type={})", slot,
+				static_cast<int>(skill.type));
+			return true;
+		}
+
+		if (!api) {
+			return false;
+		}
 
 		ShoutMCO_CastRequest req{};
 		req.structSize = sizeof(req);
@@ -216,7 +290,7 @@ namespace SpellHotbar::casts::CastIntent {
 		}
 
 		live_handle = handle;
-		payload = Payload{ slot, skill.formID, skill.type, skill.hand, &keybind };
+		payload = Payload{ slot, skill.formID, skill.art_id, skill.type, skill.hand, &keybind };
 		payload_retained = true;
 
 		logger::debug("SH2 cast intent: slot {} deferred to ShoutMCO (handle {})", slot, handle);
@@ -225,12 +299,25 @@ namespace SpellHotbar::casts::CastIntent {
 		return true;
 	}
 
-	void cancel()
+	void poll_local_release()
 	{
-		if (!api || live_handle == SHOUTMCO_CAST_HANDLE_INVALID) {
+		if (attempting_release || !payload_retained || live_handle != SHOUTMCO_CAST_HANDLE_INVALID) {
 			return;
 		}
-		api->Cancel(live_handle);
+		if (should_retain_now()) {
+			return;
+		}
+		const Payload p = payload;
+		clear_payload();
+		logger::debug("SH2 cast intent: local latch releasing slot {}", p.slot);
+		attempt_release(p);
+	}
+
+	void cancel()
+	{
+		if (api && live_handle != SHOUTMCO_CAST_HANDLE_INVALID) {
+			api->Cancel(live_handle);
+		}
 		// Drop local ownership now rather than waiting for the abandon callback, which ShoutMCO
 		// queues onto a later drain. Waiting would leave a withdrawn payload looking pending for
 		// the rest of the frame — and on a game load, past the point the bar it names still

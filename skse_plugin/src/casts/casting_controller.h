@@ -297,9 +297,11 @@ namespace SpellHotbar::casts::CastingController {
 	 */
 	bool can_accept_hotbar_cast();
 
+	bool is_live_concentration();
+
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
-	bool try_start_art(uint32_t art_id, size_t slot);
+	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 

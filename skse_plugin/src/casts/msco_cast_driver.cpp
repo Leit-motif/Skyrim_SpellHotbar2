@@ -290,6 +290,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		return sent;
 	}
 
+	void arm_combo_restore()
+	{
+		arm_restore();
+	}
+
 	void cancel(RE::PlayerCharacter* pc)
 	{
 		if (is_active()) {

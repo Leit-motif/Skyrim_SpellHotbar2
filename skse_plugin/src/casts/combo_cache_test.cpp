@@ -21,6 +21,14 @@ using SpellHotbar::casts::MscoChargeCurve;
 using SpellHotbar::casts::charge_time_to_anim_speed;
 using SpellHotbar::casts::is_msco_combo_window_close_event;
 using SpellHotbar::casts::is_msco_combo_window_open_event;
+using SpellHotbar::casts::AbilityLatch;
+using SpellHotbar::casts::classify_ability_latch;
+using SpellHotbar::casts::is_ability_hit_frame_event;
+using SpellHotbar::casts::is_ability_latch_event;
+using SpellHotbar::casts::is_ability_win_open_event;
+using SpellHotbar::casts::should_capture_attack_during_ability;
+using SpellHotbar::casts::should_cut_ability_for_attack;
+using SpellHotbar::casts::should_retain_local_cast_intent;
 
 namespace {
 
@@ -361,6 +369,66 @@ void live_art_state_plants_wasd()
 		"idle does not plant");
 }
 
+void ability_latch_prefers_winopen_then_hitframe_then_artexit()
+{
+	expect(classify_ability_latch(true, true) == AbilityLatch::winOpen,
+		"a clip with WinOpen latches there even if it also has HitFrame");
+	expect(classify_ability_latch(true, false) == AbilityLatch::winOpen,
+		"WinOpen is the Ability latch when present");
+	expect(classify_ability_latch(false, true) == AbilityLatch::hitFrame,
+		"HitFrame is the Ability latch when the clip has no WinOpen");
+	expect(classify_ability_latch(false, false) == AbilityLatch::artExit,
+		"SH2_ArtExit is the Ability latch when the clip has neither window");
+}
+
+void ability_latch_events_match_the_classified_kind()
+{
+	expect(is_ability_win_open_event("MCO_WinOpen"), "MCO_WinOpen opens the Ability latch");
+	expect(is_ability_win_open_event("MSCO_WinOpen"), "MSCO_WinOpen opens the Ability latch");
+	expect(is_ability_win_open_event("MCO_winopen"), "lowercase MCO WinOpen opens the Ability latch");
+	expect(!is_ability_win_open_event("MCO_WinClose"), "WinClose is not the Ability latch");
+	expect(is_ability_hit_frame_event("HitFrame"), "HitFrame is the fallback Ability latch event");
+	expect(!is_ability_hit_frame_event("MCO_WinOpen"), "WinOpen is not HitFrame");
+	expect(is_ability_latch_event(AbilityLatch::winOpen, "MCO_WinOpen"),
+		"a WinOpen latch fires on WinOpen");
+	expect(!is_ability_latch_event(AbilityLatch::winOpen, "HitFrame"),
+		"a WinOpen latch does not fire early at HitFrame");
+	expect(is_ability_latch_event(AbilityLatch::hitFrame, "HitFrame"),
+		"a HitFrame latch fires on HitFrame");
+	expect(is_ability_latch_event(AbilityLatch::artExit, "SH2_ArtExit"),
+		"an ArtExit latch fires on SH2_ArtExit");
+	expect(!is_ability_latch_event(AbilityLatch::artExit, "HitFrame"),
+		"an ArtExit latch does not fire at HitFrame");
+}
+
+void a_press_behind_our_shtb_is_retained_until_the_latch_opens()
+{
+	expect(should_retain_local_cast_intent(true, false, false),
+		"a hotbar press during our Driver Cast or Ability before the latch is the local queue");
+	expect(!should_retain_local_cast_intent(true, true, false),
+		"once the latch is open the press starts now rather than waiting");
+	expect(!should_retain_local_cast_intent(false, false, false),
+		"someone else's swing is ShoutMCO's clock, not a local retain");
+	expect(!should_retain_local_cast_intent(true, false, true),
+		"concentration is not this queue");
+}
+
+void attack_after_the_ability_latch_cuts_and_is_not_captured()
+{
+	expect(should_cut_ability_for_attack(true, true, true),
+		"an attack after the Ability latch sends ArtExit and stays uncaptured");
+	expect(!should_cut_ability_for_attack(true, false, true),
+		"an attack before the Ability latch must not skip the current hit");
+	expect(!should_cut_ability_for_attack(false, true, true),
+		"idle is not an Ability cut");
+	expect(should_capture_attack_during_ability(true, false, true),
+		"an attack before the Ability latch is captured so it cannot mash through");
+	expect(!should_capture_attack_during_ability(true, true, true),
+		"after the latch the attack press is left uncaptured");
+	expect(!should_capture_attack_during_ability(true, false, false),
+		"an unrelated key is not captured as an Ability mash-through");
+}
+
 }  // namespace
 
 int main()
@@ -402,6 +470,10 @@ int main()
 	driver_cast_roots_while_the_shtb_state_is_live();
 	ticket_10_cut_unroots_even_if_the_instance_is_still_alive();
 	live_art_state_plants_wasd();
+	ability_latch_prefers_winopen_then_hitframe_then_artexit();
+	ability_latch_events_match_the_classified_kind();
+	a_press_behind_our_shtb_is_retained_until_the_latch_opens();
+	attack_after_the_ability_latch_cuts_and_is_not_captured();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";
