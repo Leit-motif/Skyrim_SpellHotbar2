@@ -1,4 +1,5 @@
 #include "art_definition.h"
+#include "art_icon_resolve.h"
 
 #include <cstdlib>
 #include <iostream>
