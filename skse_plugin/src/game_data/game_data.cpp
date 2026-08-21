@@ -104,6 +104,14 @@ namespace SpellHotbar::GameData {
     std::unordered_map<uint32_t, ArtDefinition> art_cast_info;
     std::unordered_map<uint32_t, Gametime_cooldown_value> art_cooldowns;
 
+    struct ArtIconOverride {
+        std::string icon;
+        std::uint32_t icon_form{0};
+    };
+
+    std::unordered_map<uint32_t, ArtIconOverride> art_catalogue_icons;
+    std::unordered_map<uint32_t, ArtIconOverride> art_icon_overrides;
+
     std::unique_ptr<std::unordered_map<std::string, size_t>> spell_effects_key_indices{nullptr};
 
     std::unordered_map<RE::FormID, Transformation_data> custom_transformation_data;
@@ -517,6 +525,7 @@ namespace SpellHotbar::GameData {
         spell_casteffect_art.clear();
         animation_names.clear();
         art_cast_info.clear();
+        art_catalogue_icons.clear();
 
         load_translations(std::filesystem::path(translation_path));
 
@@ -1356,7 +1365,47 @@ namespace SpellHotbar::GameData {
     void set_art(ArtDefinition art)
     {
         const uint32_t id = art.id;
+        art_catalogue_icons.insert_or_assign(id, ArtIconOverride{ art.icon, art.icon_form });
+        if (const auto override_it = art_icon_overrides.find(id); override_it != art_icon_overrides.end()) {
+            art.icon = override_it->second.icon;
+            art.icon_form = override_it->second.icon_form;
+        }
         art_cast_info.insert_or_assign(id, std::move(art));
+    }
+
+    void set_art_icon(uint32_t art_id, std::string icon, std::uint32_t icon_form)
+    {
+        if (icon.empty() && icon_form == 0) {
+            art_icon_overrides.erase(art_id);
+            if (const auto base = art_catalogue_icons.find(art_id); base != art_catalogue_icons.end()) {
+                icon = base->second.icon;
+                icon_form = base->second.icon_form;
+            }
+        } else {
+            art_icon_overrides.insert_or_assign(art_id, ArtIconOverride{ icon, icon_form });
+        }
+
+        auto it = art_cast_info.find(art_id);
+        if (it != art_cast_info.end()) {
+            it->second.icon = icon;
+            it->second.icon_form = icon_form;
+        }
+    }
+
+    void reset_art_icon(uint32_t art_id)
+    {
+        set_art_icon(art_id, {}, 0);
+    }
+
+    bool get_art_catalogue_icon(uint32_t art_id, std::string& out_icon, std::uint32_t& out_icon_form)
+    {
+        const auto it = art_catalogue_icons.find(art_id);
+        if (it == art_catalogue_icons.end()) {
+            return false;
+        }
+        out_icon = it->second.icon;
+        out_icon_form = it->second.icon_form;
+        return true;
     }
 
     const ArtDefinition* get_art(uint32_t art_id)
@@ -2230,6 +2279,16 @@ namespace SpellHotbar::GameData {
 
              d.AddMember("items", items_node, d.GetAllocator());
 
+             rj::Value art_icons_node(rj::kArrayType);
+             for (auto& [art_id, icon_data] : art_icon_overrides) {
+                 rj::Value entry(rj::kObjectType);
+                 entry.AddMember("art_id", art_id, d.GetAllocator());
+                 entry.AddMember("icon", rj::Value(icon_data.icon.c_str(), d.GetAllocator()), d.GetAllocator());
+                 entry.AddMember("icon_form", icon_data.icon_form, d.GetAllocator());
+                 art_icons_node.PushBack(entry, d.GetAllocator());
+             }
+             d.AddMember("art_icons", art_icons_node, d.GetAllocator());
+
              rj::PrettyWriter<rj::OStreamWrapper> writer(osw);
              writer.SetIndent(' ', 4);
              d.Accept(writer);
@@ -2277,6 +2336,31 @@ namespace SpellHotbar::GameData {
              else {
                  errors = true;
                  logger::error("items is not array type!");
+             }
+         }
+
+         if (d.HasMember("art_icons")) {
+             if (d["art_icons"].IsArray()) {
+                 for (auto& art_object : d["art_icons"].GetArray()) {
+                     if (!art_object.IsObject() || !art_object.HasMember("art_id")) {
+                         errors = true;
+                         continue;
+                     }
+                     const uint32_t art_id = art_object["art_id"].GetUint();
+                     std::string icon;
+                     std::uint32_t icon_form = 0;
+                     if (art_object.HasMember("icon") && art_object["icon"].IsString()) {
+                         icon = art_object["icon"].GetString();
+                     }
+                     if (art_object.HasMember("icon_form") && art_object["icon_form"].IsUint()) {
+                         icon_form = art_object["icon_form"].GetUint();
+                     }
+                     set_art_icon(art_id, icon, icon_form);
+                 }
+             }
+             else {
+                 errors = true;
+                 logger::error("art_icons is not array type!");
              }
          }
 

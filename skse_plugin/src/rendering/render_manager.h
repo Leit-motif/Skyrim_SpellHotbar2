@@ -119,6 +119,10 @@ namespace SpellHotbar {
         static bool draw_skill(RE::FormID formID, int size, ImU32 col = IM_COL32_WHITE);
         static bool draw_art_icon(uint32_t art_id, int size, ImU32 col = IM_COL32_WHITE);
         static bool draw_art_icon_in_editor(uint32_t art_id, ImVec2 pos, int size, ImU32 col = IM_COL32_WHITE);
+        static bool draw_art_icon_fields(std::uint32_t icon_form, const std::string& icon, int size,
+            ImU32 col = IM_COL32_WHITE);
+        static bool draw_art_icon_fields_in_editor(std::uint32_t icon_form, const std::string& icon, ImVec2 pos,
+            int size, ImU32 col = IM_COL32_WHITE);
         static bool draw_skill_in_editor(RE::FormID formID, ImVec2 pos, int size, ImU32 col = IM_COL32_WHITE);
         static void draw_default_icon_in_editor(GameData::DefaultIconType icon_type, ImVec2 pos, int size, ImU32 col = IM_COL32_WHITE);
         static void draw_extra_icon_in_editor(const std::string &key, ImVec2 pos, int size, ImU32 col = IM_COL32_WHITE);

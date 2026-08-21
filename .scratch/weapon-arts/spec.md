@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 07 agent-done (owner cells 1–3 open); 06, 08–09 remain.
+Status: in progress — 01–03 and 05 resolved; 04 agent-done (owner cells 1–2 open); 06 agent-done (owner cells 1–2 open); 07 agent-done (owner cells 1–3 open); 08–09 remain.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -195,7 +195,7 @@ behaviour is exactly preserved.
   bar data gains a version.
 - Art definitions are data, following the existing spell-data loader precedent: id, display name,
   icon, Art Selector value, Art Class, stamina cost, cooldown, and global cooldown. Balancing is a
-  data edit. Distinct per-art icons are ticket 06 (extra atlas, original glyphs, sample first).
+  data edit. Distinct per-art icons are ticket 06 (extra-atlas picker + optional CSV bake).
 - The press routes through the existing input-mode dispatch, so the existing Papyrus slot-activation
   function drives it unchanged. `try_start_art` refuses on cooldown, unaffordable stamina, or Art
   Class mismatch **before** writing the selector.
@@ -342,9 +342,9 @@ and ADR-0008.
 | [01](issues/01-play-a-bound-weapon-art-from-drawn-idle.md) | resolved | Play a bound art from drawn idle |
 | [02](issues/02-bind-a-weapon-art-from-the-bind-menu.md) | resolved | Bind an art from the Binding Menu |
 | [03](issues/03-map-an-art-pack-folder-to-a-catalogue-row.md) | resolved | Folder → catalogue row + selector |
-| [04](issues/04-own-the-art-pack-in-sh2-oar-directories.md) | claimed — agent 3–6 passed | Art Pack lives in SH2 OAR directories |
+| [04](issues/04-own-the-art-pack-in-sh2-oar-directories.md) | resolved | Art Pack lives in SH2 OAR directories |
 | [05](issues/05-consume-clip-translation-on-shtb-states.md) | resolved | shtb states consume clip translation |
-| [06](issues/06-procure-weapon-art-icons.md) | ready-for-agent | Distinct icon per named ash |
+| [06](issues/06-procure-weapon-art-icons.md) | agent-done | Atlas icon picker + extra-atlas draw path |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
 | [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
 | [09](issues/09-weapon-arts-editor.md) | needs-triage | In-game editor (PIE / rename / icon) |

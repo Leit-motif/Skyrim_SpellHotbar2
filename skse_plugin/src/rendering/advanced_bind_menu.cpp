@@ -7,6 +7,7 @@
 #include "../bar/hotbars.h"
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
+#include "art_icon_edit_dialog.h"
 
 namespace SpellHotbar::BindMenu {
 
@@ -767,7 +768,12 @@ namespace SpellHotbar::BindMenu {
                         if (ImGui::IsItemHovered()) {
                             RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
-                        set_drag_source_art(art_id, scale_factor);
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                            ArtIconEditor::open(art_id);
+                        }
+                        if (!ArtIconEditor::is_open()) {
+                            set_drag_source_art(art_id, scale_factor);
+                        }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
@@ -1260,6 +1266,10 @@ namespace SpellHotbar::BindMenu {
 
         ImGui::End();
 
-        RenderManager::draw_custom_mouse_cursor();
+        if (ArtIconEditor::is_open()) {
+            ArtIconEditor::draw();
+        } else {
+            RenderManager::draw_custom_mouse_cursor();
+        }
     }
 }

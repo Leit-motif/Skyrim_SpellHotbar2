@@ -6,10 +6,12 @@
 
 using SpellHotbar::ArtClass;
 using SpellHotbar::ArtDefinition;
+using SpellHotbar::ArtIconDrawKind;
 using SpellHotbar::GameData::EquippedType;
 using SpellHotbar::art_class_is_live;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
+using SpellHotbar::resolve_art_icon_draw_kind;
 
 namespace {
 
@@ -176,6 +178,30 @@ void custom_folder_files_override_name_and_icon()
 	expect(art.has_clip, "a dropped AABL clip marks the folder as playable");
 }
 
+void icon_form_wins_over_string_keys()
+{
+	expect(resolve_art_icon_draw_kind(0x123, "GREATER_POWER", true, true) == ArtIconDrawKind::Form,
+		"icon_form selects Form before atlas keys");
+}
+
+void extra_atlas_beats_default_icon_name()
+{
+	expect(resolve_art_icon_draw_kind(0, "icons_skills_FLAMES", true, true) == ArtIconDrawKind::ExtraAtlas,
+		"extra atlas wins when both maps contain the key");
+}
+
+void default_icon_name_when_not_in_extra_atlas()
+{
+	expect(resolve_art_icon_draw_kind(0, "GREATER_POWER", false, true) == ArtIconDrawKind::DefaultIcon,
+		"default icon names resolve without extra atlas");
+}
+
+void unknown_icon_degrades_to_unknown_kind()
+{
+	expect(resolve_art_icon_draw_kind(0, "NOT_A_REAL_ICON", false, false) == ArtIconDrawKind::Unknown,
+		"missing keys resolve to Unknown");
+}
+
 }  // namespace
 
 int main()
@@ -194,6 +220,10 @@ int main()
 	generic_art_is_live_on_melee_and_fists_only();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();
+	icon_form_wins_over_string_keys();
+	extra_atlas_beats_default_icon_name();
+	default_icon_name_when_not_in_extra_atlas();
+	unknown_icon_degrades_to_unknown_kind();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

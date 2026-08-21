@@ -21,6 +21,7 @@ struct ArtDefinition {
 	std::uint32_t id{0};
 	std::string display_name;
 	std::string icon;
+	std::uint32_t icon_form{0};
 	int selector{0};
 	ArtClass art_class{ArtClass::Generic};
 	float stamina_cost{0.0f};

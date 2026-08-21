@@ -12,6 +12,7 @@
 
 #include <dxgi.h>
 #include "../game_data/game_data.h"
+#include "../game_data/art_icon_resolve.h"
 #include "texture_csv_loader.h"
 #include "../game_data/keynames_csv_loader.h"
 #include <unordered_map>
@@ -1318,22 +1319,76 @@ bool RenderManager::draw_skill(RE::FormID formID, int size, ImU32 col) {
     }
 }
 
-bool RenderManager::draw_art_icon(uint32_t art_id, int size, ImU32 col)
+bool RenderManager::draw_art_icon_fields(std::uint32_t icon_form, const std::string& icon, int size, ImU32 col)
 {
     constexpr float scale = 1.0f;
+    if (icon_form != 0) {
+        return draw_skill(static_cast<RE::FormID>(icon_form), size, col);
+    }
+    const bool extra_contains = extra_icons.contains(icon);
+    const bool default_contains = TextureCSVLoader::default_icon_names.contains(icon);
+    const auto kind = resolve_art_icon_draw_kind(icon_form, icon, extra_contains, default_contains);
+    switch (kind) {
+    case ArtIconDrawKind::ExtraAtlas:
+        extra_icons.at(icon).draw_with_scale(static_cast<float>(size), static_cast<float>(size), col, scale);
+        return true;
+    case ArtIconDrawKind::DefaultIcon: {
+        auto type = TextureCSVLoader::default_icon_names.at(icon);
+        if (!default_icons.contains(type)) {
+            type = GameData::DefaultIconType::UNKNOWN;
+        }
+        default_icons.at(type).draw_with_scale(static_cast<float>(size), static_cast<float>(size), col, scale);
+        return true;
+    }
+    case ArtIconDrawKind::Unknown:
+    default:
+        if (default_icons.contains(GameData::DefaultIconType::UNKNOWN)) {
+            default_icons.at(GameData::DefaultIconType::UNKNOWN)
+                .draw_with_scale(static_cast<float>(size), static_cast<float>(size), col, scale);
+            return true;
+        }
+        return false;
+    }
+}
+
+bool RenderManager::draw_art_icon_fields_in_editor(std::uint32_t icon_form, const std::string& icon, ImVec2 pos,
+    int size, ImU32 col)
+{
+    if (icon_form != 0) {
+        return draw_skill_in_editor(static_cast<RE::FormID>(icon_form), pos, size, col);
+    }
+    const bool extra_contains = extra_icons.contains(icon);
+    const bool default_contains = TextureCSVLoader::default_icon_names.contains(icon);
+    const auto kind = resolve_art_icon_draw_kind(icon_form, icon, extra_contains, default_contains);
+    switch (kind) {
+    case ArtIconDrawKind::ExtraAtlas:
+        draw_extra_icon_in_editor(icon, pos, size, col);
+        return true;
+    case ArtIconDrawKind::DefaultIcon: {
+        auto type = TextureCSVLoader::default_icon_names.at(icon);
+        if (!default_icons.contains(type)) {
+            type = GameData::DefaultIconType::UNKNOWN;
+        }
+        draw_default_icon_in_editor(type, pos, size, col);
+        return true;
+    }
+    case ArtIconDrawKind::Unknown:
+    default:
+        if (default_icons.contains(GameData::DefaultIconType::UNKNOWN)) {
+            draw_default_icon_in_editor(GameData::DefaultIconType::UNKNOWN, pos, size, col);
+            return true;
+        }
+        return false;
+    }
+}
+
+bool RenderManager::draw_art_icon(uint32_t art_id, int size, ImU32 col)
+{
     const ArtDefinition* art = GameData::get_art(art_id);
     if (!art) {
         return false;
     }
-    GameData::DefaultIconType type = GameData::DefaultIconType::UNKNOWN;
-    if (TextureCSVLoader::default_icon_names.contains(art->icon)) {
-        type = TextureCSVLoader::default_icon_names.at(art->icon);
-    }
-    if (!default_icons.contains(type)) {
-        return false;
-    }
-    default_icons.at(type).draw_with_scale(static_cast<float>(size), static_cast<float>(size), col, scale);
-    return true;
+    return draw_art_icon_fields(art->icon_form, art->icon, size, col);
 }
 
 bool RenderManager::draw_art_icon_in_editor(uint32_t art_id, ImVec2 pos, int size, ImU32 col)
@@ -1342,18 +1397,7 @@ bool RenderManager::draw_art_icon_in_editor(uint32_t art_id, ImVec2 pos, int siz
     if (!art) {
         return false;
     }
-    GameData::DefaultIconType type = GameData::DefaultIconType::UNKNOWN;
-    if (TextureCSVLoader::default_icon_names.contains(art->icon)) {
-        type = TextureCSVLoader::default_icon_names.at(art->icon);
-    }
-    if (!default_icons.contains(type)) {
-        return false;
-    }
-    auto& img = default_icons.at(type);
-    ImGui::GetWindowDrawList()->AddImage(img.get_res(), ImVec2(pos.x, pos.y), ImVec2(pos.x + size, pos.y + size),
-        img.uv0, img.uv1, col);
-    draw_slot_overlay(pos, size);
-    return true;
+    return draw_art_icon_fields_in_editor(art->icon_form, art->icon, pos, size, col);
 }
 
 bool RenderManager::draw_skill_in_editor(RE::FormID formID, ImVec2 pos, int size, ImU32 col)

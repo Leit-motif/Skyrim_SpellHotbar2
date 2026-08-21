@@ -74,6 +74,7 @@ def generate(
     arts_csv: Path,
     overlay_root: Path,
     previous_paths: dict[str, str] | None = None,
+    previous_icons: dict[str, str] | None = None,
     log: LogFn | None = None,
 ) -> GenerateResult:
     write_log = log or (lambda _msg: None)
@@ -126,7 +127,7 @@ def generate(
                 (
                     str(art_id),
                     sub.name,
-                    DEFAULT_ICON,
+                    (previous_icons or {}).get(sub.name, DEFAULT_ICON),
                     str(art_id),
                     sub.art_class,
                     DEFAULT_STAMINA,
@@ -494,6 +495,21 @@ def _previous_from_csv(path: Path) -> dict[str, str]:
     return previous
 
 
+def _previous_icons_from_csv(path: Path | None) -> dict[str, str]:
+    icons: dict[str, str] = {}
+    if path is None:
+        return icons
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return icons
+    for line in text.splitlines()[1:]:
+        cols = line.split("\t")
+        if len(cols) >= 3 and cols[1].strip() and cols[2].strip():
+            icons[cols[1].strip()] = cols[2].strip()
+    return icons
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -548,11 +564,13 @@ def main(argv: list[str] | None = None) -> int:
         print("--scan, --arts-csv, and --overlay are required unless --emit-templates", file=sys.stderr)
         return 2
     previous_paths = _previous_from_csv(args.previous_csv) if args.previous_csv else None
+    previous_icons = _previous_icons_from_csv(args.previous_csv) if args.previous_csv else None
     result = generate(
         scan_roots=args.scan,
         arts_csv=args.arts_csv,
         overlay_root=args.overlay,
         previous_paths=previous_paths,
+        previous_icons=previous_icons,
         log=lambda msg: print(msg, file=sys.stderr),
     )
     print(f"emitted {result.emitted} arts; missing {len(result.missing)}")

@@ -397,6 +397,39 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertEqual([c["condition"] for c in kinds], ["CompareValues", "IsActorBase"])
 
 
+    def test_regen_preserves_icon_by_display_name(self):
+        sub = _submod(self.scan, "AoW Pack", "Disengage")
+        _write(sub / "config.json", json.dumps(_worn_config("Disengage")))
+        _write(sub / "animations" / AABL, "clip")
+        prior = self.root / "prior.csv"
+        _write(
+            prior,
+            "ArtID\tDisplayName\tIcon\tSelector\tArtClass\tStaminaCost\tCooldown\tGlobalCooldown\n"
+            "12\tDisengage\tDESTRUCTION_FIRE_ADEPT\t12\tGeneric\t25\t8s\t1.0\n",
+        )
+        from generate_art_pack import _previous_from_csv, _previous_icons_from_csv
+
+        result = self._generate(
+            previous_paths=_previous_from_csv(prior),
+            previous_icons=_previous_icons_from_csv(prior),
+        )
+
+        self.assertEqual(result.emitted, 1)
+        row = [line for line in self.arts_csv.read_text(encoding="utf-8").splitlines() if "Disengage" in line][0]
+        cols = row.split("\t")
+        self.assertEqual(cols[2], "DESTRUCTION_FIRE_ADEPT")
+
+    def test_new_ash_without_prior_icon_uses_default(self):
+        sub = _submod(self.scan, "AoW Pack", "Flurry Strike")
+        _write(sub / "config.json", json.dumps(_worn_config("Flurry Strike")))
+        _write(sub / "animations" / AABL, "clip")
+
+        self._generate()
+
+        row = [line for line in self.arts_csv.read_text(encoding="utf-8").splitlines() if "Flurry Strike" in line][0]
+        self.assertEqual(row.split("\t")[2], "GREATER_POWER")
+
+
 class CustomArtFolderTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
