@@ -13,6 +13,8 @@ namespace SpellHotbar {
 constexpr std::uint32_t vanilla_firebolt_local_form = 0x12FD0;
 constexpr const char* vanilla_firebolt_plugin = "Skyrim.esm";
 constexpr const char* custom_ability_sidecar_filename = "ability.ini";
+// Ticket 12. When false, clips keep author CAST/SoundPlay; stamp/inject are no-ops.
+inline constexpr bool custom_ability_spell_assignment_enabled = false;
 
 struct CustomAbilitySidecar {
 	std::string name;
@@ -84,12 +86,20 @@ void apply_custom_ability_sidecar(ArtDefinition& art, const CustomAbilitySidecar
 
 [[nodiscard]] bool clip_has_custom_ability_pie(const std::vector<ClipAnnotation>& annotations, int folder_number);
 
+[[nodiscard]] bool is_author_spell_cast_annotation(std::string_view text) noexcept;
+
+[[nodiscard]] bool is_sound_play_annotation(std::string_view text) noexcept;
+
+[[nodiscard]] bool annotations_share_time(float a, float b) noexcept;
+
+[[nodiscard]] std::string custom_ability_spell_sound_annotation(std::string_view sound_editor_id);
+
 [[nodiscard]] std::optional<float> custom_ability_hit_frame_time(const std::vector<ClipAnnotation>& annotations);
 
 [[nodiscard]] float custom_ability_pie_stamp_time(
 	const std::vector<ClipAnnotation>& annotations, float duration) noexcept;
 
 [[nodiscard]] std::string ensure_custom_ability_pie_in_annotation_txt(
-	std::string_view txt, int folder_number);
+	std::string_view txt, int folder_number, std::string_view release_sound_editor_id = {});
 
 }  // namespace SpellHotbar

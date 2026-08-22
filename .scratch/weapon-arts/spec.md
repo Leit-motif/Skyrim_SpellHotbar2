@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–05, 07–08, and 10 resolved; 06 agent-done; 09 ready-for-agent; 11 needs-triage.
+Status: in progress — 01–05 and 07–10 resolved; 06 agent-done; 11–12 needs-triage.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -127,7 +127,7 @@ behaviour is exactly preserved.
 - **Ability Pack** — a set of OAR submods keyed to the Ability Selector. _Avoid_: animation mod, moveset.
 - **Ability Class** — 1H / 2H / Dual / Generic; gray-out and refuse. Catalogue column is still `ArtClass`.
 - **Custom Ability Folder** — SH2-owned `Custom_Ability_N` drop-in; a catalogue row, not a slot index.
-- **Ability Editor** / **Custom Ability Spell** / **Ability Cost** — see `CONTEXT.md`. Ticket 09.
+- **Ability Editor** / **Ability Cost** — see `CONTEXT.md`. Ticket 09. **Custom Ability Spell** is ticket 12 (parked).
 - **Terminal Ability / Chaining Ability** — an ability whose clip does not, or does, carry `MCO_WinOpen`.
   A property of the clip, never of the binding. Chain-out uses WinOpen when present, otherwise HitFrame.
 
@@ -202,7 +202,7 @@ behaviour is exactly preserved.
 - Cost and cooldown are the fork's, using its existing casting-instance machinery, so the hotbar can
   render the cooldown. `Additional Attack by Loop`'s spells and perks are not consulted. This fork
   does not require that mod's hotkey or Stances perks for bound arts. Payload Interpreter does not
-  charge resources for a Custom Ability Spell.
+  charge resources for a Custom Ability Spell (ticket 12, parked).
 - A refused press — unaffordable, on cooldown, wrong Art Class — highlights the slot in the error
   state the other slot kinds already use, and grays the icon while the mismatch holds.
 
@@ -254,10 +254,11 @@ behaviour is exactly preserved.
 - The player drops `AABL_Attack_A.hkx` into a folder. Extra numbered folders (`Custom_Ability_13`, …)
   still scan in and use the same Ability Editor. Default Art Class is Generic until the editor sets
   another.
-- Ticket 09 is the Ability Editor (name, atlas icon, Custom Ability Spell, class, costs, CD, GCD).
-  Configuration is a sidecar in the folder (ADR-0009), not `name.txt` / `icon.txt`. PIE marker is
-  stamped HitFrame else 5% of duration when missing. Pointed AoW files are never annotated. Fire-time
-  override is ticket 11. No dummy `.hkx`.
+- Ticket 09 is the Ability Editor (name, atlas icon, class, costs, CD, GCD) on every catalogue
+  row, including pointer-pack ashes. Custom Ability configuration is a sidecar in the folder
+  (ADR-0009). Ash player tuning is the user overlay (ADR-0010). Dropped clips fire their author
+  payloads. Pointed AoW files are never written. Custom Ability Spell assignment is ticket 12.
+  Fire-time override is ticket 11 (blocked by 12). No dummy `.hkx`.
 
 ## Testing Decisions
 
@@ -305,12 +306,13 @@ WinOpen tags vs one without, latch opens on the matching event.
 - Slot-locked folders (`Custom_Ability_1` is not key 1).
 - Instantiate-from-ash / pick a catalogue clip in ImGui (09 is folder overlay only).
 - Ability Editor fire-time slider (ticket 11).
+- Custom Ability Spell assignment / CAST strip / PIE inject (ticket 12).
 - Editing the sibling MCO shout behavior engine from this repository. Consuming its published
   cast-intent API is in scope.
 - Consecutive Driver Cast one-slot buffer as its own ticket (folded into 10). Real-shout **key**
   buffering (thuum). Hotbar shouts are in 10.
-- Per-art tuning of release timing beyond the clip's own annotations, 09's HitFrame / 5% stamp, and
-  ticket 10's WinOpen-else-HitFrame latch.
+- Per-art tuning of release timing beyond the clip's own annotations, ticket 12's HitFrame / 5%
+  stamp (parked), and ticket 10's WinOpen-else-HitFrame latch.
 - Publishing modified binaries.
 - Nordic UI second icon tint (later).
 
@@ -344,6 +346,13 @@ installed modlist. Recorded so the next agent does not re-derive them:
   editor later; icons original/hybrid/extra-atlas/sample-first. Dual is its own tag.
 - Grill 2026-08-21: Ability Editor (ticket 09) un-parked — Custom Ability folders only; sidecar;
   Firebolt placeholder; SH2 stam/magicka/health; HitFrame else 5%; ticket 11 for fire-time UI.
+- Owner 2026-08-21: park Custom Ability Spell assignment after live fire failed (no spells cast).
+  09 keeps the overlay editor and clip-native payloads. Assignment work → ticket 12 `needs-triage`.
+  Learnings: C++ translation defaults lose to `translation.txt` (`Globald Cooldown`); ImGui
+  Backspace stuck because Win32 NewFrame and a missed Skyrim key-up both held the key; dropped
+  AoW/AABL clips already fire `PIE.@CAST` so SH2 must not also inject CASTSPELL until 12 is
+  diagnosed. Ashes share the Ability Editor; player retune is the user overlay (ADR-0010), never
+  the pointed HKX. Owner closed 09 the same day.
 - Grill 2026-08-21 (ticket 10): one Cast Intent for Ability, spell, and hotbar shout; two clocks
   (ShoutMCO vs our latch); combo continues; WinOpen else HitFrame else ArtExit; 23 and 09 folded in.
 
@@ -363,6 +372,7 @@ and ADR-0008.
 | [06](issues/06-procure-weapon-art-icons.md) | agent-done | Atlas icon picker + extra-atlas draw path |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
 | [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
-| [09](issues/09-weapon-arts-editor.md) | agent-done | Ability Editor |
+| [09](issues/09-weapon-arts-editor.md) | resolved | Ability Editor (all Abilities, including ashes) |
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
-| [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 09) |
+| [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 12) |
+| [12](issues/12-custom-ability-spell-assignment.md) | needs-triage | Custom Ability Spell assignment (parked from 09) |

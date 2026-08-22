@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <windows.h>
 
@@ -104,7 +105,7 @@ bool run_process(const std::wstring& exe, const std::wstring& args)
 	return true;
 }
 
-void stamp_hkx_with_hkxc(const std::filesystem::path& hkx, int folder_number)
+void stamp_hkx_with_hkxc(const std::filesystem::path& hkx, int folder_number, std::string_view release_sound_editor_id)
 {
 	wchar_t* env = nullptr;
 	std::size_t env_len = 0;
@@ -129,7 +130,7 @@ void stamp_hkx_with_hkxc(const std::filesystem::path& hkx, int folder_number)
 	std::ostringstream buf;
 	buf << in.rdbuf();
 	in.close();
-	const auto updated = ensure_custom_ability_pie_in_annotation_txt(buf.str(), folder_number);
+	const auto updated = ensure_custom_ability_pie_in_annotation_txt(buf.str(), folder_number, release_sound_editor_id);
 	std::ofstream out(txt, std::ofstream::trunc);
 	if (!out) {
 		return;
@@ -137,6 +138,49 @@ void stamp_hkx_with_hkxc(const std::filesystem::path& hkx, int folder_number)
 	out << updated;
 	out.close();
 	run_process(exe, L"update -a \"" + txt_s + L"\" -i \"" + hkx_s + L"\"");
+}
+
+[[nodiscard]] std::string release_sound_editor_id_for(const ArtDefinition& art)
+{
+	auto* handler = RE::TESDataHandler::GetSingleton();
+	if (!handler) {
+		return {};
+	}
+	const auto plugin = art.spell_plugin.empty() ? vanilla_firebolt_plugin : art.spell_plugin;
+	const auto form = art.spell_local_form == 0 ? vanilla_firebolt_local_form : art.spell_local_form;
+	auto* spell = handler->LookupForm<RE::SpellItem>(form, plugin);
+	if (!spell) {
+		return {};
+	}
+	for (auto* effect : spell->effects) {
+		if (!effect || !effect->baseEffect) {
+			continue;
+		}
+		RE::BGSSoundDescriptorForm* release = nullptr;
+		RE::BGSSoundDescriptorForm* fallback = nullptr;
+		for (const auto& pair : effect->baseEffect->effectSounds) {
+			if (!pair.sound) {
+				continue;
+			}
+			if (pair.id == RE::MagicSystem::SoundID::kRelease) {
+				release = pair.sound;
+				break;
+			}
+			if (!fallback && pair.id != RE::MagicSystem::SoundID::kCastLoop &&
+				pair.id != RE::MagicSystem::SoundID::kHit) {
+				fallback = pair.sound;
+			}
+		}
+		auto* snd = release ? release : fallback;
+		if (!snd) {
+			continue;
+		}
+		const char* edid = snd->GetFormEditorID();
+		if (edid && edid[0] != '\0') {
+			return edid;
+		}
+	}
+	return {};
 }
 
 }  // namespace
@@ -212,8 +256,19 @@ bool persist_custom_ability(ArtDefinition& art)
 	return true;
 }
 
+bool persist_ability(ArtDefinition& art)
+{
+	if (is_custom_ability(art.id)) {
+		return persist_custom_ability(art);
+	}
+	return GameData::persist_art_player_overlay(art);
+}
+
 void emit_custom_ability_pi_config()
 {
+	if (!custom_ability_spell_assignment_enabled) {
+		return;
+	}
 	std::vector<std::pair<int, CustomAbilitySidecar>> entries;
 	for (const auto id : GameData::list_art_ids()) {
 		const auto* art = GameData::get_art(id);
@@ -235,6 +290,9 @@ void emit_custom_ability_pi_config()
 
 void inject_custom_ability_pie(RE::hkaAnimation* animation, const ArtDefinition& art)
 {
+	if (!custom_ability_spell_assignment_enabled) {
+		return;
+	}
 	if (!animation || !is_custom_ability(art.id) || animation->annotationTracks.empty()) {
 		return;
 	}
@@ -242,7 +300,7 @@ void inject_custom_ability_pie(RE::hkaAnimation* animation, const ArtDefinition&
 	const auto sidecar = sidecar_from_art(art, n);
 	const auto expanded = std::string("PIE.") + custom_ability_castspell_instruction(sidecar);
 	const auto dollar = custom_ability_pie_annotation(n);
-	const auto needle = custom_ability_pi_name(n);
+	const auto sound_line = custom_ability_spell_sound_annotation(release_sound_editor_id_for(art));
 
 	std::vector<ClipAnnotation> collected;
 	for (const auto& track : animation->annotationTracks) {
@@ -252,7 +310,15 @@ void inject_custom_ability_pie(RE::hkaAnimation* animation, const ArtDefinition&
 		}
 	}
 	const float stamp_time = custom_ability_pie_stamp_time(collected, animation->duration);
+	std::vector<float> author_cast_times;
+	for (const auto& annotation : collected) {
+		if (is_author_spell_cast_annotation(annotation.text)) {
+			author_cast_times.push_back(annotation.time);
+		}
+	}
 
+	bool placed = false;
+	bool sound_placed = sound_line.empty();
 	for (auto& track : animation->annotationTracks) {
 		for (std::int32_t i = 0; i < track.annotations.size(); ++i) {
 			const char* text = track.annotations[i].text.c_str();
@@ -260,25 +326,61 @@ void inject_custom_ability_pie(RE::hkaAnimation* animation, const ArtDefinition&
 				continue;
 			}
 			const std::string_view view{ text };
-			if (view == dollar || view.find(needle) != std::string_view::npos || view == expanded) {
+			if (view == dollar || view.starts_with(dollar + ".") || view == expanded) {
+				track.annotations[i].time = stamp_time;
 				track.annotations[i].text = expanded.c_str();
-				return;
+				placed = true;
+				continue;
 			}
+			if (is_sound_play_annotation(view)) {
+				bool paired = false;
+				for (const float cast_time : author_cast_times) {
+					if (annotations_share_time(track.annotations[i].time, cast_time)) {
+						paired = true;
+						break;
+					}
+				}
+				if (paired) {
+					track.annotations[i].text = "SH2_ReplacedSound";
+					continue;
+				}
+				if (!sound_line.empty() && annotations_share_time(track.annotations[i].time, stamp_time)) {
+					track.annotations[i].text = sound_line.c_str();
+					sound_placed = true;
+				}
+				continue;
+			}
+			if (!is_author_spell_cast_annotation(view)) {
+				continue;
+			}
+			const auto dot = view.find('.');
+			if (dot != std::string_view::npos) {
+				const auto event = view.substr(0, dot);
+				if (!event.empty() && event != "PIE") {
+					track.annotations[i].text = std::string{ event }.c_str();
+					continue;
+				}
+			}
+			track.annotations[i].text = "SH2_ReplacedCast";
 		}
 	}
 
 	auto& track = animation->annotationTracks[0];
-	if (track.annotations.empty()) {
-		return;
+	if (!placed) {
+		RE::hkaAnnotationTrack::Annotation anno{ stamp_time, 0, expanded.c_str() };
+		track.annotations.push_back(anno);
 	}
-	auto anno = track.annotations[0];
-	anno.time = stamp_time;
-	anno.text = expanded.c_str();
-	track.annotations.push_back(anno);
+	if (!sound_placed) {
+		RE::hkaAnnotationTrack::Annotation anno{ stamp_time, 0, sound_line.c_str() };
+		track.annotations.push_back(anno);
+	}
 }
 
 void stamp_custom_ability_clip(const ArtDefinition& art)
 {
+	if (!custom_ability_spell_assignment_enabled) {
+		return;
+	}
 	if (!art.has_clip || art.folder_path.empty()) {
 		return;
 	}
@@ -286,7 +388,7 @@ void stamp_custom_ability_clip(const ArtDefinition& art)
 	if (hkx.empty()) {
 		return;
 	}
-	stamp_hkx_with_hkxc(hkx, folder_number_of(art));
+	stamp_hkx_with_hkxc(hkx, folder_number_of(art), release_sound_editor_id_for(art));
 }
 
 }  // namespace SpellHotbar

@@ -784,11 +784,7 @@ namespace SpellHotbar::BindMenu {
                             RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
                         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
-                            if (is_custom_ability(art_id)) {
-                                AbilityEditor::open(art_id);
-                            } else {
-                                ArtIconEditor::open(art_id);
-                            }
+                            AbilityEditor::open(art_id);
                         }
                         RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
                         if (!ArtIconEditor::is_open() && !AbilityEditor::is_open()) {
@@ -797,11 +793,9 @@ namespace SpellHotbar::BindMenu {
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
-                        if (is_custom_ability(art_id)) {
-                            ImGui::SameLine();
-                            if (ImGui::SmallButton(translate_c("$EDIT"))) {
-                                AbilityEditor::open(art_id);
-                            }
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton(translate_c("$EDIT"))) {
+                            AbilityEditor::open(art_id);
                         }
 
                         ImGui::TableNextColumn();

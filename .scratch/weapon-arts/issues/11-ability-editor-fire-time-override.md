@@ -3,13 +3,13 @@
 Let the Ability Editor choose when `PIE.$custom_ability_N` fires in the clip, instead of only the
 v1 rule (HitFrame, else 5% of duration).
 
-**Blocked by:** 09
+**Blocked by:** 12
 
 **Status:** needs-triage
 
 ## You test this
 
-(Unwritten until 09 ships.) Open Custom Ability 3 with a dropped clip. Move a fire-time control;
+(Unwritten until 12 ships.) Open Custom Ability 3 with a dropped clip. Move a fire-time control;
 the assigned spell releases at that point in the motion, not at HitFrame/5%.
 
 ## Agent tests the rest
@@ -20,8 +20,8 @@ scrubber is extra and not this ticket unless explicitly added.
 
 ## What this is
 
-An enhancement on ticket 09’s inject. 09 must ship without it: HitFrame, else 5% of duration
-(tiny windup, not 50%).
+An enhancement on ticket 12’s inject. 12 is parked (`needs-triage`); 09 no longer injects.
+When 12 ships, v1 fire time is still HitFrame, else 5% of duration (tiny windup, not 50%).
 
 ## What this is not
 

@@ -41,7 +41,10 @@ void a_row_loads_every_art_field()
 	expect(arts.size() == 1 && arts[0].art_class == ArtClass::Generic, "ArtClass Generic is Generic");
 	expect(arts.size() == 1 && arts[0].stamina_cost == 25.0f, "StaminaCost is 25");
 	expect(arts.size() == 1 && arts[0].gcd == 1.0f, "GlobalCooldown is 1.0");
+	expect(arts.size() == 1 && arts[0].cooldown_text == "8s", "Cooldown cell is kept as text");
 	expect(arts.size() == 1 && arts[0].cooldown_days > 0.0f, "8s cooldown is positive days");
+	expect(arts.size() == 1 && arts[0].magicka_cost == 0.0f, "missing MagickaCost is 0");
+	expect(arts.size() == 1 && arts[0].health_cost == 0.0f, "missing HealthCost is 0");
 }
 
 void art_class_column_loads_each_legal_value()
@@ -205,6 +208,31 @@ void default_icon_name_when_not_in_extra_atlas()
 		"default icon names resolve without extra atlas");
 }
 
+void player_overlay_replaces_catalogue_tuning_and_round_trips()
+{
+	ArtDefinition catalogue;
+	catalogue.id = 2;
+	catalogue.display_name = "Aimed Blow";
+	catalogue.icon = "GREATER_POWER";
+	catalogue.art_class = ArtClass::Generic;
+	catalogue.stamina_cost = 25.0f;
+	catalogue.cooldown_text = "8s";
+	catalogue.gcd = 1.0f;
+	ArtDefinition live = catalogue;
+	auto overlay = SpellHotbar::art_player_overlay_from(live);
+	overlay.display_name = "Cheap Aimed Blow";
+	overlay.stamina_cost = 5.0f;
+	overlay.magicka_cost = 10.0f;
+	overlay.art_class = ArtClass::OneHand;
+	SpellHotbar::apply_art_player_overlay(live, overlay);
+	expect(live.display_name == "Cheap Aimed Blow", "overlay name wins");
+	expect(live.stamina_cost == 5.0f, "overlay stamina wins");
+	expect(live.magicka_cost == 10.0f, "overlay magicka wins");
+	expect(live.art_class == ArtClass::OneHand, "overlay class wins");
+	expect(!SpellHotbar::art_matches_catalogue_tuning(live, catalogue), "edited ash is not catalogue");
+	expect(SpellHotbar::art_matches_catalogue_tuning(catalogue, catalogue), "catalogue matches itself");
+}
+
 void unknown_icon_degrades_to_unknown_kind()
 {
 	expect(resolve_art_icon_draw_kind(0, "NOT_A_REAL_ICON", false, false) == ArtIconDrawKind::Unknown,
@@ -322,23 +350,76 @@ void pie_stamps_at_five_percent_without_hit_frame()
 		"missing HitFrame uses 5% of duration, not mid-clip");
 }
 
-void pie_stamp_leaves_author_payloads_and_is_idempotent()
+void pie_stamp_replaces_author_casts_and_is_idempotent()
 {
 	const char* txt =
 		"# numOriginalFrames: 10\n"
-		"# duration: 1.000000\n"
+		"# duration: 2.000000\n"
 		"# numAnnotationTracks: 1\n"
-		"# numAnnotations: 2\n"
+		"# numAnnotations: 4\n"
 		"0.000000 animmotion 0 0 0\n"
-		"0.500000 HitFrame.@CASTSPELL|0x1|Author.esp|1|1|0|0|0|0|0|0|0\n";
+		"0.346300 PIE.@CAST|0x812|SpellscribeStances.esp|1|1|0|0|0|0|0|0|0\n"
+		"0.366630 HitFrame\n"
+		"0.866580 PIE.@CAST|0x812|SpellscribeStances.esp|1|1|0|0|0|0|0|0|0\n";
 	const auto once = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(txt, 3);
-	expect(once.find("HitFrame.@CASTSPELL|0x1|Author.esp") != std::string::npos,
-		"author payloads stay on the clip");
-	expect(once.find("PIE.$custom_ability_3") != std::string::npos, "the Custom Ability marker is added");
-	const auto twice = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(once, 3);
+	expect(once.find("PIE.@CAST|") == std::string::npos, "author CAST payloads are stripped");
+	expect(once.find("HitFrame") != std::string::npos, "HitFrame stays");
 	const auto first = once.find("PIE.$custom_ability_3");
-	const auto second = twice.find("PIE.$custom_ability_3", first + 1);
-	expect(first != std::string::npos && second == std::string::npos, "a second save does not add another marker");
+	const auto second = once.find("PIE.$custom_ability_3", first + 1);
+	expect(first != std::string::npos && second == std::string::npos, "exactly one Custom Ability marker");
+	expect(once.find("0.366630 PIE.$custom_ability_3") != std::string::npos,
+		"the marker is stamped at the first HitFrame");
+
+	const char* with_whoosh =
+		"# duration: 2.000000\n"
+		"# numAnnotations: 5\n"
+		"0.000000 animmotion 0 0 0\n"
+		"0.346300 PIE.@CAST|0x812|SpellscribeStances.esp|1|1|0|0|0|0|0|0|0\n"
+		"0.346300 SoundPlay.MAGFirebolt03FireSD\n"
+		"0.366630 HitFrame\n"
+		"0.800000 SoundPlay.WPNSwingBladeMedium\n";
+	const auto stripped = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(with_whoosh, 3, "MAGFrostbolt01FireSD");
+	expect(stripped.find("SoundPlay.MAGFirebolt03FireSD") == std::string::npos,
+		"the author CAST's whoosh is stripped");
+	expect(stripped.find("SoundPlay.WPNSwingBladeMedium") != std::string::npos,
+		"weapon swing sounds stay");
+	expect(stripped.find("0.366630 SoundPlay.MAGFrostbolt01FireSD") != std::string::npos,
+		"the assigned spell's Release sound is stamped at fire time");
+	expect(stripped.find("PIE.$custom_ability_3") != std::string::npos, "the Custom Ability marker is still added");
+
+	const auto again = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(stripped, 3, "MAGFrostbolt01FireSD");
+	const auto first_sound = again.find("SoundPlay.MAGFrostbolt01FireSD");
+	const auto second_sound = again.find("SoundPlay.MAGFrostbolt01FireSD", first_sound + 1);
+	expect(first_sound != std::string::npos && second_sound == std::string::npos,
+		"a second save does not add another Release whoosh");
+
+	const auto with_hitframe_payload = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(
+		"# duration: 1.000000\n"
+		"# numAnnotations: 1\n"
+		"0.500000 HitFrame.@CASTSPELL|0x1|Author.esp|1|1|0|0|0|0|0|0|0\n",
+		3);
+	expect(with_hitframe_payload.find("HitFrame.@CASTSPELL") == std::string::npos,
+		"HitFrame CASTSPELL is not left as a second fire");
+	expect(with_hitframe_payload.find("0.500000 HitFrame\n") != std::string::npos,
+		"the HitFrame event itself is kept");
+	expect(with_hitframe_payload.find("PIE.$custom_ability_3") != std::string::npos, "the Custom Ability marker is added");
+
+	const auto twice = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(once, 3);
+	const auto first_again = twice.find("PIE.$custom_ability_3");
+	const auto second_again = twice.find("PIE.$custom_ability_3", first_again + 1);
+	expect(first_again != std::string::npos && second_again == std::string::npos,
+		"a second save does not add another marker");
+}
+
+void author_cast_detection_ignores_cast_ok_and_custom_marker()
+{
+	using SpellHotbar::is_author_spell_cast_annotation;
+	expect(!is_author_spell_cast_annotation("CastOKStart"), "CastOKStart is not a spell payload");
+	expect(!is_author_spell_cast_annotation("PIE.$custom_ability_3"), "the SH2 marker is not an author cast");
+	expect(is_author_spell_cast_annotation("PIE.@CAST|0x812|SpellscribeStances.esp|1|1|0|0|0|0|0|0|0"),
+		"Spellscribe CAST is an author fire");
+	expect(is_author_spell_cast_annotation("PIE.@CASTSPELL|0x12FD0|Skyrim.esm|1|1|0|0|0|0|0|0|0"),
+		"expanded CASTSPELL from another mod is still an author fire");
 }
 
 }  // namespace
@@ -367,11 +448,13 @@ int main()
 	magicka_and_health_refuse_the_same_way_as_stamina();
 	pie_stamps_at_hit_frame_when_present();
 	pie_stamps_at_five_percent_without_hit_frame();
-	pie_stamp_leaves_author_payloads_and_is_idempotent();
+	pie_stamp_replaces_author_casts_and_is_idempotent();
+	author_cast_detection_ignores_cast_ok_and_custom_marker();
 	icon_form_wins_over_string_keys();
 	extra_atlas_beats_default_icon_name();
 	default_icon_name_when_not_in_extra_atlas();
 	unknown_icon_degrades_to_unknown_kind();
+	player_overlay_replaces_catalogue_tuning_and_round_trips();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

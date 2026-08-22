@@ -24,6 +24,8 @@ void assign_custom_ability_spell(ArtDefinition& art, RE::SpellItem* spell);
 
 bool persist_custom_ability(ArtDefinition& art);
 
+bool persist_ability(ArtDefinition& art);
+
 void emit_custom_ability_pi_config();
 
 void inject_custom_ability_pie(RE::hkaAnimation* animation, const ArtDefinition& art);

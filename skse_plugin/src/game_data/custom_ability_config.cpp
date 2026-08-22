@@ -265,15 +265,76 @@ ArtMeter unaffordable_art_meter(float need_stamina, float need_magicka, float ne
 	return ArtMeter::None;
 }
 
-bool clip_has_custom_ability_pie(const std::vector<ClipAnnotation>& annotations, int folder_number)
+bool annotation_is_custom_ability_pie(std::string_view text, int folder_number)
 {
 	const auto marker = custom_ability_pie_annotation(folder_number);
+	return text == marker || text.starts_with(marker + ".");
+}
+
+bool clip_has_custom_ability_pie(const std::vector<ClipAnnotation>& annotations, int folder_number)
+{
 	for (const auto& annotation : annotations) {
-		if (annotation.text == marker || annotation.text.starts_with(marker + ".")) {
+		if (annotation_is_custom_ability_pie(annotation.text, folder_number)) {
 			return true;
 		}
 	}
 	return false;
+}
+
+bool is_author_spell_cast_annotation(std::string_view text) noexcept
+{
+	if (text.find("$custom_ability_") != std::string_view::npos) {
+		return false;
+	}
+	std::string_view payload = text;
+	if (payload.starts_with("PIE.")) {
+		payload.remove_prefix(4);
+	} else {
+		const auto dot = payload.find('.');
+		if (dot != std::string_view::npos) {
+			const auto after = payload.substr(dot + 1);
+			if (after.starts_with("PIE.")) {
+				payload = after.substr(4);
+			} else {
+				payload = after;
+			}
+		}
+	}
+	return payload.starts_with("@CASTSPELL") || payload.starts_with("@CAST|");
+}
+
+bool is_sound_play_annotation(std::string_view text) noexcept
+{
+	return text.starts_with("SoundPlay.");
+}
+
+bool annotations_share_time(float a, float b) noexcept
+{
+	return std::fabs(a - b) <= 0.00051f;
+}
+
+std::string custom_ability_spell_sound_annotation(std::string_view sound_editor_id)
+{
+	if (sound_editor_id.empty()) {
+		return {};
+	}
+	return std::string("SoundPlay.") + std::string{ sound_editor_id };
+}
+
+std::optional<std::string> keep_event_after_stripping_author_cast(std::string_view text)
+{
+	if (!is_author_spell_cast_annotation(text)) {
+		return std::string{ text };
+	}
+	const auto dot = text.find('.');
+	if (dot == std::string_view::npos) {
+		return std::nullopt;
+	}
+	const auto event = text.substr(0, dot);
+	if (event.empty() || event == "PIE") {
+		return std::nullopt;
+	}
+	return std::string{ event };
 }
 
 std::optional<float> custom_ability_hit_frame_time(const std::vector<ClipAnnotation>& annotations)
@@ -351,15 +412,58 @@ std::string format_anno_time(float time)
 
 }  // namespace
 
-std::string ensure_custom_ability_pie_in_annotation_txt(std::string_view txt, int folder_number)
+std::string ensure_custom_ability_pie_in_annotation_txt(
+	std::string_view txt, int folder_number, std::string_view release_sound_editor_id)
 {
 	auto parsed = parse_annotation_txt(txt);
-	if (clip_has_custom_ability_pie(parsed.annotations, folder_number)) {
-		return std::string{ txt };
+	std::vector<float> author_cast_times;
+	for (const auto& annotation : parsed.annotations) {
+		if (is_author_spell_cast_annotation(annotation.text)) {
+			author_cast_times.push_back(annotation.time);
+		}
 	}
-	const float time = custom_ability_pie_stamp_time(parsed.annotations, parsed.duration);
-	parsed.annotations.push_back(ClipAnnotation{ .time = time, .text = custom_ability_pie_annotation(folder_number) });
-	std::sort(parsed.annotations.begin(), parsed.annotations.end(),
+
+	std::vector<ClipAnnotation> kept;
+	kept.reserve(parsed.annotations.size() + 2);
+	for (const auto& annotation : parsed.annotations) {
+		if (is_sound_play_annotation(annotation.text)) {
+			bool paired = false;
+			for (const float cast_time : author_cast_times) {
+				if (annotations_share_time(annotation.time, cast_time)) {
+					paired = true;
+					break;
+				}
+			}
+			if (paired) {
+				continue;
+			}
+		}
+		if (const auto kept_text = keep_event_after_stripping_author_cast(annotation.text)) {
+			kept.push_back(ClipAnnotation{ .time = annotation.time, .text = *kept_text });
+		}
+	}
+	parsed.annotations = std::move(kept);
+	if (!clip_has_custom_ability_pie(parsed.annotations, folder_number)) {
+		const float time = custom_ability_pie_stamp_time(parsed.annotations, parsed.duration);
+		parsed.annotations.push_back(
+			ClipAnnotation{ .time = time, .text = custom_ability_pie_annotation(folder_number) });
+	}
+	const auto sound_line = custom_ability_spell_sound_annotation(release_sound_editor_id);
+	if (!sound_line.empty()) {
+		const float time = custom_ability_pie_stamp_time(parsed.annotations, parsed.duration);
+		bool has_ours = false;
+		for (auto& annotation : parsed.annotations) {
+			if (!is_sound_play_annotation(annotation.text) || !annotations_share_time(annotation.time, time)) {
+				continue;
+			}
+			annotation.text = sound_line;
+			has_ours = true;
+		}
+		if (!has_ours) {
+			parsed.annotations.push_back(ClipAnnotation{ .time = time, .text = sound_line });
+		}
+	}
+	std::stable_sort(parsed.annotations.begin(), parsed.annotations.end(),
 		[](const ClipAnnotation& a, const ClipAnnotation& b) { return a.time < b.time; });
 
 	if (parsed.num_annotations_header_index >= 0) {

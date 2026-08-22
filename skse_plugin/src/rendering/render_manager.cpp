@@ -44,6 +44,8 @@ namespace SpellHotbar {
     constexpr std::string_view texture_frame_bg_path{ ".\\data\\SKSE\\Plugins\\SpellHotbar\\images\\inv_bg.dds" };
     constexpr std::string_view texture_cursor_path{ ".\\data\\SKSE\\Plugins\\SpellHotbar\\images\\cursor.dds" };
 
+    HWND g_imgui_hwnd{ nullptr };
+
     void apply_imgui_style() {
         //set imgui style
 
@@ -901,10 +903,8 @@ void RenderManager::init_spellproc_overlay_icons(size_t amount) {
 }
 
 LRESULT RenderManager::WndProcHook::thunk(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    auto& io = ImGui::GetIO();
-    if (uMsg == WM_KILLFOCUS) {
-        io.ClearInputCharacters();
-        io.ClearInputKeys();
+    if (uMsg == WM_KILLFOCUS || (uMsg == WM_ACTIVATE && LOWORD(wParam) == WA_INACTIVE)) {
+        Input::reset_imgui_keyboard();
     }
 
     return func(hWnd, uMsg, wParam, lParam);
@@ -967,6 +967,7 @@ void RenderManager::D3DInitHook::thunk() {
     logger::info("...ImGui Initialized");
 
     initialized.store(true);
+    g_imgui_hwnd = reinterpret_cast<HWND>(sd.outputWindow);
 
     WndProcHook::func = reinterpret_cast<WNDPROC>(
         SetWindowLongPtrA(sd.outputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProcHook::thunk)));
@@ -994,6 +995,11 @@ void RenderManager::DXGIPresentHook::thunk(std::uint32_t a_p1) {
     // start imgui
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
+    if (!g_imgui_hwnd || ::GetForegroundWindow() != g_imgui_hwnd || !should_block_game_key_inputs()) {
+        Input::reset_imgui_keyboard();
+    } else {
+        Input::apply_imgui_keyboard();
+    }
     ImGui::NewFrame();
 
     // My stuff

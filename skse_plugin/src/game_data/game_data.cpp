@@ -103,6 +103,7 @@ namespace SpellHotbar::GameData {
     std::vector<std::tuple<RE::BGSArtObject*, RE::BGSArtObject*, const std::string>> spell_casteffect_art;
     std::unordered_map<RE::FormID, Gametime_cooldown_value> gametime_cooldowns;
     std::unordered_map<uint32_t, ArtDefinition> art_cast_info;
+    std::unordered_map<uint32_t, ArtDefinition> art_catalogue;
     std::unordered_map<uint32_t, Gametime_cooldown_value> art_cooldowns;
 
     struct ArtIconOverride {
@@ -112,6 +113,7 @@ namespace SpellHotbar::GameData {
 
     std::unordered_map<uint32_t, ArtIconOverride> art_catalogue_icons;
     std::unordered_map<uint32_t, ArtIconOverride> art_icon_overrides;
+    std::unordered_map<uint32_t, ArtPlayerOverlay> art_player_overlays;
 
     std::unique_ptr<std::unordered_map<std::string, size_t>> spell_effects_key_indices{nullptr};
 
@@ -527,6 +529,7 @@ namespace SpellHotbar::GameData {
         spell_casteffect_art.clear();
         animation_names.clear();
         art_cast_info.clear();
+        art_catalogue.clear();
         art_catalogue_icons.clear();
 
         load_translations(std::filesystem::path(translation_path));
@@ -1365,21 +1368,35 @@ namespace SpellHotbar::GameData {
         return ret;
     }
 
+    void apply_stored_player_tuning(ArtDefinition& art)
+    {
+        if (SpellHotbar::is_custom_ability(art.id)) {
+            return;
+        }
+        if (const auto overlay_it = art_player_overlays.find(art.id); overlay_it != art_player_overlays.end()) {
+            apply_art_player_overlay(art, overlay_it->second);
+            return;
+        }
+        if (const auto override_it = art_icon_overrides.find(art.id); override_it != art_icon_overrides.end()) {
+            art.icon = override_it->second.icon;
+            art.icon_form = override_it->second.icon_form;
+        }
+    }
+
     void set_art(ArtDefinition art)
     {
         const uint32_t id = art.id;
+        art_catalogue.insert_or_assign(id, art);
         art_catalogue_icons.insert_or_assign(id, ArtIconOverride{ art.icon, art.icon_form });
-        if (!SpellHotbar::is_custom_ability(id)) {
-            if (const auto override_it = art_icon_overrides.find(id); override_it != art_icon_overrides.end()) {
-                art.icon = override_it->second.icon;
-                art.icon_form = override_it->second.icon_form;
-            }
-        }
+        apply_stored_player_tuning(art);
         art_cast_info.insert_or_assign(id, std::move(art));
     }
 
     void set_art_icon(uint32_t art_id, std::string icon, std::uint32_t icon_form)
     {
+        if (SpellHotbar::is_custom_ability(art_id)) {
+            return;
+        }
         if (icon.empty() && icon_form == 0) {
             art_icon_overrides.erase(art_id);
             if (const auto base = art_catalogue_icons.find(art_id); base != art_catalogue_icons.end()) {
@@ -1413,6 +1430,15 @@ namespace SpellHotbar::GameData {
         return true;
     }
 
+    const ArtDefinition* get_art_catalogue(uint32_t art_id)
+    {
+        const auto it = art_catalogue.find(art_id);
+        if (it == art_catalogue.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
     std::filesystem::path user_art_icons_path()
     {
         return Storage::IO::get_icon_edits_user_dir() / "art_icons.json";
@@ -1431,6 +1457,26 @@ namespace SpellHotbar::GameData {
         d.AddMember("art_icons", art_icons_node, d.GetAllocator());
     }
 
+    void write_art_edits_member(rj::Document& d)
+    {
+        rj::Value art_edits_node(rj::kArrayType);
+        for (auto& [art_id, overlay] : art_player_overlays) {
+            rj::Value entry(rj::kObjectType);
+            entry.AddMember("art_id", art_id, d.GetAllocator());
+            entry.AddMember("name", rj::Value(overlay.display_name.c_str(), d.GetAllocator()), d.GetAllocator());
+            entry.AddMember("icon", rj::Value(overlay.icon.c_str(), d.GetAllocator()), d.GetAllocator());
+            entry.AddMember("icon_form", overlay.icon_form, d.GetAllocator());
+            entry.AddMember("art_class", rj::Value(art_class_label(overlay.art_class), d.GetAllocator()), d.GetAllocator());
+            entry.AddMember("stamina_cost", overlay.stamina_cost, d.GetAllocator());
+            entry.AddMember("magicka_cost", overlay.magicka_cost, d.GetAllocator());
+            entry.AddMember("health_cost", overlay.health_cost, d.GetAllocator());
+            entry.AddMember("cooldown", rj::Value(overlay.cooldown.c_str(), d.GetAllocator()), d.GetAllocator());
+            entry.AddMember("gcd", overlay.gcd, d.GetAllocator());
+            art_edits_node.PushBack(entry, d.GetAllocator());
+        }
+        d.AddMember("art_edits", art_edits_node, d.GetAllocator());
+    }
+
     bool persist_user_art_icons()
     {
         const auto path = user_art_icons_path();
@@ -1441,6 +1487,7 @@ namespace SpellHotbar::GameData {
         d.SetObject();
         d.AddMember("version", 1, d.GetAllocator());
         write_art_icons_member(d);
+        write_art_edits_member(d);
 
         std::ofstream ofs(path, std::ofstream::out);
         if (!ofs.is_open()) {
@@ -1452,6 +1499,22 @@ namespace SpellHotbar::GameData {
         writer.SetIndent(' ', 4);
         d.Accept(writer);
         return true;
+    }
+
+    bool persist_art_player_overlay(const ArtDefinition& art)
+    {
+        if (SpellHotbar::is_custom_ability(art.id)) {
+            return false;
+        }
+        const auto* catalogue = get_art_catalogue(art.id);
+        if (catalogue && art_matches_catalogue_tuning(art, *catalogue)) {
+            art_player_overlays.erase(art.id);
+            art_icon_overrides.erase(art.id);
+        } else {
+            art_player_overlays.insert_or_assign(art.id, art_player_overlay_from(art));
+            art_icon_overrides.insert_or_assign(art.id, ArtIconOverride{ art.icon, art.icon_form });
+        }
+        return persist_user_art_icons();
     }
 
     bool load_user_art_icons()
@@ -2343,6 +2406,7 @@ namespace SpellHotbar::GameData {
 
              d.AddMember("items", items_node, d.GetAllocator());
              write_art_icons_member(d);
+             write_art_edits_member(d);
 
              rj::PrettyWriter<rj::OStreamWrapper> writer(osw);
              writer.SetIndent(' ', 4);
@@ -2412,12 +2476,68 @@ namespace SpellHotbar::GameData {
                      }
                      set_art_icon(art_id, icon, icon_form);
                  }
-                 persist_user_art_icons();
              }
              else {
                  errors = true;
                  logger::error("art_icons is not array type!");
              }
+         }
+
+         if (d.HasMember("art_edits")) {
+             if (d["art_edits"].IsArray()) {
+                 art_player_overlays.clear();
+                 for (auto& art_object : d["art_edits"].GetArray()) {
+                     if (!art_object.IsObject() || !art_object.HasMember("art_id")) {
+                         errors = true;
+                         continue;
+                     }
+                     const uint32_t art_id = art_object["art_id"].GetUint();
+                     if (SpellHotbar::is_custom_ability(art_id)) {
+                         continue;
+                     }
+                     ArtPlayerOverlay overlay;
+                     if (art_object.HasMember("name") && art_object["name"].IsString()) {
+                         overlay.display_name = art_object["name"].GetString();
+                     }
+                     if (art_object.HasMember("icon") && art_object["icon"].IsString()) {
+                         overlay.icon = art_object["icon"].GetString();
+                     }
+                     if (art_object.HasMember("icon_form") && art_object["icon_form"].IsUint()) {
+                         overlay.icon_form = art_object["icon_form"].GetUint();
+                     }
+                     if (art_object.HasMember("art_class") && art_object["art_class"].IsString()) {
+                         overlay.art_class = parse_art_class(art_object["art_class"].GetString());
+                     }
+                     if (art_object.HasMember("stamina_cost") && art_object["stamina_cost"].IsNumber()) {
+                         overlay.stamina_cost = static_cast<float>(art_object["stamina_cost"].GetDouble());
+                     }
+                     if (art_object.HasMember("magicka_cost") && art_object["magicka_cost"].IsNumber()) {
+                         overlay.magicka_cost = static_cast<float>(art_object["magicka_cost"].GetDouble());
+                     }
+                     if (art_object.HasMember("health_cost") && art_object["health_cost"].IsNumber()) {
+                         overlay.health_cost = static_cast<float>(art_object["health_cost"].GetDouble());
+                     }
+                     if (art_object.HasMember("cooldown") && art_object["cooldown"].IsString()) {
+                         overlay.cooldown = art_object["cooldown"].GetString();
+                     }
+                     if (art_object.HasMember("gcd") && art_object["gcd"].IsNumber()) {
+                         overlay.gcd = static_cast<float>(art_object["gcd"].GetDouble());
+                     }
+                     art_player_overlays.insert_or_assign(art_id, overlay);
+                     art_icon_overrides.insert_or_assign(art_id, ArtIconOverride{ overlay.icon, overlay.icon_form });
+                     if (auto* live = get_art_mut(art_id)) {
+                         apply_art_player_overlay(*live, overlay);
+                     }
+                 }
+             }
+             else {
+                 errors = true;
+                 logger::error("art_edits is not array type!");
+             }
+         }
+
+         if (d.HasMember("art_icons") || d.HasMember("art_edits")) {
+             persist_user_art_icons();
          }
 
          return !errors;

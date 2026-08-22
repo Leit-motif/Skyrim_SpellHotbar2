@@ -86,20 +86,20 @@ The coarse weapon-class tag on an Ability used for gray-out and refuse: **1H**, 
 An Ability the player fills. Core ships drop-in folders `Custom_Ability_1` … `N` (plus extras). Default catalogue name is **Custom Ability N** until the Ability Editor sets another. A catalogue row, not a hotbar slot index. _Avoid_: slot folder, moveset slot.
 
 **Custom Ability Folder**:
-The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key. Name, icon, Custom Ability Spell, cooldown, GCD, Ability Class, and Ability Costs live in that folder, not in the save, not in Payload Interpreter config, and not as `name.txt` / `icon.txt`.
+The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key. Name, icon, cooldown, GCD, Ability Class, and Ability Costs live in that folder, not in the save, not in Payload Interpreter config, and not as `name.txt` / `icon.txt`. Custom Ability Spell keys may round-trip in the sidecar unused (ticket 12).
 _Avoid_: icon_edits JSON as the definition, co-save.
 
 **Ability Editor**:
-The in-game ImGui that configures one Custom Ability Folder: name, atlas icon, Custom Ability Spell, Ability Class, cooldown, GCD, and Ability Costs. Opened from the Abilities tab. It does not edit pointer-pack ashes, does not author clips, and has no delivery/self-target toggle (delivery follows the assigned spell).
+The in-game ImGui that configures one Ability: name, atlas icon, Ability Class, cooldown, GCD, and Ability Costs. Opened from the Abilities tab for Custom Abilities and pointer-pack ashes. It does not author clips and does not assign a Custom Ability Spell (ticket 12).
 _Avoid_: Weapon Arts editor, ash editor, Spell Editor (that surface edits spell FormIDs).
 
 **Custom Ability Spell**:
-The fire-and-forget spell assigned to a Custom Ability Folder's Payload Interpreter instruction. Vanilla Firebolt is a placeholder default, not a balance choice, and may fire even if the player has not learned it. The Ability Editor picker lists known fire-and-forget spells when changing assignment. Includes ritual fire-and-forget, lesser/greater powers, and voice spells. Not concentration, potions, scrolls, or a TESShout form. Payload Interpreter fires it; it does not charge resources or start shout cooldown.
-_Avoid_: art effect, baked FormID in the hkx, Ashes of War payload.
+Parked (ticket 12). The fire-and-forget spell that would be assigned to a Custom Ability Folder's Payload Interpreter instruction. Until 12 ships, dropped clips fire their author `@CAST` / `@CASTSPELL` / `SoundPlay`. Vanilla Firebolt is the unused sidecar default. Includes ritual fire-and-forget, lesser/greater powers, and voice spells. Not concentration, potions, scrolls, or a TESShout form.
+_Avoid_: art effect, Ashes of War payload as SH2 assignment.
 
 **Ability Cost**:
-Stamina, magicka, and health spent by SH2 when an Ability starts. Defaults: 25 stamina, 0 magicka, 0 health, 8s cooldown, 1s GCD. The editor may change those numbers; assigning a spell does not seed or overwrite them. The press is refused if any required meter is short. Payload Interpreter costs stay at zero.
-_Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost seeding from the assigned spell.
+Stamina, magicka, and health spent by SH2 when an Ability starts. Defaults: 25 stamina, 0 magicka, 0 health, 8s cooldown, 1s GCD. The editor may change those numbers. Assigning a Custom Ability Spell (ticket 12, parked) does not seed or overwrite them. The press is refused if any required meter is short. Payload Interpreter costs stay at zero.
+_Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost seeding from an assigned spell.
 
 **Terminal Ability / Chaining Ability**:
 An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.

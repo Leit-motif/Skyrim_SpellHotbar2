@@ -117,7 +117,7 @@ namespace SpellHotbar {
 			{ "$CASTING_TYPE_SCROLL", "Scroll" },
 			{ "$CAST_EFFECT", "Cast Effect" },
 			{ "$NO_EFFECT", "No Effect" },
-			{ "$GLOBAL_COOLDOWN", "Globald Cooldown" },
+			{ "$GLOBAL_COOLDOWN", "Global Cooldown" },
 			{ "$COOLDOWN", "Cooldown" },
 			{ "$CAST_TIME", "Cast Time" },
 			{ "$ANIMATION", "Animation" },

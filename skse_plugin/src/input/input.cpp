@@ -1,6 +1,8 @@
 #include "input.h"
 #include <charconv>
+#include <chrono>
 #include <fstream>
+#include <unordered_map>
 #include "keybinds.h"
 #include "../logger/logger.h"
 #include <imgui_impl_dx11.h>
@@ -47,6 +49,74 @@ namespace {
 
 }
 namespace SpellHotbar::Input {
+
+	namespace {
+		using Clock = std::chrono::steady_clock;
+		constexpr auto k_imgui_key_hold_timeout = std::chrono::milliseconds(200);
+
+		std::unordered_map<int, Clock::time_point> imgui_held_keys;
+		bool imgui_mod_ctrl{ false };
+		bool imgui_mod_shift{ false };
+		bool imgui_mod_alt{ false };
+		Clock::time_point imgui_mod_ctrl_seen{};
+		Clock::time_point imgui_mod_shift_seen{};
+		Clock::time_point imgui_mod_alt_seen{};
+
+		[[nodiscard]] bool imgui_mod_still_down(bool down, Clock::time_point seen, Clock::time_point now)
+		{
+			return down && (now - seen) <= k_imgui_key_hold_timeout;
+		}
+
+		void note_imgui_key(ImGuiKey key, bool pressed)
+		{
+			if (key == ImGuiKey_None) {
+				return;
+			}
+			if (pressed) {
+				imgui_held_keys[static_cast<int>(key)] = Clock::now();
+			} else {
+				imgui_held_keys.erase(static_cast<int>(key));
+			}
+		}
+
+		void note_imgui_mod(bool& down, Clock::time_point& seen, bool pressed)
+		{
+			down = pressed;
+			seen = Clock::now();
+		}
+	}  // namespace
+
+	void reset_imgui_keyboard()
+	{
+		imgui_held_keys.clear();
+		imgui_mod_ctrl = false;
+		imgui_mod_shift = false;
+		imgui_mod_alt = false;
+		auto& io = ImGui::GetIO();
+		io.ClearInputCharacters();
+		io.ClearInputKeys();
+	}
+
+	void apply_imgui_keyboard()
+	{
+		const auto now = Clock::now();
+		for (auto it = imgui_held_keys.begin(); it != imgui_held_keys.end();) {
+			if (now - it->second > k_imgui_key_hold_timeout) {
+				it = imgui_held_keys.erase(it);
+			} else {
+				++it;
+			}
+		}
+		auto& io = ImGui::GetIO();
+		io.ClearInputKeys();
+		io.AddKeyEvent(ImGuiKey_ModCtrl, imgui_mod_still_down(imgui_mod_ctrl, imgui_mod_ctrl_seen, now));
+		io.AddKeyEvent(ImGuiKey_ModShift, imgui_mod_still_down(imgui_mod_shift, imgui_mod_shift_seen, now));
+		io.AddKeyEvent(ImGuiKey_ModAlt, imgui_mod_still_down(imgui_mod_alt, imgui_mod_alt_seen, now));
+		for (const auto& [key, seen] : imgui_held_keys) {
+			(void)seen;
+			io.AddKeyEvent(static_cast<ImGuiKey>(key), true);
+		}
+	}
 
     inline constexpr std::tuple<uint32_t, RE::INPUT_DEVICE> get_device_and_input(const RE::ButtonEvent* bEvent) {
         uint32_t key = 0;
@@ -310,10 +380,11 @@ namespace SpellHotbar::Input {
             else if (event->eventType == RE::INPUT_EVENT_TYPE::kChar) {
                 if (!captureEvent && RenderManager::should_block_game_key_inputs()) {
                     auto ch_event = event->AsCharEvent();
-                    
-                    auto& io = ImGui::GetIO();
-                    io.AddInputCharacter(ch_event->keycode);
-
+                    const auto code = ch_event->keycode;
+                    if (code >= 32 && code != 127) {
+                        auto& io = ImGui::GetIO();
+                        io.AddInputCharacter(code);
+                    }
                 }
             } else if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
                 RE::ButtonEvent* bEvent = event->AsButtonEvent();
@@ -324,16 +395,16 @@ namespace SpellHotbar::Input {
                     bool is_pressed = bEvent->IsPressed();
 
                     if (key_device == RE::INPUT_DEVICE::kKeyboard) {
-                        //update imgui mods
                         if (key_code == 29 || key_code == 157) {
-                            io.AddKeyEvent(ImGuiKey_ModCtrl, is_pressed);
+                            note_imgui_mod(imgui_mod_ctrl, imgui_mod_ctrl_seen, is_pressed);
                         }
                         if (key_code == 42 || key_code == 54) {
-                            io.AddKeyEvent(ImGuiKey_ModShift, is_pressed);
-                            //mod_shift.update(bEvent);
+                            note_imgui_mod(imgui_mod_shift, imgui_mod_shift_seen, is_pressed);
                         }
                         if (key_code == 56 || key_code == 184) {
-                            io.AddKeyEvent(ImGuiKey_ModAlt, is_pressed);
+                            note_imgui_mod(imgui_mod_alt, imgui_mod_alt_seen, is_pressed);
+                        }
+                        if (key_code == 56 || key_code == 184) {
                             mod_alt.update(key_code, key_device, is_pressed);
                         }
                     }
@@ -385,11 +456,8 @@ namespace SpellHotbar::Input {
                             }
                             else {
                                 int dx_code = input_to_dx_scancode(key_device, static_cast<uint8_t>(key_code));
-                                if (dx_code >= 0 && dx_code < dx_to_imgui.size()) {
-                                    ImGuiKey key = dx_to_imgui[dx_code];
-                                    if (key != ImGuiKey_None) {
-                                        io.AddKeyEvent(key, is_pressed);
-                                    }
+                                if (dx_code >= 0 && dx_code < static_cast<int>(dx_to_imgui.size())) {
+                                    note_imgui_key(dx_to_imgui[static_cast<std::size_t>(dx_code)], is_pressed);
                                 }
                             }
                         }

@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <array>
 #include <string>
-#include <vector>
 
 namespace SpellHotbar::AbilityEditor {
 
@@ -31,8 +30,6 @@ namespace SpellHotbar::AbilityEditor {
 		std::uint32_t draft_spell_local{ vanilla_firebolt_local_form };
 		std::string draft_spell_plugin{ vanilla_firebolt_plugin };
 		bool draft_self_target{ false };
-		char spell_filter[64]{};
-		std::vector<RE::SpellItem*> spell_list;
 
 		constexpr std::array<ArtClass, 4> class_values{
 			ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
@@ -56,15 +53,17 @@ namespace SpellHotbar::AbilityEditor {
 			draft_spell_local = art.spell_local_form == 0 ? vanilla_firebolt_local_form : art.spell_local_form;
 			draft_spell_plugin = art.spell_plugin.empty() ? vanilla_firebolt_plugin : art.spell_plugin;
 			draft_self_target = art.self_target;
-			spell_filter[0] = '\0';
-			spell_list = list_known_custom_ability_spells();
 		}
 
 		void apply_to_art(ArtDefinition& art)
 		{
 			art.display_name = name_buf.data();
 			if (art.display_name.empty()) {
-				art.display_name = "Custom Ability " + std::to_string(art.id - custom_art_id_base);
+				if (is_custom_ability(art.id)) {
+					art.display_name = "Custom Ability " + std::to_string(art.id - custom_art_id_base);
+				} else if (const ArtDefinition* catalogue = GameData::get_art_catalogue(art.id)) {
+					art.display_name = catalogue->display_name;
+				}
 			}
 			art.icon = draft_icon;
 			art.icon_form = draft_icon_form;
@@ -95,7 +94,7 @@ namespace SpellHotbar::AbilityEditor {
 	void open(uint32_t art_id)
 	{
 		const ArtDefinition* art = GameData::get_art(art_id);
-		if (art == nullptr || !is_custom_ability(art_id)) {
+		if (art == nullptr) {
 			return;
 		}
 		editing_art_id = art_id;
@@ -107,7 +106,6 @@ namespace SpellHotbar::AbilityEditor {
 	{
 		show_dialog = false;
 		editing_art_id = 0;
-		spell_list.clear();
 	}
 
 	void draw()
@@ -173,40 +171,6 @@ namespace SpellHotbar::AbilityEditor {
 			ImGui::EndCombo();
 		}
 
-		ArtDefinition preview = *art;
-		preview.spell_local_form = draft_spell_local;
-		preview.spell_plugin = draft_spell_plugin;
-		ImGui::TextUnformatted(translate_c("$CUSTOM_ABILITY_SPELL"));
-		ImGui::TextUnformatted(custom_ability_spell_label(preview).c_str());
-		ImGui::InputTextWithHint("##spell_filter", translate_c("$FILTER"), spell_filter, sizeof(spell_filter));
-		if (ImGui::BeginChild("##spell_picker", ImVec2(0.0f, 180.0f * scale_factor), true)) {
-			for (auto* spell : spell_list) {
-				if (!spell) {
-					continue;
-				}
-				const char* spell_name = spell->GetName();
-				if (!spell_name) {
-					continue;
-				}
-				if (spell_filter[0] != '\0') {
-					const std::string lower_name = spell_name;
-					const std::string filter = spell_filter;
-					if (lower_name.find(filter) == std::string::npos) {
-						continue;
-					}
-				}
-				const bool selected = spell->GetLocalFormID() == draft_spell_local && spell->GetFile(0) &&
-									  spell->GetFile(0)->GetFilename() == draft_spell_plugin;
-				if (ImGui::Selectable(spell_name, selected)) {
-					assign_custom_ability_spell(preview, spell);
-					draft_spell_local = preview.spell_local_form;
-					draft_spell_plugin = preview.spell_plugin;
-					draft_self_target = preview.self_target;
-				}
-			}
-		}
-		ImGui::EndChild();
-
 		ImGui::InputFloat(translate_c("$STAMINA_COST"), &draft_stamina, 1.0f, 5.0f, "%.0f");
 		ImGui::InputFloat(translate_c("$MAGICKA_COST"), &draft_magicka, 1.0f, 5.0f, "%.0f");
 		ImGui::InputFloat(translate_c("$HEALTH_COST"), &draft_health, 1.0f, 5.0f, "%.0f");
@@ -270,8 +234,20 @@ namespace SpellHotbar::AbilityEditor {
 		RenderManager::set_large_font();
 		if (ImGui::Button(translate_id("$SAVE").c_str())) {
 			apply_to_art(*art);
-			persist_custom_ability(*art);
+			persist_ability(*art);
 			close();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button(translate_id("$RESET").c_str())) {
+			if (is_custom_ability(art->id)) {
+				ArtDefinition fresh = custom_art_from_folder(static_cast<int>(art->id - custom_art_id_base),
+					"", "", "", art->has_clip);
+				fresh.folder_path = art->folder_path;
+				fresh.has_clip = art->has_clip;
+				load_from_art(fresh);
+			} else if (const ArtDefinition* catalogue = GameData::get_art_catalogue(art->id)) {
+				load_from_art(*catalogue);
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button(translate_id("$CANCEL").c_str())) {

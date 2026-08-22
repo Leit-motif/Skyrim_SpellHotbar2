@@ -63,6 +63,24 @@ std::optional<float> parse_art_duration_days(std::string_view time_str);
 
 ArtClass parse_art_class(std::string_view text);
 
+struct ArtPlayerOverlay {
+	std::string display_name;
+	std::string icon;
+	std::uint32_t icon_form{ 0 };
+	ArtClass art_class{ ArtClass::Generic };
+	float stamina_cost{ 0.0f };
+	float magicka_cost{ 0.0f };
+	float health_cost{ 0.0f };
+	std::string cooldown;
+	float gcd{ 1.0f };
+};
+
+void apply_art_player_overlay(ArtDefinition& art, const ArtPlayerOverlay& overlay);
+
+[[nodiscard]] ArtPlayerOverlay art_player_overlay_from(const ArtDefinition& art);
+
+[[nodiscard]] bool art_matches_catalogue_tuning(const ArtDefinition& live, const ArtDefinition& catalogue) noexcept;
+
 [[nodiscard]] constexpr const char* art_class_label(ArtClass art_class) noexcept
 {
 	switch (art_class) {
