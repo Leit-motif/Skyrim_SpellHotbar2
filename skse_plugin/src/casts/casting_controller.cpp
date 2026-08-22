@@ -103,6 +103,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (MscoCastDriver::is_active()) {
 			MscoCastDriver::cancel(pc);
 		}
+		MscoCastDriver::interrupt_left_caster_if_spell(pc);
 		if (current_cast) {
 			current_cast->on_reset();
 			current_cast.reset();

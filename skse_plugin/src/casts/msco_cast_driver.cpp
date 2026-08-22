@@ -190,15 +190,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		(void)hand;
 		trace_budget.store(0, std::memory_order_relaxed);
-		auto* left = pc->GetEquippedObject(true);
-		const bool left_holds_spell =
-			left && (left->Is(RE::FormType::Spell) || left->Is(RE::FormType::Scroll));
-		if (isolate_left_hand_caster_for_driver_cast(left_holds_spell)) {
-			if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
-				caster->InterruptCast(true);
-			}
-			logger::debug("SH2 cast: isolated left-hand caster at Driver Cast start");
-		}
+		interrupt_left_caster_if_spell(pc);
 		load_charge_curve();
 		write_clip_speed(pc, charge_time);
 		return send_entry(pc);
@@ -329,5 +321,22 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
 		ClipTranslationDriver::reset();
+	}
+
+	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc)
+	{
+		if (!pc) {
+			return;
+		}
+		auto* left = pc->GetEquippedObject(true);
+		const bool left_holds_spell =
+			left && (left->Is(RE::FormType::Spell) || left->Is(RE::FormType::Scroll));
+		if (!isolate_left_hand_caster_for_driver_cast(left_holds_spell)) {
+			return;
+		}
+		if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
+			caster->InterruptCast(true);
+		}
+		logger::debug("SH2: isolated left-hand caster (spell in left hand)");
 	}
 }

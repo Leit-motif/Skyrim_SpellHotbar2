@@ -81,4 +81,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void finish(RE::PlayerCharacter* pc);
 
 	void reset_session();
+
+	/**
+	 * Interrupt the left MagicCaster when that hand holds a spell. Driver Cast
+	 * begin, Ability begin, and yielding our shtb clip all use this so a cancelled
+	 * MSCO left charge cannot stick IsCasting until sheathe.
+	 */
+	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc);
 }

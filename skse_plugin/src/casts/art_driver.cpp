@@ -45,6 +45,9 @@ namespace SpellHotbar::casts::ArtDriver {
 		latch.store(static_cast<int>(AbilityLatch::artExit), std::memory_order_relaxed);
 		const bool sent = pc->NotifyAnimationGraph("SH2_ArtStart"sv);
 		state_active.store(sent, std::memory_order_relaxed);
+		if (sent) {
+			MscoCastDriver::interrupt_left_caster_if_spell(pc);
+		}
 		logger::debug("SH2 art: notified SH2_ArtStart -> {}", sent);
 		return sent;
 	}

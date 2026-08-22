@@ -218,8 +218,9 @@ struct MscoChargeCurve {
 	return handled_spell_slot && left_hand_holds_spell;
 }
 
-// A Driver Cast interrupts the left-hand MagicCaster when that hand holds a
-// spell, so an in-progress left charge cannot complete alongside the payload.
+// A Driver Cast or Ability interrupts the left-hand MagicCaster when that
+// hand holds a spell, so an in-progress MSCO left charge cannot stay
+// IsCasting after the shtb clip takes over (sheathe was the only reset).
 // Idle casters are a no-op; clip SpellFire is isolated separately.
 [[nodiscard]] constexpr bool isolate_left_hand_caster_for_driver_cast(
 	bool left_hand_holds_spell) noexcept
