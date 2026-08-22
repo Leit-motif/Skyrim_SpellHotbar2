@@ -25,9 +25,16 @@ struct ArtDefinition {
 	int selector{0};
 	ArtClass art_class{ArtClass::Generic};
 	float stamina_cost{0.0f};
+	float magicka_cost{0.0f};
+	float health_cost{0.0f};
 	float cooldown_days{-1.0f};
 	float gcd{1.0f};
 	bool has_clip{true};
+	std::uint32_t spell_local_form{0};
+	std::string spell_plugin;
+	bool self_target{false};
+	std::string folder_path;
+	std::string cooldown_text{"8s"};
 };
 
 constexpr std::uint32_t custom_art_id_base = 1000;
@@ -37,11 +44,12 @@ constexpr std::uint32_t custom_art_id_base = 1000;
 	return art_id >= custom_art_id_base;
 }
 
-// Custom Ability catalogue row from a numbered drop-in folder. Display name / icon come from
-// optional name.txt and icon.txt first lines; otherwise "Custom Ability N" and GREATER_POWER.
-// Art Class is Generic. ArtID and selector are custom_art_id_base + folder number (not a hotbar slot).
+// Custom Ability catalogue row from a numbered drop-in folder. Sidecar ability.ini is the
+// source of truth (ADR-0009). name.txt / icon.txt remain a fallback when no sidecar exists.
+// ArtID and selector are custom_art_id_base + folder number (not a hotbar slot).
 ArtDefinition custom_art_from_folder(int folder_number, std::string_view folder_name,
-	std::string_view name_file, std::string_view icon_file, bool has_clip);
+	std::string_view name_file, std::string_view icon_file, bool has_clip,
+	std::string_view sidecar_text = {});
 
 std::optional<int> parse_custom_art_folder_number(std::string_view folder_name);
 

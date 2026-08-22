@@ -1369,9 +1369,11 @@ namespace SpellHotbar::GameData {
     {
         const uint32_t id = art.id;
         art_catalogue_icons.insert_or_assign(id, ArtIconOverride{ art.icon, art.icon_form });
-        if (const auto override_it = art_icon_overrides.find(id); override_it != art_icon_overrides.end()) {
-            art.icon = override_it->second.icon;
-            art.icon_form = override_it->second.icon_form;
+        if (!SpellHotbar::is_custom_ability(id)) {
+            if (const auto override_it = art_icon_overrides.find(id); override_it != art_icon_overrides.end()) {
+                art.icon = override_it->second.icon;
+                art.icon_form = override_it->second.icon_form;
+            }
         }
         art_cast_info.insert_or_assign(id, std::move(art));
     }
@@ -1462,6 +1464,15 @@ namespace SpellHotbar::GameData {
     }
 
     const ArtDefinition* get_art(uint32_t art_id)
+    {
+        auto it = art_cast_info.find(art_id);
+        if (it == art_cast_info.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
+    ArtDefinition* get_art_mut(uint32_t art_id)
     {
         auto it = art_cast_info.find(art_id);
         if (it == art_cast_info.end()) {

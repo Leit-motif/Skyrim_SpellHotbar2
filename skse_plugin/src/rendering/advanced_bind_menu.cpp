@@ -8,6 +8,7 @@
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
 #include "art_icon_edit_dialog.h"
+#include "ability_editor.h"
 
 namespace SpellHotbar::BindMenu {
 
@@ -142,6 +143,7 @@ namespace SpellHotbar::BindMenu {
     void hide()
     {
         ArtIconEditor::close();
+        AbilityEditor::close();
         show_frame = false;
 
         list_of_skills.clear();
@@ -615,6 +617,10 @@ namespace SpellHotbar::BindMenu {
             ArtIconEditor::draw();
             return;
         }
+        if (AbilityEditor::is_open()) {
+            AbilityEditor::draw();
+            return;
+        }
 
         ImGui::PushFont(font_text);
         static constexpr ImGuiWindowFlags window_flag = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground;
@@ -778,15 +784,25 @@ namespace SpellHotbar::BindMenu {
                             RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
                         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
-                            ArtIconEditor::open(art_id);
+                            if (is_custom_ability(art_id)) {
+                                AbilityEditor::open(art_id);
+                            } else {
+                                ArtIconEditor::open(art_id);
+                            }
                         }
                         RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
-                        if (!ArtIconEditor::is_open()) {
+                        if (!ArtIconEditor::is_open() && !AbilityEditor::is_open()) {
                             set_drag_source_art(art_id, scale_factor);
                         }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
+                        if (is_custom_ability(art_id)) {
+                            ImGui::SameLine();
+                            if (ImGui::SmallButton(translate_c("$EDIT"))) {
+                                AbilityEditor::open(art_id);
+                            }
+                        }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));

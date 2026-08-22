@@ -1,5 +1,6 @@
 #include "art_definition.h"
 #include "art_icon_resolve.h"
+#include "custom_ability_config.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -167,6 +168,13 @@ void custom_folder_number_is_not_a_slot_index()
 	expect(art.icon == "GREATER_POWER", "empty icon file uses GREATER_POWER");
 	expect(art.art_class == ArtClass::Generic, "custom folders are Generic");
 	expect(!art.has_clip, "empty template has no clip");
+	expect(art.stamina_cost == 25.0f, "unedited Custom Ability stamina is 25");
+	expect(art.magicka_cost == 0.0f, "unedited Custom Ability magicka is 0");
+	expect(art.health_cost == 0.0f, "unedited Custom Ability health is 0");
+	expect(art.gcd == 1.0f, "unedited Custom Ability GCD is 1s");
+	expect(art.spell_local_form == SpellHotbar::vanilla_firebolt_local_form,
+		"unedited Custom Ability spell is vanilla Firebolt");
+	expect(art.spell_plugin == SpellHotbar::vanilla_firebolt_plugin, "Firebolt lives in Skyrim.esm");
 }
 
 void custom_folder_files_override_name_and_icon()
@@ -203,6 +211,136 @@ void unknown_icon_degrades_to_unknown_kind()
 		"missing keys resolve to Unknown");
 }
 
+void sidecar_is_the_folder_source_of_truth()
+{
+	const char* text =
+		"name=Rapier Lunge\n"
+		"icon=FLAMES\n"
+		"icon_form=0\n"
+		"spell_form=00012FD0\n"
+		"spell_plugin=Skyrim.esm\n"
+		"self_target=0\n"
+		"art_class=1H\n"
+		"stamina=10\n"
+		"magicka=40\n"
+		"health=5\n"
+		"cooldown=8s\n"
+		"gcd=1.5\n";
+	const auto art = SpellHotbar::custom_art_from_folder(
+		3, "Custom_Ability_3", "ignored.txt\n", "GREATER_POWER\n", true, text);
+	expect(art.display_name == "Rapier Lunge", "sidecar name wins over name.txt");
+	expect(art.icon == "FLAMES", "sidecar icon wins over icon.txt");
+	expect(art.art_class == ArtClass::OneHand, "sidecar Art Class is 1H");
+	expect(art.stamina_cost == 10.0f, "sidecar stamina is 10");
+	expect(art.magicka_cost == 40.0f, "sidecar magicka is 40");
+	expect(art.health_cost == 5.0f, "sidecar health is 5");
+	expect(art.gcd == 1.5f, "sidecar GCD is 1.5");
+	expect(art.spell_local_form == 0x12FD0, "sidecar keeps Firebolt local form");
+}
+
+void extra_folder_uses_the_same_sidecar_and_pi_name()
+{
+	const auto sidecar = SpellHotbar::parse_custom_ability_sidecar("name=Extra\nart_class=2H\n", 13);
+	expect(sidecar.name == "Extra", "Custom_Ability_13 reads the same sidecar");
+	expect(sidecar.art_class == ArtClass::TwoHand, "extras can set Art Class");
+	expect(SpellHotbar::custom_ability_pi_name(13) == "custom_ability_13",
+		"$custom_ability_N uses the folder number");
+	expect(SpellHotbar::custom_ability_pie_annotation(13) == "PIE.$custom_ability_13",
+		"the clip marker is PIE.$custom_ability_N");
+}
+
+void pi_instruction_has_zero_resource_lines()
+{
+	auto sidecar = SpellHotbar::default_custom_ability_sidecar(3);
+	sidecar.stamina_cost = 25.0f;
+	sidecar.magicka_cost = 40.0f;
+	sidecar.health_cost = 5.0f;
+	sidecar.self_target = true;
+	const auto inst = SpellHotbar::custom_ability_castspell_instruction(sidecar);
+	expect(inst == "@CASTSPELL|0x12FD0|Skyrim.esm|1|1|1|0|0|0|0|0|0",
+		"PIE costs stay zero; selfTarget follows delivery");
+	const auto line = SpellHotbar::custom_ability_pi_line(3, sidecar);
+	expect(line == "$custom_ability_3 = @CASTSPELL|0x12FD0|Skyrim.esm|1|1|1|0|0|0|0|0|0",
+		"PI config aliases the instruction");
+}
+
+void default_assignment_is_vanilla_firebolt()
+{
+	const auto sidecar = SpellHotbar::default_custom_ability_sidecar(1);
+	expect(sidecar.spell_local_form == 0x12FD0, "placeholder spell is Firebolt");
+	expect(sidecar.spell_plugin == "Skyrim.esm", "Firebolt plugin is Skyrim.esm");
+	expect(sidecar.stamina_cost == 25.0f && sidecar.magicka_cost == 0.0f && sidecar.health_cost == 0.0f,
+		"Ability Costs default 25/0/0");
+}
+
+void only_fire_and_forget_spells_are_assignable()
+{
+	using SpellHotbar::AbilitySpellCasting;
+	using SpellHotbar::AbilitySpellFormKind;
+	using SpellHotbar::is_assignable_custom_ability_spell;
+	expect(is_assignable_custom_ability_spell(AbilitySpellFormKind::Spell, AbilitySpellCasting::FireAndForget),
+		"ritual F&F, powers, and voice spells are Spell + fire-and-forget");
+	expect(!is_assignable_custom_ability_spell(AbilitySpellFormKind::Spell, AbilitySpellCasting::Concentration),
+		"concentration is excluded");
+	expect(!is_assignable_custom_ability_spell(AbilitySpellFormKind::Scroll, AbilitySpellCasting::FireAndForget),
+		"scrolls are excluded");
+	expect(!is_assignable_custom_ability_spell(AbilitySpellFormKind::Alchemy, AbilitySpellCasting::FireAndForget),
+		"potions are excluded");
+	expect(!is_assignable_custom_ability_spell(AbilitySpellFormKind::Shout, AbilitySpellCasting::FireAndForget),
+		"TESShout is excluded");
+}
+
+void magicka_and_health_refuse_the_same_way_as_stamina()
+{
+	using SpellHotbar::ArtMeter;
+	using SpellHotbar::unaffordable_art_meter;
+	expect(unaffordable_art_meter(25, 0, 0, 10, 100, 100) == ArtMeter::Stamina,
+		"short stamina refuses");
+	expect(unaffordable_art_meter(0, 40, 0, 100, 10, 100) == ArtMeter::Magicka,
+		"short magicka refuses");
+	expect(unaffordable_art_meter(0, 0, 5, 100, 100, 1) == ArtMeter::Health, "short health refuses");
+	expect(unaffordable_art_meter(25, 0, 0, 25, 0, 0) == ArtMeter::None, "exact stamina is affordable");
+	expect(unaffordable_art_meter(0, 0, 0, 0, 0, 0) == ArtMeter::None, "zero costs never refuse");
+}
+
+void pie_stamps_at_hit_frame_when_present()
+{
+	std::vector<SpellHotbar::ClipAnnotation> anns{
+		{ 0.0f, "animmotion 0 0 0" },
+		{ 0.42f, "HitFrame" },
+		{ 0.9f, "MCO_WinOpen" },
+	};
+	expect(SpellHotbar::custom_ability_pie_stamp_time(anns, 1.0f) == 0.42f,
+		"HitFrame time is the v1 fire time");
+	expect(!SpellHotbar::clip_has_custom_ability_pie(anns, 3), "a new clip is missing the marker");
+}
+
+void pie_stamps_at_five_percent_without_hit_frame()
+{
+	std::vector<SpellHotbar::ClipAnnotation> anns{ { 0.0f, "animmotion 0 0 0" } };
+	expect(SpellHotbar::custom_ability_pie_stamp_time(anns, 2.0f) == 0.10f,
+		"missing HitFrame uses 5% of duration, not mid-clip");
+}
+
+void pie_stamp_leaves_author_payloads_and_is_idempotent()
+{
+	const char* txt =
+		"# numOriginalFrames: 10\n"
+		"# duration: 1.000000\n"
+		"# numAnnotationTracks: 1\n"
+		"# numAnnotations: 2\n"
+		"0.000000 animmotion 0 0 0\n"
+		"0.500000 HitFrame.@CASTSPELL|0x1|Author.esp|1|1|0|0|0|0|0|0|0\n";
+	const auto once = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(txt, 3);
+	expect(once.find("HitFrame.@CASTSPELL|0x1|Author.esp") != std::string::npos,
+		"author payloads stay on the clip");
+	expect(once.find("PIE.$custom_ability_3") != std::string::npos, "the Custom Ability marker is added");
+	const auto twice = SpellHotbar::ensure_custom_ability_pie_in_annotation_txt(once, 3);
+	const auto first = once.find("PIE.$custom_ability_3");
+	const auto second = twice.find("PIE.$custom_ability_3", first + 1);
+	expect(first != std::string::npos && second == std::string::npos, "a second save does not add another marker");
+}
+
 }  // namespace
 
 int main()
@@ -221,6 +359,15 @@ int main()
 	generic_art_is_live_on_melee_and_fists_only();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();
+	sidecar_is_the_folder_source_of_truth();
+	extra_folder_uses_the_same_sidecar_and_pi_name();
+	pi_instruction_has_zero_resource_lines();
+	default_assignment_is_vanilla_firebolt();
+	only_fire_and_forget_spells_are_assignable();
+	magicka_and_health_refuse_the_same_way_as_stamina();
+	pie_stamps_at_hit_frame_when_present();
+	pie_stamps_at_five_percent_without_hit_frame();
+	pie_stamp_leaves_author_payloads_and_is_idempotent();
 	icon_form_wins_over_string_keys();
 	extra_atlas_beats_default_icon_name();
 	default_icon_name_when_not_in_extra_atlas();

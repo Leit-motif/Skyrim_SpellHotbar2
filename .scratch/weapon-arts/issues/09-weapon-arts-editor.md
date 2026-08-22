@@ -6,7 +6,7 @@ spell at HitFrame (else 5% of duration). Pointer-pack ashes are not editable.
 
 **Blocked by:** 08 (resolved), 06 (bar must draw extra-atlas icons the picker can assign)
 
-**Status:** ready-for-agent
+**Status:** agent-done
 
 ## You test this
 
@@ -64,3 +64,12 @@ independent costs (no seed); Firebolt placeholder; F&F including ritual; SH2 sta
 Class in editor; ImGui from Abilities tab; extras and empty folders in; unknown Firebolt ok.
 
 Owner 2026-08-21: grill matches; Status → ready-for-agent.
+
+2026-08-21: Agent 6–10. Sidecar `ability.ini` in the Custom Ability Folder (ADR-0009);
+Ability Editor is its own ImGui (Abilities tab Edit, not Spell Editor); ashes have no Edit.
+PI `$custom_ability_N = @CASTSPELL|…` with zero resource lines; default Firebolt; 13+ same path.
+`try_start_art` MagFail+flash on short magicka/health as well as stamina. PIE stamp is HitFrame
+else 5%; in-memory inject on `SH2_Art_Clip` so a dropped clip fires this session; on-disk HKX
+rewrite needs `HKXC_ANNO_CLI`. `name.txt`/`icon.txt` still load if no sidecar (ticket 08 folders).
+Tests: `art_data_test` green. Owner 1–5 still open. DLL deployed to Dev - Spell Hotbar 2.
+

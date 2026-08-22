@@ -62,6 +62,8 @@ set(source_files src/plugin.cpp
                  src/game_data/art_definition.cpp
                  src/game_data/art_icon_resolve.h
                  src/game_data/art_icon_resolve.cpp
+                 src/game_data/custom_ability_config.h
+                 src/game_data/custom_ability_config.cpp
                  src/game_data/art_data_csv_loader.h
                  src/game_data/art_data_csv_loader.cpp
                  src/casts/casting_controller.h
@@ -100,6 +102,10 @@ set(source_files src/plugin.cpp
                  src/rendering/icon_edit_dialog.cpp
                  src/rendering/art_icon_edit_dialog.h
                  src/rendering/art_icon_edit_dialog.cpp
+                 src/rendering/ability_editor.h
+                 src/rendering/ability_editor.cpp
+                 src/game_data/custom_ability_runtime.h
+                 src/game_data/custom_ability_runtime.cpp
                  src/casts/spell_proc.h
                  src/casts/spell_proc.cpp
                  src/rendering/bar_dragging_config_window.h
@@ -121,7 +127,7 @@ add_executable(clip_translation_test src/casts/clip_translation_test.cpp)
 target_compile_features(clip_translation_test PRIVATE cxx_std_23)
 target_include_directories(clip_translation_test PRIVATE src/casts)
 
-add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp)
+add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp src/game_data/custom_ability_config.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)
 target_include_directories(art_data_test PRIVATE src/game_data)
 

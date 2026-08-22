@@ -9,6 +9,7 @@
 #include "art_driver.h"
 #include "combo_cache.h"
 #include "cast_intent.h"
+#include "../game_data/custom_ability_config.h"
 
 namespace SpellHotbar::casts::CastingController {
 
@@ -1418,9 +1419,21 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 		auto* av = pc->AsActorValueOwner();
-		if (art->stamina_cost > 0.0f && av && av->GetActorValue(RE::ActorValue::kStamina) < art->stamina_cost) {
-			logger::info("SH2 art: unaffordable (need {} stamina)", art->stamina_cost);
-			RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+		const float have_stamina = av ? av->GetActorValue(RE::ActorValue::kStamina) : 0.0f;
+		const float have_magicka = av ? av->GetActorValue(RE::ActorValue::kMagicka) : 0.0f;
+		const float have_health = av ? av->GetActorValue(RE::ActorValue::kHealth) : 0.0f;
+		const auto short_meter = unaffordable_art_meter(art->stamina_cost, art->magicka_cost, art->health_cost,
+			have_stamina, have_magicka, have_health);
+		if (short_meter != ArtMeter::None) {
+			RE::ActorValue flash = RE::ActorValue::kStamina;
+			if (short_meter == ArtMeter::Magicka) {
+				flash = RE::ActorValue::kMagicka;
+			} else if (short_meter == ArtMeter::Health) {
+				flash = RE::ActorValue::kHealth;
+			}
+			logger::info("SH2 art: unaffordable (stam {} mag {} hp {})", art->stamina_cost, art->magicka_cost,
+				art->health_cost);
+			RE::HUDMenu::FlashMeter(flash);
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
@@ -1444,6 +1457,12 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		if (art->stamina_cost > 0.0f && av) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina, -art->stamina_cost);
+		}
+		if (art->magicka_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -art->magicka_cost);
+		}
+		if (art->health_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth, -art->health_cost);
 		}
 		if (art->cooldown_days > 0.0f) {
 			GameData::add_art_cooldown(art_id, art->cooldown_days);

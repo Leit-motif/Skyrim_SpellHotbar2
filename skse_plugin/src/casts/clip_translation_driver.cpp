@@ -4,6 +4,8 @@
 #include "msco_cast_driver.h"
 #include "combo_cache.h"
 #include "../logger/logger.h"
+#include "../game_data/game_data.h"
+#include "../game_data/custom_ability_runtime.h"
 
 #include <algorithm>
 #include <mutex>
@@ -33,7 +35,7 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 				   name == "SH2_Cast4_Clip"sv;
 		}
 
-		[[nodiscard]] const RE::hkaAnimation* bound_animation(const RE::hkbClipGenerator* clip)
+		[[nodiscard]] RE::hkaAnimation* bound_animation(RE::hkbClipGenerator* clip)
 		{
 			if (!clip || !clip->binding || !clip->binding->animation) {
 				return nullptr;
@@ -82,7 +84,7 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 			if (!is_shtb_clip(raw)) {
 				return;
 			}
-			const auto* animation = bound_animation(clip);
+			auto* animation = bound_animation(clip);
 			auto parsed = parse_keys(animation);
 			if (std::string_view{ raw } == "SH2_Art_Clip"sv) {
 				bool has_win_open{ false };
@@ -101,6 +103,12 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 							if (is_ability_hit_frame_event(tag)) {
 								has_hit_frame = true;
 							}
+						}
+					}
+					if (GameData::global_art_selector) {
+						const auto art_id = static_cast<std::uint32_t>(GameData::global_art_selector->value);
+						if (const ArtDefinition* art = GameData::get_art(art_id)) {
+							inject_custom_ability_pie(animation, *art);
 						}
 					}
 				}

@@ -1,4 +1,5 @@
 #include "art_definition.h"
+#include "custom_ability_config.h"
 
 #include <algorithm>
 #include <charconv>
@@ -216,24 +217,27 @@ std::optional<int> parse_custom_art_folder_number(std::string_view folder_name)
 }
 
 ArtDefinition custom_art_from_folder(int folder_number, std::string_view /*folder_name*/,
-	std::string_view name_file, std::string_view icon_file, bool has_clip)
+	std::string_view name_file, std::string_view icon_file, bool has_clip,
+	std::string_view sidecar_text)
 {
+	CustomAbilitySidecar sidecar = sidecar_text.empty()
+		? default_custom_ability_sidecar(folder_number)
+		: parse_custom_ability_sidecar(sidecar_text, folder_number);
+	if (sidecar_text.empty()) {
+		const auto name = first_nonempty_line(name_file);
+		if (!name.empty()) {
+			sidecar.name = name;
+		}
+		const auto icon = first_nonempty_line(icon_file);
+		if (!icon.empty()) {
+			sidecar.icon = icon;
+		}
+	}
 	ArtDefinition art;
 	art.id = custom_art_id_base + static_cast<std::uint32_t>(folder_number);
 	art.selector = static_cast<int>(art.id);
-	art.art_class = ArtClass::Generic;
-	art.stamina_cost = 25.0f;
-	art.cooldown_days = parse_art_duration_days("8s").value_or(-1.0f);
-	art.gcd = 1.0f;
 	art.has_clip = has_clip;
-	art.display_name = first_nonempty_line(name_file);
-	if (art.display_name.empty()) {
-		art.display_name = "Custom Ability " + std::to_string(folder_number);
-	}
-	art.icon = first_nonempty_line(icon_file);
-	if (art.icon.empty()) {
-		art.icon = "GREATER_POWER";
-	}
+	apply_custom_ability_sidecar(art, sidecar, folder_number);
 	return art;
 }
 

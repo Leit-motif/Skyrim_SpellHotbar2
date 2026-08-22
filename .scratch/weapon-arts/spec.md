@@ -363,6 +363,6 @@ and ADR-0008.
 | [06](issues/06-procure-weapon-art-icons.md) | agent-done | Atlas icon picker + extra-atlas draw path |
 | [07](issues/07-gray-out-arts-on-wrong-art-class.md) | resolved | Art Class gray-out / refuse |
 | [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
-| [09](issues/09-weapon-arts-editor.md) | ready-for-agent | Ability Editor |
+| [09](issues/09-weapon-arts-editor.md) | agent-done | Ability Editor |
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
 | [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 09) |
