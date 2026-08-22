@@ -65,11 +65,13 @@ A mod that owns a cast payload and asks ShoutMCO whether the request should pass
 _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
 
 **Cast Intent**:
-One pending request to activate a hotbar payload. Spell Hotbar 2 retains and revalidates it; ShoutMCO owns only its release or abandonment timing.
-_Avoid_: Copied spell payload, queued spell object
+One pending hotbar activation (spell, Ability, or hotbar shout). Last tap wins. Spell Hotbar 2
+retains and revalidates it. ShoutMCO owns release only when the player is in someone else’s MCO
+swing or a real shout; this mod owns release when the player is in a Driver Cast or Ability.
+_Avoid_: Copied spell payload, queued spell object, separate queues per slot kind
 
 **Ability**:
-A bindable animation launched from a hotbar slot without equipping anything. The slot holds an ability id, not a FormID. The clip may be an attack or a spell animation. Pointer-pack ashes and Custom Abilities are both Abilities. _Avoid_: weapon art, art (as the product name), power attack, additional attack, ash of war.
+A bindable animation launched from a hotbar slot without equipping anything. The slot holds an ability id, not a FormID. The clip may be an attack or a spell animation. Pointer-pack ashes and Custom Abilities are both Abilities. An Ability is a member of the MCO combo chain: the swing after it continues the sampled index; it does not reset to hit 1. _Avoid_: weapon art, art (as the product name), power attack, additional attack, ash of war.
 
 **Ability Selector**:
 The TESGlobal the fork writes to name which Ability plays; OAR conditions read it. Zero means no fork ability is selected. The ESP form is still `SpellHotbar_ArtSelector` (form `D63`); that identifier is load-order wiring, not the UI name. _Avoid_: art keyword, worn art.
@@ -87,7 +89,7 @@ An Ability the player fills. Core ships drop-in folders `Custom_Ability_1` … `
 The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key.
 
 **Terminal Ability / Chaining Ability**:
-An ability whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
+An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.
 
 ## Findings
 

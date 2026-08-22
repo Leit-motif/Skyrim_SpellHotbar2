@@ -7,7 +7,7 @@ moves selection into Spell Hotbar 2's own Art Pack.
 
 **Blocked by:** 03 (resolved)
 
-**Status:** claimed — agent 3–6 passed; owner 1–2 open
+**Status:** resolved
 
 ## You test this
 
@@ -76,4 +76,9 @@ Seam tests: 8 passing (`python_scripts/generate_art_pack_test.py`).
 
 Clip selection now lives in this fork’s Art Pack. Regenerating writes `config.json` under
 `SpellHotbar2Arts`, points `overrideAnimationsFolder` at the author’s folder, and does not
-shadow their `config.json` with `user.json`. Owner still needs cells 1–2 on `SH2ArtBind04`.
+shadow their `config.json` with `user.json`.
+
+Owner 2026-08-20: cells 1–2 are not leftover work. Bound ashes already play without wearing
+anything. Slot-55 clothing / AABL hotkey was Ashes of War’s old identity, not SH2’s. Proving
+that path at selector 0 was a regression check for ticket 03’s `user.json` shadows; it is not
+Ability product acceptance. Ticket closed.

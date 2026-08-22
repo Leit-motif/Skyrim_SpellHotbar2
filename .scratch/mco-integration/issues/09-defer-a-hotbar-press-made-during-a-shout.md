@@ -8,7 +8,11 @@ cast-intent API and cast when the shout releases, instead of being silently disc
 **Blocked by:** Nothing. Independent of the spell→attack chain work — that one is about leaving
 the cast state, this one is about entering it.
 
-**Status:** ready-for-agent
+**Status:** superseded 2026-08-21 — do not implement this file.
+
+Folded into [weapon-arts ticket 10](../../weapon-arts/issues/10-queue-arts-into-and-out-of-attacks.md):
+a press during a real shout is the same one-slot queue, offered to ShoutMCO (`kBehindShout`). The
+`!is_shouting` guard drop lives there so the press can reach the queue.
 
 ## Why
 
