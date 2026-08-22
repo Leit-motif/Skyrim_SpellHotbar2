@@ -81,8 +81,9 @@ Ability combo restore as already grilled (ADR-0005 exception widened).
 Not mash-through (14). Not replacing thuum’s vanilla shout key. Not Art Class / icons / editor
 (07/06/09/11). Not potions (09 left those as “work during shout, no queue”). Not concentration.
 
-Supersedes [mco-integration 23](../../mco-integration/issues/23-one-slot-buffer-for-consecutive-driver-casts.md)
-and [mco-integration 09](../../mco-integration/issues/09-defer-a-hotbar-press-made-during-a-shout.md).
+Supersedes the consecutive Driver Cast buffer that was briefly filed as mco-integration 23
+(deleted; that work is this queue behind ticket 22’s window) and
+[mco-integration 09](../../mco-integration/issues/09-defer-a-hotbar-press-made-during-a-shout.md).
 
 ## Comments
 
