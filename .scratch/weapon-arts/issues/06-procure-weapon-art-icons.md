@@ -116,3 +116,9 @@ cuts. The owner removed an unnecessary gold wreath, replaced the initial cold-bl
 black, bronze, ivory, and antique gold, and selected the quieter dark field over a later oxblood
 haze. Backgrounds should vary across the atlas, but a colored field is not mandatory where it
 weakens the icon.
+
+Owner 2026-08-23: **Crushing Blow** is finalized as `aow_09_crushing_blow`. The heavy two-handed
+sequence resolves into a Nord-coded vertical warhammer smash with a white shock ring, lifted
+weathered-brown rock, dark-red cracks, and a visibly ice-blue/steel-gray field. Owner-supplied
+Skyrim concept art informed only the broad horned iron-helmet language; it is not redistributed.
+The final edit equalized the horns and removed two confusing spectral background hammers.
