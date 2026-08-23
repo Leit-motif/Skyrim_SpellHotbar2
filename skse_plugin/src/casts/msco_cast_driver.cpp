@@ -17,7 +17,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	namespace {
 		std::atomic<bool> state_active{ false };
 		std::atomic<bool> combo_window{ false };
-		std::atomic<bool> channel_shape{ false };
+		std::atomic<CastShape> cast_shape{ CastShape::fire_and_forget };
 		std::atomic<bool> clip_committed{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
@@ -106,18 +106,21 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
+		// The state is gone and nothing is chainable through it. Shared by every way a cast
+		// leaves the state, so a new piece of per-cast state is cleared in one place.
+		void clear_state_flags()
+		{
+			state_active.store(false, std::memory_order_relaxed);
+			combo_window.store(false, std::memory_order_relaxed);
+			cast_shape.store(CastShape::fire_and_forget, std::memory_order_relaxed);
+		}
+
 		void send_exit(RE::PlayerCharacter* pc)
 		{
 			if (pc) {
 				const bool consumed = pc->NotifyAnimationGraph("SH2_CastExit"sv);
 				logger::debug("SH2 cast: notified SH2_CastExit -> {}", consumed);
 			}
-		}
-
-		CastShape current_shape()
-		{
-			return channel_shape.load(std::memory_order_relaxed) ? CastShape::channel
-																 : CastShape::fire_and_forget;
 		}
 
 		bool send_entry(RE::PlayerCharacter* pc)
@@ -196,7 +199,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return false;
 		}
 		(void)hand;
-		channel_shape.store(shape == CastShape::channel, std::memory_order_relaxed);
+		cast_shape.store(shape, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		interrupt_left_caster_if_spell(pc);
 		load_charge_curve();
@@ -219,7 +222,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 
 		if (is_msco_combo_window_open_event(tag) && is_active()) {
-			const CastShape shape = current_shape();
+			const CastShape shape = cast_shape.load(std::memory_order_relaxed);
 			combo_window.store(spellfire_opens_combo_window(shape), std::memory_order_relaxed);
 			bool expected = false;
 			if (clip_committed.compare_exchange_strong(expected, true, std::memory_order_relaxed) &&
@@ -290,9 +293,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// interrupted rather than starting at attack1.
 		arm_restore();
 		send_exit(pc);
-		state_active.store(false, std::memory_order_relaxed);
-		combo_window.store(false, std::memory_order_relaxed);
-		channel_shape.store(false, std::memory_order_relaxed);
+		clear_state_flags();
 	}
 
 	void arm_combo_restore()
@@ -307,9 +308,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			arm_restore();
 		}
 		send_exit(pc);
-		state_active.store(false, std::memory_order_relaxed);
-		combo_window.store(false, std::memory_order_relaxed);
-		channel_shape.store(false, std::memory_order_relaxed);
+		clear_state_flags();
 	}
 
 	void finish(RE::PlayerCharacter* pc)
@@ -318,17 +317,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			arm_restore();
 		}
 		send_exit(pc);
-		state_active.store(false, std::memory_order_relaxed);
-		combo_window.store(false, std::memory_order_relaxed);
-		channel_shape.store(false, std::memory_order_relaxed);
+		clear_state_flags();
 	}
 
 	void reset_session()
 	{
-		state_active.store(false, std::memory_order_relaxed);
-		combo_window.store(false, std::memory_order_relaxed);
+		clear_state_flags();
 		clip_committed.store(false, std::memory_order_relaxed);
-		channel_shape.store(false, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
 		ClipTranslationDriver::reset();
