@@ -87,3 +87,9 @@ silver-blue diagonal strike through a restrained gold focal point. The curved sw
 intentional Redguard shorthand. The owner's broader race/fighting-style reference is recorded in
 `python_scripts/weapon_art_icons/figure-guidance.md` and guides later silhouettes without forcing a
 race choice where a neutral figure is more accurate. Catalogue wiring again waits for the atlas.
+
+Owner 2026-08-23: **Akatosh Charge** is finalized as `aow_03_akatosh_charge`. The selected glyph
+is the original circular-gold candidate: an Imperial-coded spear bearer crossing four gold pulses
+inside a broken divine halo. Three later attempts made the energy more literally draconic, but each
+read more like a dragon illustration and less like a spell icon. The original wins on hotbar visual
+grammar and 32 px readability; literal lore motifs remain subordinate to ability recognition.
