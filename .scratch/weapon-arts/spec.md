@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–05 and 07–10 resolved; 06 agent-done; 11–12 needs-triage.
+Status: in progress — 01–05 and 07–10 resolved; 06 agent-done; 11–13 needs-triage.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -115,6 +115,8 @@ behaviour is exactly preserved.
     an art does not require editing the fork.
 32. As a player who does not customize, I want the Ashes of War catalogue when that mod is installed,
     so I have a baseline set without copying anyone's `.hkx`.
+33. As a player, I want Abilities that will not work on the bar I am editing to look gray in the
+    Binding Menu, so I can see what belongs on that bar before I bind it. Ticket 13.
 
 ## Implementation Decisions
 
@@ -376,3 +378,4 @@ and ADR-0008.
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
 | [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 12) |
 | [12](issues/12-custom-ability-spell-assignment.md) | needs-triage | Custom Ability Spell assignment (parked from 09) |
+| [13](issues/13-gray-out-ineligible-abilities-in-bind-menu.md) | needs-triage | Bind-menu gray-out from the selected bar |

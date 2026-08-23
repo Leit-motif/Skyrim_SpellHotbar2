@@ -175,6 +175,10 @@ A cast that looks like an unmodified vanilla shout may therefore be an unmapped 
 than a design limit. Check the in-game spell editor's animation assignment before treating it
 as a defect.
 
+Concentration still uses those animation ids (aimed 1001, self 1002, ritual 11001, ward 1003)
+but the Driver Cast shtb clips are fire-and-forget single-play. Looping concentration types
+are mco-integration ticket 25.
+
 ### 6. ~~The MCO shout behavior engine needs no changes to serve this mod~~ — WITHDRAWN 2026-08-05
 
 ~~That engine's DLL is a pure animation-event observer, and its ADR-0002 forbids it from reading

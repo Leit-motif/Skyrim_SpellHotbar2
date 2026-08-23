@@ -158,7 +158,8 @@ the bigger effort the same evening:
   button release — our own state, so nothing interrupts the channel; (2) a chain-out window
   the driver opens at release, honoured by the engine (the Chain Window mechanism thuum
   already ships for shout exhales); (3) true combo-position continuity (attack3, not
-  attack1) is engine-owned MCO state via the ticket-50 API.
+  attack1) is engine-owned MCO state via the ticket-50 API. Owner 2026-08-21: concentration
+  needs its own **looping animation types**. That slice is ticket 25 (`needs-triage`).
 - **Release timing MVP:** clip annotations are the source of truth (inject via
   hkxc-anno-cli where missing); a per-clip/per-combo-step tuning override is a future
   enhancement.

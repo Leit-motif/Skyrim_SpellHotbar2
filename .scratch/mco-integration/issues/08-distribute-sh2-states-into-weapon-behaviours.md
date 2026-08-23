@@ -102,8 +102,9 @@ constraint: touch nothing msco/MCBO owns.
 
 - Mid-swing entry and combo-position continuity (attack3 not attack1) — ShoutMCO ticket-50
   API, thuum repo.
-- Concentration (looping state + release-opened chain window) — its own ticket once this
-  lands; the tier plan is in the spec's 2026-08-11 direction section.
+- Concentration (looping state + release-opened chain window) — parked here; filed as
+  [25](25-concentration-looping-animation-types.md) on 2026-08-21. The tier plan is in the
+  spec's 2026-08-11 direction section.
 - Weapon-specific cast clips (the hand-cast clip may look odd holding a sword — owner
   acceptance decides whether variants are needed; do not pre-build them).
 - Pruning the now-dead enter/exit notify arrays from the magicbehavior patch (fold into
