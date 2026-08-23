@@ -55,7 +55,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (applied) {
 			dat.selectedPower = old_form;
 		}
-		logger::info("T62 restore: selectedPower {:08X} -> {:08X} (applied={}, {})", cur_id,
+		logger::debug("SH2 power: restored selectedPower {:08X} -> {:08X} (applied={}, {})", cur_id,
 			old_form ? old_form->GetFormID() : 0u, applied, why);
 	}
 
@@ -75,7 +75,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (!deferred_restore.active) {
 			return;
 		}
-		logger::info("T62 discard: dropping deferred selectedPower restore to {:08X}",
+		logger::debug("SH2 power: dropping deferred selectedPower restore to {:08X}",
 			deferred_restore.old_form ? deferred_restore.old_form->GetFormID() : 0u);
 		deferred_restore = {};
 	}
@@ -87,7 +87,7 @@ namespace SpellHotbar::casts::CastingController {
 		deferred_restore.old_form = old_form;
 		deferred_restore.age = 0.0f;
 		deferred_restore.active = true;
-		logger::info("T62 defer: holding selectedPower {:08X} until IsShouting falls (restores {:08X})",
+		logger::debug("SH2 power: holding selectedPower {:08X} until IsShouting falls (restores {:08X})",
 			swapped ? swapped->GetFormID() : 0u, old_form ? old_form->GetFormID() : 0u);
 	}
 
@@ -803,28 +803,13 @@ namespace SpellHotbar::casts::CastingController {
 		return 0.0f;
 	}
 
-	// T62 spike (thuum ticket 62): temporary per-frame edge trace of the player's IsShouting
-	// graph variable, so the shout clip's live window can be lined up against the
-	// selectedPower swap/restore timestamps. Stripped once the fix is signed off.
-	void t62_trace_is_shouting_edge(RE::PlayerCharacter* pc, bool is_shouting)
-	{
-		static bool prev_is_shouting{ false };
-		if (is_shouting != prev_is_shouting) {
-			prev_is_shouting = is_shouting;
-			auto& dat = pc->GetActorRuntimeData();
-			logger::info("T62 IsShouting -> {} (selectedPower {:08X})", is_shouting ? "true" : "false",
-				dat.selectedPower ? dat.selectedPower->GetFormID() : 0u);
-		}
-	}
-
 	void update_cast(float delta)
 	{
-		// One bool graph read per unpaused frame on the player: the shout's own liveness edge.
-		// It drives the deferred write-back, and the T62 trace rides along on the same read.
+		// One bool graph read per unpaused frame on the player: the shout's own liveness, which
+		// is what a deferred selectedPower write-back is waiting on.
 		if (auto* player = RE::PlayerCharacter::GetSingleton()) {
 			bool is_shouting{ false };
 			player->GetGraphVariableBool("IsShouting"sv, is_shouting);
-			t62_trace_is_shouting_edge(player, is_shouting);
 			update_deferred_power_restore(delta, is_shouting);
 		}
 		CastIntent::poll_local_release();
@@ -1390,10 +1375,6 @@ namespace SpellHotbar::casts::CastingController {
 			auto& dat = pc->GetActorRuntimeData();
 			m_old_form = dat.selectedPower;
 			dat.selectedPower = form;
-			// T62 spike (thuum ticket 62): temporary trace of the selectedPower swap window.
-			logger::info("T62 swap: selectedPower {:08X} -> {:08X}",
-				m_old_form ? m_old_form->GetFormID() : 0u,
-				form ? form->GetFormID() : 0u);
 		}
 	}
 
