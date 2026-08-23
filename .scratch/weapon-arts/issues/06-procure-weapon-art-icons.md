@@ -99,3 +99,8 @@ nine-second clip contains twelve hits and ends in a heavy paralysis slam. The ap
 an Orc-coded shock-trooper silhouette, three broad crimson arcs as shorthand for the sustained
 sequence, and one lower-right terminal impact. It replaces the rejected ornate-sword pilot with a
 compact spell-icon composition.
+
+Owner 2026-08-23: **Blood Seeker** is finalized as `aow_05_blood_seeker`. The sword-only clip
+delivers five rapid `DarknessAttack` hits. The approved glyph uses a lean Dunmer-coded spellsword
+and narrow crimson-violet spectral cuts converging on one dark focal point, keeping it distinct
+from Blood Flurry's heavy Orc-coded arcs and slam.
