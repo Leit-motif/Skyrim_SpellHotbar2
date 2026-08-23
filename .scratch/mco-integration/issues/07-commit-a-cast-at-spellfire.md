@@ -10,7 +10,12 @@ losing `IsShouting` after the magic is committed, per
 ticket 01's live answer or on ticket 02's branch change — both are corrections to this mod's own
 lifecycle and are correct with no MCO engine present at all.
 
-**Status:** claimed
+**Status:** claimed — **but the work appears to be IN THE SOURCE already; this line is stale.**
+Checked 2026-08-23 while answering the owner on what SH2 work v1 still needs:
+`skse_plugin/src/casts/casting_controller.cpp` carries `arm_spellfire()`, `spellfire_seen`,
+`spellfire_mask`, and the `MLh_SpellFire_Event` commit path, with runtime-verified comments dated
+2026-08-11. **Close it against ADR-0004's criteria rather than rebuilding it** — what is missing is
+a verdict, not code.
 
 ## Why this is not chaining work
 
