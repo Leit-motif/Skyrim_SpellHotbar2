@@ -5,7 +5,7 @@ bar and in the Arts tab; only the name tells them apart. Story 6 wants an icon *
 
 **Blocked by:** 03 (resolved)
 
-**Status:** agent-done
+**Status:** ready-for-human
 
 ## You test this
 
@@ -63,3 +63,12 @@ sample three then batch; Nordic tint later.
 
 Agent 2026-08-21: picker-over-atlas defers bespoke glyph batch; owner assigns Crane Style /
 Disengage / Blood Flurry first, then batch remainder via picker + optional CSV bake.
+
+Owner 2026-08-23: the picker route is exhausted — the loaded atlases do not hold enough distinct
+generic glyphs to tell 57 ashes apart, so the glyphs have to be authored after all. Plan: a
+separate session generates an icon atlas for the whole Ashes set from each art's name, its
+description where one exists, and clues parsed out of its annotations. Expect a cluster of themes
+by weapon type, then variations within a theme by colour and angle. The SH2 paint and the ER
+silhouette language from the 2026-08-18 grill remain the style base, and cell 5 still binds: the
+glyphs are original, no third-party art is copied in. This ticket stays open until that atlas
+exists; owner assignment through the picker is blocked on it, not the other way round.

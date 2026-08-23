@@ -796,8 +796,14 @@ namespace SpellHotbar::BindMenu {
                             set_drag_source_art(art_id, scale_factor);
                         }
 
+                        // Gray outranks yellow: a dead row is dead (ticket 14).
+                        const bool direct_on_bar =
+                            !dead_on_bar && art_class_is_direct_on_bar(art->art_class, Bars::menu_bar_id);
                         if (dead_on_bar) {
                             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+                        }
+                        else if (direct_on_bar) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 210, 74, 255));
                         }
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
@@ -808,7 +814,7 @@ namespace SpellHotbar::BindMenu {
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
-                        if (dead_on_bar) {
+                        if (dead_on_bar || direct_on_bar) {
                             ImGui::PopStyleColor();
                         }
 

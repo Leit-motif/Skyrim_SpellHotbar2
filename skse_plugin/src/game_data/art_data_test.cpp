@@ -11,6 +11,7 @@ using SpellHotbar::ArtDefinition;
 using SpellHotbar::ArtIconDrawKind;
 using SpellHotbar::GameData::EquippedType;
 using SpellHotbar::art_class_is_live;
+using SpellHotbar::art_class_is_direct_on_bar;
 using SpellHotbar::art_class_is_live_on_bar;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
@@ -199,6 +200,66 @@ void magic_ranged_and_transform_bars_are_all_dead()
 		"Generic dead on Vampire Lord");
 	expect(!art_class_is_live_on_bar(ArtClass::Generic, static_cast<std::uint32_t>('WWOL')),
 		"Generic dead on Werewolf");
+}
+
+void direct_class_match_is_yellow_only_on_its_own_stance_bar()
+{
+	constexpr std::uint32_t two_hand = static_cast<std::uint32_t>('2HND');
+	constexpr std::uint32_t dual_wield = static_cast<std::uint32_t>('1HDW');
+	constexpr std::uint32_t one_hand_shield = static_cast<std::uint32_t>('1HSD');
+	constexpr std::uint32_t one_hand_spell = static_cast<std::uint32_t>('1HSP');
+	expect(art_class_is_direct_on_bar(ArtClass::TwoHand, two_hand), "2H is direct on Two-Handed");
+	expect(art_class_is_direct_on_bar(ArtClass::Dual, dual_wield), "Dual is direct on Dual Wield");
+	expect(art_class_is_direct_on_bar(ArtClass::OneHand, one_hand_shield), "1H is direct on 1H Shield");
+	expect(art_class_is_direct_on_bar(ArtClass::OneHand, one_hand_spell), "1H is direct on 1H Spell");
+	expect(!art_class_is_direct_on_bar(ArtClass::OneHand, dual_wield), "1H is only any-matched on Dual Wield");
+	expect(!art_class_is_direct_on_bar(ArtClass::Dual, two_hand), "Dual is dead, not direct, on Two-Handed");
+	expect(art_class_is_direct_on_bar(ArtClass::TwoHand, two_hand + 1), "sneak Two-Handed matches parent");
+}
+
+void generic_is_never_a_direct_match()
+{
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAIN'),
+	};
+	for (const auto bar : bars) {
+		expect(!art_class_is_direct_on_bar(ArtClass::Generic, bar), "Generic runs everywhere, so it is never specific");
+	}
+}
+
+void parent_and_non_melee_bars_have_no_direct_match()
+{
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAIN'),
+		static_cast<std::uint32_t>('MAGC'), static_cast<std::uint32_t>('RNGD'),
+		static_cast<std::uint32_t>('VMPL'), static_cast<std::uint32_t>('WWOL'),
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : bars) {
+		for (const auto art_class : classes) {
+			expect(!art_class_is_direct_on_bar(art_class, bar), "parent and non-melee bars union or exclude, never match directly");
+		}
+	}
+}
+
+void every_direct_match_is_also_live()
+{
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAIN'),
+		static_cast<std::uint32_t>('MAGC'), static_cast<std::uint32_t>('RNGD'),
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : bars) {
+		for (const auto art_class : classes) {
+			if (art_class_is_direct_on_bar(art_class, bar)) {
+				expect(art_class_is_live_on_bar(art_class, bar), "yellow can never outrank gray");
+			}
+		}
+	}
 }
 
 void custom_folder_number_is_not_a_slot_index()
@@ -487,6 +548,10 @@ int main()
 	two_hand_bar_is_two_hand_and_generic_only();
 	melee_and_main_are_union_of_children();
 	magic_ranged_and_transform_bars_are_all_dead();
+	direct_class_match_is_yellow_only_on_its_own_stance_bar();
+	generic_is_never_a_direct_match();
+	parent_and_non_melee_bars_have_no_direct_match();
+	every_direct_match_is_also_live();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();
 	sidecar_is_the_folder_source_of_truth();

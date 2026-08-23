@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–05 and 07–10 resolved; 06 and 13 agent-done (owner verification next: 13, then 06); 11–12 deferred as future enhancements (owner, 2026-08-23).
+Status: in progress — 01–05, 07–10 and 13 resolved; 14 agent-done (owner verification next); 06 needs an authored icon atlas from its own session; 15 holds the Double Slash empty-clip diagnosis, blocked on an owner ruling about the OAR duplicate filter; 11–12 deferred as future enhancements (owner, 2026-08-23).
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the

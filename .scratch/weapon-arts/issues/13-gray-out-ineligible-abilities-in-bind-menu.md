@@ -5,7 +5,7 @@ editing, which rows will actually play on the bar they have selected.
 
 **Blocked by:** 02, 07 (both resolved)
 
-**Status:** agent-done
+**Status:** resolved
 
 ## Grill (2026-08-23)
 
@@ -58,3 +58,6 @@ no tooltip, keep catalogue order).
 2026-08-23: Agent cells 4–5. `art_class_is_live_on_bar` + `art_data_test` green. Binding Menu list
 and slot strip use `draw_cd_overlay(0)` from `Bars::menu_bar_id`. Drop still allowed. Plugin copied
 to Dev - Spell Hotbar 2. Owner cells 1–3 remain.
+
+Owner 2026-08-23: cells 1-3 pass — "gray functionality works great". Resolved. The follow-up the
+pass surfaced, a second yellow tier for arts whose class *is* the selected stance, is ticket 14.

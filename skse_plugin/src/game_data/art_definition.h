@@ -170,4 +170,25 @@ void apply_art_player_overlay(ArtDefinition& art, const ArtPlayerOverlay& overla
 	}
 }
 
+// Bind-menu direct match (ticket 14). A class is direct when the selected bar *is* its stance, so
+// the row is specific to that bar rather than merely live on it. Generic runs on every stance and
+// is therefore never direct; parent bars union their children, so nothing is direct on them.
+[[nodiscard]] constexpr bool art_class_is_direct_on_bar(ArtClass art_class, std::uint32_t bar_id) noexcept
+{
+	if (art_class == ArtClass::Generic) {
+		return false;
+	}
+	switch (art_bar_stance_root(bar_id)) {
+	case static_cast<std::uint32_t>('1HSD'):
+	case static_cast<std::uint32_t>('1HSP'):
+		return art_class == ArtClass::OneHand;
+	case static_cast<std::uint32_t>('1HDW'):
+		return art_class == ArtClass::Dual;
+	case static_cast<std::uint32_t>('2HND'):
+		return art_class == ArtClass::TwoHand;
+	default:
+		return false;
+	}
+}
+
 }  // namespace SpellHotbar
