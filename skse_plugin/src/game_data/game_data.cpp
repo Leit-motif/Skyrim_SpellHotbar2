@@ -1481,7 +1481,14 @@ namespace SpellHotbar::GameData {
     {
         const auto path = user_art_icons_path();
         logger::info("Persisting ability icon assignments to {}", path.string());
-        std::filesystem::create_directories(path.parent_path());
+        const auto parent_dir = path.parent_path();
+        if (!parent_dir.empty()) {
+            std::error_code ec;
+            std::filesystem::create_directories(parent_dir, ec);
+            if (ec) {
+                logger::error("Could not create directory '{}': {}", parent_dir.string(), ec.message());
+            }
+        }
 
         rj::Document d;
         d.SetObject();
@@ -2380,7 +2387,14 @@ namespace SpellHotbar::GameData {
          constexpr int save_format{ 1 };
          logger::info("Saving Icon Edits to {}", path);
          std::filesystem::path file_path(path);
-         std::filesystem::create_directories(file_path.parent_path());
+         const auto parent_dir = file_path.parent_path();
+         if (!parent_dir.empty()) {
+             std::error_code ec;
+             std::filesystem::create_directories(parent_dir, ec);
+             if (ec) {
+                 logger::error("Could not create directory '{}': {}", parent_dir.string(), ec.message());
+             }
+         }
 
          rj::Document d;
          d.SetObject();

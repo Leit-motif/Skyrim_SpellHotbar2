@@ -379,7 +379,14 @@ namespace SpellHotbar::Storage::IO {
 
         std::filesystem::path out_path = get_preset_user_dir() / filename;
 
-        std::filesystem::create_directories(out_path.parent_path());
+        const auto parent_dir = out_path.parent_path();
+        if (!parent_dir.empty()) {
+            std::error_code ec;
+            std::filesystem::create_directories(parent_dir, ec);
+            if (ec) {
+                logger::error("Could not create directory '{}': {}", parent_dir.string(), ec.message());
+            }
+        }
 
         rj::Document d;
         d.SetObject();
