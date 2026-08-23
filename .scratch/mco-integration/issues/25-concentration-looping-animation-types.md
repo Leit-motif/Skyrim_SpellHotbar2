@@ -6,7 +6,8 @@ Driver Cast types (`MSCO_left1`–`left4`, `MODE_SINGLE_PLAY`, exit on clip end)
 **Blocked by:** 08 (resolved). Ticket 08 parked this: looping conc state + release-opened chain
 window. The 2026-08-11 spec direction is the tier plan.
 
-**Status:** needs-triage
+**Status:** ready-for-agent — promoted 2026-08-23. Every triage question below now has an owner
+ruling or a source-audit answer (recorded in Notes); the build spec is the "What to build" section.
 
 ## Owner ask (2026-08-21)
 
@@ -70,6 +71,46 @@ dual id at all — the branch hardcodes 1003 with the comment "ward has no dual 
 fire-and-forget convention, where aimed and ritual share 10016 and self and ritual-self share 10017,
 so the dual slot is a shared animation by design rather than a per-family one. Owner 2026-08-23 wants
 every cast type integrated, so that convention is now in scope to change.
+
+## What to build (2026-08-23)
+
+Two linked phases, per the owner's triage. Both are integration work inside the fork; no new or
+imported animation assets, per the scope decision.
+
+**Phase 1 — sustain the loop.** A concentration cast started from the hotbar must not die with
+the single-play Driver Cast clip. The repair happens at the seam the source audit names: which
+path a concentration cast takes, and what the shtb state does when it gets one. Two candidate
+shapes, choose by evidence, not preference:
+
+- (a) The conc cast plays its `_start` and then **exits the shtb state into the idle loop** the
+  24 existing OAR submods already own (they loop by replacing the idle/locomotion set keyed on
+  `SpellHotbar_SpellAnimationType`). The channel's liveness stays with
+  `CastingInstanceSpellConcentration`; release restores the animation-type global and the idle
+  reverts.
+- (b) The shtb state is **held for the hold** (re-notify / replay against the same clip) and
+  exits on release. `msco_cast_driver::replay` exists but is a restart, not a loop — measure
+  whether the seam it plays is visible before choosing this.
+
+Whichever shape wins: exit on button release, and the existing fire-and-forget path must be
+byte-for-byte untouched.
+
+**Phase 2 — chain window at release.** When the hold ends, open the cast-combo window the same
+way a fire-and-forget clip does at SpellFire→WinClose (ticket 22's clock), so a channel can hand
+off to an attack. Channels stay out of the cast-index walk (ticket 11's rule stands; the owner's
+"don't redesign the runtime" confirms it).
+
+**Dual distinctness (either phase, smallest diff wins).** In
+`skse_plugin/src/game_data/spell_cast_data.cpp:89-92`: ritual-conc's dual slot currently reuses
+11003 and ward hardcodes 1003 with no dual id. Extend the family distinctness through the dual
+slot — new ids are configuration mapping onto **existing** submods, not new assets. Where no
+submod exists for a combination (ward dual), record the mapping chosen and why rather than
+inventing art.
+
+**Evidence.** Live only: hold Flames (aimed conc) and a self conc with weapon drawn — the loop
+sustains for the whole hold (captured frames at t0 and t+3s or a short recording), release ends
+it, a fire-and-forget on the same bar still uses its throw type. Dual-cast a ritual conc and
+confirm it no longer plays the plain dual conc clip. A build or static check diagnoses, never
+proves.
 
 ## What this is not
 
