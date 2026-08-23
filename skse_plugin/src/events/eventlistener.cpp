@@ -103,6 +103,8 @@ namespace SpellHotbar::events {
                 {
                     GameData::add_gametime_cooldown(shout->GetFormID(), 24.0, true);
                 }
+                // T62 spike (thuum ticket 62): temporary trace of the kVoiceFire arrival.
+                logger::info("T62 kVoiceFire: form {:08X}", event->sourceForm->GetFormID());
                 casts::CastingController::try_finish_shout_cast(event->sourceForm->GetFormID());
             }
         }

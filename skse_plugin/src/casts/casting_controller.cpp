@@ -708,8 +708,29 @@ namespace SpellHotbar::casts::CastingController {
 		return 0.0f;
 	}
 
+	// T62 spike (thuum ticket 62): temporary per-frame edge trace of the player's IsShouting
+	// graph variable, so the shout clip's live window can be lined up against the
+	// selectedPower swap/restore timestamps. One bool graph read per unpaused frame.
+	void t62_trace_is_shouting_edge()
+	{
+		static bool prev_is_shouting{ false };
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc) {
+			return;
+		}
+		bool is_shouting{ false };
+		pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
+		if (is_shouting != prev_is_shouting) {
+			prev_is_shouting = is_shouting;
+			auto& dat = pc->GetActorRuntimeData();
+			logger::info("T62 IsShouting -> {} (selectedPower {:08X})", is_shouting ? "true" : "false",
+				dat.selectedPower ? dat.selectedPower->GetFormID() : 0u);
+		}
+	}
+
 	void update_cast(float delta)
 	{
+		t62_trace_is_shouting_edge();
 		CastIntent::poll_local_release();
 		if (current_cast) {
 			if (!current_cast->casted()) {
@@ -1269,6 +1290,10 @@ namespace SpellHotbar::casts::CastingController {
 			auto& dat = pc->GetActorRuntimeData();
 			m_old_form = dat.selectedPower;
 			dat.selectedPower = form;
+			// T62 spike (thuum ticket 62): temporary trace of the selectedPower swap window.
+			logger::info("T62 swap: selectedPower {:08X} -> {:08X}",
+				m_old_form ? m_old_form->GetFormID() : 0u,
+				form ? form->GetFormID() : 0u);
 		}
 	}
 
@@ -1284,9 +1309,14 @@ namespace SpellHotbar::casts::CastingController {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 				auto& dat = pc->GetActorRuntimeData();
-				if (dat.selectedPower == m_form) {
+				// T62 spike (thuum ticket 62): temporary trace of the selectedPower restore.
+				const auto cur_id = dat.selectedPower ? dat.selectedPower->GetFormID() : 0u;
+				const bool applied = dat.selectedPower == m_form;
+				if (applied) {
 					dat.selectedPower = m_old_form;
 				}
+				logger::info("T62 restore: selectedPower {:08X} -> {:08X} (applied={})",
+					cur_id, m_old_form ? m_old_form->GetFormID() : 0u, applied);
 				m_reequiped = true;
 				consume_items();
 				return true;
