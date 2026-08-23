@@ -182,3 +182,31 @@ new defer). ShoutMCO still defers mid-swing and releases while `IsAttacking=1` (
 this session). Recovery-tail cadence is now
 [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md). Early-press `released -> false`
 at `preHitFrame` remains this ticket's ShoutMCO ordering bug.
+
+## Absorbed from ShoutMCO ticket 51, 2026-08-23
+
+Owner ruling: *"this isn't even a ticket -- can this just be rolled into 04? All these duplicate tickets are confusing."* The provider/consumer split was a repository boundary, not two pieces of work -- ShoutMCO's side (its ticket 50) shipped 2026-08-12, so everything left is here. **This ticket now owns both the build and the proof, and it is a v1 publication gate** (owner, same day: SH2 integration is mandatory for v1).
+
+**One row of 51 does NOT come across.** Its T-pose criterion is struck: the owner ruled 2026-08-23 that there is no T-pose anywhere in the load order, and sibling ticket 05 closed on that observation.
+
+### Acceptance criteria, inherited verbatim
+
+- [ ] During both light and power MCO attacks, early/pre-hit/post-hit/recovery-tail Direct Cast
+      requests preserve the attack and start the cast exactly once after confirmed ready
+- [ ] Spell Hotbar revalidates slot assignment, cooldown, resources, and player state at release;
+      an invalid payload is discarded once with no retry
+- [ ] Newest-intent replacement works across vanilla shout and Spell Hotbar requests
+- [ ] Engine absent and incompatible-major controls fail open and show `unavailable` or
+      `incompatible` in Spell Hotbar's read-only status
+- [ ] Runtime evidence shows no per-frame polling, new worker thread, or hot-path filesystem access
+- [x] ~~Spell Hotbar's intended animation plays without T-pose~~ — STRUCK 2026-08-23, no T-pose remains; see ticket 05
+- [ ] Named save/profile, tested commits, deployed binaries, keys, slots, spells, and attack kinds
+      are recorded
+
+## Comments
+
+### 2026-08-22 — still the integration gate, not next
+
+Ticket 54 unblocked Spell Hotbar 2 ticket 04's early-press cell (`inRdy` release). The T-pose
+cell is Spell Hotbar-owned (`shtb` / OAR), not a shout-clip conflict. This ticket stays blocked
+on that repo's 04/05 closeout. Owner path today is the Thu'um pack (10 → 11), not this.
