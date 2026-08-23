@@ -19,3 +19,5 @@ art's weapon compatibility or animation does not support a clear choice.
 
 Use only economical silhouette cues. Figures remain generalized and faceless; the icon communicates
 an ability at hotbar scale, not a character portrait.
+
+See `color-guidance.md` for the companion race palette reference.

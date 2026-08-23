@@ -8,6 +8,8 @@ Original Weapon Art icon masters and atlas inputs live here.
 - `manifest.tsv` is the handoff contract for generation, review, and later atlas wiring.
 - `figure-guidance.md` records the owner-approved Elder Scrolls race shorthand used when an
   icon benefits from a race-specific silhouette.
+- `color-guidance.md` records the owner-approved race palette shorthand used when an icon benefits
+  from race-coded color.
 - `pilot/` contains rejected calibration outputs only. Nothing under it is atlas input.
 
 The stable icon key is the filename stem. Do not write a key into
