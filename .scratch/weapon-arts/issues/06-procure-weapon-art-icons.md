@@ -138,3 +138,9 @@ Owner 2026-08-23: **Disengage** is finalized as `aow_12_disengage`. Its backward
 becomes an inverted Bosmer-coded dual-dagger leap carried by one moss-green rotation crescent. The
 final correction aligns the whole body to one coherent three-quarter plane and relaxes the arms so
 the glyph reads as retreating movement, not a strike.
+
+Session pause 2026-08-23: **Divided Strike** (`aow_13_divided_strike`) is in progress and has no
+approved candidate. Eleven of 57 icons are finalized, leaving 46. The moving-lunge candidate was
+the closest, but its X geometry was not convex as the owner intended; the following outward-C-curve
+interpretation was explicitly rejected. Resume from `.scratch/weapon-arts/icon-authoring-handoff.md`
+and clarify the intended convex-X shape before generating again.
