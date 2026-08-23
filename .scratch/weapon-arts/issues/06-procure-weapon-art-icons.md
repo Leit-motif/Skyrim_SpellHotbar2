@@ -144,3 +144,9 @@ approved candidate. Eleven of 57 icons are finalized, leaving 46. The moving-lun
 the closest, but its X geometry was not convex as the owner intended; the following outward-C-curve
 interpretation was explicitly rejected. Resume from `.scratch/weapon-arts/icon-authoring-handoff.md`
 and clarify the intended convex-X shape before generating again.
+
+Owner 2026-08-23: **Divided Strike** is shipped as `aow_13_divided_strike` under an explicit time
+constraint. The selected glyph is a forward dual-wield lunge with an ordinary red-magenta X
+cross-slash. The owner said it was not the result they wanted but chose to ship it rather than spend
+more time; this is a pragmatic acceptance, not an endorsement of the abandoned convex-X direction.
+Twelve of 57 icons are finalized, leaving 45.

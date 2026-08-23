@@ -7,14 +7,20 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **13 — Divided Strike** (`aow_13_divided_strike`)
-- Status: **in progress; no Divided Strike candidate is approved**
-- Inventory: **11 of 57 finalized; 46 remain**
+- Active art: **14 — Divine Smite** (`aow_14_divine_smite`)
+- Status: **in progress; first Divine Smite candidate pending**
+- Inventory: **12 of 57 finalized; 45 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
 
-## Exact Divided Strike stopping point
+## Divided Strike disposition
+
+The owner directed that `divided_strike_cross_slash_v8.png` ship under time constraint on
+2026-08-23. It is usable but explicitly not the visual result the owner wanted. The approved master,
+128 px atlas input, prompt, and this compromise are recorded under `python_scripts/weapon_art_icons/`.
+
+## Earlier Divided Strike stopping point
 
 The animation evidence supports a three-beat dual-weapon sequence: off-hand collision first,
 main-hand collision second, then both weapon nodes collide in the terminal beat. The intended icon
@@ -47,4 +53,3 @@ candidate, then change the weapon and trail geometry together. Do not guess at �
 - Elder Scrolls race and palette shorthand live in `figure-guidance.md` and `color-guidance.md`.
 - Backgrounds should vary across the atlas without defaulting every icon to black or adding haze.
 - Catalogue wiring waits until the atlas contains the approved stable keys.
-
