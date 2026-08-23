@@ -122,3 +122,8 @@ sequence resolves into a Nord-coded vertical warhammer smash with a white shock 
 weathered-brown rock, dark-red cracks, and a visibly ice-blue/steel-gray field. Owner-supplied
 Skyrim concept art informed only the broad horned iron-helmet language; it is not redistributed.
 The final edit equalized the horns and removed two confusing spectral background hammers.
+
+Owner 2026-08-23: **Cyclone Spin** is finalized as `aow_10_cyclone_spin`. Two huge mirrored-radius
+hits and a knockback finisher become a Redguard-coded duelist inside a two-part turquoise-gold
+cyclone. Its sand/ochre field, warm-brown edges, and deep-red center establish deliberate background
+and palette variety while retaining 32 px clarity.
