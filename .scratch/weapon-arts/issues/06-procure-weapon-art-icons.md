@@ -104,3 +104,8 @@ Owner 2026-08-23: **Blood Seeker** is finalized as `aow_05_blood_seeker`. The sw
 delivers five rapid `DarknessAttack` hits. The approved glyph uses a lean Dunmer-coded spellsword
 and narrow crimson-violet spectral cuts converging on one dark focal point, keeping it distinct
 from Blood Flurry's heavy Orc-coded arcs and slam.
+
+Owner 2026-08-23: **Blood Spiller** is finalized as `aow_06_blood_spiller`. The sword-or-dagger
+clip delivers four hits with phantom-sword, shadow, and flash effects. The approved glyph uses a
+Breton-coded spellsword and a tight descending cascade of physical and spectral blades into one
+cutting flash, distinct from the other two Blood arts.
