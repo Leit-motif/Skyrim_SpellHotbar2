@@ -57,6 +57,10 @@ namespace SpellHotbar::Storage {
     void SaveCallback(SKSE::SerializationInterface* a_intfc)
     {
         logger::trace("Saving to SKSE save...");
+
+        //A hotbar shout's selectedPower swap is held until its clip ends (thuum ticket 62). It is
+        //a runtime borrow and must not be what a save records, so settle it before serializing.
+        casts::CastingController::flush_deferred_power_restore();
         /// main hotbars data
         if (!a_intfc->OpenRecord('HOTB', Storage::save_format))
         {

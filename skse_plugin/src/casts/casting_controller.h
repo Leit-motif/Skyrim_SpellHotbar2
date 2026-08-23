@@ -206,6 +206,12 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
 	protected:
+		/**
+		* May this instance hand its selectedPower write-back to the controller instead of
+		* performing it now? A plain power restores immediately, as it always has.
+		*/
+		virtual bool defer_power_write_back(RE::PlayerCharacter*) const { return false; }
+
 		RE::TESForm* m_old_form;
 		bool m_reequiped;
 	};
@@ -216,6 +222,13 @@ namespace SpellHotbar::casts::CastingController {
 		virtual ~CastingInstanceShout() = default;
 		virtual bool reequip_old_power() override;
 	protected:
+		/**
+		* A shout's clip outlives its cast instance: the instance dies at GCD expiry while the
+		* graph is still shouting, and words two and three echo after that. Restoring
+		* selectedPower there gives those echoes the *equipped* shout's identity (thuum ticket
+		* 62). Defer while the graph says IsShouting.
+		*/
+		virtual bool defer_power_write_back(RE::PlayerCharacter* pc) const override;
 	};
 
 	class CastingInstancePotionUse : public BaseCastingInstance {
@@ -319,6 +332,13 @@ namespace SpellHotbar::casts::CastingController {
 	bool can_start_new_cast();
 
 	void drop_live_cast();
+
+	/**
+	* Perform any selectedPower write-back a finished hotbar shout is still holding, right now
+	* (thuum ticket 62). Called before a new swap and before the game serializes, so the swapped
+	* value can never reach a save or be captured as the next cast's "old" power.
+	*/
+	void flush_deferred_power_restore();
 
 	/*
 	* check if a power is currently tracked as casting instance, and finish it.

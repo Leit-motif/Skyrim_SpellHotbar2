@@ -15,6 +15,98 @@ namespace SpellHotbar::casts::CastingController {
 
 	std::unique_ptr<BaseCastingInstance> current_cast = nullptr;
 
+	// THE DEFERRED selectedPower WRITE-BACK (thuum ticket 62).
+	//
+	// A hotbar shout swaps its own form into the player's selectedPower so the injected "Shout"
+	// button press fires OUR shout instead of the equipped one. The cast instance dies at GCD
+	// expiry, which is ~1.8s BEFORE the graph leaves the shout (measured 2026-08-22: restore at
+	// 55.114, shoutStop at 56.959), and the old code restored there. Words two and three of a
+	// three-word shout echo after that point, and everything that reads selectedPower then sees
+	// the equipped shout: SKSE's kVoiceFire reported the wrong form to our own bookkeeping, and
+	// OAR re-selected the exhale clip against it. That is the misroute.
+	//
+	// The window we need therefore outlives the instance, so the hold lives here on the
+	// controller. The instance hands over its pair of forms and dies on schedule; nothing about
+	// set_casted, the GCD, or cooldown timing moves.
+	struct DeferredPowerRestore {
+		RE::TESForm* swapped{ nullptr };   // what we wrote into selectedPower
+		RE::TESForm* old_form{ nullptr };  // what belongs there
+		float age{ 0.0f };
+		bool active{ false };
+	};
+	DeferredPowerRestore deferred_restore{};
+
+	// Belt and braces. If IsShouting never falls — graph wedged, actor yanked out of the clip,
+	// a mod holding the variable — the swap must not outlive the shout by much. The longest
+	// vanilla three-word shout is comfortably inside this.
+	constexpr float deferred_restore_timeout{ 8.0f };
+
+	// Put the old power back, but only if the slot is still holding what we put there: the
+	// player may have equipped something else in the meantime, and that choice wins.
+	void write_back_power(RE::TESForm* swapped, RE::TESForm* old_form, const char* why)
+	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc) {
+			return;
+		}
+		auto& dat = pc->GetActorRuntimeData();
+		const auto cur_id = dat.selectedPower ? dat.selectedPower->GetFormID() : 0u;
+		const bool applied = dat.selectedPower == swapped;
+		if (applied) {
+			dat.selectedPower = old_form;
+		}
+		logger::debug("SH2 power: restored selectedPower {:08X} -> {:08X} (applied={}, {})", cur_id,
+			old_form ? old_form->GetFormID() : 0u, applied, why);
+	}
+
+	void flush_deferred_power_restore()
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		write_back_power(deferred_restore.swapped, deferred_restore.old_form, "flush");
+		deferred_restore = {};
+	}
+
+	// Forget a pending write-back without performing it. Used on a game load, where the save
+	// being read owns selectedPower and a pre-load form must never be written over it.
+	void discard_deferred_power_restore()
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		logger::debug("SH2 power: dropping deferred selectedPower restore to {:08X}",
+			deferred_restore.old_form ? deferred_restore.old_form->GetFormID() : 0u);
+		deferred_restore = {};
+	}
+
+	void defer_power_restore(RE::TESForm* swapped, RE::TESForm* old_form)
+	{
+		flush_deferred_power_restore();  // never stack two holds
+		deferred_restore.swapped = swapped;
+		deferred_restore.old_form = old_form;
+		deferred_restore.age = 0.0f;
+		deferred_restore.active = true;
+		logger::debug("SH2 power: holding selectedPower {:08X} until IsShouting falls (restores {:08X})",
+			swapped ? swapped->GetFormID() : 0u, old_form ? old_form->GetFormID() : 0u);
+	}
+
+	void update_deferred_power_restore(float delta, bool is_shouting)
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		deferred_restore.age += delta;
+		if (!is_shouting) {
+			write_back_power(deferred_restore.swapped, deferred_restore.old_form, "IsShouting fell");
+			deferred_restore = {};
+		}
+		else if (deferred_restore.age > deferred_restore_timeout) {
+			write_back_power(deferred_restore.swapped, deferred_restore.old_form, "timeout");
+			deferred_restore = {};
+		}
+	}
+
 	// THE COMMITMENT POINT (ADR 0004 as amended by ADR 0006, ticket 07).
 	//
 	// The clip our shtb state plays (MSCO_left1) carries an `MLh_SpellFire_Event` annotation at
@@ -129,6 +221,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	void drop_live_cast()
 	{
+		// Dropped for a game load: the save being read owns selectedPower, so a hold from the
+		// session being left behind is forgotten rather than written over it.
+		discard_deferred_power_restore();
 		current_cast.reset();
 		clear_spellfire();
 		ArtDriver::reset_session();
@@ -710,6 +805,13 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
+		// One bool graph read per unpaused frame on the player: the shout's own liveness, which
+		// is what a deferred selectedPower write-back is waiting on.
+		if (auto* player = RE::PlayerCharacter::GetSingleton()) {
+			bool is_shouting{ false };
+			player->GetGraphVariableBool("IsShouting"sv, is_shouting);
+			update_deferred_power_restore(delta, is_shouting);
+		}
 		CastIntent::poll_local_release();
 		if (current_cast) {
 			if (!current_cast->casted()) {
@@ -1266,6 +1368,10 @@ namespace SpellHotbar::casts::CastingController {
 		m_gcd = 0.5f;
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (pc) {
+			// A previous hotbar shout may still be holding its write-back (thuum ticket 62).
+			// Settle it first, or this cast would capture that shout as the power to restore
+			// and the player's real one would be lost.
+			flush_deferred_power_restore();
 			auto& dat = pc->GetActorRuntimeData();
 			m_old_form = dat.selectedPower;
 			dat.selectedPower = form;
@@ -1283,9 +1389,16 @@ namespace SpellHotbar::casts::CastingController {
 		if (!m_reequiped) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
-				auto& dat = pc->GetActorRuntimeData();
-				if (dat.selectedPower == m_form) {
-					dat.selectedPower = m_old_form;
+				// The write-back either happens now (powers, and a shout whose graph is
+				// already done) or is handed to the controller to finish after the clip
+				// (thuum ticket 62). Either way this instance is finished with it, so the
+				// bookkeeping below — m_reequiped, consume_items, the caller's shout
+				// cooldowns — keeps its existing timing.
+				if (defer_power_write_back(pc)) {
+					defer_power_restore(m_form, m_old_form);
+				}
+				else {
+					write_back_power(m_form, m_old_form, "immediate");
 				}
 				m_reequiped = true;
 				consume_items();
@@ -1313,6 +1426,19 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::reset_shout_cd();
 			}
 		}
+	}
+
+	bool CastingInstanceShout::defer_power_write_back(RE::PlayerCharacter* pc) const
+	{
+		if (!pc) {
+			return false;
+		}
+		bool is_shouting{ false };
+		pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
+		// Only hold it if the graph is actually shouting. A cast that died before the graph
+		// ever entered — refused, interrupted, cut for a combo — restores here and now, exactly
+		// as it did before, and never waits for an edge that will not come.
+		return is_shouting;
 	}
 
 	bool CastingInstanceShout::reequip_old_power()
