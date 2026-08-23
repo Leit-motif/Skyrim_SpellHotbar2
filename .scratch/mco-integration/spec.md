@@ -1,7 +1,8 @@
 # MCO Integration for Spell Hotbar 2
 
 Status: in progress — audited 2026-08-23 on the owner's ruling that the pre-08 tickets are out
-of date. Open: 04 (v1 gate, narrowed to fail-open-control telemetry), 06 (rescoped to the
+of date. **04 resolved the same day — the v1 SH2 gate is closed** (thuum 54 + owner ruling on
+the fail-open cell + no-polling and provenance evidence). Open: 06 (rescoped to the
 `create_directories` crash guard), 24 and 25 (needs-triage; 25 is the concentration gap the
 owner sees in play). Closed by the audit: 02 superseded, 03 and 07 resolved. Everything else
 was already resolved, superseded, or closed.
