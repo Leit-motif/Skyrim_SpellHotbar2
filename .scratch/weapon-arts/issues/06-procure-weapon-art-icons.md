@@ -93,3 +93,9 @@ is the original circular-gold candidate: an Imperial-coded spear bearer crossing
 inside a broken divine halo. Three later attempts made the energy more literally draconic, but each
 read more like a dragon illustration and less like a spell icon. The original wins on hotbar visual
 grammar and 32 px readability; literal lore motifs remain subordinate to ability recognition.
+
+Owner 2026-08-23: **Blood Flurry** is finalized as `aow_04_blood_flurry`. The greatsword-only
+nine-second clip contains twelve hits and ends in a heavy paralysis slam. The approved glyph uses
+an Orc-coded shock-trooper silhouette, three broad crimson arcs as shorthand for the sustained
+sequence, and one lower-right terminal impact. It replaces the rejected ornate-sword pilot with a
+compact spell-icon composition.
