@@ -4,6 +4,7 @@
 #include <iostream>
 
 using SpellHotbar::casts::CastComboIndex;
+using SpellHotbar::casts::CastShape;
 using SpellHotbar::casts::CastDelivery;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
@@ -31,6 +32,11 @@ using SpellHotbar::casts::should_cut_ability_for_attack;
 using SpellHotbar::casts::should_record_mco_combo_sample;
 using SpellHotbar::casts::should_retain_local_cast_intent;
 using SpellHotbar::casts::should_yield_shtb_before_hotbar_shout;
+using SpellHotbar::casts::channel_chain_window_open;
+using SpellHotbar::casts::channel_end_arms_combo_restore;
+using SpellHotbar::casts::should_cut_channel_for_attack;
+using SpellHotbar::casts::spellfire_advances_cast_index;
+using SpellHotbar::casts::spellfire_opens_combo_window;
 
 namespace {
 
@@ -449,6 +455,48 @@ void a_legal_hotbar_shout_yields_the_live_shtb_clip()
 		"idle has no shtb clip to stop");
 }
 
+
+void a_channel_does_not_walk_the_cast_clip_set()
+{
+	expect(spellfire_advances_cast_index(CastShape::fire_and_forget),
+		"a fire-and-forget clip advances SH2's cast index at SpellFire");
+	expect(!spellfire_advances_cast_index(CastShape::channel),
+		"a channel is one cast held, not a chain step");
+}
+
+void a_channel_does_not_open_the_follow_up_press_window()
+{
+	expect(spellfire_opens_combo_window(CastShape::fire_and_forget),
+		"ticket 22: a committed Driver Cast opens its window at SpellFire");
+	expect(!spellfire_opens_combo_window(CastShape::channel),
+		"a second hotbar cast during a hold is a refusal, not a chain");
+}
+
+void a_channel_is_chainable_out_only_once_it_streams()
+{
+	expect(!channel_chain_window_open(false, false), "no channel, no window");
+	expect(!channel_chain_window_open(true, false),
+		"a channel still in its charge has not committed anything to chain out of");
+	expect(channel_chain_window_open(true, true), "a streaming channel may hand off");
+}
+
+void an_attack_during_a_streaming_channel_ends_it()
+{
+	expect(should_cut_channel_for_attack(channel_chain_window_open(true, true), true),
+		"attack during a streaming channel ends the channel");
+	expect(!should_cut_channel_for_attack(channel_chain_window_open(true, true), false),
+		"a press that is not an attack leaves the channel alone");
+	expect(!should_cut_channel_for_attack(channel_chain_window_open(true, false), true),
+		"an attack before the channel streams keeps today's behaviour");
+}
+
+void a_channel_that_streamed_hands_its_combo_position_on()
+{
+	expect(channel_end_arms_combo_restore(true),
+		"the swing after a hold continues the chain the hold interrupted");
+	expect(!channel_end_arms_combo_restore(false),
+		"a channel that never streamed has nothing to hand off");
+}
 }  // namespace
 
 int main()
@@ -496,6 +544,11 @@ int main()
 	attack_after_the_ability_latch_cuts_and_is_not_captured();
 	ability_hitframe_does_not_replace_the_mco_combo_sample();
 	a_legal_hotbar_shout_yields_the_live_shtb_clip();
+	a_channel_does_not_walk_the_cast_clip_set();
+	a_channel_does_not_open_the_follow_up_press_window();
+	a_channel_is_chainable_out_only_once_it_streams();
+	an_attack_during_a_streaming_channel_ends_it();
+	a_channel_that_streamed_hands_its_combo_position_on();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

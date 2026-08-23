@@ -521,6 +521,21 @@ namespace SpellHotbar::Input {
                         }
                     }
 
+                    // Chain out of a concentration channel. A channel has no clip left to cut
+                    // -- its start clip ended and the hold is sustained by the OAR idle loop --
+                    // so the thing an attack has to end is the channel itself. The press is not
+                    // captured, the same fail-safe the cast cut above uses: a channel that
+                    // refuses to end still gives the player an ordinary swing.
+                    if (!captureEvent && pc && bEvent->IsDown() && in_ingame_state() &&
+                        casts::CastingController::is_channel_chainable())
+                    {
+                        const uint32_t attack_key = get_attack_key(key_device);
+                        if (casts::should_cut_channel_for_attack(
+                                true, is_attack_press(key_code, key_device, attack_key))) {
+                            casts::CastingController::cut_channel_for_attack(pc);
+                        }
+                    }
+
                     if (!captureEvent && pc && bEvent->IsDown() && in_ingame_state() &&
                         casts::ArtDriver::is_active())
                     {

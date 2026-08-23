@@ -1,4 +1,5 @@
 #include "spell_cast_data.h"
+#include "cast_anim_ids.h"
 #include "game_data.h"
 
 namespace SpellHotbar::GameData {
@@ -84,14 +85,6 @@ namespace SpellHotbar::GameData {
 
     }
 
-    constexpr std::array<std::uint16_t, 2> cast_anims_aimed{ 1U, 10016U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_self{ 2U, 10017U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_aimed_conc{ 1001U, 11003U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_self_conc{ 1002U, 11004U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_ritual{ 10000U, 10016U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_ritual_conc{ 11001U, 11003U };
-    constexpr std::array<std::uint16_t, 2> cast_anims_ritual_self{ 10000U, 10017U }; //same regular anim, but self cast fast anim
-
     inline bool is_ward_spell(const RE::SpellItem* spell) {
         return spell->effects.size() > 0 && spell->effects[0]->baseEffect && spell->effects[0]->baseEffect->HasKeywordID(0x1EA69);
     }
@@ -101,38 +94,17 @@ namespace SpellHotbar::GameData {
         uint16_t ret{ 0U };
 
         if (anim < 0) {
-            size_t ind = anim2 ? 1U : 0U;
+            const CastAnimSlot slot = anim2 ? CastAnimSlot::variant : CastAnimSlot::primary;
             if (form->GetFormType() == RE::FormType::Spell || form->GetFormType() == RE::FormType::Scroll) {
                 const RE::SpellItem* spell = form->As<RE::SpellItem>();
 
-                bool self = spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf;
+                const bool self = spell->GetDelivery() == RE::MagicSystem::Delivery::kSelf;
+                const bool two_handed = spell->IsTwoHanded();
                 if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration) {
-                    if (spell->IsTwoHanded()) {
-                        //Ritual Conc
-                        ret = cast_anims_ritual_conc[ind]; // ritual self conc is not used or provided by vanilla game
-                    }
-                    else
-                    {
-                        if (is_ward_spell(spell)) {
-                            //Ward anim, ward has no dual cast
-                            ret = 1003U;
-                        }
-                        else {
-                            //1H conc
-                            ret = self ? cast_anims_self_conc[ind] : cast_anims_aimed_conc[ind];
-                        }
-                    }
+                    ret = anim_id(concentration_family(two_handed, self, is_ward_spell(spell)), slot);
                 }
                 else {
-                    if (spell->IsTwoHanded()) {
-                        //Ritual Cast
-                        ret = self ? cast_anims_ritual_self[ind] : cast_anims_ritual[ind];
-                    }
-                    else
-                    {
-                        //Regular Cast
-                        ret = self ? cast_anims_self[ind] : cast_anims_aimed[ind];
-                    }
+                    ret = anim_id(fire_and_forget_family(two_handed, self), slot);
                 }
 
             }
@@ -145,7 +117,7 @@ namespace SpellHotbar::GameData {
 
     float Spell_cast_data::get_ritual_conc_anim_prerelease_time(int anim) {
         float pre_release_anim{ 0.0f };
-        if (anim == cast_anims_ritual_conc[0]) {
+        if (anim == kRitualConc.primary) {
             auto cam = RE::PlayerCamera::GetSingleton();
             if (cam && cam->IsInFirstPerson()) {
                 pre_release_anim = 1.5f;

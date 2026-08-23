@@ -17,6 +17,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	namespace {
 		std::atomic<bool> state_active{ false };
 		std::atomic<bool> combo_window{ false };
+		std::atomic<bool> channel_shape{ false };
 		std::atomic<bool> clip_committed{ false };
 		std::atomic<int> trace_budget{ 0 };
 		constexpr int post_cut_trace_events{ 24 };
@@ -113,6 +114,12 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
+		CastShape current_shape()
+		{
+			return channel_shape.load(std::memory_order_relaxed) ? CastShape::channel
+																 : CastShape::fire_and_forget;
+		}
+
 		bool send_entry(RE::PlayerCharacter* pc)
 		{
 			const int index = g_castIndex.current();
@@ -183,12 +190,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		return combo_window.load(std::memory_order_relaxed);
 	}
 
-	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time)
+	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time, CastShape shape)
 	{
 		if (!pc) {
 			return false;
 		}
 		(void)hand;
+		channel_shape.store(shape == CastShape::channel, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		interrupt_left_caster_if_spell(pc);
 		load_charge_curve();
@@ -211,12 +219,15 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 
 		if (is_msco_combo_window_open_event(tag) && is_active()) {
-			combo_window.store(true, std::memory_order_relaxed);
+			const CastShape shape = current_shape();
+			combo_window.store(spellfire_opens_combo_window(shape), std::memory_order_relaxed);
 			bool expected = false;
-			if (clip_committed.compare_exchange_strong(expected, true, std::memory_order_relaxed)) {
+			if (clip_committed.compare_exchange_strong(expected, true, std::memory_order_relaxed) &&
+				spellfire_advances_cast_index(shape)) {
 				g_castIndex.advance();
 			}
-			logger::debug("SH2 cast: combo window open ({})", tag);
+			logger::debug("SH2 cast: commitment point ({}), shape={}, window={}", tag,
+				shape == CastShape::channel ? "channel" : "fnf", spellfire_opens_combo_window(shape));
 		}
 
 		if (is_msco_combo_window_close_event(tag)) {
@@ -271,20 +282,17 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		return false;
 	}
 
-	bool replay(RE::PlayerCharacter* pc)
+	void end_channel(RE::PlayerCharacter* pc)
 	{
-		if (!pc) {
-			return false;
-		}
-		if (is_active()) {
-			return true;
-		}
-		// Concentration re-entry is not a combo step. Send the original event so a
-		// looping channel does not walk the clip set; ticket 11 leaves channels out.
-		const bool sent = pc->NotifyAnimationGraph("SH2_CastRight"sv);
-		state_active.store(sent, std::memory_order_relaxed);
+		// The state is normally already gone: a channel's start clip raises SH2_CastExit on its
+		// own, and the sustain lives in the OAR idle loop from there. What is still owed at
+		// release is the combo position, so the swing after a hold continues the chain the hold
+		// interrupted rather than starting at attack1.
+		arm_restore();
+		send_exit(pc);
+		state_active.store(false, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
-		return sent;
+		channel_shape.store(false, std::memory_order_relaxed);
 	}
 
 	void arm_combo_restore()
@@ -301,6 +309,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
+		channel_shape.store(false, std::memory_order_relaxed);
 	}
 
 	void finish(RE::PlayerCharacter* pc)
@@ -311,6 +320,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		send_exit(pc);
 		state_active.store(false, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
+		channel_shape.store(false, std::memory_order_relaxed);
 	}
 
 	void reset_session()
@@ -318,6 +328,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		state_active.store(false, std::memory_order_relaxed);
 		combo_window.store(false, std::memory_order_relaxed);
 		clip_committed.store(false, std::memory_order_relaxed);
+		channel_shape.store(false, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
 		ClipTranslationDriver::reset();

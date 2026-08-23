@@ -60,6 +60,15 @@ _Avoid_: Build success, undocumented smoke test
 The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `MSCO_left1` through `left4`, walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Combo-position restore for a Driver Cast this mod started is this mod's work (ADR-0005 named exception), not ShoutMCO's release-timing API. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
+**Cast Channel**:
+A concentration cast held from a hotbar slot. It enters the Driver Cast state for its start clip
+only; the hold is then sustained by the OAR idle loop, which every concentration submod builds by
+replacing the idle and locomotion set while `SpellHotbar_isCastingConcSpell` is raised (ADR-0013).
+A channel does not walk the cast-combo index and does not open the follow-up-press window — both
+belong to a clip that is still playing. Its chain-out window is the hold itself: an attack inside
+it ends the channel and becomes the swing, keeping combo position.
+_Avoid_: looping cast state, concentration Driver Cast, held cast clip
+
 **Cast Plant**:
 Input lock for a live shtb state (Driver Cast or Ability): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Ticket 19 is the plant; abilities ticket 05 applies clip translation from the playing file’s `animmotion` (supersedes the deferred mco-integration ticket 21). Abilities reuse the same plant.
 _Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means animation-driven translation, not input lock), freeze the actor in place

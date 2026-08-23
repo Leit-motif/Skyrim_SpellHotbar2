@@ -1,5 +1,6 @@
 #pragma once
 #include "../bar/hotbar.h"
+#include "combo_cache.h"
 
 namespace SpellHotbar::casts::MscoCastDriver {
 
@@ -15,8 +16,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
 	 * plays at MSCO's charge-scaled pace (ticket 18). WASD capture during the state
 	 * is ticket 19; bAnimationDriven comes from the shtb graph wrap (ticket 21).
+	 *
+	 * `shape` says what the state is being entered for. A channel borrows it for the
+	 * start clip only: its SpellFire commits the cast without walking the clip set or
+	 * opening the follow-up window, and the state is then left to end so the OAR idle
+	 * loop can sustain the hold (ADR-0013).
 	 */
-	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time);
+	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time, CastShape shape);
 
 	/**
 	 * Load MSCO.ini's charge-to-speed curve. Called at DataLoaded and again at each
@@ -56,9 +62,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	bool should_trace_graph_events();
 
 	/**
-	 * Re-send the entry for a sustained concentration loop if the state has exited.
+	 * End a concentration channel: hand its combo position on and make sure the state is
+	 * gone. Sent whether or not the state is still live -- a channel normally leaves it at
+	 * the end of the start clip, so by release there is usually nothing left to exit.
 	 */
-	bool replay(RE::PlayerCharacter* pc);
+	void end_channel(RE::PlayerCharacter* pc);
 
 	/**
 	 * Leave the cast state early via SH2_CastExit. Sent unconditionally: the event's

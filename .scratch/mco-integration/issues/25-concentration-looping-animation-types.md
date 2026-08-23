@@ -6,8 +6,9 @@ Driver Cast types (`MSCO_left1`–`left4`, `MODE_SINGLE_PLAY`, exit on clip end)
 **Blocked by:** 08 (resolved). Ticket 08 parked this: looping conc state + release-opened chain
 window. The 2026-08-11 spec direction is the tier plan.
 
-**Status:** ready-for-agent — promoted 2026-08-23. Every triage question below now has an owner
-ruling or a source-audit answer (recorded in Notes); the build spec is the "What to build" section.
+**Status:** needs-owner-verification — built 2026-08-23. Both phases and the dual-distinctness
+slice are implemented and the unit suite passes; every acceptance cell is live evidence the owner
+has to make. See "What shipped" below.
 
 ## Owner ask (2026-08-21)
 
@@ -111,6 +112,85 @@ sustains for the whole hold (captured frames at t0 and t+3s or a short recording
 it, a fire-and-forget on the same bar still uses its throw type. Dual-cast a ritual conc and
 confirm it no longer plays the plain dual conc clip. A build or static check diagnoses, never
 proves.
+
+
+## What shipped 2026-08-23
+
+Shape **(a)**, on the evidence in the source audit above. All of it is plugin work; no animation
+asset was created, retargeted, imported, or redistributed, and the fire-and-forget path is
+untouched.
+
+**Phase 1 — sustain the loop.** `MscoCastDriver::replay` is gone. It re-sent `SH2_CastRight`
+every half second whenever the state had ended, which restarted the single-play start clip and
+held the actor out of the drawn idle — the one state that owns the real loop. A channel now
+enters the state for its start clip, the clip's own end-of-clip trigger ends the state, and the
+24 concentration OAR submods sustain the hold by replacing the idle and locomotion set while
+`SpellHotbar_isCastingConcSpell` is raised. Release clears that global through the existing
+`reset_animation_vars()` and the idle reverts.
+
+`MscoCastDriver::begin` now takes a `CastShape`. A channel's SpellFire commits the cast but does
+not walk SH2's cast-combo index and does not open the follow-up-press window; a fire-and-forget
+cast does both, exactly as before. That is ticket 11's rule, now enforced at the driver rather
+than by a comment on a function that walked around it.
+
+**Phase 2 — chain out at release.** Written as "open the cast-combo window at release". Under
+shape (a) the literal window bit cannot be the mechanism: `combo_window` is only read together
+with `MscoCastDriver::is_active()`, and a channel deliberately holds no state, so the flag would
+be inert. What the phase asks for — a channel can hand off to an attack — needed two things
+instead, and both shipped:
+
+- `CastingController::cut_channel_for_attack`: an attack press during a streaming channel ends
+  the channel and travels on to the game as an ordinary swing. Before this the press started a
+  swing while the beam kept streaming. The press is not captured, the same fail-safe ticket 10
+  uses.
+- The channel arms the ADR-0005 combo write-back when it ends, so the swing after a hold
+  continues the chain the hold interrupted instead of starting at hit 1. A hold longer than
+  `RollingMcoCombo::kMaxAgeMs` has no fresh sample and hands nothing on, which is honest rather
+  than invented.
+
+The window's shape is therefore the hold: it opens at the commitment point and closes when the
+player lets go or attacks (`channel_chain_window_open` in `combo_cache.h`).
+
+**Dual distinctness.** The two-id family table moved out of `spell_cast_data.cpp` into
+`skse_plugin/src/game_data/cast_anim_ids.h`, a pure header with its own test. Ritual
+concentration's variant slot no longer borrows `11003`: it ships one submod
+(`cast_ritual_aimed_conc`) and now keeps `11001` in both slots, so a fast ritual channel stops
+playing the plain dual concentration loop. Ward concentration keeps `1003` in both slots, and the
+reason is recorded in the header rather than solved with art: there is no dual ward submod and
+vanilla has no dual ward pose to map onto. Aimed (`1001` / `11003`) and self (`1002` / `11004`)
+were already distinct and are unchanged. Fire-and-forget ids are unchanged and pinned by test.
+
+The shape decision is recorded as `docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md`,
+and `CONTEXT.md` gains the term **Cast Channel**.
+
+### Files
+
+- `skse_plugin/src/game_data/cast_anim_ids.h`, `cast_anim_ids_test.cpp` (new)
+- `skse_plugin/src/game_data/spell_cast_data.cpp`
+- `skse_plugin/src/casts/combo_cache.h`, `combo_cache_test.cpp`
+- `skse_plugin/src/casts/msco_cast_driver.h`, `msco_cast_driver.cpp`
+- `skse_plugin/src/casts/casting_controller.h`, `casting_controller.cpp`
+- `skse_plugin/src/input/input.cpp`
+- `skse_plugin/CMakeLists.txt`, `docs/adr/0013-…`, `CONTEXT.md`
+
+### Evidence so far, and what it is not
+
+Release build clean; all six unit test binaries pass (`cast_anim_ids_test`, `combo_cache_test`,
+`clip_translation_test`, `art_data_test`, `art_bind_record_test`, `bind_drop_test`). The DLL is
+deployed to `Dev - Spell Hotbar 2`.
+
+That is a diagnosis, not proof. Every cell below is live evidence and none of it is taken:
+
+- [ ] Hold Flames (aimed conc, `1001`) from a hotbar slot with a weapon drawn. The clip loops for
+      the whole hold — frames at t0 and t+3s, or a short recording, committed and cited by path.
+- [ ] Release ends the channel and the idle reverts.
+- [ ] A self concentration behaves the same way (`1002`).
+- [ ] A fire-and-forget on the same bar still uses its throw type.
+- [ ] An attack pressed during a hold ends the channel and swings, continuing the combo.
+- [ ] A fast ritual concentration no longer plays the plain dual concentration loop (`11001`, not
+      `11003`).
+- [ ] A dual-cast aimed and a dual-cast self concentration each loop their own clip
+      (`11003` / `11004`).
 
 ## What this is not
 

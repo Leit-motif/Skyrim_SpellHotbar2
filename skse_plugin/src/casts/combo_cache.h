@@ -363,6 +363,56 @@ enum class AbilityLatch {
 	return !our_shtb_busy;
 }
 
+// What the shtb cast state is being used for. A fire-and-forget cast owns the state for the
+// whole clip. A concentration channel borrows it for the start clip only and then hands the
+// sustain to the OAR idle loop, which is where every conc submod builds the loop: they replace
+// 1hm_idle / dw1hm1hmidle / staff_idle and the turn family for as long as
+// SpellHotbar_isCastingConcSpell is raised (ADR-0013).
+enum class CastShape {
+	fire_and_forget,
+	channel,
+};
+
+// SH2's cast-combo index walks the MSCO_left1..left4 clip set. A channel is one cast held, not
+// a chain step, so its SpellFire commits the cast without moving the index (ticket 11).
+[[nodiscard]] constexpr bool spellfire_advances_cast_index(CastShape shape) noexcept
+{
+	return shape == CastShape::fire_and_forget;
+}
+
+// Nor does a channel's SpellFire open the follow-up-press window. That window is an envelope
+// inside a clip that is still playing; a channel's start clip has already handed off, and a
+// second hotbar cast during a hold is a refusal, not a chain.
+[[nodiscard]] constexpr bool spellfire_opens_combo_window(CastShape shape) noexcept
+{
+	return shape == CastShape::fire_and_forget;
+}
+
+// A channel's chain-out window is the hold itself. It opens when the channel commits and the
+// spell starts streaming, and it closes when the player lets go. There is no clip clock to
+// read here, because the start clip ended long before the hold does.
+[[nodiscard]] constexpr bool channel_chain_window_open(
+	bool channel_live, bool channel_streaming) noexcept
+{
+	return channel_live && channel_streaming;
+}
+
+// An attack inside that window ends the channel and becomes the swing. The press itself is not
+// captured: it travels the rest of the dispatch, the same fail-safe ticket 10 uses.
+[[nodiscard]] constexpr bool should_cut_channel_for_attack(
+	bool channel_chain_open, bool is_attack_press) noexcept
+{
+	return channel_chain_open && is_attack_press;
+}
+
+// Combo position must survive the hold: the swing after a channel continues the chain the
+// channel interrupted, through the same ADR-0005 write-back a Driver Cast arms at SH2_CastExit.
+// A channel that never started streaming has nothing to hand off.
+[[nodiscard]] constexpr bool channel_end_arms_combo_restore(bool channel_streaming) noexcept
+{
+	return channel_streaming;
+}
+
 // A hotbar shout that is allowed to start must leave SH2_Art_State / the
 // Driver Cast before the Shout ButtonEvent, or both clips play together.
 [[nodiscard]] constexpr bool should_yield_shtb_before_hotbar_shout(

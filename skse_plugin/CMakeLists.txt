@@ -92,6 +92,7 @@ set(source_files src/plugin.cpp
                  src/game_data/user_custom_spelldata.cpp
                  src/storage/user_data_io.h
                  src/storage/user_data_io.cpp
+                 src/game_data/cast_anim_ids.h
                  src/game_data/spell_cast_data.h
                  src/game_data/spell_cast_data.cpp
                  src/rendering/potion_editor.h
@@ -130,6 +131,10 @@ target_include_directories(clip_translation_test PRIVATE src/casts)
 add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp src/game_data/custom_ability_config.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)
 target_include_directories(art_data_test PRIVATE src/game_data)
+
+add_executable(cast_anim_ids_test src/game_data/cast_anim_ids_test.cpp)
+target_compile_features(cast_anim_ids_test PRIVATE cxx_std_23)
+target_include_directories(cast_anim_ids_test PRIVATE src/game_data)
 
 add_executable(art_bind_record_test src/storage/art_bind_record_test.cpp)
 target_compile_features(art_bind_record_test PRIVATE cxx_std_23)

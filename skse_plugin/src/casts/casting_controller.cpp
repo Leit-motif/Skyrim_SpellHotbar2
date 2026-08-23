@@ -182,6 +182,29 @@ namespace SpellHotbar::casts::CastingController {
 		return current_cast && dynamic_cast<CastingInstanceSpellConcentration*>(current_cast.get());
 	}
 
+	CastingInstanceSpellConcentration* live_channel()
+	{
+		if (!current_cast) {
+			return nullptr;
+		}
+		auto* channel = dynamic_cast<CastingInstanceSpellConcentration*>(current_cast.get());
+		return (channel && !channel->casted()) ? channel : nullptr;
+	}
+
+	bool is_channel_chainable()
+	{
+		auto* channel = live_channel();
+		return channel_chain_window_open(channel != nullptr, channel && channel->is_streaming());
+	}
+
+	void cut_channel_for_attack(RE::PlayerCharacter* pc)
+	{
+		if (auto* channel = live_channel()) {
+			logger::debug("SH2 cast: attack pressed on a streaming channel; ending the channel");
+			channel->end_channel(pc);
+		}
+	}
+
 	bool our_latch_is_closed()
 	{
 		return CastIntent::should_retain_now();
@@ -728,10 +751,14 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::global_casting_conc_spell->value = 1.0f;
 			}
 			else if (static_cast<int>(timer_old / loop_timer) < static_cast<int>(m_cast_timer / loop_timer)) {
-				//Check for anim reloop & do loop callbacks
+				//Per-loop callbacks. The animation is not re-sent here: the start clip ends the
+				//shtb state on its own and the hold is sustained by the OAR idle loop, which
+				//every conc submod builds by replacing the idle and locomotion set while
+				//SpellHotbar_isCastingConcSpell is raised (ADR-0013). Re-notifying the entry
+				//restarted the single-play start clip every half second and held the actor out
+				//of the idle that owns the loop.
 
 				if (keydown) {
-					MscoCastDriver::replay(pc);
 					RenderManager::highlight_skill_slot(m_slot, loop_timer*2.0f, false);
 					auto spell = m_form->As<RE::SpellItem>();
 					if (spell != nullptr) {
@@ -754,25 +781,39 @@ namespace SpellHotbar::casts::CastingController {
 			}
 
 			if (!keydown) {
-				//trigger gcd and stop cast
-				set_casted();
-				stop_cast_loop_sound();
-				stop_charge_sound();
-				RE::MagicSystem::CastingSource src = static_cast<RE::MagicSystem::CastingSource>(std::clamp(static_cast<int>(SpellHotbar::GameData::global_casting_source->value), 0, 3));
-				auto playerCaster = pc->GetMagicCaster(src);
-				if (playerCaster) {
-					playerCaster->InterruptCast(false);
-				}
-				GameData::reset_animation_vars();
-				MscoCastDriver::cancel(pc);
-				play_release_sound();
-				apply_cooldown();
-				consume_items();
+				end_channel(pc);
 			}
 
 		}
 
 		return cancel;
+	}
+
+	void CastingInstanceSpellConcentration::end_channel(RE::PlayerCharacter* pc)
+	{
+		if (m_casted) {
+			//Already ended -- an attack cut it and this is the update tick behind it.
+			return;
+		}
+		//trigger gcd and stop cast
+		set_casted();
+		stop_cast_loop_sound();
+		stop_charge_sound();
+		RE::MagicSystem::CastingSource src = static_cast<RE::MagicSystem::CastingSource>(std::clamp(static_cast<int>(SpellHotbar::GameData::global_casting_source->value), 0, 3));
+		auto playerCaster = pc->GetMagicCaster(src);
+		if (playerCaster) {
+			playerCaster->InterruptCast(false);
+		}
+		GameData::reset_animation_vars();
+		if (channel_end_arms_combo_restore(m_spell_started)) {
+			MscoCastDriver::end_channel(pc);
+		}
+		else {
+			MscoCastDriver::cancel(pc);
+		}
+		play_release_sound();
+		apply_cooldown();
+		consume_items();
 	}
 
 	bool CastingInstanceSpellConcentration::is_gcd_expired() const
@@ -868,7 +909,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::fire_and_forget)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -899,7 +940,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::channel)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -927,7 +968,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::channel)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -957,7 +998,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::fire_and_forget)) {
 					return start_result::started;
 				}
 				current_cast.reset();

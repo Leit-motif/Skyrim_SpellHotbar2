@@ -33,10 +33,9 @@ namespace SpellHotbar::casts::CastingController {
 		*
 		* False by default, so only a kind of cast that says otherwise is ever cut. A power, a
 		* shout, and a potion never enter the state at all, and ending one on their behalf would
-		* be a send for a state they do not own. A concentration channel does own the state but
-		* cannot be ended this way either: its own loop re-enters the state within half a
-		* second, so the end would be undone a moment later. Ending a channel properly is its
-		* own ticket.
+		* be a send for a state they do not own. A concentration channel enters the state for
+		* its start clip and then leaves it, so by the time it could be cut there is no state
+		* left to end; ending a channel is `cut_channel_for_attack` instead (ticket 25).
 		*/
 		virtual bool has_cuttable_cast_state() const;
 
@@ -180,6 +179,19 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool has_duration() const;
 		virtual float get_current_gcd_progress() const override;
+
+		/**
+		 * Is the channel past its commitment point and streaming the spell? Before that there
+		 * is no channel to hand off, only a charge that a cut would throw away.
+		 */
+		inline bool is_streaming() const { return m_spell_started; }
+
+		/**
+		 * End the hold: stop the loop sound, interrupt the caster, drop the animation globals
+		 * so the OAR idle loop reverts, hand the combo position on, and pay the cooldown. The
+		 * player releasing the key and an attack chaining out both come through here.
+		 */
+		void end_channel(RE::PlayerCharacter* pc);
 	protected:
 		const Input::KeyBind& m_keybind;
 		int m_slot;
@@ -311,6 +323,21 @@ namespace SpellHotbar::casts::CastingController {
 	bool can_accept_hotbar_cast();
 
 	bool is_live_concentration();
+
+	/**
+	 * Is a concentration channel live and streaming, so an attack may chain out of it?
+	 *
+	 * A channel has no clip clock to read: the shtb state ended with its start clip and the
+	 * hold is sustained by the OAR idle loop. Its chain-out window is therefore the hold
+	 * itself, opened at the commitment point and closed when the player lets go.
+	 */
+	bool is_channel_chainable();
+
+	/**
+	 * End a streaming channel because the player attacked. The press itself is untouched and
+	 * reaches the game as an ordinary swing, continuing the combo the channel interrupted.
+	 */
+	void cut_channel_for_attack(RE::PlayerCharacter* pc);
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
