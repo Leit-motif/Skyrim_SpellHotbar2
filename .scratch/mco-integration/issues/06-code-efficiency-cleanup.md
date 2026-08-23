@@ -8,7 +8,13 @@ rather than from reading.
 **Blocked by:** None, but explicitly **secondary**. It is not a prerequisite for any
 integration ticket and must not be bundled into one.
 
-**Status:** ready-for-agent
+**Status:** ready-for-agent — **rescoped 2026-08-23 to the crash guard below.** Audit: the
+general measure-and-optimize pass is stale (the code it would have measured has been rewritten
+by tickets 07–22 and the weapon-arts effort) and is dropped unless the owner re-raises it. The
+`saveBarsToFile` CTD is still live: `hotbars.cpp:295` still calls the throwing
+`create_directories` unguarded, and the same pattern sits at `game_data.cpp:1484`,
+`game_data.cpp:2383`, and `user_data_io.cpp:382` (`custom_ability_runtime.cpp` already uses the
+`error_code` overload — copy that). Fixing those four sites is the whole remaining ticket.
 
 The owner named this as a secondary goal alongside MCO integration. Keeping it in its own
 ticket keeps integration diffs reviewable — a chain-out fix and a refactor in the same commit

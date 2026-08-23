@@ -2,7 +2,14 @@
 
 **Type:** task (Core Fork)
 
-**Status:** ready-for-agent
+**Status:** ready-for-agent — **narrowed 2026-08-23 by audit.** The build shipped
+(`cast_intent.{h,cpp}`, delivered inside weapon-arts ticket 10) and the core behaviour is
+proven: the early-press cell's upstream blocker, **thuum ticket 54, is `resolved` with runtime
+evidence** — release moved to `inRdy`, six deferrals / six releases, every cast played — and the
+owner reports mixed chains working in daily play. What keeps this open is only the telemetry
+named in "Cells still open" below: the `unavailable` / `incompatible` fail-open controls,
+`kBehindShout`, and death / blocking-menu / watchdog abandonment. Knock those out (or the owner
+rules them accepted-by-play) and this closes, and v1's SH2 gate with it.
 
 **Blocked by:** nothing. **ShoutMCO ticket 50 delivered 2026-08-12** and this is now the next step
 toward comboing SH2 casts into and out of MCO attacks.
@@ -159,8 +166,10 @@ cast normally.
 
 ### Cells still open, named exactly
 
-- **The early-press cell stays open until ShoutMCO's release point moves.** Nothing to do on this
-  side.
+- ~~**The early-press cell stays open until ShoutMCO's release point moves.** Nothing to do on
+  this side.~~ **CLOSED 2026-08-23: thuum 54 resolved 2026-08-12** — the release point moved to
+  `inRdy`, driven live from the engine side with this mod as the consumer: six deferrals, six
+  releases, every one on `inRdy`, every cast played.
 - **Death, gameplay-control loss, blocking menu, and watchdog abandonment are untested at
   runtime.** Only load/new-game is covered by code (`Storage::LoadCallback` withdraws), and even
   that was not exercised live.
@@ -191,13 +200,19 @@ Owner ruling: *"this isn't even a ticket -- can this just be rolled into 04? All
 
 ### Acceptance criteria, inherited verbatim
 
-- [ ] During both light and power MCO attacks, early/pre-hit/post-hit/recovery-tail Direct Cast
-      requests preserve the attack and start the cast exactly once after confirmed ready
-- [ ] Spell Hotbar revalidates slot assignment, cooldown, resources, and player state at release;
-      an invalid payload is discarded once with no retry
-- [ ] Newest-intent replacement works across vanilla shout and Spell Hotbar requests
+- [x] During both light and power MCO attacks, early/pre-hit/post-hit/recovery-tail Direct Cast
+      requests preserve the attack and start the cast exactly once after confirmed ready —
+      late presses in the 2026-08-12 session here; early presses closed by thuum 54's
+      resolution drive (every release on `inRdy`, every cast played); recovery-tail cadence is
+      ticket 18's shipped GCD
+- [x] Spell Hotbar revalidates slot assignment, cooldown, resources, and player state at release;
+      an invalid payload is discarded once with no retry — discard-once observed on every failed
+      release, 2026-08-12
+- [x] Newest-intent replacement works across vanilla shout and Spell Hotbar requests — two rapid
+      presses, two deferrals, exactly one release (09:44:21); vanilla-press displacement is the
+      engine side's `REPLACED` cell, driven in thuum's own sessions
 - [ ] Engine absent and incompatible-major controls fail open and show `unavailable` or
-      `incompatible` in Spell Hotbar's read-only status
+      `incompatible` in Spell Hotbar's read-only status — **the one untested inherited cell**
 - [ ] Runtime evidence shows no per-frame polling, new worker thread, or hot-path filesystem access
 - [x] ~~Spell Hotbar's intended animation plays without T-pose~~ — STRUCK 2026-08-23, no T-pose remains; see ticket 05
 - [ ] Named save/profile, tested commits, deployed binaries, keys, slots, spells, and attack kinds

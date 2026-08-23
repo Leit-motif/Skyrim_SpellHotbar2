@@ -5,7 +5,7 @@ Custom Ability Folder clip, instead of the clip’s author `@CAST` / `@CASTSPELL
 
 **Blocked by:** 09
 
-**Status:** needs-triage
+**Status:** deferred 2026-08-23 — owner ruling: future enhancement, not v1. Triage when re-raised.
 
 ## You test this
 

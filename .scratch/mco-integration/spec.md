@@ -1,6 +1,10 @@
 # MCO Integration for Spell Hotbar 2
 
-Status: ready-for-agent
+Status: in progress — audited 2026-08-23 on the owner's ruling that the pre-08 tickets are out
+of date. Open: 04 (v1 gate, narrowed to fail-open-control telemetry), 06 (rescoped to the
+`create_directories` crash guard), 24 and 25 (needs-triage; 25 is the concentration gap the
+owner sees in play). Closed by the audit: 02 superseded, 03 and 07 resolved. Everything else
+was already resolved, superseded, or closed.
 
 Supersedes `../baseline-adoption/spec.md`, which is closed. Created 2026-08-03.
 

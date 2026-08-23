@@ -10,12 +10,24 @@ losing `IsShouting` after the magic is committed, per
 ticket 01's live answer or on ticket 02's branch change — both are corrections to this mod's own
 lifecycle and are correct with no MCO engine present at all.
 
-**Status:** claimed — **but the work appears to be IN THE SOURCE already; this line is stale.**
-Checked 2026-08-23 while answering the owner on what SH2 work v1 still needs:
-`skse_plugin/src/casts/casting_controller.cpp` carries `arm_spellfire()`, `spellfire_seen`,
-`spellfire_mask`, and the `MLh_SpellFire_Event` commit path, with runtime-verified comments dated
-2026-08-11. **Close it against ADR-0004's criteria rather than rebuilding it** — what is missing is
-a verdict, not code.
+**Status:** resolved 2026-08-23 — closed against ADR-0004's criteria by source audit. Verdict:
+
+- **Commitment point exists and gates delivery.** `arm_spellfire()` /
+  `notify_spellfire()` / `is_cast_committed()` (`casting_controller.cpp:139–169`), and the
+  delivery gate reads `if (anim_ok || is_cast_committed())` (`:534`) — a committed cast
+  delivers whatever happens to the animation state, exactly the guarantee the ADR records.
+- **The `IsShouting` defect the ADR fixes is gone at the root.** No cast path reads
+  `IsShouting` any more; liveness is `MscoCastDriver::is_active()`, fed by this mod's own
+  entry notify and `SH2_CastExit` (ticket 03's 2026-08-12 withdrawal documents this).
+- **One deliberate deviation, recorded rather than hidden:** the committing event is
+  `MLh_SpellFire_Event` on the shtb clip (+0.46s, runtime-verified 2026-08-11), not
+  `Voice_SpellFire_Event` — because ticket 08 moved casts out of the shout graph entirely.
+  The ADR's principle (commit at the spellfire event the playing graph raises; no cross-mod
+  handshake) holds unchanged; the event followed the cast into the weapon graphs. Scope note
+  added to ADR-0004 in the same audit commit.
+- **Runtime evidence:** commit at +0.475s in ticket 04's 2026-08-12 session; every released
+  cast played in thuum 54's resolution drive; the spell firing at all is confirmed by the
+  owner-accepted 8effcad slice and daily play.
 
 ## Why this is not chaining work
 

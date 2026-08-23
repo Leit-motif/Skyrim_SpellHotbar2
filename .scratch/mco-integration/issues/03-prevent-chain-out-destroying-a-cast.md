@@ -7,11 +7,23 @@ an MCO chain without the cut destroying the spell — followed by its implementa
 
 **Blocked by:** 01 — Answer the open question; 02 — Make the cast release event stance-aware.
 
-**Status:** ~~claimed (grilling, 2026-08-05)~~ **open — claim released 2026-08-12 during
-cleanup.** The grilling ended and its outcome is recorded in the body (ADR-0004, the ticket 07
-split, and the 2026-08-12 supersession of the engine-arm item). What remains is the live
-verification in "What remains here", which rides the ticket 10–15 drives rather than a claim on
-this file.
+**Status:** ~~claimed (grilling, 2026-08-05)~~ ~~open — claim released 2026-08-12 during
+cleanup~~ **resolved 2026-08-23 by audit.** The grilling's outcome was already recorded
+(ADR-0004, the ticket 07 split); the "What remains here" cells have since all been covered by
+later work, each one named:
+
+- *Carry the decision to the engine side* — done. The seam is documented on both sides
+  (ADR-0005 here ↔ thuum ADR-0008), and thuum tickets 50/51/54 all build on it; the engine
+  never armed and never needed to (superseded item below).
+- *Chain-out leaves the spell intact* — proven. Ticket 10's drives, ticket 04's 2026-08-13
+  owner mixed-chain (`attack1 → attack2 → cast1 → attack3 → cast2`), and thuum 54's resolution
+  drive (six deferrals, six releases on `inRdy`, **every cast played**).
+- *Spell fires at all* (finding 12) — confirmed by the owner-accepted 8effcad slice and daily
+  play since.
+- *Real-shout chain-out unchanged* — thuum's own boards carry that regression (its 52/54
+  drives); nothing on this side touches it.
+- *No-chain path unchanged* — the sheathed-refusal control in ticket 04's evidence
+  (`PASS_THROUGH`, byte-for-byte prior behaviour).
 
 ## The premise changed on 2026-08-05. Read this before the rest.
 

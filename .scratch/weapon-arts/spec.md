@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–05 and 07–10 resolved; 06 and 13 agent-done; 11–12 needs-triage.
+Status: in progress — 01–05 and 07–10 resolved; 06 and 13 agent-done (owner verification next: 13, then 06); 11–12 deferred as future enhancements (owner, 2026-08-23).
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -376,6 +376,6 @@ and ADR-0008.
 | [08](issues/08-ship-custom-art-folder-templates.md) | resolved | `Custom_Ability_1`…`12` drop-in folders |
 | [09](issues/09-weapon-arts-editor.md) | resolved | Ability Editor (all Abilities, including ashes) |
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
-| [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 12) |
-| [12](issues/12-custom-ability-spell-assignment.md) | needs-triage | Custom Ability Spell assignment (parked from 09) |
+| [11](issues/11-ability-editor-fire-time-override.md) | deferred | PIE fire-time override / slider (after 12) |
+| [12](issues/12-custom-ability-spell-assignment.md) | deferred | Custom Ability Spell assignment (parked from 09) |
 | [13](issues/13-gray-out-ineligible-abilities-in-bind-menu.md) | agent-done | Bind-menu gray-out from the selected bar |
