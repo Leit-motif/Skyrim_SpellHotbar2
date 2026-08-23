@@ -80,3 +80,10 @@ the atlas CSV contains the key. The approved style is a generalized, faceless MM
 silhouette: Khajiit lore cues, one dominant high kick, cyan-white motion crescent, restrained gold
 impact, dark atmospheric field, and 32 px readability. Installed SWF frames and the supplied MMO
 icon screenshot were convention references only; none are redistributed.
+
+Owner 2026-08-23: **Aimed Blow** is finalized as `aow_02_aimed_blow`. Its animation evidence is a
+committed forward lunge with one hit and `VacuumChop`; the approved icon distills that into a
+silver-blue diagonal strike through a restrained gold focal point. The curved sword is accepted as
+intentional Redguard shorthand. The owner's broader race/fighting-style reference is recorded in
+`python_scripts/weapon_art_icons/figure-guidance.md` and guides later silhouettes without forcing a
+race choice where a neutral figure is more accurate. Catalogue wiring again waits for the atlas.

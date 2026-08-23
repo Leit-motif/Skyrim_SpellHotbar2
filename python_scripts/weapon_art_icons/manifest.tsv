@@ -1,2 +1,3 @@
 ArtID	DisplayName	IconKey	Status	Master	AtlasInput	Prompt	Notes
+2	Aimed Blow	aow_02_aimed_blow	finalized	python_scripts/weapon_art_icons/source/aow_02_aimed_blow.png	python_scripts/weapon_art_icons/icons/aow_02_aimed_blow.png	python_scripts/weapon_art_icons/prompts/aow_02_aimed_blow.md	Owner approved 2026-08-23; Redguard-coded curved sword; catalogue wiring waits for atlas build
 8	Crane Style	aow_08_crane_style	finalized	python_scripts/weapon_art_icons/source/aow_08_crane_style.png	python_scripts/weapon_art_icons/icons/aow_08_crane_style.png	python_scripts/weapon_art_icons/prompts/aow_08_crane_style.md	Owner approved 2026-08-23; catalogue wiring waits for atlas build

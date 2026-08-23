@@ -6,6 +6,8 @@ Original Weapon Art icon masters and atlas inputs live here.
 - `icons/` keeps the 128 x 128 PNG consumed by the atlas stitcher.
 - `prompts/` records the approved prompt and reference roles.
 - `manifest.tsv` is the handoff contract for generation, review, and later atlas wiring.
+- `figure-guidance.md` records the owner-approved Elder Scrolls race shorthand used when an
+  icon benefits from a race-specific silhouette.
 - `pilot/` contains rejected calibration outputs only. Nothing under it is atlas input.
 
 The stable icon key is the filename stem. Do not write a key into
