@@ -150,3 +150,9 @@ constraint. The selected glyph is a forward dual-wield lunge with an ordinary re
 cross-slash. The owner said it was not the result they wanted but chose to ship it rather than spend
 more time; this is a pragmatic acceptance, not an endorsement of the abandoned convex-X direction.
 Twelve of 57 icons are finalized, leaving 45.
+
+Owner 2026-08-23: **Divine Smite** is finalized as `aow_14_divine_smite`. The selected glyph uses
+a Breton-coded dark spellsword, radiant diagonal gold-white sword smite, terminal explosion,
+circular divine halo, and pale-blue enchant wisps. The owner selected the original two-handed-grip
+render over the later one-handed correction; the exact attached PNG is canonical despite the
+catalogue's `1H` class. Thirteen of 57 icons are finalized, leaving 44.

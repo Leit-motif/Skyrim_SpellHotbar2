@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **14 — Divine Smite** (`aow_14_divine_smite`)
-- Status: **in progress; first Divine Smite candidate pending**
-- Inventory: **12 of 57 finalized; 45 remain**
+- Active art: **15 — Double Slash** (`aow_15_double_slash`)
+- Status: **in progress; first Double Slash candidate pending**
+- Inventory: **13 of 57 finalized; 44 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -19,6 +19,13 @@ prompts, and notes are already recorded in `python_scripts/weapon_art_icons/mani
 The owner directed that `divided_strike_cross_slash_v8.png` ship under time constraint on
 2026-08-23. It is usable but explicitly not the visual result the owner wanted. The approved master,
 128 px atlas input, prompt, and this compromise are recorded under `python_scripts/weapon_art_icons/`.
+
+## Divine Smite disposition
+
+The owner approved the attached original two-handed-grip Divine Smite render on 2026-08-23, not
+the later one-handed correction. The exact attachment is the approved master. Its 128 px atlas
+input, prompt, animation/effect evidence, and catalogue-class mismatch note are recorded under
+`python_scripts/weapon_art_icons/`.
 
 ## Earlier Divided Strike stopping point
 
