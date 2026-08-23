@@ -127,3 +127,9 @@ Owner 2026-08-23: **Cyclone Spin** is finalized as `aow_10_cyclone_spin`. Two hu
 hits and a knockback finisher become a Redguard-coded duelist inside a two-part turquoise-gold
 cyclone. Its sand/ochre field, warm-brown edges, and deep-red center establish deliberate background
 and palette variety while retaining 32 px clarity.
+
+Owner 2026-08-23: **Dash Slam** is finalized as `aow_11_dash_slam`. Its roughly 686-unit dash and
+single area-knockback hit become an Orsimer-armored greatsword shock trooper crossing a forge-green
+field into a rust-orange impact. Owner-supplied armor references guided only the original layered
+plate silhouette. Helmet corrections added the tall blade-ridge, flared cheek guards, and attached
+trailing crest-tail; no source reference is redistributed.
