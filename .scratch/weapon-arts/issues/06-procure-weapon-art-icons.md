@@ -72,3 +72,11 @@ by weapon type, then variations within a theme by colour and angle. The SH2 pain
 silhouette language from the 2026-08-18 grill remain the style base, and cell 5 still binds: the
 glyphs are original, no third-party art is copied in. This ticket stays open until that atlas
 exists; owner assignment through the picker is blocked on it, not the other way round.
+
+Owner 2026-08-23: **Crane Style** is the first finalized glyph. Stable key
+`aow_08_crane_style`; approved master, 128 px atlas input, and exact prompt are recorded under
+`python_scripts/weapon_art_icons/`. It is intentionally not written into `arts_ashes.csv` until
+the atlas CSV contains the key. The approved style is a generalized, faceless MMO ability
+silhouette: Khajiit lore cues, one dominant high kick, cyan-white motion crescent, restrained gold
+impact, dark atmospheric field, and 32 px readability. Installed SWF frames and the supplied MMO
+icon screenshot were convention references only; none are redistributed.
