@@ -5,69 +5,56 @@ editing, which rows will actually play on the bar they have selected.
 
 **Blocked by:** 02, 07 (both resolved)
 
-**Status:** needs-triage
+**Status:** agent-done
 
-## Owner ask (2026-08-21)
+## Grill (2026-08-23)
 
-> in the binding menu, based on the active/selected Bar, abilities that are ineligible should be
-> greyed out so the player knows what works for each bar they are on.
+- Dual Wield bar is **any-match**: 1H, Dual, and Generic look live (rapier and two melee 1H both
+  open that bar). HUD still grays Dual Flurry on a rapier at press time.
+- Bind a gray row anyway. Gray is information, not a lock.
+- Tint the Abilities tab **list and** the in-menu slot strip. Same empty-charge overlay as the HUD.
+- Main / Melee are **union of children**. Sneak = parent. Magic / Ranged / Vampire Lord / Werewolf
+  are all dead.
+- No why-gray tooltip. Do not sort gray rows to the bottom.
 
 ## You test this
 
-(Unwritten until triage.) Open the Binding Menu, Abilities tab. Select the Two-Handed bar: 1H and
-Dual rows look dead; 2H and Generic look live. Select Dual Wield: Dual and Generic look live.
-Select Magic or Ranged: every Ability looks dead (no shtb art state yet). Switch the bar combo:
-the list retints without closing the menu.
+Profile `Nolvus Awakening`. Binding Menu, Abilities tab.
+
+1. Select **Two-Handed**. Blood Flurry (2H) and Disengage (Generic) look live. A 1H ash and Dual
+   Flurry look dead (empty-charge overlay, dim name). Drag Dual Flurry onto a slot anyway: it
+   binds. The slot icon on that strip is also dead.
+2. Select **Dual Wield**. 1H, Dual, and Generic look live; 2H looks dead. Switch bars: rows stay in
+   catalogue order and retint without closing the menu.
+3. Select **Magic** (or Ranged): every Ability looks dead. Select **Melee** or **Default**: 1H, 2H,
+   Dual, and Generic all look live.
+
+If Dual Flurry is dead on Dual Wield, or if a gray drop is refused, it fails.
+
+## Agent tests the rest
+
+4. `art_class_is_live_on_bar` any-matches Dual Wield (`ONEHAND_EMPTY` + `DUAL_WIELD`). Two-Handed
+   is 2H + Generic only. Melee/Default union children. Magic/Ranged/VL/WW none live. Sneak id
+   (`parent+1`) matches parent.
+5. List and slot strip use `draw_cd_overlay(0)` keyed off `Bars::menu_bar_id`, not the drawn
+   weapon. Spell/potion tabs unchanged. `apply_bind_drop` unchanged.
 
 ## What this is
 
-**Bind-menu eligibility tint** keyed off `Bars::menu_bar_id` (the combo on the right), not off the
-weapon currently drawn. Ticket 07 already grays the **HUD slot** from live `getPlayerEquipmentType()`
-and refuses the press. This ticket is the catalogue list (and, if triage says so, the in-menu slot
-strip) so the player can see the same policy while binding.
-
-Reuse `art_class_is_live` / Ability Class. Do not invent a second class enum.
+Bind-menu eligibility tint from the selected bar. Reuses Ability Class. Does not hide rows.
 
 ## What this is not
 
-Not HUD gray-out / MagFail (07, resolved). Not a new Ability Class. Not staff/bow art states
-(spec: those bars stay dead until a later SH2.mco staff effort). Not hiding rows — gray, still
-listed.
-
-## Known mapping trap (must answer in triage)
-
-`getCurrentHotbar_ingame` sends **both** `ONEHAND_EMPTY` (rapier) and `DUAL_WIELD` (two melee 1H)
-to `DUAL_WIELD_BAR`. Live HUD gray is equipment-accurate; bar-level gray cannot be both “1H live”
-and “Dual live” unless the policy is “live if *any* equipment that uses this bar would accept it.”
-
-| Selected bar | Equipment types that actually open it |
-|---|---|
-| Dual Wield (`1HDW`) | ONEHAND_EMPTY **and** DUAL_WIELD |
-| One-Hand Shield | ONEHAND_SHIELD |
-| One-Hand Spell | ONEHAND_SPELL |
-| Two-Handed | TWOHAND |
-| Magic | SPELL, STAFF_SHIELD — all Ability Classes dead |
-| Ranged | BOW, CROSSBOW — all dead |
-| Main / sheathed / fists | MAIN_BAR; Generic live on FIST; 1H/2H/Dual dead on fists |
-| Sneak variants | same parent bar + 1 |
-
-## Triage
-
-1. **Policy on Dual Wield bar.** Any-match (1H, Dual, and Generic all live) vs split the bar
-   (out of this ticket) vs something else.
-2. **Bind a gray row?** 07 allows bind anyway so the slot waits for a matching weapon. Same here,
-   or refuse the drop?
-3. **In-menu slots.** Tint already-bound wrong-class icons on the selected bar’s strip, or only
-   the Abilities tab list?
-4. **Parent bars.** Melee / Main are inheritance parents, not a single EquippedType. Gray
-   everything except Generic, or skip tint on parent bars?
-
-## Notes
-
-List draw is `advanced_bind_menu.cpp` Abilities tab (`list_of_arts_filtered`). It never consults
-`art_class_is_live` or `menu_bar_id`. Slot icons in that window call `draw_art_icon_in_editor`
-without the HUD’s empty-charge overlay.
+Not HUD gray-out / MagFail (07). Not a new Ability Class. Not staff/bow art states. Not a Dual
+Wield bar split. Not a why-gray tooltip.
 
 ## Comments
 
 Owner 2026-08-21: filed from the post-09 punch list. Distinct from 07 (HUD vs live weapon).
+
+Grill 2026-08-23: owner confirmed Q1–Q6 (any-match, bind anyway, list+slots, union of children,
+no tooltip, keep catalogue order).
+
+2026-08-23: Agent cells 4–5. `art_class_is_live_on_bar` + `art_data_test` green. Binding Menu list
+and slot strip use `draw_cd_overlay(0)` from `Bars::menu_bar_id`. Drop still allowed. Plugin copied
+to Dev - Spell Hotbar 2. Owner cells 1–3 remain.

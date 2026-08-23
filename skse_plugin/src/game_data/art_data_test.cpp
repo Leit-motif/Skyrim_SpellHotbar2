@@ -11,6 +11,7 @@ using SpellHotbar::ArtDefinition;
 using SpellHotbar::ArtIconDrawKind;
 using SpellHotbar::GameData::EquippedType;
 using SpellHotbar::art_class_is_live;
+using SpellHotbar::art_class_is_live_on_bar;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
 using SpellHotbar::resolve_art_icon_draw_kind;
@@ -154,6 +155,50 @@ void generic_art_is_live_on_melee_and_fists_only()
 	expect(!art_class_is_live(ArtClass::Generic, EquippedType::CROSSBOW), "Generic dead on crossbow");
 	expect(!art_class_is_live(ArtClass::Generic, EquippedType::SPELL), "Generic dead on magic");
 	expect(!art_class_is_live(ArtClass::Generic, EquippedType::STAFF_SHIELD), "Generic dead on staff");
+}
+
+void dual_wield_bar_is_any_match_for_one_hand_and_dual()
+{
+	constexpr std::uint32_t dual_wield_bar = static_cast<std::uint32_t>('1HDW');
+	constexpr std::uint32_t dual_wield_sneak = dual_wield_bar + 1;
+	expect(art_class_is_live_on_bar(ArtClass::OneHand, dual_wield_bar), "1H live on Dual Wield bar (rapier)");
+	expect(art_class_is_live_on_bar(ArtClass::Dual, dual_wield_bar), "Dual live on Dual Wield bar");
+	expect(art_class_is_live_on_bar(ArtClass::Generic, dual_wield_bar), "Generic live on Dual Wield bar");
+	expect(!art_class_is_live_on_bar(ArtClass::TwoHand, dual_wield_bar), "2H dead on Dual Wield bar");
+	expect(art_class_is_live_on_bar(ArtClass::OneHand, dual_wield_sneak), "sneak Dual Wield matches parent");
+}
+
+void two_hand_bar_is_two_hand_and_generic_only()
+{
+	constexpr std::uint32_t two_hand_bar = static_cast<std::uint32_t>('2HND');
+	expect(art_class_is_live_on_bar(ArtClass::TwoHand, two_hand_bar), "2H live on Two-Handed bar");
+	expect(art_class_is_live_on_bar(ArtClass::Generic, two_hand_bar), "Generic live on Two-Handed bar");
+	expect(!art_class_is_live_on_bar(ArtClass::OneHand, two_hand_bar), "1H dead on Two-Handed bar");
+	expect(!art_class_is_live_on_bar(ArtClass::Dual, two_hand_bar), "Dual dead on Two-Handed bar");
+}
+
+void melee_and_main_are_union_of_children()
+{
+	constexpr std::uint32_t melee = static_cast<std::uint32_t>('MELE');
+	constexpr std::uint32_t main = static_cast<std::uint32_t>('MAIN');
+	expect(art_class_is_live_on_bar(ArtClass::OneHand, melee), "1H live on Melee parent");
+	expect(art_class_is_live_on_bar(ArtClass::TwoHand, melee), "2H live on Melee parent");
+	expect(art_class_is_live_on_bar(ArtClass::Dual, melee), "Dual live on Melee parent");
+	expect(art_class_is_live_on_bar(ArtClass::Generic, melee), "Generic live on Melee parent");
+	expect(art_class_is_live_on_bar(ArtClass::TwoHand, main), "2H live on Default (child union)");
+	expect(art_class_is_live_on_bar(ArtClass::Generic, main), "Generic live on Default (fists)");
+}
+
+void magic_ranged_and_transform_bars_are_all_dead()
+{
+	expect(!art_class_is_live_on_bar(ArtClass::Generic, static_cast<std::uint32_t>('MAGC')),
+		"Generic dead on Magic bar");
+	expect(!art_class_is_live_on_bar(ArtClass::OneHand, static_cast<std::uint32_t>('RNGD')),
+		"1H dead on Ranged bar");
+	expect(!art_class_is_live_on_bar(ArtClass::Generic, static_cast<std::uint32_t>('VMPL')),
+		"Generic dead on Vampire Lord");
+	expect(!art_class_is_live_on_bar(ArtClass::Generic, static_cast<std::uint32_t>('WWOL')),
+		"Generic dead on Werewolf");
 }
 
 void custom_folder_number_is_not_a_slot_index()
@@ -438,6 +483,10 @@ int main()
 	one_hand_art_is_live_on_one_hand_variants();
 	dual_art_is_live_only_on_dual_wield();
 	generic_art_is_live_on_melee_and_fists_only();
+	dual_wield_bar_is_any_match_for_one_hand_and_dual();
+	two_hand_bar_is_two_hand_and_generic_only();
+	melee_and_main_are_union_of_children();
+	magic_ranged_and_transform_bars_are_all_dead();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();
 	sidecar_is_the_folder_source_of_truth();

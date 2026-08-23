@@ -115,4 +115,59 @@ void apply_art_player_overlay(ArtDefinition& art, const ArtPlayerOverlay& overla
 	return false;
 }
 
+// Bind-menu gray-out (ticket 13). Bar ids are Bars::* fourCCs from hotbars.h.
+// Sneak bars are parent+1. Live if any EquippedType that opens this bar (or, for Main/Melee,
+// any child bar) would accept the class. Magic / Ranged / Vampire Lord / Werewolf: none live.
+[[nodiscard]] constexpr std::uint32_t art_bar_stance_root(std::uint32_t bar_id) noexcept
+{
+	switch (bar_id) {
+	case static_cast<std::uint32_t>('MAIN') + 1:
+		return static_cast<std::uint32_t>('MAIN');
+	case static_cast<std::uint32_t>('MELE') + 1:
+		return static_cast<std::uint32_t>('MELE');
+	case static_cast<std::uint32_t>('1HSD') + 1:
+		return static_cast<std::uint32_t>('1HSD');
+	case static_cast<std::uint32_t>('1HSP') + 1:
+		return static_cast<std::uint32_t>('1HSP');
+	case static_cast<std::uint32_t>('1HDW') + 1:
+		return static_cast<std::uint32_t>('1HDW');
+	case static_cast<std::uint32_t>('2HND') + 1:
+		return static_cast<std::uint32_t>('2HND');
+	case static_cast<std::uint32_t>('RNGD') + 1:
+		return static_cast<std::uint32_t>('RNGD');
+	case static_cast<std::uint32_t>('MAGC') + 1:
+		return static_cast<std::uint32_t>('MAGC');
+	default:
+		return bar_id;
+	}
+}
+
+[[nodiscard]] constexpr bool art_class_is_live_on_bar(ArtClass art_class, std::uint32_t bar_id) noexcept
+{
+	using GameData::EquippedType;
+	const std::uint32_t bar = art_bar_stance_root(bar_id);
+	const bool dual_wield_bar = art_class_is_live(art_class, EquippedType::ONEHAND_EMPTY) ||
+								art_class_is_live(art_class, EquippedType::DUAL_WIELD);
+	const bool shield_bar = art_class_is_live(art_class, EquippedType::ONEHAND_SHIELD);
+	const bool spell_bar = art_class_is_live(art_class, EquippedType::ONEHAND_SPELL);
+	const bool two_hand_bar = art_class_is_live(art_class, EquippedType::TWOHAND);
+	const bool melee_parent = dual_wield_bar || shield_bar || spell_bar || two_hand_bar;
+	switch (bar) {
+	case static_cast<std::uint32_t>('1HDW'):
+		return dual_wield_bar;
+	case static_cast<std::uint32_t>('1HSD'):
+		return shield_bar;
+	case static_cast<std::uint32_t>('1HSP'):
+		return spell_bar;
+	case static_cast<std::uint32_t>('2HND'):
+		return two_hand_bar;
+	case static_cast<std::uint32_t>('MELE'):
+		return melee_parent;
+	case static_cast<std::uint32_t>('MAIN'):
+		return art_class_is_live(art_class, EquippedType::FIST) || melee_parent;
+	default:
+		return false;
+	}
+}
+
 }  // namespace SpellHotbar

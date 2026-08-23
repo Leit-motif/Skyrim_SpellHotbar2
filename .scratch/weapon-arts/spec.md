@@ -1,6 +1,6 @@
 # Weapon Arts for Spell Hotbar 2
 
-Status: in progress — 01–05 and 07–10 resolved; 06 agent-done; 11–13 needs-triage.
+Status: in progress — 01–05 and 07–10 resolved; 06 and 13 agent-done; 11–12 needs-triage.
 
 Created 2026-08-12. Depends on `../mco-integration/` — specifically its ticket 08 (the `shtb`
 state distributed into `1hm_behavior`, owner-verified) and ticket 04 / ShoutMCO ticket 50 (the
@@ -378,4 +378,4 @@ and ADR-0008.
 | [10](issues/10-queue-arts-into-and-out-of-attacks.md) | resolved | One press queue (Ability / spell / hotbar shout) |
 | [11](issues/11-ability-editor-fire-time-override.md) | needs-triage | PIE fire-time override / slider (after 12) |
 | [12](issues/12-custom-ability-spell-assignment.md) | needs-triage | Custom Ability Spell assignment (parked from 09) |
-| [13](issues/13-gray-out-ineligible-abilities-in-bind-menu.md) | needs-triage | Bind-menu gray-out from the selected bar |
+| [13](issues/13-gray-out-ineligible-abilities-in-bind-menu.md) | agent-done | Bind-menu gray-out from the selected bar |

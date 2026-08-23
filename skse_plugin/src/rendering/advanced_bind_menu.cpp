@@ -787,10 +787,18 @@ namespace SpellHotbar::BindMenu {
                             AbilityEditor::open(art_id);
                         }
                         RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
+                        const bool dead_on_bar =
+                            !art_class_is_live_on_bar(art->art_class, Bars::menu_bar_id);
+                        if (dead_on_bar) {
+                            RenderManager::draw_cd_overlay(icon_pos, table_icon_size, 0.0f, IM_COL32_WHITE);
+                        }
                         if (!ArtIconEditor::is_open() && !AbilityEditor::is_open()) {
                             set_drag_source_art(art_id, scale_factor);
                         }
 
+                        if (dead_on_bar) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+                        }
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
                         ImGui::SameLine();
@@ -800,6 +808,9 @@ namespace SpellHotbar::BindMenu {
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
+                        if (dead_on_bar) {
+                            ImGui::PopStyleColor();
+                        }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c("$DASH"));
@@ -1115,6 +1126,11 @@ namespace SpellHotbar::BindMenu {
             else {
                 if (skill.type == slot_type::weapon_art) {
                     drawn_skill = RenderManager::draw_art_icon_in_editor(skill.art_id, bpos, icon_size, skill.color);
+                    const ArtDefinition* slotted_art = GameData::get_art(skill.art_id);
+                    if (slotted_art &&
+                        !art_class_is_live_on_bar(slotted_art->art_class, Bars::menu_bar_id)) {
+                        RenderManager::draw_cd_overlay(bpos, icon_size, 0.0f, IM_COL32_WHITE);
+                    }
                 }
                 else {
                     drawn_skill = RenderManager::draw_skill_in_editor(skill.formID, bpos, icon_size, skill.color);
