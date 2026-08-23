@@ -19,3 +19,7 @@ primary; use a race palette to reinforce a figure choice without making the comp
 
 Use a limited subset for each glyph. A race-coded figure remains generalized and faceless; its
 palette supports the ability's identity rather than turning it into a costume illustration.
+
+Background hue is also a controlled source of atlas variety. Do not default every icon to a black
+field, but do not force a colored or hazy background where a quieter dark field gives the action
+better hotbar readability.

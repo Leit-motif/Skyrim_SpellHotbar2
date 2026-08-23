@@ -109,3 +109,10 @@ Owner 2026-08-23: **Blood Spiller** is finalized as `aow_06_blood_spiller`. The 
 clip delivers four hits with phantom-sword, shadow, and flash effects. The approved glyph uses a
 Breton-coded spellsword and a tight descending cascade of physical and spectral blades into one
 cutting flash, distinct from the other two Blood arts.
+
+Owner 2026-08-23: **Champion's End** is finalized as `aow_07_champions_end`. The two-hit,
+enlarged-collision clip becomes an Imperial-coded one-handed veteran behind two oversized crossing
+cuts. The owner removed an unnecessary gold wreath, replaced the initial cold-blue palette with
+black, bronze, ivory, and antique gold, and selected the quieter dark field over a later oxblood
+haze. Backgrounds should vary across the atlas, but a colored field is not mandatory where it
+weakens the icon.
