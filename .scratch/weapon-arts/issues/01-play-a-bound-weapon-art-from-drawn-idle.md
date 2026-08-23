@@ -52,7 +52,8 @@ Earlier agent proof (Save65) still stands: `SH2_ArtStart` consumed, selector 1 w
 
 Test Art is 25 stamina and 8s cooldown (`GREATER_POWER` icon). That CD overlay is the intended “ability” read.
 
-`AABL_Attack_A` is the placeholder clip until an Ashes of War pack is wired.
+`AABL_Attack_A` was the ticket-01 inert placeholder. ADR-0011: the product clip is any
+MCO-annotated HKX named by the catalogue, not that filename.
 
 Art binds also persist through a dedicated SKSE `WART` record (bar id + slot + modifier + art id) so a 1h+spell bar does not fall back to an inherited spell after load.
 

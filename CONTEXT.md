@@ -37,8 +37,16 @@ The independently validated Installed Configuration before any behavior customiz
 _Avoid_: Build success, provisional smoke test
 
 **Dual-Input Compatibility**:
-Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them.
+Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them. That bar includes configuring binds and using the bind menu, not only Direct Cast.
 _Avoid_: Controller-only support, keyboard-only support
+
+**Mod Control Panel**:
+SKSE Menu Framework's in-game menu that hosts this fork's configuration pages and native editor windows after ADR-0012.
+_Avoid_: MCM, SkyUI config, Prisma menu
+
+**ImGui Host**:
+The single plugin allowed to own the Dear ImGui context and the presentation and UI-input hooks. This fork is a guest of SKSE Menu Framework, not a second host.
+_Avoid_: Shared imgui, dual overlay, SH2 renderer as host
 
 **Material Interaction**:
 A repeatable Nolvus-specific conflict, regression, stability problem, or meaningful behavioral deviation from normal upstream expectations that prevents acceptance.
@@ -71,13 +79,18 @@ swing or a real shout; this mod owns release when the player is in a Driver Cast
 _Avoid_: Copied spell payload, queued spell object, separate queues per slot kind
 
 **Ability**:
-A bindable animation launched from a hotbar slot without equipping anything. The slot holds an ability id, not a FormID. The clip may be an attack or a spell animation. Pointer-pack ashes and Custom Abilities are both Abilities. An Ability is a member of the MCO combo chain: the swing after it continues the sampled index; it does not reset to hit 1. _Avoid_: weapon art, art (as the product name), power attack, additional attack, ash of war.
+A bindable animation launched from a hotbar slot without equipping anything. The slot holds an ability id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and cooldown. PIE / clip annotations own hits, windows, and motion. The clip may be any MCO-annotated HKX the load order can see — not only `AABL_Attack_A.hkx` (ADR-0011). Ashes of War is the concept (named special attacks), not the machinery (slot-55 items, AABL hotkey). Pointer-pack ashes and Custom Abilities are both Abilities. An Ability is a member of the MCO combo chain: the swing after it continues the sampled index; it does not reset to hit 1. _Avoid_: weapon art, art (as the product name), power attack, additional attack, ash of war (as a system).
 
 **Ability Selector**:
-The TESGlobal the fork writes to name which Ability plays; OAR conditions read it. Zero means no fork ability is selected. The ESP form is still `SpellHotbar_ArtSelector` (form `D63`); that identifier is load-order wiring, not the UI name. _Avoid_: art keyword, worn art.
+The TESGlobal SH2 writes to name which Ability is live so OAR or PIE conditions can read it.
+Zero means no fork ability is selected. The ESP form is still `SpellHotbar_ArtSelector` (form
+`D63`); that identifier is load-order wiring, not the UI name. _Avoid_: art keyword, worn art,
+Ashes of War item identity.
 
 **Ability Pack**:
-A set of OAR submods keyed to the Ability Selector. The on-disk pack folder remains `SpellHotbar2Arts`. _Avoid_: animation mod, moveset.
+A folder of clips plus catalogue rows that name those files, keyed to the Ability Selector. May be
+generated from an installed Ashes of War tree; it is not that mod's OAR-on-AABL machinery. The
+on-disk pack folder remains `SpellHotbar2Arts`. _Avoid_: animation mod, moveset.
 
 **Ability Class**:
 The coarse weapon-class tag on an Ability used for gray-out and refuse: **1H**, **2H**, **Dual**, or **Generic**. Live when the player's current `EquippedType` matches that tag; otherwise the slot is gray and the press is refused. Catalogue files still use an `ArtClass` column. Not OAR `IsEquippedType` and not a worn keyword. _Avoid_: weapon type, ash keyword, stance.
