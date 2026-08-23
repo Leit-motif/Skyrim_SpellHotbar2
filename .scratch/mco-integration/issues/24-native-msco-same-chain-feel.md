@@ -6,10 +6,12 @@ Native left/right MSCO (a charge this mod did not start as a Driver Cast) should
 chaining policy as every other interactable: **no mash-through**, last-wins Cast Intent, chain
 when the clip’s **WinOpen** window is open, close that window at **WinClose**.
 
-**Blocked by:** weapon-arts ticket 10 (resolved). Do not start while 09/11 are in flight unless
-the owner re-prioritizes.
+**Blocked by:** weapon-arts ticket 10 (resolved). The old “not while 09/11 are in flight” gate is
+spent — weapon-arts 09 is resolved and 11 is deferred as of 2026-08-23.
 
-**Status:** needs-triage
+**Status:** deferred 2026-08-23 — owner ruling: gameplay already feels good and the native-MSCO
+difference is not disruptive. Low-priority enhancement; do not implement standalone. The four
+“Triage must decide” questions below are still open and must be answered when it is re-raised.
 
 ## You would test this
 
@@ -81,6 +83,11 @@ shares one clock.
 Owner 2026-08-21 after ticket 10: every interactable should have the same policy; look for
 WinOpen / WinClose to allow chaining; native MSCO must not be mash-through. Regression fear is
 explicit; last known good is ticket 10 + the interrupt commit.
+
+Owner 2026-08-23 triage: current gameplay already feels good. The native-MSCO difference is
+real but not disruptive, so keep this as a low-priority enhancement. Revisit only if it becomes
+noticeable in play or can be folded safely into related casting work; do not prioritize standalone
+implementation now.
 
 ## Comments
 
