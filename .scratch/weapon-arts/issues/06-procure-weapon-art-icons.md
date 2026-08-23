@@ -133,3 +133,8 @@ single area-knockback hit become an Orsimer-armored greatsword shock trooper cro
 field into a rust-orange impact. Owner-supplied armor references guided only the original layered
 plate silhouette. Helmet corrections added the tall blade-ridge, flared cheek guards, and attached
 trailing crest-tail; no source reference is redistributed.
+
+Owner 2026-08-23: **Disengage** is finalized as `aow_12_disengage`. Its backward acrobatic motion
+becomes an inverted Bosmer-coded dual-dagger leap carried by one moss-green rotation crescent. The
+final correction aligns the whole body to one coherent three-quarter plane and relaxes the arms so
+the glyph reads as retreating movement, not a strike.
