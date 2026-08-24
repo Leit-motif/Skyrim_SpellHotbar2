@@ -439,6 +439,12 @@ Bosmer rotation, one connected handaxe, and one open spiral physical wake. Body 
 clearance, and axe path pass physics; no literal wind magic is invented. Full and 32 px passed.
 Forty-nine icons are finalized; three remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Umbral Torment** (`aow_56_umbral_torment`) is a recorded one-shot hard
+failure. Its grip, sword, edge, and payload-proven orange trail pass physics, but literal mountains,
+battlefield ground, and fiery spectacle create scenic key art and imply unsupported fire magic.
+Evidence is ignored-pilot only; no master/input or retry. Forty-nine icons are finalized; two remain
+unprocessed and six are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink

@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **56 — Umbral Torment** (`aow_56_umbral_torment`)
+- Active art: **57 — Wicked Throw** (`aow_57_wicked_throw`)
 - Status: **not started**
-- Inventory: **49 of 57 finalized; 3 unprocessed and 5 recorded hard failures remain**
+- Inventory: **49 of 57 finalized; 2 unprocessed and 6 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -375,6 +375,13 @@ Goal-mode one-shot finalized on 2026-08-24. Three right-weapon hits with explici
 persistence become one airborne Bosmer rotation, one connected handaxe, and one open spiral physical
 wake. Body tuck, counterbalance, grip, clearance, and axe path pass physics. No literal wind magic
 is inferred. Full and 32 px passed.
+
+## Umbral Torment disposition
+
+Recorded one-shot hard failure on 2026-08-24. The two-hand grip, sword, edge, and one payload-proven
+orange trail are mechanically coherent, but literal mountains/battlefield and extensive fiery
+spectacle create scenic key art and imply fire magic. Evidence is ignored-pilot only; no master,
+input, or retry.
 
 ## Dual Flurry context-layer pivot
 
