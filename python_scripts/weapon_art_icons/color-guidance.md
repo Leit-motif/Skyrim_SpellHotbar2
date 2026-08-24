@@ -4,6 +4,10 @@ Owner-provided reference for choosing race-coded color. This is thematic shortha
 requirement to use every listed color in an icon. Ability semantics and hotbar readability remain
 primary; use a race palette to reinforce a figure choice without making the composition busy.
 
+Race color does not select an elemental effect. Animation payloads and owner direction decide fire,
+frost, shock, blood, shadow, or nonmagical force. Do not add orange/teal grading merely because it
+is complementary or cinematic.
+
 | Race | Core colors | Accent colors | Visual feel |
 | --- | --- | --- | --- |
 | Nord | Ice blue, steel gray, weathered brown | White, dark red | Cold, rugged, fur-and-steel |

@@ -171,3 +171,11 @@ dragon jaws without depicting a literal creature. Fifteen of 57 icons are finali
 Session 2026-08-23: **Dual Flurry** (`aow_17_dual_flurry`) is in progress. The 1.666667-second
 dual-wield clip advances roughly 284 units and delivers two simultaneous paired-weapon hits; the
 second pair carries knockback. The first candidate is pending.
+
+Context-layer pivot 2026-08-23: Dual Flurry generation is paused after repeated semantic drift.
+The project now separates race, archetype or faction, equipment family, physical action, and effect
+instead of allowing a race palette or prior candidate to choose the rest. Skyrim visual vocabulary,
+a semantic prompt brief, and the project-local prompt-authoring skill live under
+`python_scripts/weapon_art_icons/` and `.agents/skills/skyrim-weapon-art-icon-prompter/`. The first
+prompt-only forward test is `.scratch/weapon-arts/prompt-drafts/aow_17_dual_flurry-context-v1.md`;
+owner semantic acceptance is required before generation resumes.

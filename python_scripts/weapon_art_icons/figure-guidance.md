@@ -4,6 +4,10 @@ Owner-provided reference for choosing a race-coded silhouette. This is thematic 
 requirement to show a specific race in every icon. Prefer a neutral, generalized figure when the
 art's weapon compatibility or animation does not support a clear choice.
 
+Race is not a costume. Resolve culture or faction, combat archetype, equipment family, physical
+action, and effect separately through `skyrim-visual-language.md`. Several races have no dedicated
+vanilla Skyrim cultural armor family; do not invent one from generic fantasy associations.
+
 | Race | Typical fighting style | Favored weapons or tools |
 | --- | --- | --- |
 | Nord | Aggressive frontline warrior; hardy, direct, often two-handed | Greatswords, battleaxes, warhammers, swords and shields |

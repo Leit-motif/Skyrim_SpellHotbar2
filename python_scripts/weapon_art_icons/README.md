@@ -11,6 +11,12 @@ Original Weapon Art icon masters and atlas inputs live here.
 - `color-guidance.md` records the owner-approved race palette shorthand used when an icon benefits
   from race-coded color.
 - `composition-guidance.md` prevents repeated figure facing and action axes across the atlas.
+- `skyrim-visual-language.md` is the canonical vocabulary for Skyrim archetypes, materials,
+  weapons, faction cues, and generic-fantasy drift checks.
+- `prompt-brief-template.md` is the semantic checkpoint used before an image-generation prompt is
+  written or revised.
+- `.agents/skills/skyrim-weapon-art-icon-prompter/` owns the prompt-authoring and self-rejection
+  workflow. Use it before generating or substantially revising any Weapon Art icon.
 - `pilot/` contains rejected calibration outputs only. Nothing under it is atlas input.
 
 The stable icon key is the filename stem. Do not write a key into

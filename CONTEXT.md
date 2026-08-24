@@ -79,6 +79,19 @@ The TESGlobal the fork writes to name which Ability plays; OAR conditions read i
 **Ability Pack**:
 A set of OAR submods keyed to the Ability Selector. The on-disk pack folder remains `SpellHotbar2Arts`. _Avoid_: animation mod, moveset.
 
+**Weapon Art Icon Brief**:
+The semantic contract written before an Ability icon prompt: frozen animation moment, body
+mechanics, Skyrim archetype, clothing construction, weapon paths, causal VFX, camera, palette, and
+32 px hierarchy. The owner approves its meaning; the agent owns conversion into image-model prose.
+_Avoid_: raw prompt, mood board, generated candidate
+
+**Skyrim Visual Language**:
+The project vocabulary that grounds original Ability icons in Skyrim through archetype, material,
+construction, weapon silhouette, wear, and physical action. It guides new art without copying game
+assets or treating a race name as a costume. Canonical source:
+`python_scripts/weapon_art_icons/skyrim-visual-language.md`.
+_Avoid_: generic fantasy style, Bethesda asset library, race palette alone
+
 **Ability Class**:
 The coarse weapon-class tag on an Ability used for gray-out and refuse: **1H**, **2H**, **Dual**, or **Generic**. Live when the player's current `EquippedType` matches that tag; otherwise the slot is gray and the press is refused. Catalogue files still use an `ArtClass` column. Not OAR `IsEquippedType` and not a worn keyword. _Avoid_: weapon type, ash keyword, stance.
 
