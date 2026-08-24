@@ -241,3 +241,10 @@ use the shield node during a roughly 693-unit charge, with a much larger final c
 foreshortened Imperial shield, one continuous dust wake, and one terminal impact dominate while
 the faceless legionary remains mostly hidden. The full result and 32 px LANCZOS reduction passed
 the hard gate. Twenty-five of 57 icons are finalized; 32 remain unprocessed.
+
+Goal mode 2026-08-23: **Furrow Strike** (`aow_27_furrow_strike`) is finalized from its single
+generation attempt. Its weaker setup collision and stronger dust/knockback finisher are distilled
+to one defining physical path: one Nord greatsword feeding one bright perspective ground furrow.
+The figure remains small and faceless, and no second trail or invented element appears. The full
+result and 32 px LANCZOS reduction passed the hard gate. Twenty-six of 57 icons are finalized;
+31 remain unprocessed.

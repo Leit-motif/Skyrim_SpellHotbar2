@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **27 — Furrow Strike** (`aow_27_furrow_strike`)
+- Active art: **28 — Head Chopper** (`aow_28_head_chopper`)
 - Status: **not started**
-- Inventory: **25 of 57 finalized; 32 unprocessed remain**
+- Inventory: **26 of 57 finalized; 31 unprocessed remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -132,6 +132,16 @@ heavy shield, one continuous physical charge wake, and one terminal rim impact w
 mostly hidden. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px
 atlas input, prompt, provider hash, evidence, and mismatch note are recorded under
 `python_scripts/weapon_art_icons/`.
+
+## Furrow Strike disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified 2H clip advances about 208 units, opens a
+weaker setup collision, then lands one 1.5-damage final collision with extended bright trail,
+`$AoW_Dust`, `$AoW_Knockback`, and camera shake. The named payload definitions remain unresolved,
+so the icon uses only physical soil, stone, and steel: one small Nord, one two-handed greatsword,
+and one perspective ground furrow. The full image and 32 px LANCZOS reduction passed the hard gate.
+The master, 128 px atlas input, prompt, provider hash, evidence, and payload uncertainty are recorded
+under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
