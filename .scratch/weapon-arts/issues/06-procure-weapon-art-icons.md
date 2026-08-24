@@ -283,3 +283,9 @@ Orcish mail using one connected two-handed single-bit battleaxe and one broad si
 The earlier contact and unresolved generic launch payload add no duplicate trail or invented
 element. The full result and 32 px LANCZOS reduction passed. Twenty-nine of 57 icons are finalized;
 26 remain unprocessed and two are recorded hard failures.
+
+Goal mode 2026-08-24: **High Kick** (`aow_33_high_kick`) is finalized from its single generation
+attempt. Its sequential left- and right-leg collision windows become one clean finishing Khajiit
+high kick with one foot-connected ivory physical wake, not a two-hit diagram. Unresolved payloads
+add no invented element or shout wave. The full result and 32 px LANCZOS reduction passed. Thirty
+of 57 icons are finalized; 25 remain unprocessed and two are recorded hard failures.

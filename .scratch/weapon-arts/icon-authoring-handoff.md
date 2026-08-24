@@ -190,6 +190,15 @@ battleaxe, and one broad silver-white sweep with no duplicate trail or invented 
 32 px results passed. The master, atlas input, prompt, provider hash, provenance, and superseded
 result are recorded under `python_scripts/weapon_art_icons/`.
 
+## High Kick disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified Generic clip advances about 363 units and
+opens sequential left- and right-leg collision windows, but its named payloads do not prove a
+visual element. The icon uses one faceless Khajiit finishing one high right-leg kick with one
+foot-connected ivory pressure wake. The two collision windows are not diagrammed. Full and 32 px
+results passed. The master, atlas input, prompt, provider hash, evidence, and uncertainty are
+recorded under `python_scripts/weapon_art_icons/`.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on
