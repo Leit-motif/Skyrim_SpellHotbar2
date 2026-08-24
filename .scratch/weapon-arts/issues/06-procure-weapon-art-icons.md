@@ -409,6 +409,12 @@ Dead-Water Argonian body check with one shell-armored shoulder and one connected
 Anatomy passes; fire-breath sound adds no fire. Full and 32 px passed. Forty-four icons are
 finalized; eight remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Simple Bash** (`aow_51_simple_bash`) is finalized from its single generation
+attempt. One short hit with explicit shield-bash sound becomes one boss-centered impact on one
+connected Nordic round shield, driven by one weaponless Nord. Shield, stance, and force path pass
+physics; no paralysis magic is invented. Full and 32 px passed. Forty-five icons are finalized;
+seven remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink

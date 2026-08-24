@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **51 — Simple Bash** (`aow_51_simple_bash`)
+- Active art: **52 — Soul Cleaver** (`aow_52_soul_cleaver`)
 - Status: **not started**
-- Inventory: **44 of 57 finalized; 8 unprocessed and 5 recorded hard failures remain**
+- Inventory: **45 of 57 finalized; 7 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -341,6 +341,13 @@ Goal-mode one-shot finalized on 2026-08-24. The left-upper-arm collision and 463
 one weaponless Dead-Water Argonian body check with a shell-armored left shoulder and one connected
 compression path. Neck, spine, arms, legs, and tail pass physics. Fire-breath sound contributes no
 fire effect. Full and 32 px passed.
+
+## Simple Bash disposition
+
+Goal-mode one-shot finalized on 2026-08-24. One short hit with explicit shield-bash sound becomes a
+boss-centered impact on one connected Nordic round shield, driven by one weaponless Nord. Shield,
+shoulder, torso, legs, and trailing arm pass physics. No paralysis magic is inferred. Full and
+32 px passed.
 
 ## Dual Flurry context-layer pivot
 
