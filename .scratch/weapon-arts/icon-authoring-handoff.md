@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **19 — Eldritch Beam** (`aow_19_eldritch_beam`)
+- Active art: **20 — Elegant Slash** (`aow_20_elegant_slash`)
 - Status: **not started**
-- Inventory: **17 of 57 finalized; 40 remain**
+- Inventory: **18 of 57 finalized; 39 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -52,6 +52,17 @@ payload. The final glyph uses a vertical Orsimer warhammer slam with one hammer-
 compression flare, ochre-gray dust, and stone fragments. The full image and its 32 px LANCZOS
 reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash, evidence,
 and model-decision provenance are recorded under `python_scripts/weapon_art_icons/`.
+
+## Eldritch Beam disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified payload stages three caster effects and
+then fires a true 2000-unit beam from the right magic node at 1.666600 seconds. Live records and
+winning NIF structure prove a green-lit laser/flare/cloud/strip beam with endpoint sparkles plus a
+secondary fire-linked cone and explosion. The final horizontal glyph keeps one small braced caster,
+one continuous white-green beam, and one compact terminal flare; the warm fringe remains confined
+to that payload-proven endpoint. The full image and 32 px LANCZOS reduction passed the hard gate.
+The master, 128 px atlas input, prompt, hashes, and evidence are recorded under
+`python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 

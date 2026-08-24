@@ -192,3 +192,10 @@ one downward hit. With no elemental payload proven, the glyph uses an Orsimer-co
 whose white compression flare, dust, and stone originate at the hammer-ground contact. The full
 result and 32 px LANCZOS reduction passed the hard gate. Seventeen of 57 icons are finalized,
 leaving 40.
+
+Goal mode 2026-08-23: **Eldritch Beam** is finalized as `aow_19_eldritch_beam` from its single
+generation attempt. The resolved payload stages three casting effects and then fires a green-lit
+2000-unit beam from the right magic node, with a secondary fire-linked terminal component. The
+glyph uses one small braced caster, one continuous horizontal white-green beam, and one compact
+endpoint whose warm fringe stays subordinate. The full result and 32 px LANCZOS reduction passed
+the hard gate. Eighteen of 57 icons are finalized, leaving 39.
