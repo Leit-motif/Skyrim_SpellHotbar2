@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **16 — Dragon Strike** (`aow_16_dragon_strike`)
-- Status: **in progress; first Dragon Strike candidate pending**
-- Inventory: **14 of 57 finalized; 43 remain**
+- Active art: **17 — Dual Flurry** (`aow_17_dual_flurry`)
+- Status: **in progress; animation evidence inspected and first candidate pending**
+- Inventory: **15 of 57 finalized; 42 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -34,6 +34,15 @@ effect-first MMO glyph intentionally retains one dominant slash despite two swin
 ability name. Its source figure is a small French-medieval knight-coded Breton rather than a
 portrait or character illustration. The approved master, 128 px atlas input, prompt, and evidence
 are recorded under `python_scripts/weapon_art_icons/`.
+
+## Dragon Strike disposition
+
+The owner approved `dragon_strike_candidate_v1.png` on 2026-08-23. The effect-first glyph uses a
+frontal depth-axis composition: one white-hot flaming sword and its foreground impact dominate the
+square, with a small faceless warrior behind them. Symmetrical flame curls suggest dragon jaws or
+swept horns without depicting a literal dragon. The approved master, 128 px atlas input, prompt,
+animation evidence, and Flaming Strike payload interpretation are recorded under
+`python_scripts/weapon_art_icons/`.
 
 ## Earlier Divided Strike stopping point
 

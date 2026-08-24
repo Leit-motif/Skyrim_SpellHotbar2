@@ -162,3 +162,12 @@ roughly 151-unit advance are distilled into one dominant silver-blue slash and a
 hotbar clarity. A small French-medieval knight-coded Breton in closed bascinet, mail, plate, and
 blue/burgundy surcoat remains subordinate to the effect. Fourteen of 57 icons are finalized,
 leaving 43.
+
+Owner 2026-08-23: **Dragon Strike** is finalized as `aow_16_dragon_strike`. Its early Flaming
+Strike setup, pre-swing sword ignition, roughly 152-unit advance, and terminal hit become one
+frontal, foreshortened white-hot flaming sword impact. Abstract symmetrical flame curls suggest
+dragon jaws without depicting a literal creature. Fifteen of 57 icons are finalized, leaving 42.
+
+Session 2026-08-23: **Dual Flurry** (`aow_17_dual_flurry`) is in progress. The 1.666667-second
+dual-wield clip advances roughly 284 units and delivers two simultaneous paired-weapon hits; the
+second pair carries knockback. The first candidate is pending.
