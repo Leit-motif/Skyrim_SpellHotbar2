@@ -215,8 +215,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 		if (is_mco_combo_index_edge(tag)) {
 			if (window_close_is_a_stomp_to_undo(g_rolling.restore_pending())) {
-				// The ready-state reset lands here and would otherwise be read as the player's
-				// position. Put ours back instead; the next real swing consumes it.
+				// This window-close is usually our own cast clip's (MSCO_left2.hkx fires
+				// MCO_winclose at 1.2s) carrying the ready reset's stomped value. Put ours
+				// back instead; the next real swing consumes it.
 				if (const auto combo = g_rolling.peek()) {
 					write_mco(a_player, *combo);
 				}

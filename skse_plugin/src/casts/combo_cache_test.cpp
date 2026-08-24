@@ -497,20 +497,23 @@ void the_combo_index_is_sampled_where_mco_writes_it()
 {
 	// Measured live: MCO_WinClose carries the NEXT swing's index; MCO_AttackInitiate and
 	// HitFrame carry the swing already playing, which is why sampling there repeated an attack.
-	expect(is_mco_combo_index_edge("MCO_WinClose"), "MCO advances the index at window close");
+	expect(is_mco_combo_index_edge("MCO_WinClose"),
+		"window close is the one conventional edge always after the clip's SGVI advance");
 	expect(is_mco_combo_index_edge("MSCO_WinClose"), "the MSCO spelling counts too");
 	expect(!is_mco_combo_index_edge("attackStop"),
 		"attackStop is MCO's reset to 1 -- the stomp the rolling cache exists to outlive");
 	expect(!is_mco_combo_index_edge("MCO_AttackInitiate"),
 		"attack time reads the swing already playing, one step behind");
 	expect(!is_mco_combo_index_edge("HitFrame"), "so does HitFrame");
-	expect(!is_mco_combo_index_edge("MCO_WinOpen"), "window open is still pre-advance");
+	expect(!is_mco_combo_index_edge("MCO_WinOpen"),
+		"this load order's packs annotate AT window open, so that edge races the write");
 }
 
 void a_pending_restore_survives_the_ready_reset()
 {
 	expect(window_close_is_a_stomp_to_undo(true),
-		"with a restore pending, a window-close is the ready reset and must be put back");
+		"with a restore pending, a window-close (our own cast clip fires one too) carries "
+		"the reset's stomp and must be put back");
 	expect(!window_close_is_a_stomp_to_undo(false),
 		"with nothing pending, a window-close is MCO's genuine next index and is sampled");
 

@@ -180,10 +180,16 @@ enum class HotbarCastPress {
 // swing will use (1, 2, 3, 4), and each following `MCO_AttackInitiate` reads that same value back
 // as the swing it is playing.
 //
-// Sampling at attack time therefore captured the swing that was ALREADY playing, so restoring it
-// repeated that attack instead of continuing past it. Reading the window-close edge preserves a
-// value MCO itself wrote -- ticket 11's "preserve, never derive" stands, because moveset length
-// still lives in the annotations and is never computed here.
+// The write itself is a clip annotation, and its TIME is pack data, not an MCO guarantee.
+// Thuum's reference clips annotate at t=0.06 (before HitFrame); this load order's stance packs
+// (Elder Creed - Blade, Mercenary Greatsword; dumps 2026-08-24) annotate AT `MCO_WinOpen`, the
+// same timestamp, so WinOpen-or-earlier edges race the write or lose to it outright. WinClose is
+// the one conventional edge that is always after the advance. Sampling at attack time captured
+// the swing ALREADY playing under these packs, so restoring it repeated that attack -- and the
+// same edges were right under early-annotating clips, which is why ticket 13 once verified
+// clean. Reading window-close preserves a value the clip itself wrote -- ticket 11's "preserve,
+// never derive" stands, because moveset length still lives in the annotations and is never
+// computed here.
 //
 // `attackStop` is deliberately NOT an edge, though it carries a value. It is MCO's end-of-swing
 // reset to 1 -- the stomp this whole rolling cache exists to outlive (ticket 11: "already ended
@@ -197,9 +203,11 @@ enum class HotbarCastPress {
 // What a window-close means depends on whether we are holding a restore.
 //
 // Measured live 2026-08-24: after a Driver Cast writes the sampled index back, a further
-// `MCO_WinClose` arrives carrying 1 -- the ready-state reset -- before MCO reads the variable for
-// the next swing. Sampling that reset both learned the wrong value AND dropped the pending
-// restore (record() clears it, by design, because a real SWING invalidates one). A reset is not a
+// `MCO_WinClose` arrives carrying 1. The EVENT is our own borrowed cast clip's -- the ready
+// reset fires @SGVI payloads, never a WinClose, and MSCO_left2.hkx carries `MCO_winclose` at
+// 1.2s (annotation dump, 2026-08-24). The VALUE 1 it carried is the ready reset's stomp read
+// at that moment. Sampling it both learned the wrong value AND dropped the pending restore
+// (record() clears it, by design, because a real SWING invalidates one). A reset is not a
 // swing. So while a restore is pending, a window-close is a stomp to put back, not a value to
 // learn from; the restore stays authoritative until an actual attack consumes it.
 [[nodiscard]] constexpr bool window_close_is_a_stomp_to_undo(bool restore_pending) noexcept
