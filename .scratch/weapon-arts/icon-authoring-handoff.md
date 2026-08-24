@@ -199,6 +199,15 @@ foot-connected ivory pressure wake. The two collision windows are not diagrammed
 results passed. The master, atlas input, prompt, provider hash, evidence, and uncertainty are
 recorded under `python_scripts/weapon_art_icons/`.
 
+## Holding Thorns disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified dual-weapon clip advances about 252 units
+through dense alternating right- and left-hand contacts, but carries no thorn, plant, poison, or
+elemental payload. The icon distills that sequence to one faceless Dunmer in Bonemold/chitin, two
+clearly held short chitin blades, and one wake connected to the leading saber. No hit-count diagram
+or literal magical thorns are introduced. Full and 32 px results passed; provenance and uncertainty
+are recorded under `python_scripts/weapon_art_icons/`.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on

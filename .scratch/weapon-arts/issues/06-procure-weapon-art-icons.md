@@ -289,3 +289,9 @@ attempt. Its sequential left- and right-leg collision windows become one clean f
 high kick with one foot-connected ivory physical wake, not a two-hit diagram. Unresolved payloads
 add no invented element or shout wave. The full result and 32 px LANCZOS reduction passed. Thirty
 of 57 icons are finalized; 25 remain unprocessed and two are recorded hard failures.
+
+Goal mode 2026-08-24: **Holding Thorns** (`aow_34_holding_thorns`) is finalized from its single
+generation attempt. A dense dual-weapon contact sequence becomes one forward-driving faceless
+Dunmer with two hand-connected chitin blades and one leading connected wake. The name contributes
+no literal or magical thorns because the clip proves none. Full and 32 px results passed.
+Thirty-one of 57 icons are finalized; 24 remain unprocessed and two are recorded hard failures.
