@@ -6,6 +6,9 @@ Driver Cast types (`MSCO_left1`–`left4`, `MODE_SINGLE_PLAY`, exit on clip end)
 **Blocked by:** 08 (resolved). Ticket 08 parked this: looping conc state + release-opened chain
 window. The 2026-08-11 spec direction is the tier plan.
 
+**Superseded for the loop by ticket 28** (`28-hold-a-looping-state-for-a-concentration-channel.md`),
+which carries the corrected design and gates it behind a spike.
+
 **Status:** needs-triage — Phase 1 was built on a false premise and **failed live** on
 2026-08-23. Owner: *"these animations aren't working, it plays the fire-and-forget animations,
 not the looped concentration animations."* The dual-distinctness slice and two smaller pieces

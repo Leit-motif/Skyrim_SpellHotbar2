@@ -1,0 +1,173 @@
+# 28 — Hold a looping state for a concentration channel
+
+**Type:** spike, then feature (Nemesis patch + driver)
+
+**Blocked by:** None. Ticket 25 is the failure this starts from; read its "Phase 1 failed, and
+why" section and `docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md` before
+touching anything.
+
+**Status:** ready-for-agent — the spike is fully specified. **The build phase is gated on the
+spike's answer and must not start before it.**
+
+## What this is
+
+A concentration cast held from a hotbar slot must play a looping clip for the whole hold. It
+does not today: the cast plays one fire-and-forget throw clip and returns to a normal idle.
+
+The animation assets for this already exist and are correct. What the fork lacks is a **state
+that is held for the length of the hold**. This ticket adds one.
+
+## The single unknown — spike this first
+
+> **Does OAR replace the animation on a `MODE_LOOPING` `hkbClipGenerator` that the `shtb`
+> Nemesis patch authors on a vanilla shout-inhale path?**
+
+Everything else in the design follows from a yes. A no kills the approach and the ticket falls
+back to the shout-graph alternative below.
+
+Two sub-questions ride along, and the same spike answers both:
+
+1. **The path.** The concentration submods carry files named `1hm_shout_inhale.hkx`,
+   `mt_shout_inhale.hkx`, `mt_shout_exhale.hkx`, `sneak1hm_shout_inhale.hkx`,
+   `sneak1hm_shout_exhale.hkx`. Confirm the exact `animationName` string a `shtb` generator must
+   carry for OAR to match it — the existing generators use `Animations\MSCO_left1.hkx`, so the
+   form is probably `Animations\1hm_shout_inhale.hkx`. Verify; do not assume.
+2. **Registration.** `1hm_shout_inhale.hkx` should already be in `1hm_behavior`'s animation
+   list, because vanilla shouts with a 1H weapon drawn use it. If it is, no new registration is
+   needed. Confirm rather than assume — a generator on an unregistered path is one of the ways
+   this patch has failed before (a prior `sh2c` build compiled a state with a null generator;
+   see ADR-0006).
+
+### How to run the spike
+
+Smallest thing that answers it. Do **not** build the concentration path to run this.
+
+1. Add one `MODE_LOOPING` `hkbClipGenerator` to the `shtb` patch on the shout-inhale path, and
+   one state that plays it, entered by a new notify event of its own. Model it on the existing
+   generator, `nemesis/Nemesis_Engine/mod/shtb/1hm_behavior/#shtb$0.txt`, whose shape is a
+   `name` of `SH2_CastRight_Clip`, an `animationName` of `Animations\MSCO_left1.hkx`, and a
+   `mode` of `MODE_SINGLE_PLAY`. Nine generators exist across `1hm_behavior` and
+   `magicbehavior`; all nine are `MODE_SINGLE_PLAY`, and there is no `MODE_LOOPING` anywhere in
+   `nemesis/` or `data/` yet.
+2. Run Nemesis, deploy, launch.
+3. Set `SpellHotbar_SpellAnimationType` (`SpellHotbar.esp` form `815`) to `1001` and
+   `SpellHotbar_isCastingConcSpell` (form `834`) to `1` by hand — Papyrus
+   `GlobalVariable.SetValue` through DevBench is enough; you do not need a real cast. Set
+   `SpellHotbar_CastingSource` (form `835`) to `0` for the left-hand submod or `1` for the
+   right-hand one.
+4. Fire the notify, and **capture a frame**. A registered clip and a live state prove the state
+   runs; they never prove which animation it played. The question is whether the pose is the
+   concentration channel pose or the vanilla shout inhale.
+5. Hold for at least five seconds and capture a second frame, to separate "looping" from
+   "played once and froze on the last pose".
+
+**Kill gate.** If OAR does not replace it, stop, record what was observed, and re-triage against
+the shout-graph alternative below. Do not build the driver side against a generator whose
+animation cannot be swapped.
+
+## The build, if the spike says yes
+
+A concentration cast enters a **held** `shtb` state instead of the single-play Driver Cast clip
+set, and leaves it on release. The state is the fork's own, so the Driver Cast bookkeeping keeps
+working; only the clip and the mode change.
+
+- Entry: a new notify of its own, not `SH2_CastRight`. Keep the fire-and-forget entries and clip
+  set untouched.
+- Exit: `SH2_CastExit`. `MscoCastDriver::end_channel` already sends it and already arms the
+  ADR-0005 combo write-back, so a channel already hands its combo position to the swing that
+  follows.
+- The per-family clip choice stays OAR's job through global `815`. The plugin already sets the
+  right id per family; do not add clip selection to the driver.
+
+**Commitment point is an open design question, not a discovery.** These clips very likely do not
+carry `MLh_SpellFire_Event`, which is what commits a Driver Cast today (ADR-0004, ADR-0006).
+Settle it before building: either annotate the fork's own state with a trigger, or fall back to
+ADR-0006's authored-cast-time floor, which exists for exactly this case. Say which was chosen
+and why.
+
+## The alternative, if the spike says no
+
+Re-enter the vanilla shout graph for concentration only, reaching the inhale loop the submods
+are already authored against. It works — it is what upstream did — but concentration becomes a
+second-class path again: no combo position, no plant, no chain-out. It also reopens ADR-0006.
+
+One of ADR-0006's three reasons for retiring the voice path was that this load order's
+shout-path clips T-posed. **Ticket 05 was closed on 2026-08-23 by owner ruling — "this isn't
+relevant any more. no t-pose anywhere."** Re-argue the retirement on current evidence rather
+than assuming it still holds; the other two reasons concerned hand casts and bear less on a
+channel.
+
+## Do not re-derive these
+
+**The loop is vanilla's, not this mod's.** The vanilla shout graph loops the inhale — that is
+how a shout charges through three words while the key is held. Upstream Spell Hotbar 2 drove
+concentration through that graph, so the channel sustained for free. That is why the mod ships
+no `MODE_LOOPING` generator: the loop was borrowed, not absent.
+
+**What the concentration submods replace.** Counted across all 24 under
+`meshes/actors/character/OpenAnimationReplacer/SpellHotbar2/`:
+
+| submod | idle clips | shout clips |
+|---|---|---|
+| `cast_1h_left_conc` | 0 | 5 |
+| `cast_1h_right_conc` | 0 | 5 |
+| `cast_1h_left_conc_idle` | 9 | 0 |
+| `cast_ritual_aimed_conc` | 12 | 5 |
+
+22 of 24 replace shout clips. The `_idle` submods are a supporting layer so turning and standing
+keep the casting pose; only 13 of 24 carry any. **The idle set is not the loop** — that was
+ticket 25's failed premise.
+
+**Coverage.** Every concentration id has submods: 1001 aimed, 1002 self, 1003 ward, 11001
+ritual, 11003 dual, 11004 dual self, with left, right, staff and ward variants and a `_start`
+partner gated on `834 == 0` against the loop's `834 > 0`.
+
+**Conditions each submod tests:** `815` equals the family id, `835` equals 0 for left or 1 for
+right, `834 > 0` for the loop and `== 0` for the `_start`, plus `IsPlayer`. Casting-source
+values are `RE::MagicSystem::CastingSource` — left 0, right 1.
+
+**OAR priority is settled.** Only Spell Hotbar 2 and its own overlay replace these files;
+nothing else in the load order contests them. `Spell Hotbar 2 - OAR Priority Over SYHO` was
+**enabled by the owner on 2026-08-23** and sits above both Spell Hotbar mods, lifting the
+concentration submods from 99010010 to 101010010 — clear of SYHO's 99999990. If a clip fails to
+swap, priority is not the reason; check the conditions and the path.
+
+**Driver API already in place** (`skse_plugin/src/casts/`):
+
+- `MscoCastDriver::begin(pc, hand, charge_time, CastShape)` — `CastShape::channel` already
+  suppresses the cast-index walk and the follow-up-press window.
+- `MscoCastDriver::end_channel(pc)` — arms the combo restore, sends `SH2_CastExit`.
+- `CastingInstanceSpellConcentration::end_channel(pc)` and `is_streaming()`.
+- `CastingController::is_channel_chainable()` and `cut_channel_for_attack(pc)` — an attack
+  during a streaming channel ends it and travels on as an ordinary swing.
+- Pure predicates and their tests: `combo_cache.h` and `combo_cache_test.cpp`.
+
+**Live-verified 2026-08-23:** `commitment point (MLh_SpellFire_Event), shape=channel,
+window=false` — the channel path is reached and the shape split works. The state exits at clip
+end and the channel ends separately at release with `combo restore armed next=2`.
+
+## Do not do this
+
+- Do not create, retarget, import, or redistribute animation assets. Owner scope decision,
+  2026-08-23, unchanged.
+- Do not try to sustain the channel through the idle set. It was built, tested and failed.
+- Do not touch the fire-and-forget path. It works and is verified.
+- Do not restore `MscoCastDriver::replay`. It restarted the single-play throw clip every half
+  second, which is a stutter, not a loop.
+
+## Acceptance
+
+Live only. A build or a static check diagnoses; it never proves an animation.
+
+- [ ] **Spike:** a `MODE_LOOPING` generator on the shout-inhale path is replaced by OAR, shown
+      by a captured frame of the concentration pose, plus a second frame five seconds later
+      proving it loops rather than freezing.
+- [ ] Hold an aimed concentration (Flames, `1001`) with a weapon drawn; the clip loops for the
+      whole hold. Frames at t0 and t+3s, committed and cited by path.
+- [ ] Release ends the channel and the pose reverts.
+- [ ] A self concentration (`1002`) loops its own clip.
+- [ ] A ward (`1003`) loops its own clip.
+- [ ] A ritual concentration (`11001`) loops its own clip, including the fast-cast slot.
+- [ ] A dual-cast aimed (`11003`) and a dual-cast self (`11004`) each loop their own clip.
+- [ ] A fire-and-forget on the same bar still plays its throw clip, unchanged.
+- [ ] An attack during a hold ends the channel and swings, continuing the combo.
