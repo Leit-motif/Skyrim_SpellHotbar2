@@ -20,6 +20,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		std::atomic<CastShape> cast_shape{ CastShape::fire_and_forget };
 		std::atomic<bool> clip_committed{ false };
 		std::atomic<int> trace_budget{ 0 };
+		// When the live channel entered its state, so the hold can be discounted from the combo
+		// sample's age at release. Zero means no channel is holding.
+		std::atomic<double> channel_started_ms{ 0.0 };
 		constexpr int post_cut_trace_events{ 24 };
 
 		MscoChargeCurve g_curve{};
@@ -110,6 +113,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// leaves the state, so a new piece of per-cast state is cleared in one place.
 		void clear_state_flags()
 		{
+			channel_started_ms.store(0.0, std::memory_order_relaxed);
 			state_active.store(false, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			cast_shape.store(CastShape::fire_and_forget, std::memory_order_relaxed);
@@ -206,6 +210,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		(void)hand;
 		cast_shape.store(shape, std::memory_order_relaxed);
+		channel_started_ms.store(
+			shape == CastShape::channel ? now_ms() : 0.0, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		interrupt_left_caster_if_spell(pc);
 		load_charge_curve();
@@ -299,6 +305,16 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// position on, so the swing after a hold continues the chain the hold interrupted rather
 		// than starting at attack1. Sent unconditionally either way: the event reaches nothing when
 		// the state is already gone.
+		//
+		// Discount the hold from the sample's age first. No sample is taken while our state is
+		// live, so the position comes from the swing before the channel, and a hold longer than
+		// kMaxAgeMs would otherwise age it out and reset the chain to attack1.
+		if (const double started = channel_started_ms.exchange(0.0, std::memory_order_relaxed);
+			started > 0.0) {
+			const double held = now_ms() - started;
+			g_rolling.credit_held_time(held);
+			logger::debug("SH2 cast: channel held {:.0f}ms; discounted from the combo sample age", held);
+		}
 		arm_restore();
 		send_exit(pc);
 		clear_state_flags();

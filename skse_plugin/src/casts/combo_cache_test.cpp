@@ -34,6 +34,7 @@ using SpellHotbar::casts::should_retain_local_cast_intent;
 using SpellHotbar::casts::should_yield_shtb_before_hotbar_shout;
 using SpellHotbar::casts::channel_chain_window_open;
 using SpellHotbar::casts::channel_end_arms_combo_restore;
+using SpellHotbar::casts::combo_sample_survives_hold;
 using SpellHotbar::casts::should_cut_channel_for_attack;
 using SpellHotbar::casts::cast_entry_walks_clip_set;
 using SpellHotbar::casts::exit_without_spellfire_is_a_dropped_press;
@@ -490,6 +491,34 @@ void a_channel_does_not_open_the_follow_up_press_window()
 		"a second hotbar cast during a hold is a refusal, not a chain");
 }
 
+void a_hold_does_not_age_out_the_combo_position()
+{
+	// The failure this fixes: attack1, hold Flames five seconds, swing -- and the swing came
+	// out as attack1 because the sample had aged past kMaxAgeMs during the hold.
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 2, .nextPowerAttack = 2 }, 0.0);
+	const double release = RollingMcoCombo::kMaxAgeMs + 3000.0;
+	expect(!cache.usable(release).has_value(),
+		"without crediting the hold, an 8s-old sample is stale and the chain resets");
+
+	cache.credit_held_time(5000.0);
+	const auto got = cache.usable(release);
+	expect(got && got->nextAttack == 2,
+		"crediting the 5s hold keeps the position, so the swing after it continues the chain");
+}
+
+void a_gap_before_the_hold_still_ages_out()
+{
+	// The cap still does its real job: a combo sampled in an earlier fight must not be
+	// replayed into an unrelated swing just because a channel was held afterwards.
+	expect(combo_sample_survives_hold(30000.0, 29000.0),
+		"a long hold started right after the swing hands its position on");
+	expect(!combo_sample_survives_hold(30000.0, 1000.0),
+		"a swing 29s before the hold is a different fight and must not be restored");
+	expect(combo_sample_survives_hold(RollingMcoCombo::kMaxAgeMs, 0.0),
+		"a fire-and-forget cast inside the cap is unaffected");
+}
+
 void a_channel_is_chainable_out_only_once_it_streams()
 {
 	expect(!channel_chain_window_open(false, false), "no channel, no window");
@@ -566,6 +595,8 @@ int main()
 	a_channel_enters_by_its_own_notify();
 	a_channel_exit_without_spellfire_is_not_a_dropped_press();
 	a_channel_does_not_open_the_follow_up_press_window();
+	a_hold_does_not_age_out_the_combo_position();
+	a_gap_before_the_hold_still_ages_out();
 	a_channel_is_chainable_out_only_once_it_streams();
 	an_attack_during_a_streaming_channel_ends_it();
 	a_channel_that_streamed_hands_its_combo_position_on();

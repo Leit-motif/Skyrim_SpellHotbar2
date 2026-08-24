@@ -71,6 +71,21 @@ public:
 		return restore_;
 	}
 
+	// A held channel is one continuous action, not a gap between actions. kMaxAgeMs measures
+	// how long the player has been OUT of the chain, so the hold itself must not count against
+	// it: a concentration channel is unbounded, so any hold past five seconds would age the
+	// sample out and the chain could never continue (ticket 28). Crediting the held time keeps
+	// the cap doing its real job -- refusing a combo sampled in an earlier fight -- while a
+	// hold of any length hands its position on.
+	void credit_held_time(double heldMs)
+	{
+		std::lock_guard lock{ mutex_ };
+		if (!valid_ || heldMs <= 0.0) {
+			return;
+		}
+		takenAtMs_ += heldMs;
+	}
+
 	void disarm()
 	{
 		std::lock_guard lock{ mutex_ };
@@ -429,6 +444,14 @@ enum class CastShape {
 [[nodiscard]] constexpr bool channel_end_arms_combo_restore(bool channel_streaming) noexcept
 {
 	return channel_streaming;
+}
+
+// Is a sample still usable at the end of a hold? `sampleAgeMs` is wall-clock age; `heldMs` is
+// the part of it spent holding the channel, which does not count. Time between the sampled
+// swing and the start of the hold still does.
+[[nodiscard]] constexpr bool combo_sample_survives_hold(double sampleAgeMs, double heldMs) noexcept
+{
+	return (sampleAgeMs - heldMs) <= RollingMcoCombo::kMaxAgeMs;
 }
 
 // A hotbar shout that is allowed to start must leave SH2_Art_State / the
