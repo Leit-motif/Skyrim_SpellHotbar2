@@ -268,3 +268,10 @@ Redguard straight-sword thrust with one collinear wake and one endpoint. The unr
 launch payload and ability name contribute no heart symbol, blood, or red energy. The full result
 and 32 px LANCZOS reduction passed the hard gate. Twenty-eight of 57 icons are finalized;
 28 remain unprocessed and one is a recorded hard failure.
+
+Goal mode 2026-08-23: **Heart Strike** (`aow_31_heart_strike`) is a recorded one-shot hard failure,
+not a finalized icon. The result correctly limits three bright collision windows to one rising
+trail, but the mace and partial haft float at its endpoint while the Breton holds no weapon. Full
+and 32 px evidence are preserved under the ignored `pilot/` tree; no master or atlas input exists
+and no regeneration was attempted. Twenty-eight of 57 icons are finalized; 27 remain unprocessed
+and two are recorded hard failures.

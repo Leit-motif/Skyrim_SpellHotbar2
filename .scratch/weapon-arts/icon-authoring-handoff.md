@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **31 — Heart Strike** (`aow_31_heart_strike`)
+- Active art: **32 — Heavy Swing** (`aow_32_heavy_swing`)
 - Status: **not started**
-- Inventory: **28 of 57 finalized; 28 unprocessed and 1 recorded hard failure remain**
+- Inventory: **28 of 57 finalized; 27 unprocessed and 2 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -170,6 +170,15 @@ name nor payload proves blood or literal heart imagery, so the icon uses one neu
 Redguard straight-sword thrust, one collinear wake, and one endpoint. The full image and 32 px
 LANCZOS reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash,
 evidence, and negative inference are recorded under `python_scripts/weapon_art_icons/`.
+
+## Heart Strike exception
+
+The single goal-mode generation attempt failed the hard gate on 2026-08-23. It correctly used one
+bright trail rather than tripling the clip's hits, but the mace and partial haft float at the far
+endpoint while the Breton's hands hold no weapon. It is not finalized and has no master or atlas
+input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
+hash, and failure reasons are recorded in `prompts/aow_31_heart_strike.md`. No regeneration was
+attempted.
 
 ## Dual Flurry context-layer pivot
 
