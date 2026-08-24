@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <mutex>
@@ -216,14 +217,24 @@ enum class HotbarCastPress {
 // observed on both 1H and greatsword. Sampling the `@SGVI` payload itself takes the value at the
 // moment the clip writes it, so an interrupted swing has already taught its advance.
 //
-// The payload's VALUE is parsed from the tag, never read back off the graph at that moment: the
-// Payload Interpreter's own write may race the event dispatch. That keeps ticket 11's "preserve,
-// never derive" intact -- the number is the clip's own, and moveset length still lives only in
-// the annotations.
+// The advance's VALUE is parsed out of the annotation text, never read back off the graph at that
+// moment: the Payload Interpreter's own write may race the event dispatch. That keeps ticket 11's
+// "preserve, never derive" intact -- the number is the clip's own, and moveset length still lives
+// only in the annotations.
 //
-// WinClose stays an edge as a fallback: if `@SGVI` tags do not reach the sink under some pack,
-// behaviour degrades to exactly what shipped before. A WinClose arriving after an SGVI simply
-// re-records the same value.
+// WHERE that text arrives is the part that was wrong for a whole ticket (ticket 29, finding 1).
+// The clip annotation is `PIE.@SGVI|MCO_nextattack|3`, and the engine splits it at the FIRST `.`:
+// everything before is the event NAME (`PIE`), everything after is the event PAYLOAD
+// (`@SGVI|MCO_nextattack|3`). `RE::BSAnimationGraphEvent` carries the two in separate members, and
+// the sink hook forwarded only `tag`. So this parser was fed event names for its whole life and
+// measured zero hits -- which was read at the time as "these packs emit no SGVI", when in truth
+// the advance was arriving every swing in a field nobody passed on. The hook now forwards
+// `payload` too, and the parser runs over both: a pack that puts the annotation in the event name
+// (no `.`) and a pack that puts it in the payload both reach the same sampler.
+//
+// WinClose stays an edge as a fallback: if `@SGVI` never parses out of either field under some
+// pack, behaviour degrades to exactly what shipped before. A WinClose arriving after an SGVI
+// simply re-records the same value.
 //
 // `attackStop` is deliberately NOT an edge, though it carries a value. It is MCO's end-of-swing
 // reset to 1 -- the stomp this whole rolling cache exists to outlive (ticket 11: "already ended
@@ -235,7 +246,10 @@ enum class HotbarCastPress {
 }
 
 // `@SGVI|<variable>|<integer>` -- the Payload Interpreter's set-graph-variable-int annotation, as
-// it arrives at the animation-event sink. The variable name is matched IN FULL: `msco_nextright`
+// it arrives at the animation-event sink. The argument is deliberately named for neither field:
+// depending on how the pack wrote the annotation this text is the event's TAG (no `.` in the
+// annotation) or its PAYLOAD (everything after the first `.`), and the caller feeds it both.
+// The variable name is matched IN FULL: `msco_nextright`
 // and other variables sharing a prefix must be rejected, or an unrelated clip counter would be
 // learned as a combo position. Allocation-free so it can run on the animation thread.
 [[nodiscard]] constexpr std::optional<int> parse_sgvi_int(
@@ -299,13 +313,158 @@ struct McoSgviSample {
 	return std::nullopt;
 }
 
+// Which swing is currently up, and why anything needs to know (ticket 29).
+//
+// Measured live 2026-08-24 (finding 2): at `MCO_AttackInitiate` the graph's `MCO_nextattack` reads
+// back as the index of the swing that is PLAYING, not its successor. The clip's own `@SGVI`
+// advance overwrites it later, mid-clip. So one live read at cast begin() means two opposite
+// things depending only on WHEN in the clip the interrupt landed:
+//
+//   * before the advance -- the value IS the playing index, and handing it on replays the very
+//     swing the player just interrupted. That is the ticket-29 bug, owner-observed on 1H and 2H.
+//   * after the advance -- the value is the successor, which is exactly what should be handed on.
+//
+// Nothing in the number distinguishes the two. Knowing which swing is open does: equal to the
+// playing index means pre-advance, different means post-advance.
+//
+// `taught_by_restore` marks a swing whose initiate consumed a pending restore. On 2H the engine
+// currently ignores the restored value (separate open ticket), so that swing's playing index is
+// UNVERIFIED -- it may not be the index we wrote. Its advance is still real and worth recording,
+// but the pair (playing -> advance) must not be taught to the successor table, or one bad restore
+// poisons the table for every later swing at that index.
+//
+// Opened on the animation thread, read on the input/main thread at begin(), so every access takes
+// the mutex.
+class McoSwingTracker {
+public:
+	static constexpr int kMinIndex = 1;
+	static constexpr int kMaxIndex = 10;
+
+	struct OpenSwing {
+		McoSgviVariable kind = McoSgviVariable::next_attack;
+		int playing = 1;
+		bool taught_by_restore = false;
+	};
+
+	// An index outside the plausible moveset range is not a combo position -- the read failed, or
+	// the graph holds something that is not a swing index. Rather than remember a value we cannot
+	// reason about, forget the swing entirely: a closed tracker degrades to today's behaviour,
+	// while a wrong playing index would mislabel a post-advance sample as a replay.
+	void open(McoSgviVariable kind, int playing, bool taught_by_restore)
+	{
+		std::lock_guard lock{ mutex_ };
+		if (playing < kMinIndex || playing > kMaxIndex) {
+			open_ = false;
+			return;
+		}
+		open_ = true;
+		swing_ = OpenSwing{ kind, playing, taught_by_restore };
+	}
+
+	void close()
+	{
+		std::lock_guard lock{ mutex_ };
+		open_ = false;
+	}
+
+	[[nodiscard]] std::optional<OpenSwing> open_swing() const
+	{
+		std::lock_guard lock{ mutex_ };
+		if (!open_) {
+			return std::nullopt;
+		}
+		return swing_;
+	}
+
+private:
+	mutable std::mutex mutex_;
+	bool open_ = false;
+	OpenSwing swing_{};
+};
+
+// What follows what, learned from the clips themselves (ticket 29).
+//
+// The successor of attack2 is NOT "3". Movesets wrap at their own length, stance packs reorder
+// steps, and power chains are shorter than light ones -- deriving the next index arithmetically
+// is the exact mistake ticket 11 was written to stop. So the table is filled only from a clip's
+// own teaching: swing N was playing when the clip wrote M, therefore on this weapon, for this
+// kind, N is followed by M. Both the payload edge and the WinClose fallback teach the same way.
+//
+// Keyed by weapon type because the movesets differ per weapon, and a greatsword's wrap must not
+// answer for a dagger's. `weaponKey` is `RE::WEAPON_TYPE` cast to int (0..9, hand-to-hand through
+// crossbow); anything else is refused rather than folded onto a neighbour's row.
+//
+// Plain arrays, zero-initialised, no allocation: this is written from the animation thread.
+// Zero means "not taught yet", which is why index 0 of each row is never a valid entry.
+class McoSuccessorTable {
+public:
+	static constexpr int kWeaponKeys = 10;
+	static constexpr int kMinIndex = McoSwingTracker::kMinIndex;
+	static constexpr int kMaxIndex = McoSwingTracker::kMaxIndex;
+
+	void learn(int weaponKey, McoSgviVariable kind, int from, int to)
+	{
+		if (!in_range(weaponKey, from) || to < kMinIndex || to > kMaxIndex) {
+			return;
+		}
+		std::lock_guard lock{ mutex_ };
+		table_[static_cast<std::size_t>(weaponKey)][kind_index(kind)]
+			  [static_cast<std::size_t>(from)] = to;
+	}
+
+	[[nodiscard]] std::optional<int> lookup(int weaponKey, McoSgviVariable kind, int from) const
+	{
+		if (!in_range(weaponKey, from)) {
+			return std::nullopt;
+		}
+		std::lock_guard lock{ mutex_ };
+		const int to = table_[static_cast<std::size_t>(weaponKey)][kind_index(kind)]
+							 [static_cast<std::size_t>(from)];
+		if (to == 0) {
+			return std::nullopt;
+		}
+		return to;
+	}
+
+private:
+	[[nodiscard]] static constexpr bool in_range(int weaponKey, int from) noexcept
+	{
+		return weaponKey >= 0 && weaponKey < kWeaponKeys && from >= kMinIndex && from <= kMaxIndex;
+	}
+
+	[[nodiscard]] static constexpr std::size_t kind_index(McoSgviVariable kind) noexcept
+	{
+		return kind == McoSgviVariable::next_attack ? 0u : 1u;
+	}
+
+	mutable std::mutex mutex_;
+	std::array<std::array<std::array<int, kMaxIndex + 1>, 2>, kWeaponKeys> table_{};
+};
+
+// The whole ticket-29 discriminator, in one line, so it can be tested without a graph.
+//
+// A live sample equal to the open swing's playing index is PRE-advance: the clip has not written
+// its successor yet, and handing this value on replays the interrupted swing. Different means the
+// advance already landed and the value is the successor we want. With no open swing of that kind
+// there is nothing to compare against, so the sample is taken as-is -- today's behaviour.
+[[nodiscard]] constexpr bool live_sample_is_pre_advance(
+	bool swing_open_matching_kind, int playing, int sampled) noexcept
+{
+	return swing_open_matching_kind && sampled == playing;
+}
+
 // The cast-begin live read, and why it is gated on IsAttacking.
 //
-// The `@SGVI` path above is the seam that was supposed to survive an interruption, and under THIS
-// load order's packs it never fires: measured live 2026-08-24 over a full attack-cast-attack
-// fixture, not one `@SGVI|MCO_nextattack|N` tag reached the animation-event sink. The SGVI path
-// stays as a fallback for packs that do emit the payload; this predicate closes the same blind
-// spot without needing one.
+// The `@SGVI` path above is the seam that survives an interruption, and it measured zero hits on
+// 2026-08-24 -- because the sink hook forwarded only the event NAME, and the annotation's text
+// lives in the PAYLOAD (ticket 29, finding 1). This predicate was written to close the same blind
+// spot without it. Both run now: the payload edge takes the advance the moment the clip writes it,
+// and this live read still covers a pack whose annotation the parser cannot read at all.
+//
+// Live reads are not interchangeable with the payload edge, which is the rest of ticket 29: a live
+// read taken BEFORE the clip's advance returns the playing index, so restoring it replays the
+// interrupted swing. `live_sample_is_pre_advance` above is what tells the two apart, and the
+// successor table is what fixes it.
 //
 // The seam that DOES fire is `MscoCastDriver::begin()`, the moment a hotbar cast starts. Measured
 // live 2026-08-24: a cast begun mid-swing logs `IsAttacking=1` and the graph still holds the

@@ -24,6 +24,9 @@ using SpellHotbar::casts::is_msco_combo_window_close_event;
 using SpellHotbar::casts::is_msco_combo_window_open_event;
 using SpellHotbar::casts::is_mco_combo_index_edge;
 using SpellHotbar::casts::McoSgviVariable;
+using SpellHotbar::casts::McoSuccessorTable;
+using SpellHotbar::casts::McoSwingTracker;
+using SpellHotbar::casts::live_sample_is_pre_advance;
 using SpellHotbar::casts::parse_mco_sgvi_sample;
 using SpellHotbar::casts::parse_sgvi_int;
 using SpellHotbar::casts::should_sample_live_at_cast_begin;
@@ -703,6 +706,201 @@ void a_channel_that_streamed_hands_its_combo_position_on()
 	expect(!channel_end_arms_combo_restore(false),
 		"a channel that never streamed has nothing to hand off");
 }
+
+void the_swing_tracker_starts_closed()
+{
+	McoSwingTracker tracker;
+	expect(!tracker.open_swing().has_value(),
+		"nothing is swinging until an initiate says so");
+}
+
+void the_swing_tracker_reads_back_what_the_initiate_opened()
+{
+	McoSwingTracker tracker;
+	tracker.open(McoSgviVariable::next_attack, 2, false);
+	const auto open = tracker.open_swing();
+	expect(open.has_value(), "an initiate opens a swing");
+	expect(open && open->kind == McoSgviVariable::next_attack, "the light initiate opens a light swing");
+	expect(open && open->playing == 2, "the playing index is preserved, never derived");
+	expect(open && !open->taught_by_restore, "an ordinary swing is not restore-taught");
+
+	McoSwingTracker restored;
+	restored.open(McoSgviVariable::next_power_attack, 3, true);
+	const auto marked = restored.open_swing();
+	expect(marked && marked->kind == McoSgviVariable::next_power_attack,
+		"the power initiate opens a power swing");
+	expect(marked && marked->taught_by_restore,
+		"a swing whose initiate consumed a restore is marked; its playing index is unverified");
+}
+
+void a_second_initiate_replaces_the_open_swing()
+{
+	McoSwingTracker tracker;
+	tracker.open(McoSgviVariable::next_attack, 2, true);
+	tracker.open(McoSgviVariable::next_attack, 3, false);
+	const auto open = tracker.open_swing();
+	expect(open && open->playing == 3, "the newest swing is the open one");
+	expect(open && !open->taught_by_restore,
+		"the restore-taught mark belongs to its own swing and must not leak into the next");
+}
+
+void an_unreadable_playing_index_closes_the_tracker()
+{
+	McoSwingTracker tracker;
+	tracker.open(McoSgviVariable::next_attack, 2, false);
+	tracker.open(McoSgviVariable::next_attack, 0, false);
+	expect(!tracker.open_swing().has_value(),
+		"0 is not a combo index; forget the swing rather than reason from a wrong one");
+	tracker.open(McoSgviVariable::next_attack, 11, false);
+	expect(!tracker.open_swing().has_value(), "nor is an index past the plausible moveset length");
+	tracker.open(McoSgviVariable::next_attack, -1, false);
+	expect(!tracker.open_swing().has_value(), "nor is a negative read");
+	tracker.open(McoSgviVariable::next_attack, 10, false);
+	expect(tracker.open_swing().has_value(), "10 is still inside the accepted range");
+}
+
+void attack_stop_closes_the_swing()
+{
+	McoSwingTracker tracker;
+	tracker.open(McoSgviVariable::next_attack, 2, false);
+	tracker.close();
+	expect(!tracker.open_swing().has_value(),
+		"after attackStop the next @SGVI|MCO_nextattack|1 is the ready reset, not a wrap");
+}
+
+void the_successor_table_knows_nothing_by_default()
+{
+	McoSuccessorTable table;
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 1).has_value(),
+		"a successor is never derived; an untaught pair stays unknown");
+}
+
+void the_successor_table_round_trips_what_a_clip_taught()
+{
+	McoSuccessorTable table;
+	table.learn(3, McoSgviVariable::next_attack, 2, 3);
+	const auto got = table.lookup(3, McoSgviVariable::next_attack, 2);
+	expect(got && *got == 3, "swing 2 taught 3, so 2 is followed by 3 on that weapon");
+	expect(!table.lookup(3, McoSgviVariable::next_attack, 3).has_value(),
+		"learning 2->3 says nothing about what follows 3");
+}
+
+void a_later_teaching_replaces_the_earlier()
+{
+	McoSuccessorTable table;
+	table.learn(0, McoSgviVariable::next_attack, 4, 1);
+	table.learn(0, McoSgviVariable::next_attack, 4, 2);
+	const auto got = table.lookup(0, McoSgviVariable::next_attack, 4);
+	expect(got && *got == 2, "the clips are the authority; the newest teaching wins");
+}
+
+void the_two_counters_keep_separate_chains()
+{
+	McoSuccessorTable table;
+	table.learn(1, McoSgviVariable::next_attack, 2, 3);
+	table.learn(1, McoSgviVariable::next_power_attack, 2, 1);
+	const auto light = table.lookup(1, McoSgviVariable::next_attack, 2);
+	const auto power = table.lookup(1, McoSgviVariable::next_power_attack, 2);
+	expect(light && *light == 3, "the light chain keeps its own successor at index 2");
+	expect(power && *power == 1, "a shorter power chain wraps at 2 without touching the light one");
+}
+
+void each_weapon_keeps_its_own_moveset()
+{
+	McoSuccessorTable table;
+	table.learn(4, McoSgviVariable::next_attack, 3, 4);
+	expect(!table.lookup(5, McoSgviVariable::next_attack, 3).has_value(),
+		"a greatsword's wrap must not answer for a dagger's");
+	const auto got = table.lookup(4, McoSgviVariable::next_attack, 3);
+	expect(got && *got == 4, "the weapon that taught it still knows it");
+}
+
+void out_of_range_teachings_are_refused()
+{
+	McoSuccessorTable table;
+	table.learn(-1, McoSgviVariable::next_attack, 2, 3);
+	table.learn(McoSuccessorTable::kWeaponKeys, McoSgviVariable::next_attack, 2, 3);
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 2).has_value(),
+		"a weapon key outside 0..9 is refused rather than folded onto a neighbour's row");
+	expect(!table.lookup(-1, McoSgviVariable::next_attack, 2).has_value(),
+		"and looking one up stays empty");
+
+	table.learn(0, McoSgviVariable::next_attack, 0, 3);
+	table.learn(0, McoSgviVariable::next_attack, 11, 3);
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 0).has_value(),
+		"0 is not a combo index on the from side");
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 11).has_value(),
+		"nor past the plausible moveset length");
+
+	table.learn(0, McoSgviVariable::next_attack, 2, 0);
+	table.learn(0, McoSgviVariable::next_attack, 3, 99);
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 2).has_value(),
+		"a taught value of 0 is a failed read, not a combo index");
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 3).has_value(),
+		"nor is a value past the moveset length");
+}
+
+void a_sample_equal_to_the_playing_index_is_pre_advance()
+{
+	expect(live_sample_is_pre_advance(true, 2, 2),
+		"the clip has not written its advance yet; restoring 2 would replay the interrupted swing");
+	expect(!live_sample_is_pre_advance(true, 2, 3),
+		"a value different from the playing index is the successor the clip already taught");
+	expect(!live_sample_is_pre_advance(false, 2, 2),
+		"with no open swing of that kind there is nothing to compare against; take the sample as-is");
+	expect(!live_sample_is_pre_advance(false, 0, 1),
+		"a closed tracker never claims pre-advance");
+}
+
+void the_sgvi_parser_reads_a_payload_shaped_string()
+{
+	// Finding 1: the engine splits `PIE.@SGVI|MCO_nextattack|2` at the first '.', so what the
+	// parser is fed is the part after it. Same text, different field.
+	const auto sample = parse_mco_sgvi_sample("@SGVI|MCO_nextattack|2");
+	expect(sample && sample->variable == McoSgviVariable::next_attack && sample->value == 2,
+		"the advance arrives in the payload and parses exactly as it did from a tag");
+	expect(!parse_mco_sgvi_sample("PIE").has_value(),
+		"the event name left behind by the split teaches nothing on its own");
+	expect(!parse_mco_sgvi_sample("PIE.@SGVI|MCO_nextattack|2").has_value(),
+		"the unsplit annotation is not what reaches the sink; only its halves do");
+}
+
+void an_interrupted_swing_hands_its_successor_on()
+{
+	// Ticket 29 end to end, in pure terms: swing 2 is up, the cast lands before the clip's own
+	// advance, so the live read is 2 -- the swing being interrupted. Restoring that replays it.
+	McoSwingTracker tracker;
+	tracker.open(McoSgviVariable::next_attack, 2, false);
+	const auto open = tracker.open_swing();
+	expect(open.has_value(), "the swing is open at the moment of the cast");
+
+	const int sampled = 2;
+	const bool matching = open && open->kind == McoSgviVariable::next_attack;
+	expect(live_sample_is_pre_advance(matching, open->playing, sampled),
+		"a sample equal to the playing index is the pre-advance interrupt ticket 29 is about");
+
+	McoSuccessorTable table;
+	table.learn(0, McoSgviVariable::next_attack, 2, 3);
+	const auto substituted = table.lookup(0, McoSgviVariable::next_attack, open->playing);
+	expect(substituted && *substituted == 3,
+		"the clip already taught that 2 is followed by 3, so the restore hands on 3");
+
+	// The wrap is the case arithmetic would get wrong: on a four-step moveset, 4 is followed by 1.
+	McoSuccessorTable wrap;
+	wrap.learn(0, McoSgviVariable::next_attack, 4, 1);
+	const auto wrapped = wrap.lookup(0, McoSgviVariable::next_attack, 4);
+	expect(wrapped && *wrapped == 1,
+		"the last swing wraps to 1 because the clip said so, never because of +1 arithmetic");
+}
+
+void an_unlearned_pre_advance_keeps_todays_behaviour()
+{
+	McoSuccessorTable table;
+	const int sampled = 2;
+	expect(live_sample_is_pre_advance(true, 2, sampled), "still a pre-advance interrupt");
+	expect(!table.lookup(0, McoSgviVariable::next_attack, 2).has_value(),
+		"with nothing learned the sampled value is kept -- the replay that shipped, logged as such");
+}
 }  // namespace
 
 int main()
@@ -771,6 +969,21 @@ int main()
 	a_channel_is_chainable_out_only_once_it_streams();
 	an_attack_during_a_streaming_channel_ends_it();
 	a_channel_that_streamed_hands_its_combo_position_on();
+	the_swing_tracker_starts_closed();
+	the_swing_tracker_reads_back_what_the_initiate_opened();
+	a_second_initiate_replaces_the_open_swing();
+	an_unreadable_playing_index_closes_the_tracker();
+	attack_stop_closes_the_swing();
+	the_successor_table_knows_nothing_by_default();
+	the_successor_table_round_trips_what_a_clip_taught();
+	a_later_teaching_replaces_the_earlier();
+	the_two_counters_keep_separate_chains();
+	each_weapon_keeps_its_own_moveset();
+	out_of_range_teachings_are_refused();
+	a_sample_equal_to_the_playing_index_is_pre_advance();
+	the_sgvi_parser_reads_a_payload_shaped_string();
+	an_interrupted_swing_hands_its_successor_on();
+	an_unlearned_pre_advance_keeps_todays_behaviour();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

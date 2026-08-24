@@ -29,6 +29,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		MscoChargeCurve g_curve{};
 		RollingMcoCombo g_rolling;
 		CastComboIndex g_castIndex;
+		// Ticket 29. `g_swing` says which swing is up, so a live sample equal to the playing index
+		// can be recognised as pre-advance instead of restored as a replay; `g_successors` holds
+		// what each swing taught, so the successor can be substituted without ever deriving it.
+		McoSwingTracker g_swing;
+		McoSuccessorTable g_successors;
 
 		constexpr std::array<std::string_view, CastComboIndex::kLength> kCastEvents{
 			"SH2_CastRight"sv,
@@ -69,6 +74,47 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		{
 			return tag == "SBF_ReadyStart"sv || tag == "MSCO_MagicReady"sv ||
 				   tag == "MCO_AttackInitiate"sv || tag == "MCO_PowerAttackInitiate"sv;
+		}
+
+		constexpr std::string_view kNextAttackVar{ "MCO_nextattack"sv };
+		constexpr std::string_view kNextPowerAttackVar{ "MCO_nextpowerattack"sv };
+
+		constexpr std::string_view var_name(McoSgviVariable kind)
+		{
+			return kind == McoSgviVariable::next_attack ? kNextAttackVar : kNextPowerAttackVar;
+		}
+
+		// Which moveset the successor table is being taught about. Movesets differ per weapon type
+		// -- lengths, wraps, and stance reorderings all differ -- so a greatsword's teaching must
+		// never answer for a dagger's. Anything that is not a weapon in the right hand (fists, a
+		// spell, an empty hand) keys to 0, which is also `kHandToHandMelee`: they share a moveset,
+		// so sharing a row is correct rather than a fallback.
+		int weapon_key(RE::Actor* actor)
+		{
+			if (!actor) {
+				return 0;
+			}
+			auto* right = actor->GetEquippedObject(false);
+			if (!right) {
+				return 0;
+			}
+			auto* weapon = right->As<RE::TESObjectWEAP>();
+			if (!weapon) {
+				return 0;
+			}
+			const int key = static_cast<int>(weapon->GetWeaponType());
+			return (key >= 0 && key < McoSuccessorTable::kWeaponKeys) ? key : 0;
+		}
+
+		// -1 says the graph bool itself could not be read, which is neither state: it must not be
+		// mistaken for "not attacking", because the gates below only ever act on a definite true.
+		int read_is_attacking(RE::Actor* actor)
+		{
+			bool attacking{ false };
+			if (!actor || !actor->GetGraphVariableBool(RE::BSFixedString("IsAttacking"sv), attacking)) {
+				return -1;
+			}
+			return attacking ? 1 : 0;
 		}
 
 		bool sample_mco(RE::Actor* actor, McoCombo& out)
@@ -219,30 +265,54 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		logger::info("SH2 probe: cast begin | shape={}",
 			shape == CastShape::channel ? "channel"sv : "fnf"sv);
 		ComboProbe::probe_read_graphs(pc, "cast begin"sv);
-		// The interruption seam. `@SGVI` payloads never reach the sink under this load order's
-		// packs (measured 2026-08-24), so the value of the swing this cast is cutting has to be
-		// taken here, live, while the swing is still up: at that instant the graph still holds its
-		// advanced index and MCO has not stomped back to 1 yet. `IsAttacking` is the whole gate --
-		// a begin() outside a swing (the ShoutMCO deferred re-begin, an idle cast) would learn the
-		// stomp, so it records nothing and the cache keeps its last WinClose/SGVI teaching.
+		// The interruption seam. The value of the swing this cast is cutting is taken here, live,
+		// while the swing is still up: at that instant the graph still holds its index and MCO has
+		// not stomped back to 1 yet. `IsAttacking` is the whole gate -- a begin() outside a swing
+		// (the ShoutMCO deferred re-begin, an idle cast) would learn the stomp, so it records
+		// nothing and the cache keeps its last WinClose/SGVI teaching.
+		//
+		// TICKET 29: what that live read MEANS depends on where in the clip the interrupt landed.
+		// Before the clip's own advance it is the PLAYING index, and handing it on replays the
+		// swing the player just interrupted; after the advance it is the successor. The open-swing
+		// tracker tells the two apart, and the successor table -- filled only from what the clips
+		// themselves taught -- supplies the successor when the sample is pre-advance. With nothing
+		// learned yet the sampled value is kept, which is exactly the behaviour that shipped.
 		{
-			bool attacking{ false };
-			// -1 says the graph bool itself could not be read, which is neither state and records
-			// nothing either way.
-			int attacking_state = -1;
+			const int attacking_state = read_is_attacking(pc);
 			McoCombo sample{};
 			bool recorded = false;
-			if (pc->GetGraphVariableBool(RE::BSFixedString("IsAttacking"sv), attacking)) {
-				attacking_state = attacking ? 1 : 0;
-				if (should_sample_live_at_cast_begin(attacking) && sample_mco(pc, sample)) {
-					// Full record(): a real swing being interrupted also invalidates any restore
-					// we were still holding, exactly as its own advance would have.
-					g_rolling.record(sample, now_ms());
-					recorded = true;
-				}
+			std::string light_note{ "not sampled" };
+			std::string power_note{ "not sampled" };
+			const auto open = g_swing.open_swing();
+			if (should_sample_live_at_cast_begin(attacking_state == 1) && sample_mco(pc, sample)) {
+				const int key = weapon_key(pc);
+				const auto resolve = [&](McoSgviVariable kind, int& field) {
+					const bool matching = open && open->kind == kind;
+					if (!live_sample_is_pre_advance(matching, open ? open->playing : 0, field)) {
+						return std::string{ "post-advance, keeping " } + std::to_string(field);
+					}
+					if (const auto successor = g_successors.lookup(key, kind, open->playing)) {
+						const int was = field;
+						field = *successor;
+						return std::string{ "pre-advance, substituted=" } + std::to_string(*successor) +
+							   " (was " + std::to_string(was) + ")";
+					}
+					return std::string{ "pre-advance, successor unknown, keeping " } +
+						   std::to_string(field) + " (replay)";
+				};
+				light_note = resolve(McoSgviVariable::next_attack, sample.nextAttack);
+				power_note = resolve(McoSgviVariable::next_power_attack, sample.nextPowerAttack);
+				// Full record(): a real swing being interrupted also invalidates any restore
+				// we were still holding, exactly as its own advance would have.
+				g_rolling.record(sample, now_ms());
+				recorded = true;
 			}
 			logger::info("SH2 probe: begin live sample next={} power={} attacking={} recorded={}",
 				sample.nextAttack, sample.nextPowerAttack, attacking_state, recorded);
+			logger::info("SH2 probe: begin combo resolution swing={} playing={} kind={} | next: {} | power: {}",
+				open ? "open"sv : "closed"sv, open ? open->playing : 0,
+				open ? (open->kind == McoSgviVariable::next_attack ? "light"sv : "power"sv) : "-"sv,
+				light_note, power_note);
 		}
 		cast_shape.store(shape, std::memory_order_relaxed);
 		channel_started_ms.store(
@@ -254,9 +324,41 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		return send_entry(pc, shape);
 	}
 
-	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag)
+	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag,
+		const RE::BSFixedString& a_payload)
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
+		const std::string_view payload{ a_payload.c_str() ? a_payload.c_str() : "" };
+
+		// TICKET 29: which swing is open. This runs FIRST, before the restore-consume branch at
+		// the bottom of this function, because the answer to "did this swing's initiate consume a
+		// restore" is only true until that branch runs -- read after it, every swing would look
+		// like an ordinary one and a restore-taught (unverified) playing index would be taught to
+		// the successor table as fact.
+		//
+		// A real swing opens the tracker at its own index; our own cast and art clips raise the
+		// same initiates, and those CLOSE it instead -- there is no MCO swing behind them, and a
+		// stale open swing would mislabel the next payload.
+		if (tag == "MCO_AttackInitiate"sv || tag == "MCO_PowerAttackInitiate"sv) {
+			const McoSgviVariable kind = tag == "MCO_AttackInitiate"sv
+				? McoSgviVariable::next_attack
+				: McoSgviVariable::next_power_attack;
+			std::int32_t playing = 0;
+			if (should_record_mco_combo_sample(is_active() || ArtDriver::is_active()) && a_player &&
+				a_player->GetGraphVariableInt(RE::BSFixedString(var_name(kind)), playing)) {
+				// Measured live: at the initiate the variable still reads as the swing that is
+				// PLAYING, not its successor. That is precisely the index the clip's advance is
+				// about to move on from, so it is the "from" side of every pair learned below.
+				g_swing.open(kind, static_cast<int>(playing), g_rolling.restore_pending());
+			} else {
+				g_swing.close();
+			}
+		} else if (tag == "attackStop"sv || tag == "MCO_EndAnimation"sv) {
+			// The swing is over. Anything SGVI arriving after this is the ready-state or
+			// AttackState-exit reset -- which is also `@SGVI|MCO_nextattack|1` -- and recording
+			// that is the exact stomp the rolling cache exists to outlive (ticket 11).
+			g_swing.close();
+		}
 
 		// The clip's own advance, taken at the moment it is written. This is the primary edge:
 		// a cast that interrupts a swing lands after the WinOpen-time advance but before
@@ -291,6 +393,70 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
+		// TICKET 29: the same advance, arriving where it actually lands. `PIE.@SGVI|...` splits
+		// into the event name `PIE` and this payload, so this -- not the branch above -- is the
+		// edge that fires under this load order's packs.
+		//
+		// The gate is stricter than the tag branch's, and deliberately so. The ready-state reset
+		// and the AttackState exit fire the SAME payload, `@SGVI|MCO_nextattack|1`. Nothing in the
+		// text tells them apart from a genuine wrap back to 1; what tells them apart is that they
+		// arrive with no swing open and with `IsAttacking` false. Recording one would re-open the
+		// bug the rolling cache exists to outlive, so both conditions must hold: an open swing of
+		// the matching kind, and a live `IsAttacking == true`.
+		if (const auto sgvi = parse_mco_sgvi_sample(payload)) {
+			const bool pending = g_rolling.restore_pending();
+			const int attacking_state = read_is_attacking(a_player);
+			const auto open = g_swing.open_swing();
+			const bool matching_kind = open && open->kind == sgvi->variable;
+			std::string_view decision{ "ignored"sv };
+
+			if (pending) {
+				// Same rule as the tag branch and the window-close stomp-to-undo branch: while a
+				// restore is pending, what we are seeing is the reset's payload, not a swing's.
+				decision = "restore pending -> put ours back"sv;
+				if (const auto combo = g_rolling.peek()) {
+					write_mco(a_player, *combo);
+				}
+			} else if (matching_kind && attacking_state == 1) {
+				if (sgvi->variable == McoSgviVariable::next_attack) {
+					g_rolling.record_next_attack(sgvi->value, now_ms());
+				} else {
+					g_rolling.record_next_power_attack(sgvi->value, now_ms());
+				}
+				if (!open->taught_by_restore) {
+					// The clip just said what follows the swing it is playing. That pair is the
+					// only source of successor knowledge -- never arithmetic.
+					g_successors.learn(weapon_key(a_player), sgvi->variable, open->playing,
+						sgvi->value);
+					decision = "recorded + learned successor"sv;
+				} else {
+					// This swing's initiate consumed a restore, so its playing index is what we
+					// wrote rather than what the engine ran (2H currently ignores the write). The
+					// advance is still the clip's own and worth recording; the PAIR is not
+					// trustworthy and must not enter the table.
+					decision = "recorded; restore-taught swing, no pair learned"sv;
+				}
+			} else if (!open) {
+				decision = "no open swing (ready/AttackState reset) -> ignored"sv;
+			} else if (!matching_kind) {
+				decision = "open swing is the other kind -> ignored"sv;
+			} else {
+				decision = "IsAttacking not true -> ignored"sv;
+			}
+
+			logger::info(
+				"SH2 probe: sgvi payload {}={} tag={} attacking={} swing={} playing={} restore_taught={} | {}",
+				sgvi->variable == McoSgviVariable::next_attack ? kNextAttackVar
+															  : kNextPowerAttackVar,
+				sgvi->value, tag, attacking_state, open ? "open"sv : "closed"sv,
+				open ? open->playing : 0, open ? open->taught_by_restore : false, decision);
+		} else if (is_reset_payload(tag) && !payload.empty()) {
+			// Deliberate first-run instrumentation: a PIE event whose payload this parser cannot
+			// read is either a different annotation or a shape we got wrong, and the raw text is
+			// the only way to tell. Bounded because PIE events are rare on this stream.
+			logger::info("SH2 probe: PIE payload did not parse: '{}'", payload);
+		}
+
 		if (is_mco_combo_index_edge(tag)) {
 			// Ticket-28 probe: read MCO_currentattack (the state that actually ran) at every
 			// window-close, so an injected fixture names the clip without the OAR log window.
@@ -312,6 +478,17 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				McoCombo sample{};
 				if (sample_mco(a_player, sample)) {
 					g_rolling.record(sample, now_ms());
+					// TICKET 29 fallback teaching. A window-close arrives after the advance, so
+					// the value it carries is the successor of the swing still open -- the same
+					// pair the payload edge learns, one edge later. Only the open swing's OWN
+					// kind is paired: a light swing's WinClose says nothing about what follows a
+					// power attack, and pairing both would invent a power chain from a light one.
+					if (const auto open = g_swing.open_swing(); open && !open->taught_by_restore) {
+						const int taught = open->kind == McoSgviVariable::next_attack
+							? sample.nextAttack
+							: sample.nextPowerAttack;
+						g_successors.learn(weapon_key(a_player), open->kind, open->playing, taught);
+					}
 					logger::debug("SH2 cast: sampled MCO next={} power={} at {}", sample.nextAttack,
 						sample.nextPowerAttack, tag);
 				} else {
@@ -437,6 +614,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		clip_committed.store(false, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
+		// No swing survives a load. A stale open swing would label the first sample of the new
+		// session against an index from the old one. The successor table is NOT cleared: it is
+		// learned moveset shape keyed by weapon type, and that outlives a save the same way the
+		// clips do.
+		g_swing.close();
 		ClipTranslationDriver::reset();
 	}
 

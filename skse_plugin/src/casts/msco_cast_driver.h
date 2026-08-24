@@ -43,8 +43,22 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * Observe the player's animation-event stream. Ends the state on SH2_CastExit,
 	 * records MCO combo position at attack-time events, and writes that position
 	 * back once after a Driver Cast's ready-state reset (ADR-0005 named exception).
+	 *
+	 * `a_payload` is the event's own payload member, and it is not optional decoration:
+	 * a clip annotation `PIE.@SGVI|MCO_nextattack|3` reaches the sink split at the first
+	 * `.` into the event NAME `PIE` and the payload `@SGVI|MCO_nextattack|3`, so MCO's
+	 * combo advance is carried there rather than in the tag (ticket 29). Both fields are
+	 * run through the same SGVI parser: a pack that writes the annotation without a `.`
+	 * puts it in the tag instead, and neither form should be the one that works.
+	 *
+	 * It also tracks which swing is open (opened at MCO_AttackInitiate /
+	 * MCO_PowerAttackInitiate for real swings, closed at attackStop / MCO_EndAnimation or
+	 * when the initiate belongs to our own borrowed clip), so a cast that interrupts a
+	 * swing can tell a pre-advance sample -- which would replay the interrupted swing --
+	 * from the successor it is supposed to hand on.
 	 */
-	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
+	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag,
+		const RE::BSFixedString& a_payload);
 
 	/**
 	 * Is the shtb cast state live right now? Raised from the entry notify's own return and

@@ -62,7 +62,16 @@ namespace SpellHotbar::events {
 				}
 
 				// The driver's active flag is cleared from here, on SH2_CastExit / SH2_ArtExit.
-				casts::MscoCastDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
+				//
+				// The PAYLOAD travels with the tag (ticket 29). A clip annotation written as
+				// `PIE.@SGVI|MCO_nextattack|3` is split by the engine at the first `.`: the event
+				// NAME is `PIE` and everything after it is the payload. Forwarding only the tag
+				// meant MCO's own combo advance -- the one value the whole rolling cache exists to
+				// keep -- arrived on every swing and was dropped on the floor here, which read for
+				// a whole ticket as "these packs emit no SGVI". ArtDriver keeps its two-argument
+				// signature: it matches on event names only and has no payload to read.
+				casts::MscoCastDriver::observe_graph_event(
+					eventHolder->As<RE::Actor>(), a_event->tag, a_event->payload);
 				casts::ArtDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_event->tag == "MLh_SpellFire_Event"sv) {
