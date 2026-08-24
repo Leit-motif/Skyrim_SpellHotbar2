@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **58 — Wind Slice** (`aow_58_wind_slice`)
-- Status: **not started**
-- Inventory: **50 of 57 finalized; 1 unprocessed and 6 recorded hard failures remain**
+- Active art: **none — all 57 catalogue entries have a recorded disposition**
+- Status: **goal-mode icon procurement complete; atlas and catalogue wiring intentionally pending**
+- Inventory: **51 of 57 finalized; 0 unprocessed and 6 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, sex presentation, race-guided palette,
 weapon family, and visible Khajiit fur pattern across the atlas. Prioritize Nord, Dunmer, Breton,
@@ -393,6 +393,19 @@ root motion become one female Altmer assassin, one released Alinorian saber-dagg
 telekinetic out-and-return loop. The throwing hand is visibly empty; stance, joints, blade identity,
 and trajectory causality pass. Full and 32 px passed. No pink psychic color, duplicate blade, disc,
 or paralysis effect was added.
+
+Atlas check: Magnetic Throw shares the owner-directed Altmer returning-blade archetype, but the two
+remain distinct at 32 px. Magnetic Throw is a dark diagonal lunge with a straight tether; Wicked
+Throw is a white-gold figure under a broad oval return orbit. No retry was taken.
+
+## Wind Slice disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The same verified dual-weapon rush used by Pirate's Slash
+advances about 412 units and alternates five right/left contacts. Wind Slice distills it to one female
+Redguard sword-dancer, exactly two held scimitars, and one pale blue-white pressure wake attached only
+to the active right blade; the offhand scimitar remains in a no-trail rear guard. Stance, grips,
+clearance, edge direction, and wake causality pass. Full and 32 px passed. No elemental storm or
+extra slash fan was invented.
 
 ## Dual Flurry context-layer pivot
 

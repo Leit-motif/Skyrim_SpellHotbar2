@@ -343,6 +343,17 @@ throwing disc, and one unbroken blue-white palm-to-hub return line, not eight pr
 32 px results passed. Thirty-five of 57 icons are finalized; 19 remain unprocessed and three are
 recorded hard failures.
 
+Owner corrections and goal closure 2026-08-24: Orbital Cleave was rebuilt from U.S. Army 1907
+saber Figure 12 after three anatomy/weapon failures; Pirate's Slash is now a female Breton
+buccaneer; Shadow Reave uses white Khajiit fur; Shoulder Slam is a female Nord axe-warrior; Subtle
+Stab is a female Dunmer thrust grounded in U.S. Army 1907 Figure 23 with mist-blue ethereal blade;
+and Tornado Leap is a female Bosmer dual-dagger vortex retaining the forest/leaves field. Wicked
+Throw finalized as a female Altmer arcane-trickster with one returning blue blade, visually
+distinguished from Magnetic Throw by its broad oval orbit. Wind Slice finalized as one female
+Redguard dual-scimitar dash with one active pressure wake. All 57 catalogue entries now have a
+disposition: 51 finalized, 0 unprocessed, and 6 recorded hard failures. Atlas stitching, catalogue
+wiring, deployment, and runtime testing remain outside this goal's authorized scope.
+
 Goal mode 2026-08-24: **Orbital Cleave** (`aow_41_orbital_cleave`) is finalized from its single
 generation attempt. One long weapon-collision window and one hit become one sustained physical
 orbiting cut by a faceless Redguard using one connected two-handed curved greatsword and one
