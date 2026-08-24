@@ -367,6 +367,12 @@ one active cutlass, one guarded dagger, and exactly one cutlass-connected wake. 
 supported stance pass the anatomy/physics gate. Full and 32 px results passed. Thirty-nine of 57
 icons are finalized; 15 remain unprocessed and three are hard failures.
 
+Goal mode 2026-08-24: **Point Charge** (`aow_44_point_charge`) is finalized from its single
+generation attempt. Two hits in a roughly 499-unit ground rush become one low Orsimer boar-spear
+charge with one point-aligned wake. Grip spacing, arm leverage, low center of gravity, planted lead
+foot, and driving rear leg pass the physics gate. Full and 32 px results passed. Forty of 57 icons
+are finalized; 14 remain unprocessed and three are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink

@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **44 — Point Charge** (`aow_44_point_charge`)
+- Active art: **45 — Reaper** (`aow_45_reaper`)
 - Status: **not started**
-- Inventory: **39 of 57 finalized; 15 unprocessed and 3 recorded hard failures remain**
+- Inventory: **40 of 57 finalized; 14 unprocessed and 3 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -293,6 +293,13 @@ Goal-mode one-shot finalized on 2026-08-24. Five alternating dual-weapon contact
 Imperial Abecean corsair lunge with one active cutlass wake and one held no-trail parrying dagger.
 Both grips, arms, hips, and planted legs form a plausible action; the cutlass edge leads its single
 wake. Full and 32 px results passed.
+
+## Point Charge disposition
+
+Goal-mode one-shot finalized on 2026-08-24. A roughly 499-unit ground rush and two hits become one
+low Orsimer boar-spear charge with one point-aligned pressure wake. Wide hand spacing, neutral
+wrists, low hips, planted lead foot, and driving rear leg pass the physics gate. Full and 32 px
+results passed.
 
 ## Dual Flurry context-layer pivot
 
