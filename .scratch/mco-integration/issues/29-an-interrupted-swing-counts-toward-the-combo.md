@@ -1,6 +1,6 @@
 # 29 — An interrupted swing counts toward the combo
 
-Status: claimed
+Status: resolved
 
 Opened 2026-08-24, carved out of ticket 28. Owner ruling, verbatim intent:
 
@@ -85,3 +85,54 @@ annotation-dump table (requires replicating OAR's runtime condition resolution),
 
 Blocked at the finish line by ticket 30 for 2H weapons (the restore is ignored there entirely);
 the 1H path is testable now.
+
+## Answer (2026-08-24 evening, commits 638be75 + 86ceadf, verified live)
+
+An interrupted swing now hands its successor on, on all three weapon classes, from either side
+of the advance. Mechanism as designed above, plus one correction the first live run forced.
+
+**Implementation** (`combo_cache.h`, `msco_cast_driver.cpp`, `animationeventhook.cpp`):
+- The hook forwards `a_event->payload`; the SGVI parser runs over it. Confirmed live: the
+  advance arrives every swing as tag `Pie` + payload `@SGVI|MCO_nextattack|N`. (Note the case:
+  `Pie`, not `PIE` — the old `is_reset_payload` tag compare never matched, so BOTH pre-existing
+  stomp-putback branches were dead code until now.)
+- `McoSwingTracker` opens at `MCO_AttackInitiate` with the variable's read-back (= the playing
+  index, reconfirmed live), closes at `attackStop`/`MCO_EndAnimation`/our own clip's initiate.
+- `McoSuccessorTable` learns `successor[weaponType][playing] = taught value` from the payload
+  edge, with the WinClose pairing as fallback. Swings whose initiate consumed a restore record
+  but never teach pairs.
+- `begin()`: a live sample equal to the open swing's playing index is pre-advance → substitute
+  the learned successor; unknown → keep the sample (truthful replay), logged as such.
+- **Correction from the first live run (86ceadf): a cut swing's AttackState-exit notify beats
+  `attackStop` to the sink** — it arrived with the tracker open and IsAttacking still 1, recorded
+  its `1` over the good sample, and taught `successor[1]=1`. A reset always teaches 1 and a clip
+  can never teach itself, so `payload_advance_is_recordable` quarantines value 1 from the payload
+  edge entirely; wrap pairs (Mercenary's 4→1) ride the reset-safe WinClose sampler instead.
+
+**Evidence (SpellHotbar2.log, clip identity from the packs' own advance payloads — attack N is
+the only clip that teaches N+1 in these packs, so the payload names the playing clip from pack
+data, not graph teachings):**
+- 1H sword, pre-advance (16:58:02): `begin combo resolution swing=open playing=1 | next:
+  pre-advance, substituted=2 (was 1)` → armed 2 → follow-up swing's advance reads `playing=2
+  taught 3` = attack2 played. The interrupted a1 handed a2 on.
+- 1H sword, post-advance (16:57:34): `post-advance, keeping 2` → attack2 played. The coin-flip
+  is gone: both press timings land on the successor.
+- Greatsword (17:00:12): `pre-advance, substituted=2 (was 1)`; the cut swing's real advance
+  even landed in the press-to-cut gap and re-confirmed 2; follow-up = attack2 (`playing=2
+  taught 3`, `restore_taught=true`). **The 2H entry honored the restore — see ticket 30's
+  answer for why it now does.**
+- Warhammer (17:02:04): `post-advance, keeping 2` → armed 2/2 → follow-up = attack2.
+- Reset payloads in every position (ready-enter, AttackState-exit, cut-swing death rattle)
+  logged and refused: `no open swing -> ignored` / `reset-valued (1) -> left to the WinClose
+  edge`.
+
+**Standing agreements honored:** the successor is never derived — every table entry is a value
+a clip taught, wrap points included; the chain-out window stays clip-driven (kMaxAgeMs
+untouched); `credit_held_time` untouched, so a concentration hold still never ages the combo
+out. Known, logged degradation: the table is per-session memory, so the first pre-advance
+interrupt of an index the session has never seen completes falls back to today's replay (Elder
+Creed's attack5 carries no advance at all, so successor[5] stays honestly unknown forever).
+
+Owner cells left open: feel-check with a real held channel and physical presses (the game is
+left running on the fixture save, iron warhammer equipped, sword and greatsword in inventory);
+optional OAR Animation Log cross-check of the clip oracle.

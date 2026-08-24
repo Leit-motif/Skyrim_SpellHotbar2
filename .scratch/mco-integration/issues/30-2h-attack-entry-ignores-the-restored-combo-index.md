@@ -54,3 +54,75 @@ implies, verified per weapon class by the OAR Animation Log.
 SGVI parser `16e0b82` (dead fallback), shtb `0_master` declarations (four variables), probe
 instrumentation. DLL deployed 12:29→15:0x builds; Nemesis output regenerated twice with Update
 Engine; 1H channel combo owner-verified working when the cast lands post-advance.
+
+Status: resolved
+
+## Answer (2026-08-24 evening): a write-ordering race over the ROOT graph's storage, not a
+## graph difference — and the 1H success is explained by the same mechanism
+
+The round-3 program asked for one mechanism fitting every fact, including the 1H flip. Here it
+is, assembled from Havok-source research plus a live run in which **the 2H entry honored the
+restored index on both greatsword and warhammer** (17:00 and 17:02, clip identity from the
+packs' own advance payloads — see ticket 29's answer for that oracle).
+
+### The mechanism
+
+1. **Every behavior graph — root and nested — owns a private `hkbVariableValueSet`.** Confirmed
+   in genuine Havok 2013 SDK source (Project Anarchy drop; research note
+   `notes/30-havok-variable-linking-research.md`). Nested
+   graphs link their variable names to the ROOT'S ids through a dedicated linking pass
+   (`hkbSymbolLinker` / `m_internalToRootVariableIdMap`) — to the root, not to the intermediate
+   graph. `VARIABLE_MODE_DISCARD_WHEN_INACTIVE` is documented verbatim: values are reset every
+   `activate()`.
+2. **`SetGraphVariableInt` reaches the root's storage** (`BShkbAnimationGraph` holds exactly one
+   `hkbBehaviorGraph*`); nested-graph writes never surface there — which is why the
+   `MCO_currentattack` probe reads 0 from the root even mid-swing (fact 4). One direction only.
+3. So the value the nested `MCO_Attack.hkb` selector consumes at attack entry is **whatever the
+   ROOT's `MCO_nextattack` holds when the nested graph comes back to life**. Three consequences:
+   - **No root declaration → no link target → universal attack1** (pre-`63fcf81`, fact 3's
+     "before" half). The declaration didn't create a sync feature; it created the root-side
+     storage the always-present link needs.
+   - **1H worked after the declaration** because the 1H exit path emits `SBF_ReadyStart` /
+     `MSCO_MagicReady` at ready — both are consume edges (`is_restore_edge`), so SH2 re-wrote
+     the restore into the root AFTER MCO's ready-enter stomp-to-1 and BEFORE the attack press.
+     Root held the restore at activation. (Fact 3's "after" half, previously unexplained.)
+   - **2H kept failing** because those ready edges never fire on the 2H path (measured, in the
+     `is_restore_edge` comment). The stomp payloads land at ready-enter; the only remaining
+     consume edge, `MCO_AttackInitiate`, fires after the nested graph has already activated and
+     read its `startStateId`. The stomp always won the race. Same graph, different EVENT
+     vocabulary on the way out — which is why round 2 found the topology identical (fact 2).
+4. **Why it works now, on every weapon:** the stomps arrive as `Pie`-tagged payload events, and
+   both of SH2's stomp-putback branches were DEAD before this session — `is_reset_payload`
+   compared the tag against `"PIE"` (wrong case) and the SGVI parser only ever saw tags. Ticket
+   29's payload forwarding revived the pending-restore putback: every stomp is now answered
+   with a re-write within the same event dispatch (`restore pending -> put ours back`,
+   17:00:13.015), so the root holds the restore when the nested graph activates. Measured
+   result: greatsword restore 2 → attack2 (`playing=2 taught 3`, `restore_taught=true`),
+   warhammer restore 2 → attack2. The "2H immunity" was the stomp winning a race whose
+   equalizer had never actually been wired in.
+
+### What each fact maps to
+
+| Fact | Explanation |
+|---|---|
+| 1. 1H honors 3, 2H plays attack1 (15:0x builds) | ready-edge rewrite exists on 1H only; 2H stomp wins |
+| 2. Graphs weapon-agnostic, one nested instance | the race is in event timing, not topology |
+| 3. `0_master` declaration flipped 1H only | declaration = root storage for the link; 1H alone had a post-stomp rewrite moment |
+| 4. `MCO_currentattack` reads 0 at root | nested→root writes don't propagate; the link serves root→nested |
+| 5. `@SGVI` tags never reach the sink | they arrive as PAYLOADS on tag `Pie`; the hook forwarded tags only |
+| 6. Sampling half correct | unchanged; ticket 29 finished its semantics |
+
+### Named residue (honest gaps, no behavioral consequence today)
+
+- The exact sync granularity inside the closed binary (copy at `activate()` vs per-frame sync of
+  linked variables) is not observable: `hkbBehaviorGraph::activate()`/`update()` bodies were
+  never published even in the open Havok drop. Both variants predict everything measured.
+- The pre-declaration sword playing attack2 (13:30 observation) is consistent with the 1H nested
+  instance serving its own stale storage across the cast rather than resetting — warm vs cold
+  across the two weapon paths — but with the root link now authoritative this distinction no
+  longer changes behavior, and settling it would need the binary.
+
+The probe suite (`combo_probe.*`, `SH2 probe:` lines, the `0_master` declarations) stays until
+the owner has felt the combo on their save; the `MCO_currentattack` declaration is now known to
+be unreadable-by-design from the root and can be dropped whenever the probes retire. Handoff
+(b)'s ADR is unblocked: the mechanism is named.
