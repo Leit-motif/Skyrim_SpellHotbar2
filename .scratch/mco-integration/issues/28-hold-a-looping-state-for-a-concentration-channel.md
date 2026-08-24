@@ -242,6 +242,68 @@ never sets it, so a channel would reset the fire-and-forget combo index on every
 that branch on `CastShape::fire_and_forget` — a pure predicate, so it belongs in `combo_cache.h`
 with a test beside the existing ones.
 
+## Build status — 2026-08-23, end of session
+
+The held state works and the clip is correct. Combo hand-off is **not** finished; it has a
+diagnosed, still-open defect. Do not close this ticket.
+
+### Shipped and owner-confirmed
+
+- `SH2_CastChannel` enters `SH2_Channel_State`; the state is held for the whole hold and ends on
+  release. Log: `notified SH2_CastChannel (held channel) -> true`, then `SH2_CastExit -> true`
+  4.6s later with no `state exiting` between them.
+- **Flames looks right.** Owner 2026-08-23: *"Flames works perfect now!"*
+- A fire-and-forget cast on the same bar is unchanged (`shape=fnf, window=true` in the same run).
+
+### The bug that hid the whole thing, and the false claim that caused it
+
+`Spell Hotbar 2 - MSCO Cast Animations` ships `SpellHotbar2_MCBO/cast_left_probe` — a 16-clip
+diagnostic left over from the 2026-08-11 voice-driver work (see
+`notes/05-progress-2026-08-11-voice-driver.md`; these are the clips that T-posed). It carries
+**priority 101500000** against the concentration submods' 101010010, and its only condition is
+`815 > 0` — a catch-all matching every animation type. It therefore won `1hm_shout_inhale.hkx`
+and the channel looped an MCBO **cast** clip, which is what the owner saw as the fire-and-forget
+animation.
+
+This ticket's own claim — *"Only Spell Hotbar 2 and its own overlay replace these files; nothing
+else in the load order contests them"* — was false, and it is why the spike passed while the real
+cast failed: the spike's A/B/A compared two wrong clips and read the difference as success. The
+real audit, by submod count on `1hm_shout_inhale.hkx`: Spell Hotbar 2 86, its priority overlay 86,
+Dev - Thuum Reborn 18, SYHO 7, Goetia Conditional Shouts 1, the probe 1. The path is shared;
+safety rests on conditions, not exclusivity.
+
+**Fixed by** renaming the probe's `config.json` to `config.json.disabled` (clips left on disk;
+revert by renaming back). This is a live-fixture change, not a repository one — a fresh install
+of that local mod would reintroduce it.
+
+### Open defect — the restored combo index is 1
+
+`attack1 → hold Flames → attack` still yields attack1. Two separate causes, one fixed:
+
+1. **Fixed.** `RollingMcoCombo::kMaxAgeMs` is 5000ms, sized for a one-to-two-second throw clip. A
+   channel is unbounded and takes no samples while our state is live, so any hold past five
+   seconds aged the pre-hold sample out and armed nothing at all. The hold is now credited back
+   at release; a gap *before* the hold still ages out. Log line: `channel held NNNNms; discounted
+   from the combo sample age`.
+2. **Open.** The restore now always arms, but the sampled value is itself frequently `1`, so
+   restoring it faithfully reproduces attack1. One cut in the owner's run armed `next=2`, so the
+   value is timing-dependent. The sample is taken in `observe_graph_event` at
+   `MCO_AttackInitiate` / `MCO_PowerAttackInitiate` / `HitFrame`, whichever lands last before the
+   channel; the suspicion is that this reads `MCO_nextattack` before MCO advances it, so a swing
+   cancelled early into a cast samples the current index rather than the next one.
+
+**A debug line is already built and deployed for exactly this** and has never been read: `SH2
+cast: sampled MCO next={} power={} at {tag}`. Next session: one clean `attack1 → hold → attack`,
+then read which tag produced which value. That decides whether the fix is choosing a different
+attack-time event, or deriving the successor rather than preserving the sample — the latter would
+contradict `RollingMcoCombo`'s "preserve, never derive" rule, so prefer the former.
+
+### Still untested
+
+Self `1002`, ward `1003`, ritual `11001` including the fast-cast slot, dual `11003` and `11004`,
+release-reverts-the-pose, and the t0/t+3s frames this ticket asks to be committed. All need the
+owner's bindings.
+
 ## Acceptance
 
 Live only. A build or a static check diagnoses; it never proves an animation.

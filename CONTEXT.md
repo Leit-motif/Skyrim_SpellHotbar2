@@ -61,12 +61,17 @@ The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` /
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
 
 **Cast Channel**:
-A concentration cast held from a hotbar slot. It enters the Driver Cast state for its start clip
-only; the hold is then sustained by the OAR idle loop, which every concentration submod builds by
-replacing the idle and locomotion set while `SpellHotbar_isCastingConcSpell` is raised (ADR-0013).
+A concentration cast held from a hotbar slot. It enters `SH2_Channel_State`, its own `shtb` state
+entered by `SH2_CastChannel`, whose `MODE_LOOPING` generator carries no end-of-clip trigger and so
+is held for the whole hold, ending on `SH2_CastExit` at release. The generator's path is
+`Animations\1HM_Shout_Inhale.HKX` — the one clip every non-idle concentration submod replaces — so
+OAR still picks the per-family clip from `SpellHotbar_SpellAnimationType` (ADR-0013, ticket 28).
 A channel does not walk the cast-combo index and does not open the follow-up-press window — both
-belong to a clip that is still playing. Its chain-out window is the hold itself: an attack inside
-it ends the channel and becomes the swing, keeping combo position.
+belong to a clip that is still playing — and it commits on the authored cast-time floor rather
+than a clip's SpellFire, because these clips carry none (ADR-0006). It remains a member of the MCO
+combo chain: its chain-out window is the hold itself, an attack inside it ends the channel and
+becomes the swing, and the hold is credited back against the combo sample's staleness cap so a
+hold of any length still hands its position on.
 _Avoid_: looping cast state, concentration Driver Cast, held cast clip
 
 **Cast Plant**:

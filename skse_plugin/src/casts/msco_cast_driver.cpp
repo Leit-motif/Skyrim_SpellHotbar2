@@ -228,6 +228,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			McoCombo sample{};
 			if (sample_mco(a_player, sample)) {
 				g_rolling.record(sample, now_ms());
+				logger::debug("SH2 cast: sampled MCO next={} power={} at {}", sample.nextAttack,
+					sample.nextPowerAttack, tag);
 			} else {
 				g_rolling.disarm();
 			}
