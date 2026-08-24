@@ -1,37 +1,46 @@
 # Soulless Swing
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_53_soulless_swing`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Soulless Swing/AABL_Attack_A.HKX`; SHA-256 `ADBCF5E78F43F7D5FB588C0F4FFB46A2622EB4FAC2AABD9FF9831C122C3AD682`.
-- Animation-proven: the 4.166667-second, 97-track 1H clip makes four hits across back-and-forth motion and ends with jump-attack sound and shake; net travel is about 358 units.
-- Language, paralysis, and hit-fog names are unresolved; no soul, necromancy, absorption, darkness, or magic is claimed.
-- Composition choice: one Redguard terminal flanged-mace backhand with one compact physical wake.
+- Frozen action: A Redguard silhouette rotates through one compact backhand mace swing. Feet and hips turn beneath the shoulder; the hand mass, short haft, and flanged head finish together on the outside line.
+- Outline cues: wrapped head mass, lean duelist proportion.
+- Weapon: one connected one-handed flanged mace with short haft and compact head.
+- Effect: one compact steel-white mace-head wake attached to the striking head.
+- Orientation: short horizontal backhand, left-to-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls one-handed weapon art named "Soulless Swing". This is an action glyph, not a portrait, character key art, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Redguard mace fighter completing one terminal backhand swing lower-right to upper-left. Left front foot planted, right rear foot touching down, knees flexed, hips and torso rotating together. Right arm across body with elbow slightly bent; right fist closes around one mace grip, wrist aligned. Left empty hand open near chest. Hide face behind dark indigo veil and compact bronze brow guard.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected one-handed Redguard flanged mace: one short dark-steel haft, compact six-flanged bronze-and-steel head, leather-wrapped grip, one small pommel. Striking flanges attached and leading. Not hammer, axe, sword, floating head, or two-handed polearm.
+Primary request: Soulless Swing. A Redguard silhouette rotates through one compact backhand mace swing. Feet and hips turn beneath the shoulder; the hand mass, short haft, and flanged head finish together on the outside line.
 
-Add exactly ONE short dense ivory-bronze physical wake tangent behind the mace head, rising lower-right to upper-left and ending at the leading flange in one compact spark. Thickest around the head and tapering backward. No extra trails, soul ribbon, ghost, ring, X, fog, or detached crescent.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, flanged mace, and compact path. Face is a void. Race as outline only: wrapped head mass, lean duelist proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 4.166667-second, 97-track 1H clip makes four hits across back-and-forth motion and ends with jump-attack sound, shake, and unresolved names. Distill to one terminal physical mace swing. The name proves no souls, aura, necromancy, absorption, darkness, or magic.
-
-Use Elder Scrolls Redguard construction: fitted deep indigo lamellar and leather, sand wraps, compact bronze guards, muted crimson sash, dark boots, geometric stitching. Palette: indigo, sand, bronze, dark steel, crimson, one ivory-bronze wake against warm gray and dusty teal. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless Redguard, exactly one connected held flanged mace, exactly one mace-head-connected wake. Anatomically possible landing, grip, wrist, elbow, shoulder, balance, striking-face direction, and trail only. No portrait, second weapon, floating head, detached haft, hammer, axe, sword, extra arm, impossible wrist, hand on head, multiple trails, soul, ghost, skull, necromancy, darkness, fog, paralysis glow, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected one-handed flanged mace with short haft and compact head.
+Causal wake: one compact steel-white mace-head wake attached to the striking head.
+Scene/backdrop: dark deep-red and sand-charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: short horizontal backhand, left-to-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no soul effect; no sash detail; no oversized mace; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. The hand closes around the grip between head and attached pommel; wrist, forearm, shoulder, hips, legs, striking flanges, and wake form one supported backhand swing.
-- Full resolution and 32 px LANCZOS: pass. One flanged mace and its one head-centered wake remain distinct with no soul imagery.
-- Master SHA-256: `F78A4F27CF2AEFA8C1FCC3482184D2B663916B2F60E035DC47A9C698C194EDFD`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `190F1C93B9E05CD5FFA492EDD69C3BE4E43921A88A92A6E093A0FBC151CE5431`.

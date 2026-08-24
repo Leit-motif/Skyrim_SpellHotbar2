@@ -1,48 +1,46 @@
 # Tornado Leap
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_55_tornado_leap`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Tornado Leap/AABL_Attack_A.HKX`; SHA-256 `FD97D69EF45D8C369871F213C843031484812A61CB7CF7F1DE8532E6AF584F8F`.
-- Animation-proven: the 2.733333-second, 97-track Generic clip moves about 456 units and makes three right-weapon hits; every collision triples trail lifetime/base-color intensity, and the final hit carries knockback.
-- The name supports orbiting action shorthand but does not prove literal wind, air magic, or a cyclone.
-- Composition choice: one airborne Bosmer, one connected handaxe, and one persistent open spiral physical wake.
+- Frozen action: A small Bosmer silhouette is airborne in one compact spin with two short daggers. Knees tuck near the rotating torso; each arm carries one blade tangent to the same rotation plane.
+- Outline cues: small hooded hunter mass, light narrow shoulders.
+- Weapon: exactly two connected short daggers, one in each hand, both shorter than the forearms.
+- Effect: two pale blade wakes combine into one readable spiral around the airborne mass.
+- Orientation: centered radial spin.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Tornado Leap". This is an effect-first action glyph, not a portrait, key art, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Make exactly ONE persistent ivory-sage physical axe wake dominant: an open spiral sweeping lower-left behind figure, around upper-right, ending at one moving axe head near upper-left. One continuous blade path with at most one and a half turns, brightest behind edge and tapering backward. Not literal wind, three trails, perfect ring, funnel, or detached swirl.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Show exactly one small faceless full-body Bosmer airborne at center, rotating counterclockwise. Knees tucked at different heights, hips centered, torso rotated with shoulders, left empty arm bent inward, right axe arm extended only enough to clear body. Right fist closes around one grip; wrist neutral, elbow slightly bent, shoulder connected. Axe/wake never pass through body. Hide face under bark-brown hood and bone brow mask.
+Primary request: Tornado Leap. A small Bosmer silhouette is airborne in one compact spin with two short daggers. Knees tuck near the rotating torso; each arm carries one blade tangent to the same rotation plane.
 
-Exactly ONE connected one-handed Bosmer handaxe: short dark hardwood haft, compact forward-facing single crescent dark-steel head with pale-bone socket plate, moss grip, butt cap. No second axe, double head, detached blade, scythe, sword, or floating weapon. Edge leads spiral.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, airborne legs, two daggers, and spiral path. Face is a void. Race as outline only: small hooded hunter mass, light narrow shoulders. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 2.733333-second, 97-track Generic clip moves about 456 units and makes three right-weapon hits. Every collision triples trail lifetime and base-color intensity; final has knockback. Distill to one persistent physical orbit path and one terminal edge. The name proves no wind, air magic, weather, or vortex.
-
-Use Bosmer hunter construction: moss-green leather, bark-brown scale, tan hide wraps, small pale-bone pieces, muted amber sash, soft boots. Palette: moss, bark, tan, bone, amber, dark steel, one ivory-sage wake against dusky plum and forest green. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless airborne Bosmer, exactly one connected held single-head handaxe, exactly one axe-connected open spiral wake. Anatomically possible airborne rotation, joints, grip, wrist, shoulder, body clearance, and angular balance only. No portrait, second weapon, duplicate axe, floating head, detached haft, double axe, extra arm, impossible wrist, hand on blade, weapon through body, multiple trails, literal tornado, wind magic, funnel cloud, ring, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: exactly two connected short daggers, one in each hand, both shorter than the forearms.
+Causal wake: two pale blade wakes combine into one readable spiral around the airborne mass.
+Scene/backdrop: dark forest-green and charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: centered radial spin
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no leaves; no foliage; no handaxe; no third blade; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Compact leg tuck, centered hips, counterbalancing free arm, connected shoulder/wrist, and one axe clear the body through a plausible airborne rotation.
-- Full resolution and 32 px LANCZOS: pass. One continuous spiral ends at one axe head; physical leaves/debris remain subordinate and do not become a separate magic effect.
-- Master SHA-256: `8CF4D124A3FB79803B5E2E16FFDEF9BFB80398C39A8ED359F1CC9B377743F4AB`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
 
-## Owner-directed dual-dagger correction
-
-- The owner retained the Bosmer, forest-green/purple field, and leaves, but requested a female Wood
-  Elf with dual daggers spinning through the tornado.
-- The accepted edit has exactly one short dagger in each closed fist. Opposed arms keep both blades
-  clear of the body; exactly one attached wake per dagger continues into one leaf-filled vortex.
-- Full and 32 px LANCZOS: pass. Female Bosmer, two daggers, and one coherent tornado remain readable;
-  grips, shoulders, body tuck, balance, and blade paths pass.
-- Superseded male handaxe master is preserved under the ignored pilot tree.
-- Corrected master SHA-256: `4B26FEE12365AE31EACC5C1D99BF01FAC6B0FA6D713967F85EC63306E7EFCD41`.
+- 128 px SHA-256: `CB28F8EC16A0B207BA901A7115A115A851F372E4C1A1FF803A4036635FFB0D85`.

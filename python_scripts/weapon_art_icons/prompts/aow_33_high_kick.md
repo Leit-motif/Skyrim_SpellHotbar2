@@ -1,8 +1,9 @@
 # High Kick
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-24
+**Status:** Owner-approved silhouette regeneration (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** One new Codex built-in image-generation call with five approved icon-grammar
+references; no rejected-candidate reference and no inpainting
 
 **Stable icon key:** `aow_33_high_kick`
 
@@ -14,44 +15,42 @@
 - Animation-proven: the 1.333333-second, 97-track Generic clip advances about 363 units. Enlarged
   collision windows move from the left leg to the right leg, with hit frames at 0.499998 and
   0.733330.
-- Payload resolution: `$ES_Paralysis`, `$RS_ImpactJD`, and `$ES_EndureArmor` were not resolved to
-  authoritative visual definitions. The Dragonrend release sound at both hits does not prove a
-  shout wave, color, or element.
-- Composition choice: show the finishing high right-leg kick as the one dominant action. Do not
-  diagram the two collision windows or invent an element.
-- Race/palette choice: a faceless Khajiit in warm brown, tan, ochre, burgundy, muted gold, and deep
-  purple provides deliberate race and palette rotation after the Orsimer Heavy Swing.
+- Owner-directed staging: show the finishing high right-leg roundhouse as the one dominant action;
+  Khajiit outline; one foot-connected ivory crescent; plum field.
+- Grammar references only: Crane Style, Aimed Blow, Blood Flurry, Champion's End, and Dragon Strike
+  set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px
+  readability. Their poses, facing, weapons, races, figures, and compositions are not references.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style martial art named "High Kick". This is a graphical action icon, not a portrait, character key art, splash illustration, wallpaper, or scenic painting.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, retained as a 128x128 atlas input and designed to remain legible at 32x32
 
-ACTION FIGURE:
-Show one faceless full-body Khajiit martial fighter delivering one explosive high roundhouse kick from lower-left toward upper-right. Freeze the finishing right-leg contact: planted left leg bent, hips fully rotated, torso leaning away for balance, right leg extended high with the boot/foot at the upper-right leading point, arms compact and guarding. The dynamic body and extended leg form the icon. Keep the face completely hidden by a low hood and shadow; use only subtle pointed-ear hood and tail silhouette cues.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. Do not copy their pose, facing, weapon, race, figure, or composition.
 
-ONE KICK WAKE:
-Add exactly ONE short ivory-white physical pressure crescent immediately behind and tangent to the extended right foot, following the foot's upward-right arc. It must begin at the foot and fade backward toward the bent knee. One compact impact flare and a few dust flecks sit at the foot's leading edge.
-No second kick trail, no echo legs, no duplicate figure, no ring, no X, no floating crescent, no weapon, and no victim.
+Primary request: High Kick. A generalized Khajiit martial-artist silhouette completing one explosive high roundhouse. Planted left leg bent and supporting the center of gravity, hips rotated, torso counterleaning, right leg extended to the upper-right as the leading point. One ivory-white pressure crescent tangent to and beginning at the extended foot, fading backward along the foot's path; one compact warm-gold impact flare at the toes.
 
-EVIDENCE:
-The verified 1.333-second clip advances roughly 363 units and opens enlarged collision windows on the left leg and then the right leg, with two hit frames and unresolved armor/paralysis/impact payload names. Represent the clean final high kick only; do not invent an element, aura, paralysis color, shout wave, or two-hit diagram.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, kicking legs, and path. Face is a void. Race as outline only: pointed ears, short muzzle, tail completing the kick arc. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-KHAJIIT VISUAL LANGUAGE:
-Economical silhouette and material cues: agile compact build, hood with subtle ear points, one curved tail balancing the kick, warm-brown leather wraps, tan cloth, ochre bindings, narrow burgundy sash, restrained muted-gold fittings and deep-purple accent. No visible face, eyes, muzzle detail, fur portrait, anatomy showcase, or ornate costume.
-
-STYLE AND PALETTE:
-Crisp painterly graphical MMO hotbar icon optimized for 32x32. The extended leg, foot, and one connected pressure crescent dominate against a quiet deep plum-black and warm charcoal field. Ivory-white physical wake, warm brown, tan, ochre, burgundy, restrained gold. Strong silhouette, high contrast, safe crop, subtle vignette, edge-to-edge art.
-
-HARD CONSTRAINTS:
-exactly one faceless full-body Khajiit, exactly one high extended right leg, exactly one short foot-connected wake. No portrait, face close-up, extra limb, duplicate leg, second trail, weapon, shield, magic, fire, frost, lightning, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first, not a portrait and not character key art
+Composition/framing: compact square crop; kicking leg and crescent dominate; one readable rising diagonal from lower-left to upper-right; simple large masses; clear at 32x32
+Scene/backdrop: dark plum-black atmospheric field with subtle radial glow; no scenery
+Color palette: deep plum-black, ivory-white kick crescent, restrained warm-gold impact
+Detail budget: very low; broad painted shapes and glow
+Physics: anatomically plausible roundhouse silhouette; supported planted leg, rotated hip, counterbalanced torso and tail; exactly one connected kicking leg and one foot-connected causal wake
+Constraints: original art only; exactly one anonymous figure; exactly one high kick; no costume detail; no portrait framing; no extra limbs; no duplicate or echo legs; no weapon; no victim; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Calibration hard-gate result
 
-- Full-resolution result: pass. One faceless Khajiit, one planted leg, one high extended leg, and one
-  pressure wake attached directly behind the leading foot form a coherent action icon.
-- 32 px LANCZOS reduction: pass. The raised leg, foot impact, and connected ivory crescent remain the
-  immediate read; the hood and tail retain Khajiit coding without portrait framing.
-- Master SHA-256: `FEA3C978381A23596621BC0959E58796D0CF5830AC2ECD60EBB1FFB5B10E1542`.
-- No autonomous regeneration was attempted.
+- Full-resolution intermediate: pass, owner approved. One near-black Khajiit silhouette, one supported
+  high roundhouse, and one ivory/gold arc caused by the leading foot; no painted costume inventory.
+- 32 px LANCZOS reduction: pass, owner approved. The kick and impact arc read before the race
+  outline, and the image remains a compact ability glyph.
+- New 128 px atlas-input SHA-256: `D1641E46D75101D16D66FEA9EBED759D6F69C376AEBBC2BDB9DB6E2EF8008C70`.
+- The retained project artifact is the 128x128 atlas input only; the generated full-size intermediate
+  remains outside the project.
+- The previous costume plate and its 128 px reduction were archived under
+  `pilot/silhouette-drift/` before replacement.
+- The owner approved this calibration and waived further review gates for the autonomous batch.

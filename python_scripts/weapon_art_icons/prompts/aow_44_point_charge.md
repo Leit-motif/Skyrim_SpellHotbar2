@@ -1,36 +1,46 @@
 # Point Charge
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_44_point_charge`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Point Charge/AABL_Attack_A.HKX`; SHA-256 `75FC76717413FC4146D7E2119BAE6BC98ADE7525E60E217ED8B6C445E973F030`.
-- Animation-proven: the 2.133333-second, 99-track Generic clip accelerates roughly 499 units and makes two weapon hits at 0.433329 and 0.866658.
-- Composition choice: one grounded Orsimer boar-spear charge with one point-aligned wake; no element is inferred.
+- Frozen action: An Orsimer silhouette drives a two-handed boar spear straight toward the viewer. The bright point dominates the foreground; spaced hand masses, continuous shaft, angular helm, shoulders, hips, and rear leg align behind the charge.
+- Outline cues: heavy angular helm, brute shoulder mass.
+- Weapon: one connected two-handed boar spear with continuous shaft and compact broad point.
+- Effect: one bright ivory point flare with a narrow compression wake and restrained rim light on the charging mass.
+- Orientation: frontal foreshortening toward the viewer.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Point Charge". This is an action glyph, not a portrait, key art, wallpaper, or scenery.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Orsimer spear fighter charging on the ground from right toward left in a low compact stance. Left front foot planted and bent, right rear leg fully extended, hips low behind the point, torso leaning forward as one rigid line. Both hands close around one long spear shaft with wide useful spacing: lead hand near the socket guides the point, rear hand near the butt drives it. Wrists neutral, elbows flexed, no crossed arms. Hide the face behind a closed Orcish iron cheek-mask and brow plate.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected two-handed Orcish boar spear: straight dark ash shaft, one heavy leaf-shaped iron point with central ridge, rawhide socket lashings, olive-green grip bands, and one butt cap. No side axe blade, sword, second spear, shield, or detached head.
+Primary request: Point Charge. An Orsimer silhouette drives a two-handed boar spear straight toward the viewer. The bright point dominates the foreground; spaced hand masses, continuous shaft, angular helm, shoulders, hips, and rear leg align behind the charge.
 
-Add exactly ONE narrow pale-iron compression wake collinear behind the spear point and shaft, tapering backward and ending at the point in one compact rust-white contact spark. A small ochre dust push under the rear boot may show traction but is not another trail.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, spear, and compression path. Face is a void. Race as outline only: heavy angular helm, brute shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 2.133333-second, 99-track Generic clip accelerates roughly 499 units and makes two hits at 0.433329 and 0.866658. Distill both to one grounded point-first charge. No annotation proves an element.
-
-Use Elder Scrolls Orsimer construction: blackened iron scale-and-mail, angular overlapping Orcish plates, dark olive wool, rawhide straps, rust-red waist wrap, heavy brown boots. Palette: forge green, black iron, rust, rawhide brown, pale iron pressure, ochre dust, against muted clay-red and charcoal. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless grounded Orsimer, exactly one connected two-handed spear, exactly one point-aligned wake. Anatomically possible stance, grip, leverage, and balance only. No portrait, second weapon, duplicate spear, floating spearhead, axe blade, sword, shield, extra arm, crossed wrists, hand on blade, multiple trails, speed-line fan, element, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed boar spear with continuous shaft and compact broad point.
+Causal wake: one bright ivory point flare with a narrow compression wake and restrained rim light on the charging mass.
+Scene/backdrop: dark iron-gray and deep-green atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: frontal foreshortening toward the viewer
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no dark-on-dark weapon; no extra spear; no scenery; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Wide hand spacing, neutral wrists, connected arms, low hips, planted lead foot, and driving rear leg plausibly transmit the spear charge.
-- Full resolution and 32 px LANCZOS: pass. One horizontal spear point and its single narrow wake remain distinct.
-- Master SHA-256: `3CE0D5117391581714DA1EB1448C5C1784F566230077B8E576D1821E57EBD176`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `D7B398F54E94086419D62577A37491E98B1E80FDCA4EDA7CF05C4AD3C24418D2`.

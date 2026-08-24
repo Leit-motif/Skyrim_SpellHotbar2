@@ -1,47 +1,47 @@
 # Shadow Reave
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_48_shadow_reave`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Shadow Reave/AABL_Attack_A.HKX`; SHA-256 `73E79CF290C631876962299D8C63D96C334D63081E17F499D1C8BCD542FDB677`.
-- Animation-proven: the 3.166667-second, 99-track 2H clip makes three hits while traveling about 302 units; its terminal event includes jump-attack sound and camera shake.
-- Hit-fog and forward-FX names are unresolved; the ability name alone does not prove darkness, mist, teleportation, or clones.
-- Composition choice: one Khajiit caravan reaver, one connected two-handed crescent battleaxe, and one neutral physical wake.
+- Frozen action: A Khajiit silhouette completes one terminal two-handed battleaxe cut. Hips and shoulders have carried both hand masses through the long haft, and the heavy head finishes low with the tail counterbalancing the motion.
+- Outline cues: ear points, short muzzle, tail counter-arc.
+- Weapon: one connected two-handed battleaxe with long haft and one heavy cutting head.
+- Effect: one steel-white physical wake attached to the axe edge.
+- Orientation: descending diagonal, upper-right to lower-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls two-handed weapon art named "Shadow Reave". This is an action glyph, not a portrait, character key art, wallpaper, or scenery.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Khajiit caravan reaver completing one terminal two-handed diagonal axe cut from upper-left toward lower-right. Freeze a physically possible low landing: front foot planted, rear foot touching down, knees flexed, hips and shoulders rotated together. Both hands close around one long haft with wide spacing, lead nearer the head and rear near the butt; wrists neutral, elbows bent, shoulders transmitting the cut. Hide the face with a close dark indigo scarf-mask and small brass brow guard while preserving only a pointed-ear silhouette.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected two-handed Khajiit crescent battleaxe: straight dark hardwood haft, one compact forward-facing single crescent dark-steel head with brass socket and modest back spike, indigo wraps, one butt cap. No second axe, double head, detached blade, scythe, sword, or floating weapon.
+Primary request: Shadow Reave. A Khajiit silhouette completes one terminal two-handed battleaxe cut. Hips and shoulders have carried both hand masses through the long haft, and the heavy head finishes low with the tail counterbalancing the motion.
 
-Add exactly ONE broad ash-ivory physical wake tangent behind the axe edge, descending upper-left to lower-right and ending at the blade corner in one muted-brass spark. It is one blade-led wake, not three trails, darkness, fog, clone, ring, or detached crescent. Small neutral landing dust is allowed.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, battleaxe, tail cue, and terminal path. Face is a void. Race as outline only: ear points, short muzzle, tail counter-arc. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 3.166667-second, 99-track 2H clip makes three hits while traveling about 302 units; the terminal event includes jump-attack sound and shake. Hit-fog and forward-FX names are unresolved. Distill to one terminal physical cut. The name proves no shadow magic, darkness, mist, teleportation, or clones.
-
-Use Elder Scrolls Khajiit caravan-warrior construction: fitted dark indigo quilted cloth, tawny leather lamellar, narrow brass scales, sand wraps, muted rust sash, soft dark boots. Palette: indigo, tawny brown, sand, dark steel, muted brass, rust, one ash-ivory wake against quiet dusty turquoise and umber. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless Khajiit, exactly one connected two-handed single-head battleaxe, exactly one axe-connected wake. Anatomically possible landing, grip, joints, leverage, balance, edge direction, and trail path only. No portrait, second weapon, duplicate axe, floating head, detached haft, double axe, extra arm, impossible wrist, hand on blade, multiple trails, shadow magic, darkness, fog, clone, teleport effect, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed battleaxe with long haft and one heavy cutting head.
+Causal wake: one steel-white physical wake attached to the axe edge.
+Scene/backdrop: dark plum and charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: descending diagonal, upper-right to lower-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no painted fur; no shadow magic; no extra axe; no text; no logo; no watermark; no UI border; no metallic frame
+Correction priority: the battleaxe head is asymmetric with exactly one practical single-bit cutting blade on one side and a tiny blunt poll on the other. No double-bit, double crescent, mirrored, or symmetrical axe. Keep the Khajiit as a pure black outline with ear, short muzzle, and tail cues only.
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Both hands hold one shaft with useful spacing; the legs, hips, shoulders, axe edge, and connected wake agree on one supported landing cut.
-- Full resolution and 32 px LANCZOS: pass. One crescent axe and one neutral wake dominate without invented shadow effects.
-- Master SHA-256: `FEFD21A481CE54C49E030EFFCAF650D2441BA3E35FDDEB3188F061DD976E2C1C`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
 
-## Owner-directed fur-color correction
-
-- The owner requested visible Khajiit fur variation after repeated tawny treatment elsewhere.
-- The correction changes all visible fur to white with restrained cool-gray markings while
-  preserving the accepted indigo/brass armor, axe, grip, landing, and one neutral wake.
-- Full resolution and 32 px LANCZOS: pass. White ears, hands, legs, feet, and tail remain legible;
-  axe physics and trail causality are unchanged.
-- Superseded tawny master is preserved under the ignored pilot tree.
-- Corrected master SHA-256: `BA1596189E487A65A7E88D4C2CB4EE5F6E9388B8967955AF95E07A5F6B9E63B5`.
+- 128 px SHA-256: `B133A8FDA9D090E83778CD00B8A234F7AC7801009436702306CB3C86FB313049`.

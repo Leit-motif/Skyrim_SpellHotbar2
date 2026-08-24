@@ -1,37 +1,46 @@
 # Piercing Leap
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_42_piercing_leap`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Piercing Leap/AABL_Attack_A.HKX`; SHA-256 `FC8CF02921111E71F4C754295FAF2B1A6C3AE9B31B991BBDB526299812637523`.
-- Animation-proven: the 4.566667-second, 99-track Generic clip travels about 225 units and records two nearly simultaneous jump-attack hit frames at 1.416700 and 1.466608.
-- Ice-, heavy-paralysis-, hit-fog-, and wolf-magic-named annotations are unresolved, so no element, fog, animal, or paralysis color is claimed.
-- Composition choice: one airborne Breton polearm knight, one connected spear, and one collinear pressure wake distill the paired hit frames to one piercing action.
+- Frozen action: A Breton silhouette is airborne behind one two-handed spear thrust along a single diagonal axis. Torso, spaced hand masses, continuous shaft, point, and wake are collinear; legs trail compactly behind the thrust.
+- Outline cues: closed knight helm, compact shoulder mass.
+- Weapon: one connected two-handed spear with continuous long shaft, spaced hand masses, and one point leading.
+- Effect: one narrow ivory-white wake directly behind and collinear with the spear point.
+- Orientation: rising diagonal thrust, lower-left to upper-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Piercing Leap". This is an action glyph, not a portrait, character key art, splash illustration, wallpaper, or scenery.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Breton polearm knight in a committed airborne forward leap from lower-left toward upper-right. Freeze one coherent piercing instant: body nearly horizontal behind the weapon, rear leg extended, front knee tucked, shoulders driving forward, both hands spaced along one spear shaft. Use a low three-quarter side camera so the spear, hands, torso, and leap direction form one strong rising diagonal. Hide the face inside a closed compact steel bascinet; no visible eyes or portrait framing.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected two-handed Breton war spear: one long straight ashwood shaft, narrow leaf-shaped dark-steel spearhead, compact steel socket, burgundy grip wrap, and small butt cap. Both hands visibly grip the same shaft. It is a spear, not a sword, lance cluster, halberd, or detached projectile.
+Primary request: Piercing Leap. A Breton silhouette is airborne behind one two-handed spear thrust along a single diagonal axis. Torso, spaced hand masses, continuous shaft, point, and wake are collinear; legs trail compactly behind the thrust.
 
-Add exactly ONE narrow ivory-white physical pressure wake aligned directly behind the spearhead and shaft along the lower-left to upper-right thrust axis. The wake begins near the rear hand, strengthens behind the spearhead, and ends at the point in one compact pale-gold contact glint. It is one straight connected thrust trail, not multiple speed lines, a cone, ring, or floating slash. A tiny muted dust scuff at the departing rear foot may show launch, but no second impact.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, compact airborne legs, spear, and thrust axis. Face is a void. Race as outline only: closed knight helm, compact shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 4.566667-second, 99-track Generic clip travels about 225 units and records two nearly simultaneous hit frames at 1.416700 and 1.466608 during a jump attack. Unresolved ice, heavy-paralysis, hit-fog, and wolf-magic annotation names do not prove frost, paralysis color, fog magic, or a summoned animal. Distill the action to one penetrating airborne thrust, not two weapons or two trails.
-
-Use practical Elder Scrolls Breton knight language: fitted dark mail, compact steel brigandine plates, cream gambeson sleeves, cobalt-blue half-cloak pulled backward by the leap, muted burgundy belt tabs, brown leather boots and gloves. Palette: gunmetal, cream, cobalt, burgundy, ashwood, ivory-white pressure, restrained pale gold, against a quiet desaturated plum and slate field. Crisp painterly graphical MMO hotbar icon optimized for 32x32, high contrast, edge-to-edge, safe crop.
-
-HARD CONSTRAINTS: exactly one faceless full-body airborne Breton, exactly one connected two-handed spear, exactly one spear-aligned thrust wake. No portrait, second weapon, duplicate spear, floating spearhead, detached shaft, sword, shield, multiple trails, speed-line fan, frost, fog spell, wolf, paralysis glow, fire, lightning, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed spear with continuous long shaft, spaced hand masses, and one point leading.
+Causal wake: one narrow ivory-white wake directly behind and collinear with the spear point.
+Scene/backdrop: dark royal-blue and charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: rising diagonal thrust, lower-left to upper-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no scenery; no floating spear; no second point; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Both hands close around one continuous shaft with useful spacing; the shoulders, elbows, airborne body axis, rear leg, and cape plausibly counterbalance and drive the forward spear point.
-- Full resolution and 32 px LANCZOS: pass. One spear and its single collinear wake remain the dominant rising-diagonal glyph.
-- Master SHA-256: `A361D2B31767FC77DEB7B5D900174BD443C2198F91CC0D11242B4A1645D2E22D`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `E80E6CC8C7A60F8D7054310201B13B673C5B3E572D8B5DBDF9A7FD7FA5E389A0`.

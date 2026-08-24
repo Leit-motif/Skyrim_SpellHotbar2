@@ -1,53 +1,46 @@
 # Furious Charge
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-23
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_26_furious_charge`
 
-## Evidence and interpretation
+## Resolved identity
 
-- The active definition redirects to `Nolvus Ashes of War Stance Framework/Furious Charge`.
-  Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Furious Charge/AABL_Attack_A.HKX`;
-  SHA-256 `ECC2D44A60A18FF1545D11EF38B8D9CAA32469CF1D8D725D6641F090D15432CD`.
-- Animation-proven: the 5.066667-second, 99-track clip advances about 693 units. It opens four
-  collision windows on the `SHIELD` node: three 2.5-scale, 0.3-damage contacts during the run and
-  one final 4.0-scale, full-damage contact with a hit frame at 3.000000 seconds. Repeated gravel
-  footfalls and small camera shakes mark the charge. It contains no weapon swing event or elemental
-  payload.
-- Catalogue mismatch: ArtClass is `2H`, but active animation evidence explicitly collides on the
-  shield node. The icon follows the active clip and depicts no two-handed weapon.
-- Agent composition choice: one Imperial heavy shield, one mostly hidden faceless legionary, one
-  continuous charge wake, and one terminal physical impact. Imperial crimson, blackened iron,
-  bronze, gold, and ivory-gray follow project race/palette guidance without inventing magic.
-- Atlas choice: a foreshortened lower-left to upper-right shield wedge contrasts with the preceding
-  sword diagonal, cross impact, and low axe sweep.
+- Frozen action: An Imperial silhouette drives a heavy shield straight toward the viewer in a grounded rush. The shield fills the foreground while the closed helm and driving shoulder remain a small mass behind it; rear leg and torso visibly support the forward force.
+- Outline cues: closed legion helm, disciplined shoulder mass.
+- Weapon: one connected heavy rectangular shield presented boss-first; the bracing arm mass remains directly behind it.
+- Effect: one ivory compression wedge and compact boss impact on the shield face.
+- Orientation: frontal foreshortening toward the viewer.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style shield art named "Furious Charge". This is an ability glyph, not a portrait, character key art, splash illustration, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-PRIMARY GLYPH:
-A single battered Imperial heavy shield and the compressed physical charge-impact in front of it dominate 88-90% of the square. Use a low frontal three-quarter view: the shield drives from lower-left toward upper-right, strongly foreshortened, with its bronze rim leading into one compact ivory-white compression burst near the upper-right edge. Behind the shield, exactly ONE continuous tapering rush wake of dust and pressure traces the same straight charge axis back toward lower-left. This is a body-and-shield rush, not a weapon slash. No multiple trails, echo shields, rings, or floating effects.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-ACTION AND CAUSALITY:
-One tiny faceless Imperial legionary is almost entirely hidden immediately behind the shield, no more than 10-12% of the icon: only a simplified closed helmet, braced shoulder, bent driving leg, and rear boot are needed to connect body to shield. The shield is strapped to the left forearm and visibly pushed by the shoulder. Exactly one practical broad Imperial heavy shield with plausible riveted bronze-and-iron construction. No sword, axe, mace, spear, bow, staff, or second shield.
-The verified animation is a long roughly 693-unit forward charge using repeated SHIELD-node collisions and a much larger final shield collision. Depict one defining terminal shield impact, not repeated hits or repeated trails.
+Primary request: Furious Charge. An Imperial silhouette drives a heavy shield straight toward the viewer in a grounded rush. The shield fills the foreground while the closed helm and driving shoulder remain a small mass behind it; rear leg and torso visibly support the forward force.
 
-SKYRIM VISUAL LANGUAGE AND COLOR:
-Imperial identity through economical material cues only: muted crimson cloth, blackened iron, weathered bronze, one restrained gold accent. Quiet charcoal-crimson smoky field. The physical rush wake is ivory-gray dust with a few bronze-orange contact sparks and small stone fragments at the leading shield rim. No magic, no elemental aura, no holy glow, no rune.
-Bold painterly graphical MMO ability icon optimized for 32x32 readability; compact masses, high contrast, restrained texture, safe crop, dark vignette, edge-to-edge art. The shield silhouette and single forward impact must read instantly when tiny.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, shield, and compression path. Face is a void. Race as outline only: closed legion helm, disciplined shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-HARD CONSTRAINTS:
-exactly one shield, one mostly hidden faceless figure, one continuous charge wake, one terminal physical impact. No portrait, face, large character, weapon, multiple slash trails, duplicate shield, floating shield, ring, X symbol, fire, frost, lightning, spell, victim, gore, scenery, text, letters, numbers, logo, watermark, border, or UI frame.
+Weapon geometry: one connected heavy rectangular shield presented boss-first; the bracing arm mass remains directly behind it.
+Causal wake: one ivory compression wedge and compact boss impact on the shield face.
+Scene/backdrop: dark crimson-black atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: frontal foreshortening toward the viewer
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no eagle crest; no sword; no heraldry; no duplicate shield; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. The foreshortened shield, its continuous wake, and the terminal rim
-  impact dominate; the legionary is faceless, largely hidden, and mechanically subordinate.
-- 32 px LANCZOS reduction: pass. The red-black-gold shield wedge, trailing dust, and bright leading
-  contact remain one immediate charge glyph.
-- Master SHA-256: `42D9CAC79398645B8CD5610A11F6C9D9078F5A75A1959CB4E7BED6D1E0C4339B`.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `8232628C601FFED89F215B47652B3529319CE86540EBFB9AEEC7227FA5C90485`.

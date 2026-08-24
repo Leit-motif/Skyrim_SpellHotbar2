@@ -1,41 +1,46 @@
 # Long Claw
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_38_long_claw`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Long Claw/AABL_Attack_A.HKX`;
-  SHA-256 `C1374A2244B0E4E342D677C85E9215194CEF287F23348F469A71EEF5076637CA`.
-- Animation-proven: the 3.833333-second, 242-track 2H clip advances about 334 units and makes three
-  high-damage weapon contacts. The third carries unresolved heavy-paralysis and smash-fog payload
-  names plus camera shake.
-- Composition choice: one terminal rising cut, not three hits or trails. A Nord and one long hooked
-  greatsword express “claw” through physical blade geometry; unresolved names add no magic.
+- Frozen action: A broad Nord silhouette drives one rising hooked-greatsword cut from lower-right to upper-left. Bent knees and counterleaning torso support both hand masses on the hilt as the hooked tip leads the climb.
+- Outline cues: horned helm mass, broad shoulders.
+- Weapon: one connected two-handed hooked greatsword with readable hilt, long blade, and hooked terminal edge.
+- Effect: one rising steel-white wake attached to the hooked cutting edge.
+- Orientation: rising diagonal, lower-right to upper-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style two-handed weapon art named "Long Claw". This is a graphical action icon, not a portrait, character key art, splash illustration, wallpaper, or scenic painting.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one faceless full-body Nord greatswordsman completing one long low-to-high diagonal cut from lower-right toward upper-left. Freeze one coherent terminal strike: front leg planted, rear leg extended, hips rotated, torso rising, both hands spaced on one long grip. Hide the face with a closed ancient Nordic iron helm and deep shadow.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly one practical two-handed Nordic greatsword, all parts connected and held by both hands: one long dark-steel blade with a modest forward-curved claw-like tip, narrow fuller, compact hooked guard, leather-wrapped grip, pommel. Add exactly one long narrow ivory-steel pressure wake tangent to and directly behind the edge, rising from lower-right to upper-left and ending at the blade tip in one white-ochre spark. No second or third trail, echo sword, X, ring, or floating crescent.
+Primary request: Long Claw. A broad Nord silhouette drives one rising hooked-greatsword cut from lower-right to upper-left. Bent knees and counterleaning torso support both hand masses on the hilt as the hooked tip leads the climb.
 
-The verified 3.833333-second, 242-track 2H clip advances roughly 334 units and makes three high-damage contacts; the third carries unresolved heavy-paralysis and smash-fog names plus shake. Distill it to the terminal cut only. Unresolved names prove no fog magic, paralysis color, frost, aura, or element.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, hooked greatsword, and rising path. Face is a void. Race as outline only: horned helm mass, broad shoulders. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-Use economical ancient Skyrim cues: closed weathered iron helm, dark ringmail, layered iron scales, faded storm-blue wool, charcoal leather, narrow rust-red sash, small pale-fur accents. Crisp painterly Elder Scrolls MMO icon optimized for 32x32 against muted slate-blue/umber.
-
-HARD CONSTRAINTS: exactly one faceless full-body Nord, exactly one connected two-handed greatsword, exactly one blade-connected wake. No portrait, second weapon, floating weapon, detached blade, claw gauntlet, animal claw, scythe, extra limb, duplicate figure, multiple trails, magic fog, fire, frost, lightning, paralysis glow, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed hooked greatsword with readable hilt, long blade, and hooked terminal edge.
+Causal wake: one rising steel-white wake attached to the hooked cutting edge.
+Scene/backdrop: dark cold-blue and charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: rising diagonal, lower-right to upper-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no hair; no extra claw weapon; no costume detail; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. One Nord action source, one connected two-handed hooked greatsword,
-  one smooth tangent wake, and one endpoint spark form a coherent physical cut.
-- 32 px LANCZOS reduction: pass. The hooked blade and one long rising wake remain clearly readable.
-- Master SHA-256: `52F7EA3F728B79D2850AD98CC05DC05649FD8C01CC2E12662F9DC50F236F084B`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `C64D2ABC81D75D2448ADCF8363F39CC2C3B32D7E666CF499BF9D679CCEA21351`.

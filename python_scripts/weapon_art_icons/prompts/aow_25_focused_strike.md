@@ -1,56 +1,46 @@
 # Focused Strike
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-23
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_25_focused_strike`
 
-## Evidence and interpretation
+## Resolved identity
 
-- The active definition redirects to `Nolvus Ashes of War Stance Framework/Focused Strike`.
-  Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Focused Strike/AABL_Attack_A.HKX`;
-  SHA-256 `8723BCD3FAFB392EFC84B0BE315D85D10F22166696C28F8FEECE622C802D0B0D`.
-- Animation-proven: the 3.500000-second, 99-track, 1H-class clip contains three swings and hits at
-  0.433316/0.566644, 0.866632/0.983294, and 1.916590/2.166580 seconds. It advances about 246 units
-  with negligible rotation; the final beat carries jump-attack sound, camera shake, `$HitFog`, and
-  `$ES_Paralysis`.
-- Payload resolution: no active definitions were found for `$HitFog` or `$ES_Paralysis`. Their
-  element, color, spell identity, and exact VFX remain unresolved and were not invented.
-- Agent composition choice: the three timed hits are distilled to one defining final low lunge and
-  one connected descending trail. A faceless Altmer fighter with one one-handed elven sword uses
-  race-guided gold, ivory, emerald, and deep-green material cues without implying magic.
-- Atlas choice: one upper-left to lower-right diagonal contrasts with Flurry Strike's ground sweep,
-  Focused Cross's intersecting axes, and Enrage (M)'s upward fan.
+- Frozen action: A tiny Altmer silhouette commits to the final descending sword lunge from upper-right toward lower-left. Tall narrow torso, forward knee, shoulder, hand mass, blade, and target line align behind the point.
+- Outline cues: pointed-ear hood, tall narrow proportion.
+- Weapon: one connected narrow elven straight sword with the hand mass fixed behind the guard.
+- Effect: one ivory descending slash attached to the blade; the effect dominates the square.
+- Orientation: descending diagonal, upper-right to lower-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style one-handed weapon art named "Focused Strike". This is an ability glyph, not a portrait, character key art, splash illustration, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-PRIMARY GLYPH:
-One—and only one—razor-focused physical sword strike dominates the square: a single narrow ivory-white descending diagonal slash traveling from upper-left toward a compact contact point at lower-right. The one trail is brightest immediately behind the sword's cutting edge and tapers backward along that same recent path. It must be visibly attached to and caused by the blade. The slash, blade, and compact contact flare occupy about 85-88% of the icon. No duplicate trails, echo slashes, secondary arcs, rings, or floating effects.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-ACTION AND FIGURE:
-Freeze the decisive final beat of a forward lunge: one tiny faceless Altmer fighter occupies no more than 12-15% near the upper-left/center, body low and driving diagonally down-right behind the strike, front knee deeply bent, rear leg extended, right arm reaching into the cut. The figure exists only to explain the strike and must remain a simple full-body silhouette, never a subject.
-Exactly ONE practical Skyrim-style one-handed elven sword in the right hand, normal length and proportions, one grip, empty off-hand, no shield. The blade lies directly on the bright descending slash axis, with its cutting edge leading toward the lower-right contact. No second weapon and no detached blade.
+Primary request: Focused Strike. A tiny Altmer silhouette commits to the final descending sword lunge from upper-right toward lower-left. Tall narrow torso, forward knee, shoulder, hand mass, blade, and target line align behind the point.
 
-SKYRIM VISUAL LANGUAGE:
-Altmer identity through economical silhouette/material cues only: tall narrow proportions compressed into the lunge, closed faceless helm, simplified golden elven plate masses over deep emerald cloth and ivory accents. No face, eyes, hair, skin close-up, armor showcase, ornate character detail, or spellcasting.
-The animation proves a roughly 246-unit forward sequence with three hits and a decisive final low lunge. Depict only the single defining final strike, not three hits or three trails. Named paralysis and fog payloads are unresolved, so add no magical element, aura, rune, mist spell, or colored energy.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, sword, and descending path. Face is a void. Race as outline only: pointed-ear hood, tall narrow proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-STYLE AND COLOR:
-Bold painterly graphical MMO ability icon optimized for 32x32 readability; high contrast, clean silhouette, restrained texture. One ivory-white steel slash and small pale-gold physical sparks at contact against a quiet deep emerald-black field; tiny figure in muted antique gold, ivory, and deep green. Subtle dark vignette, safe crop, edge-to-edge icon art. No border, no UI frame, no text, no letters, no numbers, no logo, no watermark.
-
-HARD CONSTRAINTS:
-exactly one tiny faceless full-body figure; exactly one one-handed sword; exactly one connected slash trail; one compact physical contact point. No portrait framing, large character, large face, second weapon, three slashes, trail echoes, floating crescent, X symbol, halo, fire, frost, lightning, purple magic, victim, gore, scenery, text, or border.
+Weapon geometry: one connected narrow elven straight sword with the hand mass fixed behind the guard.
+Causal wake: one ivory descending slash attached to the blade; the effect dominates the square.
+Scene/backdrop: dark emerald and charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: descending diagonal, upper-right to lower-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no gold armor; no halo; no second slash; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. One sword, one continuous diagonal strike, and one compact contact
-  dominate; there are no duplicate trails or detached effects. The Altmer is faceless and shown in
-  action rather than portrait framing.
-- 32 px LANCZOS reduction: pass. The ivory diagonal, sword, and gold-green source silhouette remain
-  one clean ability glyph.
-- Master SHA-256: `B163DE143AE9E3715FE261A68F4291D5046ED212E72F710A9255AC9E8CB68709`.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `6B2851186AD4F67EA7094FDE000382D95481FDE1E4F86C19C89E61D88C4EC091`.

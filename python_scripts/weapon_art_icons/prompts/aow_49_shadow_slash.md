@@ -1,37 +1,46 @@
 # Shadow Slash
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_49_shadow_slash`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Shadow Slash/AABL_Attack_A.HKX`; SHA-256 `AF77D848ECB31BECCB09D693894A825F34BB892CF0588F7AFF472716D4090DB8`.
-- Animation-proven: the 3.666667-second, 99-track 2H clip travels about 637 units and makes two hits at 1.416666 and 2.066666.
-- Hit-fog and forward-FX names are unresolved; no shadow, darkness, mist, invisibility, teleportation, or clone is claimed.
-- Composition choice: one Imperial greatsword dash distilled to one terminal low horizontal cut.
+- Frozen action: An Imperial silhouette passes through one long low greatsword dash-cut from right to left. The closed helm and torso stay compressed behind both hand masses; the blade remains low and its wake records the travel line.
+- Outline cues: closed legion helm, disciplined shoulder mass.
+- Weapon: one connected two-handed straight greatsword with both hand masses on the hilt.
+- Effect: one long low steel-white physical wake attached to the blade.
+- Orientation: low horizontal right-to-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls two-handed weapon art named "Shadow Slash". This is an action glyph, not a portrait, character key art, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Imperial greatswordswoman in a very fast low dash from left toward right, completing one terminal horizontal slash. Right front foot planted beyond body, left rear leg extended, hips low, torso turned with shoulders, both arms driving one sword. Both hands close around one continuous long hilt with clear spacing, lead immediately behind guard and rear near pommel; wrists neutral, elbows flexed. Hide the face inside a closed dark-steel Imperial officer helm.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected two-handed Imperial greatsword: one long straight dark-steel double-edged blade, shallow fuller, compact winged steel guard, long oxblood-wrapped grip, one pommel. Both hands hold the same grip. No second sword, detached blade, one-handed grip, spear, axe, or floating weapon.
+Primary request: Shadow Slash. An Imperial silhouette passes through one long low greatsword dash-cut from right to left. The closed helm and torso stay compressed behind both hand masses; the blade remains low and its wake records the travel line.
 
-Add exactly ONE long low silver-ivory physical wake tangent behind the moving blade edge, running left-to-right across the lower third and ending at the sword tip in one compact red-gold spark. One connected slash only; no second trail, shadow band, fog, ring, X, afterimage, or detached crescent. A short neutral dust streak may show dash travel.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, greatsword, and low dash path. Face is a void. Race as outline only: closed legion helm, disciplined shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 3.666667-second, 99-track 2H clip travels about 637 units and makes two hits at 1.416666 and 2.066666. Hit-fog and forward-FX names are unresolved. Distill both to one terminal long-travel slash. The name proves no shadow magic, darkness, mist, invisibility, teleportation, or clones.
-
-Use Elder Scrolls Imperial veteran construction: blackened-steel segmented cuirass and bracers, dark mail, charcoal leather skirt panels, faded oxblood sash, small muted-gold fittings, fitted boots. Palette: black steel, charcoal, oxblood, muted gold, one silver-ivory wake against desaturated brick-red and slate-blue. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless Imperial, exactly one connected two-handed greatsword, exactly one blade-connected wake. Anatomically possible dash, stance, grip, joints, leverage, balance, edge direction, and trail only. No portrait, second weapon, floating sword, detached hilt, one-handed grip, extra arm, impossible wrist, hand on blade, multiple trails, shadow magic, darkness, fog, clone, teleport, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed straight greatsword with both hand masses on the hilt.
+Causal wake: one long low steel-white physical wake attached to the blade.
+Scene/backdrop: dark crimson-black atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: low horizontal right-to-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no shadow magic; no cape; no second blade; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Both hands close around one continuous hilt; wrists, shoulders, hips, legs, blade edge, and single wake agree on one supported low slash.
-- Full resolution and 32 px LANCZOS: pass. One long horizontal sword/wake glyph remains distinct without invented shadow effects.
-- Master SHA-256: `228D987CFCD896C07B473FB3D52CFAD7250470656DD24B57863E9ACB483A15F7`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `83663AD1FF11FEE34D741F7162B0A6E751C7026D8C731C626AD87BCDFD594543`.

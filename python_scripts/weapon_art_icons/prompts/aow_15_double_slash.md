@@ -1,51 +1,46 @@
 # Double Slash
 
-**Status:** Finalized by owner on 2026-08-23
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** Codex built-in image generation plus targeted effect and figure edits
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_15_double_slash`
 
-## Evidence and interpretation
+## Resolved identity
 
-- The 2.666667-second generic animation advances roughly 151 units, contains two weapon-swing
-  events, and resolves into one terminal hit with strong camera shake.
-- The owner approved an effect-first MMO glyph with one dominant silver-blue slash rather than two
-  visible trails. The final icon prioritizes hotbar readability over literal swing counting.
-- The small source figure is a French-medieval knight-coded Breton: closed steel bascinet, mail,
-  simple plate, royal-blue surcoat, and restrained burgundy panels.
+- Frozen action: A compact Breton silhouette drives one dominant sword slash across the square, frozen at the strongest finishing beat rather than diagramming two hits. The planted stance and torso rotation support a rising lower-left to upper-right cut.
+- Outline cues: closed bascinet, compact shoulder mass.
+- Weapon: one connected straight one-handed sword with the hand mass fixed behind the guard.
+- Effect: one broad ivory-blue blade wake owns the square and begins at the moving edge.
+- Orientation: rising diagonal, lower-left to upper-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Reference roles
-
-- Approved Weapon Art masters: project MMO hotbar grammar, effect-first hierarchy, faceless dark
-  silhouette, safe crop, and 32 px readability only.
-- Earlier Double Slash candidates: edit targets used to converge on the approved effect and figure.
-  No third-party artwork or Bethesda asset is stored or redistributed.
-
-## Final correction prompt
+## Generation prompt
 
 ```text
-Use case: precise-object-edit
-Asset type: square MMO/RPG hotbar ability glyph
-Input images: Image 1 is the edit target.
-Primary request: make exactly two targeted corrections.
-Correction 1 — slash effect: remove the entire upper secondary slash centered near x43%, y32%,
-including its pale arc and faint afterimage. Fill that area naturally with the existing dark
-burgundy-black atmospheric background. Keep the lower main bright silver-blue slash exactly as it
-is: same shape, position, thickness, direction, brightness, texture, endpoint, and amber impact
-spark. Do not add any replacement trail or effect. The final icon has exactly one visible slash
-trail.
-Correction 2 — Breton figure: keep the small cropped figure's exact pose, size, placement, sword,
-facing direction, and silhouette footprint, but replace the hooded cloth-adventurer design with
-unmistakable French-medieval knight coding appropriate to a Breton. Give the faceless figure a
-simple closed steel bascinet-style helmet with a narrow dark visor, chainmail at the neck, compact
-steel pauldrons and gauntlets, and a plain royal-blue surcoat with restrained burgundy panels over
-mail. Keep the knight graphical and simplified, not detailed character art.
-Keep unchanged: effect-first MMO icon hierarchy, lower main slash, sword and impact alignment,
-right-to-left action, deep burgundy background, royal-blue/burgundy palette, lighting, crop,
-negative space, and painted texture.
-Constraints: one small cropped faceless Breton knight, one sword, exactly one slash trail, one
-impact spark. No upper slash, duplicate trail, hood, rogue cloak, exposed face, portrait, full-body
-key art, ornate armor, heraldic emblem, shield, second weapon, scenery, text, runes, logo, watermark,
-or border.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
+
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
+
+Primary request: Double Slash. A compact Breton silhouette drives one dominant sword slash across the square, frozen at the strongest finishing beat rather than diagramming two hits. The planted stance and torso rotation support a rising lower-left to upper-right cut.
+
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, sword, and path. Face is a void. Race as outline only: closed bascinet, compact shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
+
+Weapon geometry: one connected straight one-handed sword with the hand mass fixed behind the guard.
+Causal wake: one broad ivory-blue blade wake owns the square and begins at the moving edge.
+Scene/backdrop: dark burgundy-blue atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: rising diagonal, lower-left to upper-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no second figure; no heraldry; no duplicate blade; no text; no logo; no watermark; no UI border; no metallic frame
 ```
+
+## Hard gate
+
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `390B527770366E91B57B1A700FC6D65E59341B17A66631E302CEDE0E996AF54B`.

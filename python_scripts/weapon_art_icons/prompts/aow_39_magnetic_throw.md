@@ -1,60 +1,46 @@
 # Magnetic Throw
 
-**Status:** Finalized by owner-directed Altmer arcane-trickster replacement on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One initial Codex generation, followed by one owner-directed edit using the
-initial result as the sole image reference
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_39_magnetic_throw`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Magnetic Throw/AABL_Attack_A.HKX`;
-  SHA-256 `5CBDB6B1F1E764AB83B7C9FDE356A2F953DFA15E1AF927514E0623DC87FC15DE`.
-- Animation-proven: the 2.333333-second, 97-track Generic clip begins with a left-hand sprint-power
-  action, makes one early contact, retreats about 68 units, then makes seven rapid contacts on the
-  same WEAPON node. One swing carries unresolved `$BlueAttackHit01`.
-- Initial composition choice: one Breton Dwemer-salvage skirmisher, one brass disc, and one
-  unbroken blue-white hand-to-hub return line.
-- Owner correction: the disc/gadget concept looked wrong. Replace it with an arcane-trickster
-  Altmer assassin throwing one blue psychic/telekinetic shadow blade that returns magnetically.
+- Frozen action: A small Altmer silhouette at lower-left reaches one palm toward a single airborne Alinor blade at upper-right. The blade follows one readable out-and-return loop, and a bright blue tether directly connects palm to blade.
+- Outline cues: pointed-ear hood, tall narrow proportion.
+- Weapon: one connected narrow flying Alinor-style blade with a gently curved edge; no blade held by the figure.
+- Effect: one bright blue palm-to-blade tether plus one compact pale-blue return loop.
+- Orientation: looping diagonal, lower-left to upper-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style weapon art named "Magnetic Throw". This is a graphical action icon, not a portrait or key art.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one faceless full-body Breton Dwemer-salvage skirmisher braced at lower-left, recoiling after a throw, right hand open toward upper-right. Exactly one compact spinning brass throwing disc sits at the upper-right endpoint.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-The disc is one joined Dwemer-metal ring-blade with a continuous outer rim, solid inner hub, and three radial braces. Connect the open right hand to the disc with exactly one continuous narrow blue-white magnetic return ribbon beginning at the palm and ending at the hub. One compact contact glint on the rim. No second arc, orbit rings, repeated discs, projectile row, echo weapon, or lightning branches.
+Primary request: Magnetic Throw. A small Altmer silhouette at lower-left reaches one palm toward a single airborne Alinor blade at upper-right. The blade follows one readable out-and-return loop, and a bright blue tether directly connects palm to blade.
 
-The verified 2.333333-second Generic clip makes one early contact, retreats about 68 units, then triggers seven rapid contacts on the same WEAPON node; one swing carries unresolved `$BlueAttackHit01`. Distill this to one thrown weapon on one return path, not eight weapons or trails. The name and blue marker support restrained magnetic-return shorthand, not an element storm.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to casting torso, hand, flying blade, and return loop. Face is a void. Race as outline only: pointed-ear hood, tall narrow proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-Use practical High Rock/Dwemer salvage cues: dark fitted mail, brown leather brigandine, compact brass shoulder/forearm plates, muted cobalt cloth, cream wraps, wine-red belt accent. Crisp painterly Elder Scrolls MMO icon optimized for 32x32 against deep umber/desaturated blue.
-
-HARD CONSTRAINTS: exactly one faceless full-body Breton, exactly one brass throwing disc, exactly one continuous hand-to-disc ribbon. No portrait, second weapon, duplicate disc, floating unrelated weapon, shield, gear cloud, projectile row, multiple trails, branching lightning, fire, frost, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected narrow flying Alinor-style blade with a gently curved edge; no blade held by the figure.
+Causal wake: one bright blue palm-to-blade tether plus one compact pale-blue return loop.
+Scene/backdrop: dark emerald-charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: looping diagonal, lower-left to upper-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no second blade; no darkness magic; no assassin portrait; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- The initial Breton/Dwemer-disc result was superseded by explicit owner direction. It is preserved
-  at `python_scripts/weapon_art_icons/pilot/aow_39_magnetic_throw_dwemer_disc_superseded.png`.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
 
-## Owner-directed edit prompt
-
-```text
-Replace the armored Breton/Dwemer-disc concept with one original Altmer arcane assassin at lower-left telekinetically throwing exactly one magical Alinorian shadow blade toward upper-right. Use fitted midnight-indigo Alinor assassin leather/cloth with blackened-gold geometric plates, muted teal sash, angular hood with pointed-ear silhouette, and a fully shadowed face.
-
-Exactly one forearm-length single-edged Alinorian assassin blade: dark metal, shallow curve, pale-gold spine, compact crescent guard, wrapped grip, one pommel. Wrap it in restrained cobalt-blue psychic energy. Connect the open casting palm to the blade pommel with exactly one smooth continuous icy-blue/cobalt magnetic return tether. One projectile and one return path represent all repeated same-node contacts.
-
-No brass disc, chakram, ring weapon, second blade, blade swarm, duplicate projectile, extra trail, pink, magenta, violet psychic energy, branching lightning, portrait, victim, or scenery. Make the blue blade and palm-to-pommel tether the immediate 32x32 read.
-```
-
-## Final hard-gate result
-
-- Full-resolution result: pass. One faceless Altmer action source, one connected physical/magical
-  blade, and one continuous cobalt palm-to-pommel tether form a coherent throw-and-recall ability.
-- 32 px LANCZOS reduction: pass. The blue blade, one return line, open hand, and crouched assassin
-  remain distinct; no gadget-disc read survives.
-- Master SHA-256: `CC476264C957CDFE16786C5002CD0512632B24E5970DE9928D109643C53C8992`.
-- No autonomous regeneration beyond the owner-directed edit was attempted.
+- 128 px SHA-256: `50466D5AC182B8D063C10D92413F4E88666E497144EE878FA15C169C3952B0E5`.

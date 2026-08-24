@@ -1,37 +1,46 @@
 # Soul Cleaver
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_52_soul_cleaver`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Soul Cleaver/AABL_Attack_A.HKX`; SHA-256 `15F7D184BCC1A861DCED3FBB09C033879FFCA86DB845DB8E8567905CDFC59C6D`.
-- Animation-proven: the 2.916667-second, 97-track Generic clip advances about 93 units and makes two hits at 1.033329 and 1.249995.
-- Paralysis is unresolved; the name proves no soul, necromancy, absorption, spectral fire, or victim.
-- Composition choice: one Orsimer executioner, one two-handed single-edged war cleaver, and one physical chop wake.
+- Frozen action: An Orsimer silhouette delivers one heavy war-cleaver chop. The planted stance, hips, shoulders, both hand masses, long hilt, and single-edged head align behind a wide descending cut.
+- Outline cues: heavy angular helm, brute shoulder mass.
+- Weapon: one connected two-handed single-edged war cleaver with a heavy forward cutting edge.
+- Effect: one wide steel-white physical chop wake attached to the edge.
+- Orientation: descending diagonal, upper-left to lower-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Soul Cleaver". This is an action glyph, not a portrait, character key art, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small faceless full-body Orsimer executioner completing one heavy two-handed cleaver chop upper-right to lower-left. Front foot planted, knees bent, hips dropped, torso rotated with shoulders, elbows flexed. Both hands close around one continuous long grip with clear spacing, lead behind guard and rear near pommel; wrists neutral. Hide face in a closed angular Orcish iron mask.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly ONE connected two-handed Orcish war cleaver: one broad heavy single-edged black-iron blade, straight cutting edge with clipped point, thick rusted spine, compact angular guard, long rawhide grip, one iron pommel. It is a cleaver-like greatblade, not an axe, scythe, one-handed butcher knife, or detached slab. Both hands hold it and the single edge leads.
+Primary request: Soul Cleaver. An Orsimer silhouette delivers one heavy war-cleaver chop. The planted stance, hips, shoulders, both hand masses, long hilt, and single-edged head align behind a wide descending cut.
 
-Add exactly ONE broad bone-white physical wake tangent behind the cleaver edge, descending upper-right to lower-left and ending at the blade corner in one compact rust-white impact. No second trail, soul energy, ghost, ring, X, black hole, or detached crescent.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, war cleaver, and chop path. Face is a void. Race as outline only: heavy angular helm, brute shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 2.916667-second, 97-track Generic clip advances about 93 units and makes two hits. Unresolved paralysis proves no magic. Distill both to one terminal physical chop. The name proves no souls, necromancy, absorption, spectral fire, darkness, or victim.
-
-Use Elder Scrolls Orsimer construction: blackened iron scale-and-mail, angular overlapping plates, dark olive cloth, rawhide straps, rust-red sash, heavy boots, bone toggles. Palette: black iron, forge green, rawhide brown, rust, bone-white wake, ochre dust against muted mustard-olive and charcoal. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one faceless Orsimer, exactly one connected two-handed single-edged cleaver, exactly one blade-connected wake. Anatomically possible stance, grip, joints, leverage, balance, edge direction, and trail only. No portrait, second weapon, floating blade, detached hilt, axe, scythe, one-handed grip, extra arm, impossible wrist, hand on blade, multiple trails, soul, ghost, skull, necromancy, darkness, paralysis glow, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected two-handed single-edged war cleaver with a heavy forward cutting edge.
+Causal wake: one wide steel-white physical chop wake attached to the edge.
+Scene/backdrop: dark iron-gray and rust atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: descending diagonal, upper-left to lower-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no soul effect; no armor detail; no second edge; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Both hands close around one long grip; elbows, shoulders, hips, legs, broad edge, and connected wake support one heavy chop.
-- Full resolution and 32 px LANCZOS: pass. The single-edged cleaver and one wake form a strong distinct glyph with no soul imagery.
-- Master SHA-256: `F2EC155C3CC6E7C8781FB4A9DA0098D2F217AD92519D40E12CFD328DC3B6370F`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `C26111D3624B08F6988142D5C4085C83E249AB2BC3577AA2B389C7C1104EC0AD`.

@@ -1,34 +1,46 @@
 # Wicked Throw
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_57_wicked_throw`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Wicked Throw/AABL_Attack_A.HKX`; SHA-256 `1CD902B78DEEBD9FDC60BECE51078DB7F9C120C115ED3C8F8AFB5B54F9D05E99`.
-- Animation-proven: the 3.25-second, 99-track clip creates two mirrored collision volumes on the
-  same `WEAPON`, produces seven rapid hit frames from 0.4 through 1.75 seconds, advances about 133
-  units, retracts, and settles near 86 units.
-- Composition choice follows the owner's earlier direction: a female Altmer arcane-trickster
-  assassin telekinetically throws one Alinorian blade that returns along one pale-blue path.
-- Paralysis names do not establish a separate visual effect.
+- Frozen action: An Altmer silhouette releases one Alinor blade into an out-and-return flight loop. The throwing hand points from a small lower-right figure mass toward the airborne blade; the blade remains the only projectile.
+- Outline cues: pointed-ear hood, tall narrow proportion.
+- Weapon: one connected narrow flying Alinor-style blade with gently curved edge; no second blade.
+- Effect: one pale-blue out-and-return loop attached to the flying blade.
+- Orientation: looping diagonal, lower-right to upper-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation brief
+## Generation prompt
 
-One square effect-first Elder Scrolls MMO ability glyph: exactly one small faceless female Altmer
-assassin at lower-left in a supported throwing follow-through, right hand visibly open and empty,
-left hand balancing near the ribs. Exactly one complete forearm-length golden-ivory Alinorian
-saber-dagger flies point-first at upper-right. Exactly one continuous pale misty-blue telekinetic
-open loop connects palm and blade, expressing one outbound and returning path without multiplying
-weapons or hits. Deep blue-black and muted emerald field; practical ivory-gold and midnight-blue
-Alinor assassin armor; no portrait framing, disc, chakram, pink effect, extra trail, or scenery.
+```text
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-## Final hard-gate result
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-- Physics/anatomy: pass. Exactly two arms and hands, planted stance, seated shoulder, neutral wrist,
-  visibly empty throwing palm, and one causally oriented airborne blade.
-- Full resolution and 32 px LANCZOS: pass. The one blade and pale-blue return loop dominate; the
-  female Altmer remains a clear secondary source.
-- Master SHA-256: `272006DC709973ADFC4A6C1F6B396C4CF943D8BB701E787DEBF91DFE6C4EC07F`.
-- No autonomous regeneration was attempted.
+Primary request: Wicked Throw. An Altmer silhouette releases one Alinor blade into an out-and-return flight loop. The throwing hand points from a small lower-right figure mass toward the airborne blade; the blade remains the only projectile.
+
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to throwing torso, hand, flying blade, and return loop. Face is a void. Race as outline only: pointed-ear hood, tall narrow proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
+
+Weapon geometry: one connected narrow flying Alinor-style blade with gently curved edge; no second blade.
+Causal wake: one pale-blue out-and-return loop attached to the flying blade.
+Scene/backdrop: dark emerald-black atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: looping diagonal, lower-right to upper-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no blonde hair; no visible face; no second blade; no portrait; no text; no logo; no watermark; no UI border; no metallic frame
+```
+
+## Hard gate
+
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `4ACDEC3E94FA83B16BB9B88313ED4A5A2154A74BA49F028BFA4752D2837AB289`.

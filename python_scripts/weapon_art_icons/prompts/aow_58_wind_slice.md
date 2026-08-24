@@ -1,32 +1,47 @@
 # Wind Slice
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_58_wind_slice`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Wind Slice/AABL_Attack_A.HKX`; SHA-256 `A8B51A0B98A959EBA09F0401ADC73EEB1A7F13ECDDD3881111C7EB0502B06DFA`.
-- Animation-proven: the 2.5-second, 99-track clip advances about 412 units and alternates right and
-  left weapon swing events across five hit frames from 0.45 through 1.17 seconds.
-- Composition choice: one female Redguard sword-dancer with two held scimitars, but only the active
-  right blade receives one pale pressure wake; the offhand blade stays in a no-trail guard.
-- The name and annotations do not prove an elemental wind spell.
+- Frozen action: A Redguard silhouette passes through one dual-scimitar dash, but only the leading scimitar is actively cutting. The torso leans into travel, one blade leads, and the second remains a close trailing weapon cue without its own wake.
+- Outline cues: wrapped head mass, lean duelist proportion.
+- Weapon: exactly two connected curved scimitars, one active at the leading edge and one trailing close to the body.
+- Effect: one pale ivory pressure wake attached only to the active scimitar edge.
+- Orientation: passing horizontal left-to-right.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation brief
+## Generation prompt
 
-One square effect-first Elder Scrolls MMO ability glyph: exactly one small faceless female Redguard
-in a low supported passing dash from upper-left to lower-right. Exactly two short one-handed
-scimitars, one per fully closed fist. The right scimitar makes the dominant low cut across the
-foreground with one pale blue-white physical pressure crescent tangent behind its leading edge; the
-left scimitar stays safely behind the hip with no trail. Sand-white cloth, terracotta leather,
-turquoise sash, aged bronze, smoky blue-gray and burnt umber field; no portrait or scenery.
+```text
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-## Final hard-gate result
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-- Physics/anatomy: pass. Front knee and rear leg support the dash; both fists close around separate
-  grips; wrists, elbows, shoulders, hips, blade clearance, and cutting edge agree on the action.
-- Full resolution and 32 px LANCZOS: pass. The active scimitar and one pressure crescent dominate;
-  the offhand weapon remains readable without becoming a second trail.
-- Master SHA-256: `2A9FAF2826AB1D6AA9B6CD8EC5675398FEBD37F7F6E5867675872ED8E4590A0F`.
-- No autonomous regeneration was attempted.
+Primary request: Wind Slice. A Redguard silhouette passes through one dual-scimitar dash, but only the leading scimitar is actively cutting. The torso leans into travel, one blade leads, and the second remains a close trailing weapon cue without its own wake.
+
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, two scimitars, and passing path. Face is a void. Race as outline only: wrapped head mass, lean duelist proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
+
+Weapon geometry: exactly two connected curved scimitars, one active at the leading edge and one trailing close to the body.
+Causal wake: one pale ivory pressure wake attached only to the active scimitar edge.
+Scene/backdrop: dark deep-red and sand-charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: passing horizontal left-to-right
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no second wake; no white costume; no scenery; no extra blade; no text; no logo; no watermark; no UI border; no metallic frame
+No correction history. Enforce exactly two scimitars but exactly one active pale pressure wake on the leading blade; the trailing scimitar remains close to the body with no glow.
+```
+
+## Hard gate
+
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `FBB959CB1E2B286ECD0C084FC92E54C1094C4E44A12112E191082EBD39259095`.

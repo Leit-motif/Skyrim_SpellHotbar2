@@ -1,73 +1,46 @@
 # Orbital Cleave
 
-**Status:** Finalized by owner-directed anatomical correction on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_41_orbital_cleave`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Orbital Cleave/AABL_Attack_A.HKX`; SHA-256 `0B27223239A767BE66FB7F6152644EAB6C6F5F99A90FF68F8346C0CCCE9657DC`.
-- Animation-proven: the 4.0-second, 99-track Generic clip keeps one WEAPON collision active from 0.949999 to 2.166666, makes one swing and one hit near 2.2 seconds, and advances about 131 units.
-- Unresolved endurance, heavy-paralysis, and Rim-enchantment names do not establish an element or magical aura.
-- Composition choice: one Redguard two-handed curved blade and one open, blade-connected orbital wake express the named action without multiplying weapons or rings.
+- Frozen action: A Redguard silhouette rotates through one horizontal saber cleave. Bent knees and centered hips support the torso turn; the saber edge leads one circular orbit while the figure remains a small pivot mass.
+- Outline cues: wrapped veil hood, lean duelist proportion.
+- Weapon: one connected one-handed saber with a curved cutting edge and hand mass behind the guard.
+- Effect: one circular ivory-gold blade wake attached to the saber edge.
+- Orientation: centered horizontal orbit.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
-
-```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Orbital Cleave". This is an action glyph, not a portrait, character key art, wallpaper, or scenic painting.
-
-Show exactly one small faceless full-body Redguard two-handed swordsman at center-left completing one powerful horizontal orbiting cleave. Use a high three-quarter camera so the hips, shoulders, both hands, one weapon, and its circular path are mechanically clear. Freeze the terminal instant: knees bent, weight over the front foot, torso tightly rotated, both hands spaced on the grip, blade crossing the foreground from right toward left. Hide the face behind a dark wrapped desert veil and low hood; no visible eyes or portrait framing.
-
-Exactly ONE connected two-handed Redguard curved greatsword: a long practical single-edged dark-steel blade with a moderate forward curve, bronze spine, compact crescent guard, indigo-wrapped long grip, and one pommel. Both hands visibly hold the same grip. The blade is neither a scimitar-sized one-hander nor a scythe.
-
-Add exactly ONE broad continuous ivory-gold physical cutting wake tangent to and immediately behind the blade edge. It sweeps around the fighter in one near-circular orbital path, but remains open at the figure and visibly terminates at the moving blade; it is not a detached halo or perfect ring. Make the blade and this one orbiting wake the immediate 32x32 read. One compact ochre spark at the leading tip only.
-
-The verified 4.0-second, 99-track Generic clip keeps one WEAPON collision active from 0.949999 to 2.166666, makes one swing and one hit at about 2.2 seconds, and advances roughly 131 units. Unresolved endurance, paralysis, and Rim enchantment names do not prove an element or magical aura. Depict one sustained physical cleave and one terminal contact, not multiple hits.
-
-Use Elder Scrolls Redguard martial language: dark indigo lamellar-and-leather cuirass over sand-colored wraps, compact bronze shoulder and forearm guards, crimson sash, practical fitted boots, subtle geometric stitching. Palette: deep indigo, dark steel, warm bronze, sand, muted crimson, and one ivory-gold wake against a quiet teal-black and burnt-umber field. Crisp painterly graphical MMO hotbar icon optimized for 32x32, edge-to-edge, high contrast, safe crop.
-
-HARD CONSTRAINTS: exactly one faceless full-body Redguard, exactly one connected two-handed curved greatsword, exactly one blade-connected orbital wake. No portrait, second weapon, floating sword, detached blade, duplicate figure, perfect halo, multiple rings, extra trails, magic storm, fire, frost, lightning, paralysis glow, victim, blood, scenery, text, logo, watermark, border, or UI frame.
-```
-
-## Final hard-gate result
-
-- The initial result failed owner review because its two-handed grip was anatomically and
-  mechanically implausible. It is preserved at
-  `python_scripts/weapon_art_icons/pilot/aow_41_orbital_cleave_bad_grip_superseded.png`.
-
-## Owner-directed correction prompt
+## Generation prompt
 
 ```text
-Redo the supplied Orbital Cleave MMO ability icon while preserving its strongest identity: one faceless Redguard, one curved two-handed greatsword, the indigo/bronze/sand palette, and one bright circular blade-connected physical wake. Correct the entire pose and grip so the weapon physics are anatomically possible.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-The sword must have one continuous long hilt behind the guard, visibly long enough for two hands. Put the lead hand fully closed around the leather-wrapped grip immediately behind the guard. Put the rear hand fully closed around the same grip near the pommel, with clear space between the hands. Both thumbs and knuckles align for the same horizontal cut; both wrists remain neutral rather than bent backward. No finger, palm, or hand touches the blade, spine, guard, empty air, or pommel knob. Both forearms connect naturally to those hands, elbows flex within normal range, shoulders rotate with the torso, and the planted legs visibly counterbalance the sword's forward mass.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Freeze one plausible terminal horizontal cleave from left toward right: hips and shoulders rotated together, front knee bent, rear foot braced, sword edge leading its path. The one ivory-gold wake must be tangent to and immediately behind the moving cutting edge, remain visibly connected to the sword tip, and sweep around the body as one open near-circle. It may not hide the corrected hands or hilt.
+Primary request: Orbital Cleave. A Redguard silhouette rotates through one horizontal saber cleave. Bent knees and centered hips support the torso turn; the saber edge leads one circular orbit while the figure remains a small pivot mass.
 
-Keep it a crisp graphical Elder Scrolls MMO hotbar icon at 1:1, with the full-body action subordinate to the sword and one wake. Exactly one figure, one anatomically gripped connected sword, and one connected wake. No second blade, floating weapon, detached hilt, extra hand, missing finger mass, crossed wrists, hand on blade, perfect halo, extra trail, magic element, portrait, text, logo, border, or scenery.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, saber, and circular path. Face is a void. Race as outline only: wrapped veil hood, lean duelist proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
+
+Weapon geometry: one connected one-handed saber with a curved cutting edge and hand mass behind the guard.
+Causal wake: one circular ivory-gold blade wake attached to the saber edge.
+Scene/backdrop: dark deep-red and sand-charcoal atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: centered horizontal orbit
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no visible face; no second blade; no floating ring; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Corrected hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. Both hands close around one continuous hilt with plausible spacing;
-  wrists, elbows, shoulders, hips, planted legs, blade edge, and trailing wake agree on one horizontal
-  two-handed cleave.
-- 32 px LANCZOS reduction: pass. The bright open orbit and the dark curved blade remain a strong
-  distinct glyph with no duplicate weapon.
-- That correction was rejected again because the two-handed sword motion remained physically
-  implausible. A fresh one-handed attempt then generated a mace-like weapon and malformed handle;
-  it was also rejected. Both are preserved under the ignored pilot tree and their prompts are dead.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
 
-## Reference-based owner correction
-
-- Physical inspiration: Figure 12, page 22 of the U.S. Army's 1907 *Provisional Regulations for
-  Saber Exercise*: `https://www.anesi.com/prse22.jpg`.
-- The scan was used only for stance, limb topology, and saber-arm mechanics. No printed text,
-  page layout, or period illustration is reproduced in the shipped original.
-- The accepted composition translates the reference into a faceless female Redguard: right hand
-  alone closes around one saber grip, left hand stays behind the back, knees remain flexed over a
-  stable base, and one open ivory-gold moulinet wake stays attached behind the cutting edge.
-- Full-resolution result: pass. Exactly one head, torso, pair of arms, pair of hands, pair of legs,
-  and pair of feet; shoulder, elbow, wrist, fist, guard, grip, and blade form one continuous path.
-- 32 px LANCZOS reduction: pass. Saber and connected wake remain the dominant readable glyph.
-- Final master SHA-256: `7852717EEE22EB852BC3918CCE12F0C3831FA7E994ED81A419835213BBC043BA`.
+- 128 px SHA-256: `875F899577A6407CC70F6194369A5D66F8796E171FF1ECF80D216FF2B43438F4`.

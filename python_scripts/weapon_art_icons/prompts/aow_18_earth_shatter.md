@@ -1,62 +1,47 @@
 # Earth Shatter
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-23
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_18_earth_shatter`
 
-## Evidence and interpretation
+## Resolved identity
 
-- The active `SpellHotbar2Arts/Earth Shatter/config.json` redirects through
-  `overrideAnimationsFolder` to
-  `Nolvus Ashes of War Stance Framework/Earth Shatter` in the selected `Nolvus Awakening`
-  profile.
-- The enabled `Ashes of War - Weapon Art Via Additional Attack` and
-  `Animations - Mercenary Greatsword` providers contain byte-identical
-  `AABL_Attack_A.hkx` files. The selected provider path is
-  `C:\Nolvus\Instances\Nolvus Awakening\MODS\mods\Ashes of War - Weapon Art Via Additional Attack\meshes\actors\character\animations\OpenAnimationReplacer\Nolvus Ashes of War Stance Framework\Earth Shatter\AABL_Attack_A.hkx`;
-  SHA-256 `B8ED9613CC4D5ED12B3DD21DC93821C681348B320FA280AC950F040106922FF7`.
-- Animation-proven: the 2.533333-second, 76-frame clip advances about 101 units, raises both arms
-  into a high wind-up, steps into a wide forward brace, emits `weaponswing` at 0.85 seconds, and
-  lands one `HitFrame` at 0.916666 seconds. There is no named elemental or spell payload.
-- Agent composition choice: distill the generic weapon-compatible move into one practical
-  two-handed warhammer and an Orsimer shock trooper. The physical overhead slam is preserved;
-  weapon family and archetype are not claimed as animation-proven.
-- Skyrim-reference-derived: weathered angular iron plates, worn leather and cloth, and a compact
-  crushing head use the project's Orsimer and warhammer vocabulary.
-- Agent composition choice: pale compression light, ochre-gray dust, and stone fragments express
-  nonmagical impact without inferring an earth element from the ability name.
-- Atlas choice: a near-vertical descending axis follows right-to-left Double Slash, frontal Dragon
-  Strike, and crossed Dual Flurry without repeating their dominant compositions.
+- Frozen action: A heavy Orsimer silhouette is compressed over one two-handed overhead warhammer slam at bottom center. Feet and hips brace behind the vertical force line; shoulders, both hand masses, haft, hammer head, and impact align.
+- Outline cues: heavy angular helm, brute shoulder mass.
+- Weapon: one connected two-handed warhammer with a long straight haft and compact crushing head.
+- Effect: one white compression flare at the hammer face with three to five large stone shards.
+- Orientation: vertical overhead into bottom-center impact.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Reference roles
-
-- No image reference was supplied to the generator. Offline stick-figure renders of the verified
-  HKX were evidence for body kinematics only and were not image-generation inputs.
-- Approved prior icons informed only the recorded MMO hotbar grammar and 32 px acceptance standard;
-  their figures, poses, palettes, effects, and compositions were not copied.
-
-## Final generation prompt
+## Generation prompt
 
 ```text
 Use case: stylized-concept
-Asset type: original square MMO/RPG hotbar ability glyph for Skyrim Spell Hotbar 2, designed first for crisp 32x32 readability
-Primary request: Earth Shatter — one brutal overhead warhammer strike at the exact instant its head hits the ground.
-Animation evidence: a 2.533-second clip advances about 101 units, raises both hands high, then drives them down while the fighter steps into a wide forward brace; one weapon swing lands one hit at 0.9167 seconds. No magical payload is proven.
-Exact action and camera: three-quarter side view with a strong near-vertical top-to-bottom action axis. Freeze the impact: a compact faceless Orsimer shock-trooper silhouette has the rear knee bent, front leg planted wide, torso compressed forward, both hands gripping one long warhammer haft, and the hammer head contacting the lower-center ground. Shoulders, elbows, hands, haft, hammer head, and impact point must form one continuous descending force line.
-Icon hierarchy: the hammer head and compact ground-impact burst are the primary read, about 65 percent of the glyph; the fighter is subordinate but fully explains the strike. Keep the whole action safely inside the square.
-Skyrim identity: broad Orsimer shock trooper in weathered angular iron plates over dark worn leather and rough cloth, simplified into bold masses; one practical two-handed warhammer with a long wooden haft and compact iron crushing head, plausible Skyrim proportions.
-Effect and causality: strictly nonmagical physical force. The hammer head is embedded at the source of one tight steel-white compression flare; ochre-gray dust and a few large stone shards fan outward along the ground from that exact contact point. No floating ring, no disconnected explosion, no elemental glow. The brightest value sits at the hammer-ground contact and fades outward.
-Palette: grounded iron gray, charcoal, worn brown, and a restrained rust accent; pale steel-white impact and ochre-gray dust against a deep muted blue-black smoky field for atlas variety.
-Style/medium: painted graphical MMO ability icon, chunky high-contrast silhouette, restrained texture, atmospheric edge glow, emblematic and action-first rather than character key art.
-Constraints: exactly one faceless fighter, exactly one two-handed warhammer, two hands on the same haft, one ground impact physically caused by the hammer. No portrait, static pose, decorative broadside weapon, sword, axe, shield, second weapon, victim, fire, frost, lightning, green magic, magic rune, floating halo, detached ring, scenery, text, logo, watermark, or border.
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
+
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
+
+Primary request: Earth Shatter. A heavy Orsimer silhouette is compressed over one two-handed overhead warhammer slam at bottom center. Feet and hips brace behind the vertical force line; shoulders, both hand masses, haft, hammer head, and impact align.
+
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, warhammer, and impact path. Face is a void. Race as outline only: heavy angular helm, brute shoulder mass. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
+
+Weapon geometry: one connected two-handed warhammer with a long straight haft and compact crushing head.
+Causal wake: one white compression flare at the hammer face with three to five large stone shards.
+Scene/backdrop: dark iron-gray and rust atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: vertical overhead into bottom-center impact
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no scenery; no floating debris cloud; no giant decorative hammer; no text; no logo; no watermark; no UI border; no metallic frame
+Final correction: show exactly four large cool-gray stone shards, clearly separated, and no other fragments or pebbles. Strictly nonmagical steel-white and ivory compression light on a blue-gray charcoal field. No orange, red, gold, fire, flames, lava, embers, or magical eruption.
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. One coherent fighter, one correctly gripped two-handed warhammer,
-  plausible anatomy, and one impact sourced at the hammer-ground contact.
-- 32 px LANCZOS reduction: pass. The central descending hammer, bright contact point, braced figure,
-  and outward debris remain a single readable hotbar action.
-- Master SHA-256: `D3ED07691FF300B33D98070FCDEB2F7314D9D665FDE26ABBAE41466EAA86559D`.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `8066000FAB2AFE915A589495C2331B762477ED41F2521B0F4ED4BCB7BF7A2C75`.

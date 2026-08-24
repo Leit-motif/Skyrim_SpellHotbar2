@@ -1,40 +1,46 @@
 # Killing Blow
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_36_killing_blow`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Killing Blow/AABL_Attack_A.HKX`;
-  SHA-256 `69BDCD94AD4489F52F6E00E58C1F4F84112187E11DCE4431B7A44D329D3C1C86`.
-- Animation-proven: the 1.833333-second, 99-track clip contains zero annotations. The catalogue
-  classifies the art as 1H; no hit count, timing, payload, element, trail color, or victim is proven.
-- Composition choice: use the name only to stage one decisive physical finishing blow. A faceless
-  Bosmer and one bone-bound stone mace provide deliberate race, material, and weapon rotation.
+- Frozen action: A small Bosmer silhouette delivers one finishing stone-mace blow down and inward. The lead knee and torso compression support the shoulder, hand mass, short haft, and compact mace head at one orange impact point.
+- Outline cues: small hooded hunter mass, light narrow shoulders.
+- Weapon: one connected stone mace shorter than the torso, with compact head and one hand mass on the haft.
+- Effect: one compact orange-white impact flare attached to the mace head.
+- Orientation: short descending diagonal, upper-right to center.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style one-handed weapon art named "Killing Blow". This is a graphical action icon, not a portrait, character key art, splash illustration, wallpaper, or scenic painting.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one faceless full-body Bosmer fighter delivering one decisive one-handed mace blow from upper-left down toward lower-right. Freeze the committed finishing instant: torso folded into the strike, front knee planted, rear leg driving, right arm fully extended along the diagonal, left hand pulled back for balance. Hide the face beneath a low horned leather hood and shadow.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Exactly one practical one-handed Bosmeri mace, all parts connected and held by the right hand: short dark wooden haft, compact irregular gray-green stone blunt head secured by bone/antler collars and rawhide. Add exactly one short ivory-ochre physical pressure wake tangent to and directly behind the moving mace head, ending at one stone-and-dust impact burst near lower-right. No second arc, echo weapon, ring, X, floating trail, or victim.
+Primary request: Killing Blow. A small Bosmer silhouette delivers one finishing stone-mace blow down and inward. The lead knee and torso compression support the shoulder, hand mass, short haft, and compact mace head at one orange impact point.
 
-The selected 1.833333-second, 99-track animation has zero annotations. The catalogue proves only a one-handed class; it does not prove a hit count, collision timing, payload, element, trail color, blood, or exact limb pose. Use the name only for one decisive physical blow. Do not invent execution imagery or magical death effects.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, mace, and impact path. Face is a void. Race as outline only: small hooded hunter mass, light narrow shoulders. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-Use economical Valenwood cues: layered dark-brown leather and moss-green hide, bark-textured shoulder guard, bone/antler fasteners, ochre wraps, muted russet sash, weathered copper, and a low hood with modest backward antler prongs. Crisp painterly Elder Scrolls MMO icon optimized for 32x32 against deep forest-teal/charcoal.
-
-HARD CONSTRAINTS: exactly one faceless full-body Bosmer, exactly one connected one-handed blunt mace, exactly one mace-connected wake. No portrait, axe, sword, hammer, second weapon, floating weapon, detached mace head, duplicate figure, multiple trails, victim, blood, skull, magic, fire, frost, lightning, poison, plants, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected stone mace shorter than the torso, with compact head and one hand mass on the haft.
+Causal wake: one compact orange-white impact flare attached to the mace head.
+Scene/backdrop: dark forest-green and bark-black atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: short descending diagonal, upper-right to center
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no spikes; no leather detail; no victim; no oversized mace; no text; no logo; no watermark; no UI border; no metallic frame
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Full-resolution result: pass. One Bosmer action figure, one compact blunt stone mace connected to
-  its haft and hand, one tangent diagonal wake, and one endpoint impact are mechanically coherent.
-- 32 px LANCZOS reduction: pass. The mace, wake, and low diagonal strike remain the immediate read.
-- Master SHA-256: `A2418D20618E8427D0A098FC39938BDBC68CE7C23AC4C478E30178DA6146FD45`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
+
+- 128 px SHA-256: `3C1B6B6EDA616180A4D141929DC246E4A32203BA93456F3955D312F20F60D925`.

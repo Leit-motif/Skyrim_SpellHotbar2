@@ -1,47 +1,47 @@
 # Shoulder Slam
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Silhouette regeneration, autonomous AFK batch (2026-08-24)
+
+**Generation path:** New Codex built-in generation with five approved grammar-only references; no prior candidate reference and no inpainting
 
 **Stable icon key:** `aow_50_shoulder_slam`
 
-## Evidence and interpretation
+## Resolved identity
 
-- Selected provider: `Ashes of War - Weapon Art Via Additional Attack/.../Shoulder Slam/AABL_Attack_A.HKX`; SHA-256 `46164CF51F082A52A8A4827B13F65CF45FAEBC3BE930EDAABE2CCE328C603E05`.
-- Animation-proven: the 1.333333-second, 99-track clip attaches a 3x collision to the left upper-arm node, makes two hits, and charges about 463 units.
-- The fire-breath sound cue is not visual effect proof; stagger is the supported terminal consequence.
-- Composition choice: one weaponless Dead-Water Argonian body check with a shell-armored left shoulder and one physical compression path.
+- Frozen action: A female Nord silhouette drives the left shoulder into one body-check impact. Bent legs and forward hips support the shoulder-connected compression wedge; a compact bearded axe trails behind with no wake and does not become the subject.
+- Outline cues: nasal helm mass, broad shoulders, compact female proportion.
+- Weapon: one connected compact bearded axe trailing from the rear hand mass, with short haft and no active path.
+- Effect: one ivory-white compression wedge attached directly to the leading left shoulder.
+- Orientation: driving diagonal, lower-right to upper-left.
+- Retained project artifact: 128x128 atlas input only; the generated full-size intermediate is not kept in the project.
 
-## Final generation prompt
+## Generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for an Elder Scrolls weapon art named "Shoulder Slam". This is an action glyph, not a portrait, character key art, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: one 1:1 MMO-style RPG ability icon for Skyrim Spell Hotbar 2, designed for a final retained 128x128 atlas input and legible at 32x32
 
-Show exactly one small weaponless full-body Argonian Dead-Water warrior charging lower-right to upper-left with the LEFT shoulder as the leading impact source. Head and neck tucked behind shoulder, spine angled forward but not folded, left shoulder ahead of chest and hips, left arm tight across ribs, right arm backward for balance, front knee flexed under center of mass, rear leg extended and driving. No weapon.
+Input images: Images 1-5 are approved icon grammar references only. They set abstraction, faceless mass, limited palette, glow, effect-first hierarchy, and 32 px readability. They are not pose, facing, weapon, race, figure, or costume references.
 
-Keep the face generalized: exposed long reptilian snout and jaw in shadow beneath an open dark-purple Elder Argonian brow circlet with small aged-bronze fitting and exactly three short rear-swept cream/rust feathers. Natural horns visible. No closed helmet or facial close-up.
+Primary request: Shoulder Slam. A female Nord silhouette drives the left shoulder into one body-check impact. Bent legs and forward hips support the shoulder-connected compression wedge; a compact bearded axe trails behind with no wake and does not become the subject.
 
-Make one large asymmetric LEFT shoulder pauldron the source: layered dark slate shell/scute plates with pale bone rim and crocodilian leather lashings. Add exactly ONE compact ivory-gray compression wedge directly in front of that shoulder, ending in one ochre-white impact at upper-left. A short dusty wake may continue behind the body as the same charge path. No weapon wake, ring, sphere, or fire.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, driving legs, shoulder impact, and trailing axe cue. Face is a void. Race as outline only: nasal helm mass, broad shoulders, compact female proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the subject.
 
-The verified 1.333333-second, 99-track clip attaches a three-times-scale collision to the left upper arm, makes two hits, and charges about 463 units. Fire-breath sound is not effect proof; final annotation supports stagger. Distill to one weaponless left-shoulder body check and one physical impact.
-
-Use researched Murkmire/Dead-Water construction: lean slate shell/scute cuirass, crocodilian leather straps, moss cloth, bone accents, weathered bronze, wrapped shins, tail counterbalancing. Palette: slate, moss, leather brown, bone, muted purple, rust feathers, ivory compression, ochre dust against swamp-green and umber. Crisp painterly graphical MMO hotbar icon optimized for 32x32.
-
-HARD CONSTRAINTS: exactly one weaponless Argonian, left shoulder leading, exactly one shoulder-connected compression path. Anatomically possible charge, neck protection, spine, arms, center of gravity, legs, and tail balance only. No portrait, closed helmet, weapon, shield, extra arm, missing hand, impossible shoulder, detached pauldron, multiple trails, fire, breath attack, magic, blood, victim, scenery, text, logo, watermark, border, or UI frame.
+Weapon geometry: one connected compact bearded axe trailing from the rear hand mass, with short haft and no active path.
+Causal wake: one ivory-white compression wedge attached directly to the leading left shoulder.
+Scene/backdrop: dark cold-blue and weathered-brown atmospheric field; no scenery
+Style/medium: painted MMO ability icon; symbolic, atmospheric, effect-first; simple large masses and strong glow; not a portrait or character key art
+Composition/framing: compact square crop; effect and weapon path dominate; the figure remains 25-45%; clear at 32x32
+Orientation: driving diagonal, lower-right to upper-left
+Physics: supported center of gravity, plausible joints, connected hand masses and weapon geometry, with every dominant trail beginning on the moving edge
+Constraints: original art only; no axe wake; no shield; no portrait framing; no text; no logo; no watermark; no UI border; no metallic frame
+Correction priority: no hair, ponytail, braid, or loose head shape. Female Nord coding comes only from compact female body proportion, one closed nasal helm mass, and broad shoulders. The trailing axe has exactly one compact bearded cutting blade and a tiny blunt poll, with no glow and no axe wake. The left shoulder impact remains the subject.
 ```
 
-## Final hard-gate result
+## Hard gate
 
-- Physics/anatomy: pass. Neck, spine, leading shoulder, tucked arm, counterbalancing arm and tail, and leg drive form one plausible body check.
-- Full resolution and 32 px LANCZOS: pass. The shell shoulder and connected impact dominate with no weapon or fire invention.
-- Master SHA-256: `AC0FB708D1FEC0DB1AAA6824A01FE48F073709C7754EC32A166D7DA4E763ECD7`.
-- No autonomous regeneration was attempted.
+Passed autonomously. The full-resolution intermediate and exact 32 px LANCZOS reduction preserve
+the action-first read, connected physics, and figure-mass hierarchy. The retained project artifact
+is the 128x128 atlas input only; the generated full-size intermediate remains outside the project.
 
-## Owner-directed race, sex, and weapon correction
-
-- The owner requested no more Argonians, a female Nord warrior, and a battleaxe identifier.
-- The fresh replacement keeps the payload-proven left-shoulder collision as the action source while
-  one compact bearded battleaxe is carried low and safely behind in the right hand with no axe wake.
-- Full and 32 px LANCZOS: pass. Left shoulder and one compression wedge dominate; the female Nord
-  silhouette and secondary axe remain legible. Charge support, grip, and weapon clearance pass.
-- Superseded Argonian master is preserved under the ignored pilot tree.
-- Corrected master SHA-256: `7BDE126F4065FDAB6CE9EDE9B48A2381AC969B9C23E0FBF698023A21C50B5C1C`.
+- 128 px SHA-256: `64B2D38FAD7171AD7D1EA33E378DA72441577C8320914284FFFB9E0E3BAA6E53`.
