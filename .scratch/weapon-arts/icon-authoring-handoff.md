@@ -216,6 +216,14 @@ one faceless Imperial in Elder Scrolls Akaviri/Blades armor, one connected katan
 scabbard, and one smooth blade-connected draw wake. Full and 32 px results passed; provenance and
 payload uncertainty are recorded under `python_scripts/weapon_art_icons/`.
 
+## Killing Blow disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The selected 1H clip has zero annotations, so neither a
+hit pattern nor an element is claimed. The icon uses one faceless Bosmer delivering one decisive
+downward blow with one connected bone-bound stone mace and one tangent physical wake. No victim,
+blood, or magical death effect is invented. Full and 32 px results passed; the evidence boundary is
+recorded under `python_scripts/weapon_art_icons/`.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on

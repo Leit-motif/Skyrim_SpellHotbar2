@@ -301,3 +301,9 @@ attempt. One fast 1H collision and hit becomes a low faceless Imperial Akaviri d
 connected katana, one empty scabbard, and one blade-tangent wake. Unresolved knockback contributes
 no element or victim. Full and 32 px results passed. Thirty-two of 57 icons are finalized; 23
 remain unprocessed and two are recorded hard failures.
+
+Goal mode 2026-08-24: **Killing Blow** (`aow_36_killing_blow`) is finalized from its single
+generation attempt. Because its 1H clip has zero annotations, the icon claims only one decisive
+physical action: a faceless Bosmer, one connected bone-bound stone mace, and one tangent wake. No
+victim, blood, hit-count diagram, or element is invented. Full and 32 px results passed. Thirty-three
+of 57 icons are finalized; 22 remain unprocessed and two are recorded hard failures.
