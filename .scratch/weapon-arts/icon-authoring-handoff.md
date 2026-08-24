@@ -208,6 +208,14 @@ clearly held short chitin blades, and one wake connected to the leading saber. N
 or literal magical thorns are introduced. Full and 32 px results passed; provenance and uncertainty
 are recorded under `python_scripts/weapon_art_icons/`.
 
+## Iai Slash disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified 1H clip pauses, accelerates to about 285
+forward units, and lands one enlarged/brightened weapon hit with unresolved knockback. The icon uses
+one faceless Imperial in Elder Scrolls Akaviri/Blades armor, one connected katana, one empty
+scabbard, and one smooth blade-connected draw wake. Full and 32 px results passed; provenance and
+payload uncertainty are recorded under `python_scripts/weapon_art_icons/`.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on

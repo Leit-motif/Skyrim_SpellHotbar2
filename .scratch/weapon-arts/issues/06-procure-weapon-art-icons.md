@@ -295,3 +295,9 @@ generation attempt. A dense dual-weapon contact sequence becomes one forward-dri
 Dunmer with two hand-connected chitin blades and one leading connected wake. The name contributes
 no literal or magical thorns because the clip proves none. Full and 32 px results passed.
 Thirty-one of 57 icons are finalized; 24 remain unprocessed and two are recorded hard failures.
+
+Goal mode 2026-08-24: **Iai Slash** (`aow_35_iai_slash`) is finalized from its single generation
+attempt. One fast 1H collision and hit becomes a low faceless Imperial Akaviri draw-cut with one
+connected katana, one empty scabbard, and one blade-tangent wake. Unresolved knockback contributes
+no element or victim. Full and 32 px results passed. Thirty-two of 57 icons are finalized; 23
+remain unprocessed and two are recorded hard failures.
