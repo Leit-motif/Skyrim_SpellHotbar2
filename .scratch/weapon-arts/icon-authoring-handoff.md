@@ -59,4 +59,7 @@ candidate, then change the weapon and trail geometry together. Do not guess at â
 - MMO/RPG hotbar convention: generalized faceless figure, one dominant action, readable at 32 px.
 - Elder Scrolls race and palette shorthand live in `figure-guidance.md` and `color-guidance.md`.
 - Backgrounds should vary across the atlas without defaulting every icon to black or adding haze.
+- Figure facing and action axes must rotate across the atlas; every new prompt names an explicit
+  orientation and avoids repeating the recent upper-left-to-lower-right default unless the clip
+  requires it. See `composition-guidance.md`.
 - Catalogue wiring waits until the atlas contains the approved stable keys.

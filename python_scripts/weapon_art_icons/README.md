@@ -10,6 +10,7 @@ Original Weapon Art icon masters and atlas inputs live here.
   icon benefits from a race-specific silhouette.
 - `color-guidance.md` records the owner-approved race palette shorthand used when an icon benefits
   from race-coded color.
+- `composition-guidance.md` prevents repeated figure facing and action axes across the atlas.
 - `pilot/` contains rejected calibration outputs only. Nothing under it is atlas input.
 
 The stable icon key is the filename stem. Do not write a key into
