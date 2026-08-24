@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **21 — Enrage (F)** (`aow_21_enrage_f`)
+- Active art: **22 — Enrage (M)** (`aow_22_enrage_m`)
 - Status: **not started**
-- Inventory: **19 of 57 finalized; 38 remain**
+- Inventory: **20 of 57 finalized; 37 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -72,6 +72,14 @@ unresolved, so the final glyph adds no paralysis element or invented magic. One 
 rising blade path remains the icon; a tiny faceless lunging duelist and one sword explain its
 source. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
 input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
+
+## Enrage (F) disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified clip contains one swing and one hit and
+explicitly sets a deep-crimson weapon trail at 2.5 times intensity. The open crimson crescent is
+the ability glyph; the faceless female fighter is only a small black source marker, with no face or
+costume showcase. The full image and 32 px LANCZOS reduction passed the hard gate. The master,
+128 px atlas input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 

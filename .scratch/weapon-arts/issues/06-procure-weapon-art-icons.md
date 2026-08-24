@@ -205,3 +205,9 @@ generation attempt. Its roughly 421-unit single-weapon lunge becomes one broad r
 blade path with a tiny faceless duelist only to show causality. The unresolved `$ES_Paralysis`
 payload contributes no invented element or color. The full result and 32 px LANCZOS reduction
 passed the hard gate. Nineteen of 57 icons are finalized, leaving 38.
+
+Goal mode 2026-08-23: **Enrage (F)** is finalized as `aow_21_enrage_f` from its single generation
+attempt. Its one-hit clip explicitly requests a 2.5-intensity deep-crimson weapon trail, which
+becomes the open crescent icon while a small faceless female fighter only marks the source. The
+full result and 32 px LANCZOS reduction passed the hard gate. Twenty of 57 icons are finalized,
+leaving 37.
