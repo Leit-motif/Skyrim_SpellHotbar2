@@ -26,6 +26,7 @@ using SpellHotbar::casts::is_mco_combo_index_edge;
 using SpellHotbar::casts::McoSgviVariable;
 using SpellHotbar::casts::parse_mco_sgvi_sample;
 using SpellHotbar::casts::parse_sgvi_int;
+using SpellHotbar::casts::should_sample_live_at_cast_begin;
 using SpellHotbar::casts::window_close_is_a_stomp_to_undo;
 using SpellHotbar::casts::AbilityLatch;
 using SpellHotbar::casts::classify_ability_latch;
@@ -614,6 +615,20 @@ void a_partial_power_update_leaves_the_attack_field_alone()
 		"two events across one swing build the whole position");
 }
 
+void a_mid_swing_cast_begin_is_sampled_live()
+{
+	expect(should_sample_live_at_cast_begin(true),
+		"a begin() with IsAttacking=1 reads the interrupted swing's pre-stomp advance "
+		"(measured n=3 mid-attack2, 2026-08-24)");
+}
+
+void a_cast_begin_outside_a_swing_teaches_nothing()
+{
+	expect(!should_sample_live_at_cast_begin(false),
+		"a deferred re-begin or an idle begin reads the post-stomp 1 (measured n=1, 272ms "
+		"later) and must leave the cache's last teaching alone");
+}
+
 void a_pending_restore_survives_the_ready_reset()
 {
 	expect(window_close_is_a_stomp_to_undo(true),
@@ -748,6 +763,8 @@ int main()
 	a_partial_update_keeps_the_other_field_and_refreshes_the_age();
 	a_partial_update_drops_a_pending_restore();
 	a_partial_power_update_leaves_the_attack_field_alone();
+	a_mid_swing_cast_begin_is_sampled_live();
+	a_cast_begin_outside_a_swing_teaches_nothing();
 	a_pending_restore_survives_the_ready_reset();
 	a_hold_does_not_age_out_the_combo_position();
 	a_gap_before_the_hold_still_ages_out();

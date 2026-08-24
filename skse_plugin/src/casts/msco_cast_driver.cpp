@@ -210,6 +210,31 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		logger::info("SH2 probe: cast begin | shape={}",
 			shape == CastShape::channel ? "channel"sv : "fnf"sv);
 		ComboProbe::probe_read_graphs(pc, "cast begin"sv);
+		// The interruption seam. `@SGVI` payloads never reach the sink under this load order's
+		// packs (measured 2026-08-24), so the value of the swing this cast is cutting has to be
+		// taken here, live, while the swing is still up: at that instant the graph still holds its
+		// advanced index and MCO has not stomped back to 1 yet. `IsAttacking` is the whole gate --
+		// a begin() outside a swing (the ShoutMCO deferred re-begin, an idle cast) would learn the
+		// stomp, so it records nothing and the cache keeps its last WinClose/SGVI teaching.
+		{
+			bool attacking{ false };
+			// -1 says the graph bool itself could not be read, which is neither state and records
+			// nothing either way.
+			int attacking_state = -1;
+			McoCombo sample{};
+			bool recorded = false;
+			if (pc->GetGraphVariableBool(RE::BSFixedString("IsAttacking"sv), attacking)) {
+				attacking_state = attacking ? 1 : 0;
+				if (should_sample_live_at_cast_begin(attacking) && sample_mco(pc, sample)) {
+					// Full record(): a real swing being interrupted also invalidates any restore
+					// we were still holding, exactly as its own advance would have.
+					g_rolling.record(sample, now_ms());
+					recorded = true;
+				}
+			}
+			logger::info("SH2 probe: begin live sample next={} power={} attacking={} recorded={}",
+				sample.nextAttack, sample.nextPowerAttack, attacking_state, recorded);
+		}
 		cast_shape.store(shape, std::memory_order_relaxed);
 		channel_started_ms.store(
 			shape == CastShape::channel ? now_ms() : 0.0, std::memory_order_relaxed);

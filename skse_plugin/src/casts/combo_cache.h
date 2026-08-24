@@ -299,6 +299,28 @@ struct McoSgviSample {
 	return std::nullopt;
 }
 
+// The cast-begin live read, and why it is gated on IsAttacking.
+//
+// The `@SGVI` path above is the seam that was supposed to survive an interruption, and under THIS
+// load order's packs it never fires: measured live 2026-08-24 over a full attack-cast-attack
+// fixture, not one `@SGVI|MCO_nextattack|N` tag reached the animation-event sink. The SGVI path
+// stays as a fallback for packs that do emit the payload; this predicate closes the same blind
+// spot without needing one.
+//
+// The seam that DOES fire is `MscoCastDriver::begin()`, the moment a hotbar cast starts. Measured
+// live 2026-08-24: a cast begun mid-swing logs `IsAttacking=1` and the graph still holds the
+// interrupted swing's ADVANCED value (n=3 while attack2 was playing) -- MCO's stomp back to 1
+// happens only after the swing is cut. The same cast re-begun through the ShoutMCO deferral 272ms
+// later logs `IsAttacking=0` and reads the post-stomp 1.
+//
+// So a live read at begin() is trustworthy exactly when the player is attacking at that instant.
+// A begin() with IsAttacking=0 -- the deferred re-begin, a cast from idle, any post-stomp tail --
+// must record nothing, so the cache keeps whatever the WinClose or SGVI edges last taught it.
+[[nodiscard]] constexpr bool should_sample_live_at_cast_begin(bool is_attacking) noexcept
+{
+	return is_attacking;
+}
+
 // What a window-close means depends on whether we are holding a restore.
 //
 // Measured live 2026-08-24: after a Driver Cast writes the sampled index back, a further
