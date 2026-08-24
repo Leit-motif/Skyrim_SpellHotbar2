@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **50 — Shoulder Slam** (`aow_50_shoulder_slam`)
+- Active art: **51 — Simple Bash** (`aow_51_simple_bash`)
 - Status: **not started**
-- Inventory: **43 of 57 finalized; 9 unprocessed and 5 recorded hard failures remain**
+- Inventory: **44 of 57 finalized; 8 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -334,6 +334,13 @@ the name or unresolved annotations. Full and 32 px results passed.
 Goal-mode one-shot finalized on 2026-08-24. Two 2H hits across a roughly 637-unit advance become one
 low Imperial greatsword dash and one connected horizontal wake. Both hands, wrists, shoulders,
 hips, legs, edge, and trail pass physics. No shadow effect is inferred. Full and 32 px passed.
+
+## Shoulder Slam disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The left-upper-arm collision and 463-unit charge become
+one weaponless Dead-Water Argonian body check with a shell-armored left shoulder and one connected
+compression path. Neck, spine, arms, legs, and tail pass physics. Fire-breath sound contributes no
+fire effect. Full and 32 px passed.
 
 ## Dual Flurry context-layer pivot
 

@@ -403,6 +403,12 @@ greatsword dash and one connected horizontal wake. Grip, joints, stance, edge, a
 physics gate; no shadow magic is invented. Full and 32 px passed. Forty-three icons are finalized;
 nine remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Shoulder Slam** (`aow_50_shoulder_slam`) is finalized from its single
+generation attempt. The left-upper-arm collision and 463-unit charge become one weaponless
+Dead-Water Argonian body check with one shell-armored shoulder and one connected compression path.
+Anatomy passes; fire-breath sound adds no fire. Full and 32 px passed. Forty-four icons are
+finalized; eight remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
