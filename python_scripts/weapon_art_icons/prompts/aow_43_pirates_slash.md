@@ -34,3 +34,13 @@ HARD CONSTRAINTS: exactly one faceless full-body Imperial corsair, exactly one h
 - Full resolution and 32 px LANCZOS: pass. The cutlass and its single hooked wake dominate while the dagger remains a legible subordinate guard.
 - Master SHA-256: `BB052E7F06C4B1E36F6AEA3323E7018E238356B112B7EE5EAD461D45E2598FBE`.
 - No autonomous regeneration was attempted.
+
+## Owner-directed sex and culture correction
+
+- The owner rejected the atlas-wide male default and requested a female Breton buccaneer.
+- The correction preserves the approved lunge, cutlass/dagger count, grips, and single wake while
+  changing the figure to practical, nonsexualized female Breton/High Rock privateer construction.
+- Full resolution and 32 px LANCZOS: pass. Female silhouette, cutlass, dagger, and one wake remain
+  readable; both grips and the supported lunge remain physically coherent.
+- Superseded male Imperial master is preserved under the ignored pilot tree.
+- Corrected master SHA-256: `9320531AA9638A3A18FAAF80483107C8147FCBC326F97F716EB48842450D3F17`.

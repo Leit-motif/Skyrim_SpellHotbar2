@@ -288,10 +288,10 @@ plausibly counterbalance the point. Unresolved ice/wolf/fog/paralysis names add 
 
 ## Pirate's Slash disposition
 
-Goal-mode one-shot finalized on 2026-08-24. Five alternating dual-weapon contacts become one low
-Imperial Abecean corsair lunge with one active cutlass wake and one held no-trail parrying dagger.
+Owner-directed correction finalized on 2026-08-24. Five alternating dual-weapon contacts become one
+low female Breton buccaneer lunge with one active cutlass wake and one held no-trail parrying dagger.
 Both grips, arms, hips, and planted legs form a plausible action; the cutlass edge leads its single
-wake. Full and 32 px results passed.
+wake. The male Imperial original is ignored-pilot history. Full and 32 px results passed.
 
 ## Point Charge disposition
 
@@ -323,10 +323,11 @@ master/input or retry.
 
 ## Shadow Reave disposition
 
-Goal-mode one-shot finalized on 2026-08-24. Three 2H hits and a jump-attack finisher become one
-Khajiit landing cut with one connected crescent battleaxe and one neutral physical wake. Hand
+Owner-directed correction finalized on 2026-08-24. Three 2H hits and a jump-attack finisher become
+one white-furred Khajiit landing cut with one connected crescent battleaxe and one neutral physical wake. Hand
 spacing, stance, hips, shoulders, edge, and wake pass physics. No shadow effect is inferred from
-the name or unresolved annotations. Full and 32 px results passed.
+the name or unresolved annotations. The tawny original is ignored-pilot history. Full and 32 px
+results passed.
 
 ## Shadow Slash disposition
 

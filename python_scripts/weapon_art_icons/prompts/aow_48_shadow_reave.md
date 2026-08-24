@@ -35,3 +35,13 @@ HARD CONSTRAINTS: exactly one faceless Khajiit, exactly one connected two-handed
 - Full resolution and 32 px LANCZOS: pass. One crescent axe and one neutral wake dominate without invented shadow effects.
 - Master SHA-256: `FEFD21A481CE54C49E030EFFCAF650D2441BA3E35FDDEB3188F061DD976E2C1C`.
 - No autonomous regeneration was attempted.
+
+## Owner-directed fur-color correction
+
+- The owner requested visible Khajiit fur variation after repeated tawny treatment elsewhere.
+- The correction changes all visible fur to white with restrained cool-gray markings while
+  preserving the accepted indigo/brass armor, axe, grip, landing, and one neutral wake.
+- Full resolution and 32 px LANCZOS: pass. White ears, hands, legs, feet, and tail remain legible;
+  axe physics and trail causality are unchanged.
+- Superseded tawny master is preserved under the ignored pilot tree.
+- Corrected master SHA-256: `BA1596189E487A65A7E88D4C2CB4EE5F6E9388B8967955AF95E07A5F6B9E63B5`.
