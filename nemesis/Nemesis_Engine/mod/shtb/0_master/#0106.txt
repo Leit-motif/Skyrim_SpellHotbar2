@@ -1453,6 +1453,8 @@
 <!-- MOD_CODE ~shtb~ OPEN -->
 				<hkcstring>MCO_nextattack</hkcstring>
 				<hkcstring>MCO_nextpowerattack</hkcstring>
+				<hkcstring>MCO_currentattack</hkcstring>
+				<hkcstring>MCO_currentpowerattack</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="characterPropertyNames" numelements="15">

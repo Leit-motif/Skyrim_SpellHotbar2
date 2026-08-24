@@ -292,6 +292,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 
 		if (is_mco_combo_index_edge(tag)) {
+			// Ticket-28 probe: read MCO_currentattack (the state that actually ran) at every
+			// window-close, so an injected fixture names the clip without the OAR log window.
+			ComboProbe::probe_read_graphs(a_player, "winclose"sv);
 			if (window_close_is_a_stomp_to_undo(g_rolling.restore_pending())) {
 				// This window-close is usually our own cast clip's (MSCO_left2.hkx fires
 				// MCO_winclose at 1.2s) carrying the ready reset's stomped value. Put ours

@@ -8,6 +8,9 @@ namespace SpellHotbar::casts::ComboProbe {
 	namespace {
 		constexpr const char* kNextAttack{ "MCO_nextattack" };
 		constexpr const char* kNextPowerAttack{ "MCO_nextpowerattack" };
+		// In-graph truth of which attack state ran: AttackNodesState<N> evaluates
+		// `MCO_currentattack = N` on entry, so this names the clip without the OAR log.
+		constexpr const char* kCurrentAttack{ "MCO_currentattack" };
 
 		const char* probe_ini()
 		{
@@ -25,8 +28,10 @@ namespace SpellHotbar::casts::ComboProbe {
 		{
 			int next = 0;
 			int power = 0;
+			int current = 0;
 			const bool ok_next = graph->GetGraphVariableInt(kNextAttack, next);
 			const bool ok_power = graph->GetGraphVariableInt(kNextPowerAttack, power);
+			const bool ok_current = graph->GetGraphVariableInt(kCurrentAttack, current);
 			out += " n=";
 			if (ok_next) {
 				append_int(out, next);
@@ -36,6 +41,12 @@ namespace SpellHotbar::casts::ComboProbe {
 			out += " p=";
 			if (ok_power) {
 				append_int(out, power);
+			} else {
+				out += '?';
+			}
+			out += " c=";
+			if (ok_current) {
+				append_int(out, current);
 			} else {
 				out += '?';
 			}
