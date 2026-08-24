@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **33 — High Kick** (`aow_33_high_kick`)
+- Active art: **41 — Orbital Cleave** (`aow_41_orbital_cleave`)
 - Status: **not started**
-- Inventory: **29 of 57 finalized; 26 unprocessed and 2 recorded hard failures remain**
+- Inventory: **36 of 57 finalized; 18 unprocessed and 3 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -253,6 +253,14 @@ Breton/Dwemer disc was replaced by one faceless Altmer arcane assassin, one coba
 Alinorian shadow blade, and one continuous magnetic return tether from open palm to blade pommel.
 No projectile copies, gadget disc, pink psychic color, or lightning web remains. Full and 32 px
 results passed.
+
+## Night Flurry disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified one-handed clip advances only about 60
+units and makes four closely spaced weapon contacts. The icon distills those beats to one terminal
+physical cut: one faceless Dunmer Morag Tong assassin, one connected chitin/ebony shortsword, and
+one continuous ivory-gray blade wake. Unresolved unbalance/paralysis names add no darkness,
+paralysis color, or other magic. Full and 32 px results passed.
 
 ## Dual Flurry context-layer pivot
 

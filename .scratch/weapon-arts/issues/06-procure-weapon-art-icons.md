@@ -347,3 +347,10 @@ Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Br
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
 psychic color, or branching lightning remains. Full and 32 px passed.
+
+Goal mode 2026-08-24: **Night Flurry** (`aow_40_night_flurry`) is finalized from its single
+generation attempt. Four closely spaced one-handed contacts become one terminal physical cut by a
+faceless Dunmer Morag Tong assassin using one connected chitin/ebony shortsword and one continuous
+blade-sourced ivory wake. Unresolved unbalance/paralysis names add no darkness or other magic. Full
+and 32 px results passed. Thirty-six of 57 icons are finalized; 18 remain unprocessed and three are
+recorded hard failures.
