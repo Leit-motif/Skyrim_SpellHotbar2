@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **29 — Head Tap** (`aow_29_head_tap`)
+- Active art: **30 — Heart Lunge** (`aow_30_heart_lunge`)
 - Status: **not started**
-- Inventory: **26 of 57 finalized; 30 unprocessed and 1 recorded hard failure remain**
+- Inventory: **27 of 57 finalized; 29 unprocessed and 1 recorded hard failure remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -151,6 +151,16 @@ polearm-length crescent weapon held in one hand. It is not finalized and has no 
 input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
 hash, and failure reasons are recorded in `prompts/aow_28_head_chopper.md`. No regeneration was
 attempted.
+
+## Head Tap disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified 2H clip advances about 232 units and
+contains six timed hits before an unresolved heavy-launch payload. Installed Argonian heavy-weapon
+annotations reuse that payload name, supporting the Argonian warhammer pairing but proving no
+element or VFX. The icon depicts only one defining final hit: one foreshortened rectangular
+warhammer, two hands on one haft, one vertical trail, and one physical contact. The full image and
+32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash,
+evidence, and payload uncertainty are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 

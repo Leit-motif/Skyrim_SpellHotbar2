@@ -255,3 +255,9 @@ axe became a polearm-length crescent weapon held in one hand, violating the dual
 construction. Full and 32 px evidence are preserved under the ignored `pilot/` tree; no master or
 atlas input exists and no regeneration was attempted. Twenty-six of 57 icons are finalized;
 30 remain unprocessed and one is a recorded hard failure.
+
+Goal mode 2026-08-23: **Head Tap** (`aow_29_head_tap`) is finalized from its single generation
+attempt. Six timed 2H hits and an unresolved heavy-launch payload are distilled to one defining
+vertical Argonian warhammer contact. One hammer, two hands on one haft, one short trail, and one
+physical impact remain clear at full size and 32 px. Twenty-seven of 57 icons are finalized;
+29 remain unprocessed and one is a recorded hard failure.
