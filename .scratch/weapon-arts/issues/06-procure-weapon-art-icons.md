@@ -355,6 +355,12 @@ two-handed sword grip. The replacement keeps the Redguard/orbital identity but p
 one continuous long hilt with plausible spacing, neutral wrists, connected arm leverage, and a
 supported stance. This establishes an explicit anatomy-and-physics sanity gate for all later icons.
 
+Goal mode 2026-08-24: **Piercing Leap** (`aow_42_piercing_leap`) is finalized from its single
+generation attempt. One airborne Breton uses one connected two-hand-gripped spear and one collinear
+pressure wake. Hand spacing, arm leverage, airborne body axis, rear leg, and cape form a plausible
+thrust; unresolved ice/wolf/fog/paralysis names add no magic. Full and 32 px results passed.
+Thirty-eight of 57 icons are finalized; 16 remain unprocessed and three are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink

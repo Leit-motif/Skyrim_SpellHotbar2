@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **42 — Piercing Leap** (`aow_42_piercing_leap`)
+- Active art: **43 — Pirate's Slash** (`aow_43_pirates_slash`)
 - Status: **not started**
-- Inventory: **37 of 57 finalized; 17 unprocessed and 3 recorded hard failures remain**
+- Inventory: **38 of 57 finalized; 16 unprocessed and 3 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -278,6 +278,14 @@ Owner correction: the first otherwise-polished result had an impossible two-hand
 was superseded. The corrected master places both closed hands on one continuous long hilt with
 plausible spacing, neutral wrists, connected forearms, supported stance, and a blade-led wake. This
 correction established the mandatory anatomy-and-physics gate for every subsequent generation.
+
+## Piercing Leap disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The forward airborne clip and two near-simultaneous hit
+frames become one piercing action: one faceless Breton polearm knight, one connected two-hand-gripped
+spear, and one collinear pressure wake. The shoulders, elbows, airborne body axis, rear leg, and cape
+plausibly counterbalance the point. Unresolved ice/wolf/fog/paralysis names add no magic. Full and
+32 px results passed.
 
 ## Dual Flurry context-layer pivot
 
