@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **43 — Pirate's Slash** (`aow_43_pirates_slash`)
+- Active art: **44 — Point Charge** (`aow_44_point_charge`)
 - Status: **not started**
-- Inventory: **38 of 57 finalized; 16 unprocessed and 3 recorded hard failures remain**
+- Inventory: **39 of 57 finalized; 15 unprocessed and 3 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -286,6 +286,13 @@ frames become one piercing action: one faceless Breton polearm knight, one conne
 spear, and one collinear pressure wake. The shoulders, elbows, airborne body axis, rear leg, and cape
 plausibly counterbalance the point. Unresolved ice/wolf/fog/paralysis names add no magic. Full and
 32 px results passed.
+
+## Pirate's Slash disposition
+
+Goal-mode one-shot finalized on 2026-08-24. Five alternating dual-weapon contacts become one low
+Imperial Abecean corsair lunge with one active cutlass wake and one held no-trail parrying dagger.
+Both grips, arms, hips, and planted legs form a plausible action; the cutlass edge leads its single
+wake. Full and 32 px results passed.
 
 ## Dual Flurry context-layer pivot
 
