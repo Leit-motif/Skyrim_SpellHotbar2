@@ -46,7 +46,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 *
 	 * `a_payload` is the event's own payload member, and it is not optional decoration:
 	 * a clip annotation `PIE.@SGVI|MCO_nextattack|3` reaches the sink split at the first
-	 * `.` into the event NAME `PIE` and the payload `@SGVI|MCO_nextattack|3`, so MCO's
+	 * `.` into the event name (raised as `Pie`, not the annotation's `PIE`) and the
+	 * payload `@SGVI|MCO_nextattack|3`, so MCO's
 	 * combo advance is carried there rather than in the tag (ticket 29). Both fields are
 	 * run through the same SGVI parser: a pack that writes the annotation without a `.`
 	 * puts it in the tag instead, and neither form should be the one that works.
@@ -92,7 +93,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void cancel(RE::PlayerCharacter* pc);
 
 	/**
-	 * Arm the last sampled MCO combo so the next ready/PIE write restores it.
+	 * Arm the last sampled MCO combo so the next restore edge writes it back.
 	 * Abilities reuse this (ADR-0005 named exception); they must not write
 	 * MCO_nextattack=1 on entry.
 	 */
@@ -105,14 +106,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void finish(RE::PlayerCharacter* pc);
 
 	void reset_session();
-
-	/**
-	 * Read-only view of the armed combo restore, for the ticket-28 probe. Throwaway: it
-	 * exists so the input thread can report what the driver is holding at the moment of an
-	 * attack press without reaching into the cache or changing its one-shot semantics.
-	 */
-	bool combo_restore_pending();
-	std::optional<McoCombo> combo_restore_peek();
 
 	/**
 	 * Interrupt the left MagicCaster when that hand holds a spell. Driver Cast

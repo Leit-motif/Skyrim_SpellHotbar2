@@ -126,3 +126,24 @@ The probe suite (`combo_probe.*`, `SH2 probe:` lines, the `0_master` declaration
 the owner has felt the combo on their save; the `MCO_currentattack` declaration is now known to
 be unreadable-by-design from the root and can be dropped whenever the probes retire. Handoff
 (b)'s ADR is unblocked: the mechanism is named.
+
+### Probe retirement (2026-08-24, after owner acceptance)
+
+The measurement kit is gone: `combo_probe.*` deleted, every `SH2 probe:` line removed, the
+throwaway `combo_restore_pending/peek` accessors and the ungated attack-press probe in `input.cpp`
+removed. What replaced it is two `logger::debug` lines that fire once per cast and once per
+advance rather than per graph per event.
+
+Two deliberate keeps:
+
+- **The `0_master` declarations stay.** `MCO_nextattack` is load-bearing — it IS the root storage
+  the nested selector reads (ADR-0014). `MCO_currentattack` is inert by that same mechanism, but
+  removing it means editing a base `#NNNN.txt`, which invalidates the Nemesis engine cache and
+  costs an Update Engine plus full regeneration — perturbing the patch that makes this work, for
+  no functional gain. Retire it whenever a regeneration is needed for another reason.
+- **The dead `is_reset_payload` branch is deleted, not fixed.** It compared the tag against
+  `"PIE"` while the engine raises `Pie`, so neither of its two call sites had ever executed. The
+  payload branch does that job with strictly better gating; reviving a second putback would only
+  duplicate a write.
+
+ADR-0014 records the mechanism and the design rule for both tickets.

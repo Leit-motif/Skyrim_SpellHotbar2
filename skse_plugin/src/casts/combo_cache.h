@@ -224,7 +224,9 @@ enum class HotbarCastPress {
 //
 // WHERE that text arrives is the part that was wrong for a whole ticket (ticket 29, finding 1).
 // The clip annotation is `PIE.@SGVI|MCO_nextattack|3`, and the engine splits it at the FIRST `.`:
-// everything before is the event NAME (`PIE`), everything after is the event PAYLOAD
+// everything before is the event NAME (raised as `Pie` -- the engine's own casing, NOT the
+// annotation's `PIE`; a tag compare against `PIE` never matches and that cost a whole ticket),
+// everything after is the event PAYLOAD
 // (`@SGVI|MCO_nextattack|3`). `RE::BSAnimationGraphEvent` carries the two in separate members, and
 // the sink hook forwarded only `tag`. So this parser was fed event names for its whole life and
 // measured zero hits -- which was read at the time as "these packs emit no SGVI", when in truth

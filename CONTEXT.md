@@ -322,6 +322,13 @@ tracking here.
 restore `MCO_nextattack` / `MCO_nextpowerattack` across a Driver Cast this mod started is
 ADR-0005's named exception, not a second hold policy. See ticket 12.
 
+**Mechanism 2026-08-24 (ADR-0014):** that restore lands in the **root** graph, because Havok links
+a nested graph's variable names to the root's ids and `MCO_Attack.hkb` reads the root's storage
+when it reactivates. The `shtb` patch's `0_master` declaration of `MCO_nextattack` is what makes
+that storage exist; without it every weapon replays `attack1`. The value itself is never derived —
+a successor table learns `playing → advance` pairs from the clips' own `@SGVI` annotations, which
+arrive as event `Pie` carrying a **payload**, not as a tag.
+
 One correction to carry across with it, because it cost a build to learn: **`MCO_WinOpen` is not
 proof a swing happened.** On the measured power attack the window opens ~180 ms *before*
 `HitFrame`, and gating on it produced clean shouts with zero swing events. That inverts the

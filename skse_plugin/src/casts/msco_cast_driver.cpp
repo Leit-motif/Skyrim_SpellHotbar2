@@ -2,7 +2,6 @@
 #include "art_driver.h"
 #include "clip_translation_driver.h"
 #include "combo_cache.h"
-#include "combo_probe.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -55,11 +54,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				return kCastEvents.front();
 			}
 			return kCastEvents[static_cast<size_t>(index - 1)];
-		}
-
-		bool is_reset_payload(std::string_view tag)
-		{
-			return tag == "PIE"sv;
 		}
 
 		// The ready edges only exist on some weapon graphs: the 1H trace passes attackStop /
@@ -138,14 +132,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (!actor) {
 				return;
 			}
+			// This is the write that matters, and it lands in the ROOT graph's storage --
+			// which is precisely where the nested MCO_Attack.hkb selector reads it from when
+			// it reactivates (ADR-0014). Actor-level is not a compromise here; it is the
+			// only storage the nested graph's variable link resolves against.
 			actor->SetGraphVariableInt("MCO_nextattack", combo.nextAttack);
 			actor->SetGraphVariableInt("MCO_nextpowerattack", combo.nextPowerAttack);
 			logger::debug("SH2 cast: restored MCO_nextattack={} MCO_nextpowerattack={}",
 				combo.nextAttack, combo.nextPowerAttack);
-			// Ticket-28 probe: the holder write above reaches one graph, and which one is the
-			// open question. Read every graph back at the same point so the log says whether the
-			// value landed where MCO reads it.
-			ComboProbe::probe_read_graphs(actor, "after write_mco"sv);
 		}
 
 		void arm_restore()
@@ -154,7 +148,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				logger::debug("SH2 cast: combo restore armed next={} power={}", combo->nextAttack,
 					combo->nextPowerAttack);
 				// Write now so a same-frame recovery attack (Ability latch cut) sees the
-				// sampled index. PIE / MagicReady still peek/consume to survive #0006's stomp.
+				// sampled index. The payload edge re-asserts it against each stomp and the
+				// initiate/ready edges consume it, so it survives #0006's reset.
 				write_mco(RE::PlayerCharacter::GetSingleton(), *combo);
 			}
 		}
@@ -259,12 +254,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return false;
 		}
 		(void)hand;
-		// Ticket-28 measurement: what did every graph hold at the moment the cast started? This
-		// is the fallback sampling seam if the @SGVI payloads above prove invisible to the sink.
-		// Read-only; nothing here changes the cast path.
-		logger::info("SH2 probe: cast begin | shape={}",
-			shape == CastShape::channel ? "channel"sv : "fnf"sv);
-		ComboProbe::probe_read_graphs(pc, "cast begin"sv);
 		// The interruption seam. The value of the swing this cast is cutting is taken here, live,
 		// while the swing is still up: at that instant the graph still holds its index and MCO has
 		// not stomped back to 1 yet. `IsAttacking` is the whole gate -- a begin() outside a swing
@@ -307,12 +296,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				g_rolling.record(sample, now_ms());
 				recorded = true;
 			}
-			logger::info("SH2 probe: begin live sample next={} power={} attacking={} recorded={}",
-				sample.nextAttack, sample.nextPowerAttack, attacking_state, recorded);
-			logger::info("SH2 probe: begin combo resolution swing={} playing={} kind={} | next: {} | power: {}",
-				open ? "open"sv : "closed"sv, open ? open->playing : 0,
-				open ? (open->kind == McoSgviVariable::next_attack ? "light"sv : "power"sv) : "-"sv,
-				light_note, power_note);
+			// One line per cast, not per event: this is the record that explains a wrong
+			// combo restore after the fact, and it is the only place the pre/post-advance
+			// call is made. Cheap enough to keep now that the per-event probes are gone.
+			logger::debug(
+				"SH2 cast: combo sample next={} power={} attacking={} recorded={} swing={} playing={} | next: {} | power: {}",
+				sample.nextAttack, sample.nextPowerAttack, attacking_state, recorded,
+				open ? "open"sv : "closed"sv, open ? open->playing : 0, light_note, power_note);
 		}
 		cast_shape.store(shape, std::memory_order_relaxed);
 		channel_started_ms.store(
@@ -393,9 +383,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
-		// TICKET 29: the same advance, arriving where it actually lands. `PIE.@SGVI|...` splits
-		// into the event name `PIE` and this payload, so this -- not the branch above -- is the
-		// edge that fires under this load order's packs.
+		// TICKET 29: the same advance, arriving where it actually lands. The annotation
+		// `PIE.@SGVI|...` splits into an event name (raised as `Pie`) and this payload, so
+		// this -- not the tag branch above -- is the edge that fires under real packs.
 		//
 		// The gate is stricter than the tag branch's, and deliberately so. The ready-state reset
 		// and the AttackState exit fire the SAME payload, `@SGVI|MCO_nextattack|1`. Most arrive
@@ -451,35 +441,19 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				decision = "IsAttacking not true -> ignored"sv;
 			}
 
-			logger::info(
-				"SH2 probe: sgvi payload {}={} tag={} attacking={} swing={} playing={} restore_taught={} | {}",
+			logger::debug("SH2 cast: advance {}={} ({})",
 				sgvi->variable == McoSgviVariable::next_attack ? kNextAttackVar
 															  : kNextPowerAttackVar,
-				sgvi->value, tag, attacking_state, open ? "open"sv : "closed"sv,
-				open ? open->playing : 0, open ? open->taught_by_restore : false, decision);
-		} else if (is_reset_payload(tag) && !payload.empty()) {
-			// Deliberate first-run instrumentation: a PIE event whose payload this parser cannot
-			// read is either a different annotation or a shape we got wrong, and the raw text is
-			// the only way to tell. Bounded because PIE events are rare on this stream.
-			logger::info("SH2 probe: PIE payload did not parse: '{}'", payload);
+				sgvi->value, decision);
 		}
 
 		if (is_mco_combo_index_edge(tag)) {
-			// Ticket-28 probe: read MCO_currentattack (the state that actually ran) at every
-			// window-close, so an injected fixture names the clip without the OAR log window.
-			ComboProbe::probe_read_graphs(a_player, "winclose"sv);
 			if (window_close_is_a_stomp_to_undo(g_rolling.restore_pending())) {
 				// This window-close is usually our own cast clip's (MSCO_left2.hkx fires
 				// MCO_winclose at 1.2s) carrying the ready reset's stomped value. Put ours
 				// back instead; the next real swing consumes it.
 				if (const auto combo = g_rolling.peek()) {
 					write_mco(a_player, *combo);
-					// Probe mode 3: the same value into every graph, in case the holder write
-					// above lands somewhere MCO's AttackNodes_StateMachine never reads.
-					if (ComboProbe::mode() == 3) {
-						ComboProbe::probe_write_graphs(a_player, combo->nextAttack,
-							combo->nextPowerAttack, "mode3 winclose-write"sv);
-					}
 				}
 			} else if (should_record_mco_combo_sample(is_active() || ArtDriver::is_active())) {
 				McoCombo sample{};
@@ -535,12 +509,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			combo_window.store(false, std::memory_order_relaxed);
 			clip_committed.store(false, std::memory_order_relaxed);
 			logger::debug("SH2 cast: state exiting (clip end or cancel)");
-		}
-
-		if (is_reset_payload(tag)) {
-			if (const auto combo = g_rolling.peek()) {
-				write_mco(a_player, *combo);
-			}
 		}
 
 		if (is_restore_edge(tag)) {
@@ -627,16 +595,6 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// clips do.
 		g_swing.close();
 		ClipTranslationDriver::reset();
-	}
-
-	bool combo_restore_pending()
-	{
-		return g_rolling.restore_pending();
-	}
-
-	std::optional<McoCombo> combo_restore_peek()
-	{
-		return g_rolling.peek();
 	}
 
 	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc)

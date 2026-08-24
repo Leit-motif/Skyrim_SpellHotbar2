@@ -78,8 +78,6 @@ set(source_files src/plugin.cpp
                  src/casts/clip_translation_driver.h
                  src/casts/clip_translation_driver.cpp
                  src/casts/combo_cache.h
-                 src/casts/combo_probe.h
-                 src/casts/combo_probe.cpp
                  src/casts/cast_intent.h
                  src/casts/cast_intent.cpp
                  src/extern/ShoutMCO_CastIntent.h
