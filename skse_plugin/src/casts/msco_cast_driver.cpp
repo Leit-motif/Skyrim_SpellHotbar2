@@ -398,11 +398,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// edge that fires under this load order's packs.
 		//
 		// The gate is stricter than the tag branch's, and deliberately so. The ready-state reset
-		// and the AttackState exit fire the SAME payload, `@SGVI|MCO_nextattack|1`. Nothing in the
-		// text tells them apart from a genuine wrap back to 1; what tells them apart is that they
-		// arrive with no swing open and with `IsAttacking` false. Recording one would re-open the
-		// bug the rolling cache exists to outlive, so both conditions must hold: an open swing of
-		// the matching kind, and a live `IsAttacking == true`.
+		// and the AttackState exit fire the SAME payload, `@SGVI|MCO_nextattack|1`. Most arrive
+		// with no swing open and `IsAttacking` false -- but NOT all: when a swing is cut, the
+		// AttackState-exit notify lands BEFORE attackStop (measured 2026-08-24 16:41, tracker
+		// still open, IsAttacking still 1), so the value itself is the last line of defence:
+		// `payload_advance_is_recordable` quarantines 1, the only value a reset can carry.
 		if (const auto sgvi = parse_mco_sgvi_sample(payload)) {
 			const bool pending = g_rolling.restore_pending();
 			const int attacking_state = read_is_attacking(a_player);
@@ -417,6 +417,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				if (const auto combo = g_rolling.peek()) {
 					write_mco(a_player, *combo);
 				}
+			} else if (matching_kind && attacking_state == 1 &&
+					   !payload_advance_is_recordable(sgvi->value)) {
+				// A cut swing's exit notify beats attackStop to this sink, so an open swing and a
+				// live IsAttacking do NOT prove a clip advance. A reset always teaches 1 and a
+				// clip can never teach itself, so 1 goes to the WinClose edge instead -- see
+				// payload_advance_is_recordable.
+				decision = "reset-valued (1) -> left to the WinClose edge"sv;
 			} else if (matching_kind && attacking_state == 1) {
 				if (sgvi->variable == McoSgviVariable::next_attack) {
 					g_rolling.record_next_attack(sgvi->value, now_ms());

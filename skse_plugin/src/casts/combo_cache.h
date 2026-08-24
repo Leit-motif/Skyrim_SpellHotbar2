@@ -441,6 +441,22 @@ private:
 	std::array<std::array<std::array<int, kMaxIndex + 1>, 2>, kWeaponKeys> table_{};
 };
 
+// What the payload edge is allowed to take from a parsed advance (ticket 29, first live run).
+//
+// The ready-state and AttackState-exit notifies teach the SAME payload shape as a clip advance,
+// always with value 1. When a swing is CUT, the exit notify arrives BEFORE attackStop -- measured
+// 2026-08-24 16:41: a cast cutting attack1 delivered the exit payload with the tracker still open
+// and IsAttacking still 1, which recorded 1 over the good post-advance sample and taught
+// successor[1]=1. Nothing in the event tells that reset from a genuine wrap teaching (a wrap also
+// teaches 1), so 1 is quarantined from the payload edge entirely -- recording and learning both.
+// The wrap pair (e.g. Mercenary Greatsword's 4->1) still gets learned, one edge later, by the
+// WinClose sampler: a WinClose only follows a swing that actually advanced, which is exactly what
+// makes it reset-safe. Values outside 1..10 are not combo indices at all.
+[[nodiscard]] constexpr bool payload_advance_is_recordable(int value) noexcept
+{
+	return value >= 2 && value <= McoSwingTracker::kMaxIndex;
+}
+
 // The whole ticket-29 discriminator, in one line, so it can be tested without a graph.
 //
 // A live sample equal to the open swing's playing index is PRE-advance: the clip has not written

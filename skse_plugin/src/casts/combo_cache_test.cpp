@@ -893,6 +893,24 @@ void an_interrupted_swing_hands_its_successor_on()
 		"the last swing wraps to 1 because the clip said so, never because of +1 arithmetic");
 }
 
+void a_reset_valued_payload_is_never_recorded_or_learned()
+{
+	// Measured 2026-08-24 16:41: a cut swing's AttackState-exit notify beats attackStop to the
+	// sink, so it arrives with the tracker open and IsAttacking true -- the same gates a real
+	// advance passes. Its value is always 1, and a clip can never teach itself, so 1 is
+	// quarantined from the payload edge; the wrap pair rides the WinClose sampler instead.
+	expect(!SpellHotbar::casts::payload_advance_is_recordable(1),
+		"1 is the reset value; the exit notify of a cut swing carries it through every other gate");
+	expect(SpellHotbar::casts::payload_advance_is_recordable(2),
+		"a real advance to 2 is recordable");
+	expect(SpellHotbar::casts::payload_advance_is_recordable(10),
+		"the last plausible index is recordable");
+	expect(!SpellHotbar::casts::payload_advance_is_recordable(0),
+		"0 is a failed read, not a teaching");
+	expect(!SpellHotbar::casts::payload_advance_is_recordable(11),
+		"past the moveset range is not a teaching");
+}
+
 void an_unlearned_pre_advance_keeps_todays_behaviour()
 {
 	McoSuccessorTable table;
@@ -983,6 +1001,7 @@ int main()
 	a_sample_equal_to_the_playing_index_is_pre_advance();
 	the_sgvi_parser_reads_a_payload_shaped_string();
 	an_interrupted_swing_hands_its_successor_on();
+	a_reset_valued_payload_is_never_recorded_or_learned();
 	an_unlearned_pre_advance_keeps_todays_behaviour();
 
 	if (g_failures != 0) {
