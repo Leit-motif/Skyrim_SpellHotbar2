@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **26 — Furious Charge** (`aow_26_furious_charge`)
+- Active art: **27 — Furrow Strike** (`aow_27_furrow_strike`)
 - Status: **not started**
-- Inventory: **24 of 57 finalized; 33 unprocessed remain**
+- Inventory: **25 of 57 finalized; 32 unprocessed remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -121,6 +121,16 @@ The icon deliberately depicts one defining final strike rather than multiplying 
 echo trails: one ivory-white descending diagonal remains physically attached to one Altmer elven
 sword. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
 input, prompt, provider hash, evidence, and model-decision provenance are recorded under
+`python_scripts/weapon_art_icons/`.
+
+## Furious Charge disposition
+
+Goal-mode one-shot finalized on 2026-08-23. Despite catalogue ArtClass `2H`, the verified active
+clip advances about 693 units and opens every collision on the `SHIELD` node, ending with a
+four-times-scale full-damage shield contact. The icon therefore uses one foreshortened Imperial
+heavy shield, one continuous physical charge wake, and one terminal rim impact with the legionary
+mostly hidden. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px
+atlas input, prompt, provider hash, evidence, and mismatch note are recorded under
 `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot

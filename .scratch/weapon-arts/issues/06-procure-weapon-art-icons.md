@@ -234,3 +234,10 @@ connected ivory-white diagonal sword path; unresolved paralysis and fog names co
 invented magic. The faceless Altmer uses race-guided gold, ivory, emerald, and deep green. The full
 result and 32 px LANCZOS reduction passed the hard gate. Twenty-four of 57 icons are finalized;
 33 remain unprocessed.
+
+Goal mode 2026-08-23: **Furious Charge** (`aow_26_furious_charge`) is finalized from its single
+generation attempt. The active clip overrides its catalogue `2H` suggestion: all four collisions
+use the shield node during a roughly 693-unit charge, with a much larger final contact. One
+foreshortened Imperial shield, one continuous dust wake, and one terminal impact dominate while
+the faceless legionary remains mostly hidden. The full result and 32 px LANCZOS reduction passed
+the hard gate. Twenty-five of 57 icons are finalized; 32 remain unprocessed.
