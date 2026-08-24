@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **45 — Reaper** (`aow_45_reaper`)
+- Active art: **46 — Ripping Hour** (`aow_46_ripping_hour`)
 - Status: **not started**
-- Inventory: **40 of 57 finalized; 14 unprocessed and 3 recorded hard failures remain**
+- Inventory: **40 of 57 finalized; 13 unprocessed and 4 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -300,6 +300,13 @@ Goal-mode one-shot finalized on 2026-08-24. A roughly 499-unit ground rush and t
 low Orsimer boar-spear charge with one point-aligned pressure wake. Wide hand spacing, neutral
 wrists, low hips, planted lead foot, and driving rear leg pass the physics gate. Full and 32 px
 results passed.
+
+## Reaper disposition
+
+Recorded one-shot hard failure on 2026-08-24. The Dunmer, connected glaive, two-handed leverage,
+edge direction, and one persistent wake are mechanically coherent, but the model turned the quiet
+volcanic color field into literal mountains, lava, and a scenic panorama. That key-art framing
+violates the icon brief. Evidence is preserved under ignored `pilot/`; no master/input or retry.
 
 ## Dual Flurry context-layer pivot
 

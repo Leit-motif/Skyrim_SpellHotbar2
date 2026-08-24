@@ -373,6 +373,12 @@ charge with one point-aligned wake. Grip spacing, arm leverage, low center of gr
 foot, and driving rear leg pass the physics gate. Full and 32 px results passed. Forty of 57 icons
 are finalized; 14 remain unprocessed and three are hard failures.
 
+Goal mode 2026-08-24: **Reaper** (`aow_45_reaper`) is a recorded one-shot hard failure. Its Dunmer,
+connected glaive, two-handed leverage, edge direction, and one persistent wake pass the physics
+gate, but literal volcanic mountains, lava, and flying rocks make scenic key art rather than a
+hotbar glyph. Evidence is ignored-pilot only; no master/input or retry. Forty of 57 icons are
+finalized; 13 remain unprocessed and four are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
