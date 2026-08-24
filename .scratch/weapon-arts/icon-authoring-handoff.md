@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **28 — Head Chopper** (`aow_28_head_chopper`)
+- Active art: **29 — Head Tap** (`aow_29_head_tap`)
 - Status: **not started**
-- Inventory: **26 of 57 finalized; 31 unprocessed remain**
+- Inventory: **26 of 57 finalized; 30 unprocessed and 1 recorded hard failure remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -142,6 +142,15 @@ so the icon uses only physical soil, stone, and steel: one small Nord, one two-h
 and one perspective ground furrow. The full image and 32 px LANCZOS reduction passed the hard gate.
 The master, 128 px atlas input, prompt, provider hash, evidence, and payload uncertainty are recorded
 under `python_scripts/weapon_art_icons/`.
+
+## Head Chopper exception
+
+The single goal-mode generation attempt failed the hard gate on 2026-08-23. It correctly limited
+the dual-wield sequence to two axes and one visible left-hand trail, but the active axe became a
+polearm-length crescent weapon held in one hand. It is not finalized and has no master or atlas
+input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
+hash, and failure reasons are recorded in `prompts/aow_28_head_chopper.md`. No regeneration was
+attempted.
 
 ## Dual Flurry context-layer pivot
 

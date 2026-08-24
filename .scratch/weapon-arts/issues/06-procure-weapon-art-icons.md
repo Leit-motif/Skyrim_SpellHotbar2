@@ -248,3 +248,10 @@ to one defining physical path: one Nord greatsword feeding one bright perspectiv
 The figure remains small and faceless, and no second trail or invented element appears. The full
 result and 32 px LANCZOS reduction passed the hard gate. Twenty-six of 57 icons are finalized;
 31 remain unprocessed.
+
+Goal mode 2026-08-23: **Head Chopper** (`aow_28_head_chopper`) is a recorded one-shot hard failure,
+not a finalized icon. The result correctly shows two axes with only one active trail, but the left
+axe became a polearm-length crescent weapon held in one hand, violating the dual one-handed weapon
+construction. Full and 32 px evidence are preserved under the ignored `pilot/` tree; no master or
+atlas input exists and no regeneration was attempted. Twenty-six of 57 icons are finalized;
+30 remain unprocessed and one is a recorded hard failure.
