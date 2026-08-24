@@ -320,3 +320,21 @@ Live only. A build or a static check diagnoses; it never proves an animation.
 - [ ] A dual-cast aimed (`11003`) and a dual-cast self (`11004`) each loop their own clip.
 - [ ] A fire-and-forget on the same bar still plays its throw clip, unchanged.
 - [ ] An attack during a hold ends the channel and swings, continuing the combo.
+
+## Closed 2026-08-24 — owner's call
+
+The animation half is done and owner-verified (channel state `f974fee`, per-family loops, the
+acceptance rows above through "fire-and-forget unchanged"; `11004` and the t0/t+3s frames remain
+untested and travel with ticket 29/30 verification sessions). The last cell — an attack during a
+hold continuing the combo — now WORKS on 1H when the cast lands after the interrupted swing's
+advance (owner OAR screenshot 2026-08-24 14:35: a1 → a2 → flames hold → attack3), and the rest
+of that cell is carved out per the owner:
+
+- **Ticket 29** — an interrupted swing counts toward the combo (pre-advance interrupts replay
+  the swing; owner ruling: the user sees animations, not hit frames).
+- **Ticket 30** — 2H attack entry ignores the restored index entirely, and 1H's success is
+  unexplained; the owner's bar for resolution is a mechanism, not a passing run.
+
+Diagnosis corpus: `notes/28-progress-2026-08-24-combo-fix.md`,
+`notes/28-entry-seam-analysis-2026-08-24.md` (rounds 1–2). Handoff (b)'s ADR is deferred into
+ticket 30.
