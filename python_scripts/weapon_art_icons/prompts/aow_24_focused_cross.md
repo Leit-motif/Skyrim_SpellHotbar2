@@ -1,8 +1,9 @@
 # Focused Cross
 
-**Status:** Hard failure after the one permitted generation attempt on 2026-08-23; not finalized
+**Status:** Finalized by owner-directed narrow correction on 2026-08-23
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** One Codex built-in generation, followed by one owner-requested inpainting edit
+using the failed result only as the edit source
 
 **Stable icon key:** `aow_24_focused_cross`
 
@@ -42,7 +43,7 @@ HARD NEGATIVES:
 not a portrait; not splash art; not a full-body hero poster; no large face; no beauty shot; no centered character; no two weapons; no crossed weapons; no floating X symbol; no disconnected effects; no giant mace; no ornate staff; no elemental spell; no gore; no scenery; no readable text.
 ```
 
-## Hard-gate failure
+## Initial hard-gate failure and owner correction
 
 - Full-resolution result: fail. The figure holds a long haft that reaches the central impact while
   a separate mace head appears on the upper descending arc. The two pieces do not form one weapon,
@@ -54,4 +55,17 @@ not a portrait; not splash art; not a full-body hero poster; no large face; no b
   `python_scripts/weapon_art_icons/pilot/aow_24_focused_cross_hard_failure.png` and
   `aow_24_focused_cross_hard_failure_32.png`.
 - Failure image SHA-256: `1C3313082EE18FA9141A201F71CC16388C91307DECF898EBF7ED9F4E8B6265DA`.
-- Per the one-shot goal, no regeneration was attempted and no master or atlas input was created.
+- Per the one-shot goal, no autonomous regeneration was attempted. The owner then explicitly
+  requested one narrow edit: remove the detached upper-right mace and preserve the rest.
+
+### Owner-directed correction prompt
+
+```text
+Make one precise inpainting edit to the supplied square MMO ability icon. Remove the entire detached floating mace in the upper-right quadrant: delete both its black metal mace head and the short wrapped handle segment directly above it. Reconstruct the continuous silver-white curved motion trail, smoky black background, dust, and sparse orange sparks naturally behind the removed object. Do not add or move any weapon. Preserve absolutely everything else unchanged: the small faceless armored figure at lower left, the single long weapon/haft held in the figure's hands extending to the central impact point, the bright horizontal dash wake, the central impact, all debris, the charcoal/ivory/orange palette, framing, lighting, and exact 1:1 composition. The result must contain no floating mace head and no object embedded in the upper curved trail. No text, no border, no new details.
+```
+
+- Corrected full-resolution result: pass under the owner's explicit disposition. The detached mace
+  is gone; one held weapon, one dash axis, and one connected impact remain.
+- 32 px LANCZOS reduction: pass. The compact cross-like intersection remains the immediate glyph
+  with the source figure subordinate.
+- Master SHA-256: `E5F3BCE0D9518B069064A99676A4AADD5C3E8C677E5EACEC4EACF27ECC1F42C1`.

@@ -9,7 +9,7 @@ Updated: 2026-08-23
 - Integration target: `weapon-arts`, not `main`
 - Active art: **25 — Focused Strike** (`aow_25_focused_strike`)
 - Status: **not started**
-- Inventory: **21 of 57 finalized; 34 unprocessed and 2 recorded hard failures remain**
+- Inventory: **23 of 57 finalized; 34 unprocessed remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -95,23 +95,23 @@ invented element. Three broken ivory-white pressure bands dominate above a tiny 
 figure. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
 input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
 
-## Flurry Strike exception
+## Flurry Strike disposition
 
-The single goal-mode generation attempt failed the hard gate on 2026-08-23. Although its three
-steel-white trails read at 32 px, the Orsimer became a large character-art subject and the requested
-one-dominant-head battleaxe became double-bitted. It is not finalized and has no master or atlas
-input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt, hash,
-and failure reasons are recorded in `prompts/aow_23_flurry_strike.md`. No regeneration was attempted.
+The single autonomous generation failed the hard gate on 2026-08-23. The owner then explicitly
+requested one narrow correction: delete the three upper trail echoes and retain only the low sweep
+physically attached to the axe head. That edit is final. The full image and 32 px LANCZOS reduction
+pass under the owner's disposition; the original failure evidence remains in ignored `pilot/` and
+the initial prompt, failure, correction prompt, provenance, and hashes remain auditable in
+`prompts/aow_23_flurry_strike.md`.
 
-## Focused Cross exception
+## Focused Cross disposition
 
-The single goal-mode generation attempt failed the hard gate on 2026-08-23. The horizontal dash
-wake and descending arc intersect clearly at 32 px and the Dunmer figure remains subordinate, but
-the figure's long haft reaches the impact while a separate mace head rides the upper arc. Those
-pieces do not form one physically connected weapon. It is not finalized and has no master or atlas
-input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
-hash, and failure reasons are recorded in `prompts/aow_24_focused_cross.md`. No regeneration was
-attempted.
+The single autonomous generation failed the hard gate on 2026-08-23 because a detached mace rode
+the upper arc. The owner explicitly requested one narrow correction removing that floating weapon.
+That edit is final. The effect-first dash/swing intersection remains readable at 32 px with one
+held weapon and no detached mace. Original failure evidence remains in ignored `pilot/`; the
+initial prompt, failure, correction prompt, provenance, and hashes remain auditable in
+`prompts/aow_24_focused_cross.md`.
 
 ## Dual Flurry context-layer pivot
 

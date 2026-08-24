@@ -1,8 +1,9 @@
 # Flurry Strike
 
-**Status:** Hard failure after the one permitted generation attempt on 2026-08-23; not finalized
+**Status:** Finalized by owner-directed narrow correction on 2026-08-23
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** One Codex built-in generation, followed by one owner-requested inpainting edit
+using the failed result only as the edit source
 
 **Stable icon key:** `aow_23_flurry_strike`
 
@@ -16,8 +17,9 @@
   brightness; the sixth hit is stronger and carries `$AoW_Knockback`.
 - Agent composition choice: an Orsimer shock trooper with one practical two-handed battleaxe and
   three steel-white trails as economical shorthand for six hits. No element was inferred.
-- Atlas intent: layered right-to-left trails were chosen after rising Elegant Slash, rotational
-  Enrage (F), and upward-frontal Enrage (M).
+- Initial atlas intent used layered right-to-left trails. The owner correctly rejected that
+  interpretation: repeated animation hits do not require multiple depicted trails. The finalized
+  correction uses one physical trail attached to the axe head.
 
 ## Final generation prompt
 
@@ -35,7 +37,7 @@ Style/medium: painted graphical MMO ability icon, bold simple masses, strong sil
 Constraints: exactly one tiny faceless fighter, one two-handed battleaxe, two hands on one haft, three trail bands as sequence shorthand, one terminal impact. No large character, portrait, armor showcase, sword, hammer, second weapon, detached ring, cyclone, fire, frost, lightning, magic rune, gore, victim, scenery, text, logo, watermark, or border.
 ```
 
-## Hard-gate failure
+## Initial hard-gate failure and owner correction
 
 - Full-resolution result: fail. The model made the Orsimer a large character-art subject rather
   than a subordinate icon marker, and the axe became a double-bitted fantasy head instead of one
@@ -46,4 +48,18 @@ Constraints: exactly one tiny faceless fighter, one two-handed battleaxe, two ha
   `python_scripts/weapon_art_icons/pilot/aow_23_flurry_strike_hard_failure.png` and
   `aow_23_flurry_strike_hard_failure_32.png`.
 - Failure image SHA-256: `197759912368FAEF9628EB7809B5334A221D6CAB6DF238EC853C3AB311D0CC22`.
-- Per the one-shot goal, no regeneration was attempted and no master or atlas input was created.
+- Per the one-shot goal, no autonomous regeneration was attempted. The owner then explicitly
+  requested one narrow edit: remove the three upper slash ribbons and retain only the single
+  ground-level trail physically attached to the axe head.
+
+### Owner-directed correction prompt
+
+```text
+Precisely edit the supplied square MMO ability icon. Remove the THREE large silver-white slash trails floating across the upper and middle background. Keep ONLY the single lowest silver-white weapon trail that is physically attached to and immediately follows the battleaxe head along the ground from the lower-left impact, curving behind the axe toward the lower right. Repaint the areas behind the removed three trails as the same quiet smoky charcoal-brown background with restrained dust haze, preserving natural continuity. Do not create any replacement arcs, streaks, echoes, ghost trails, rings, or energy bands anywhere above the axe. Preserve everything else unchanged: exactly one faceless armored Orc/Orsimer fighter, exactly one two-handed practical single-headed battleaxe with both hands on one haft, the pose, the one ground-level axe-connected trail, ground impact, sparks, stones, dark green clothing, red cloth accents, palette, lighting, crop, and 1:1 composition. No text, no border, no new weapon, no extra slash.
+```
+
+- Corrected full-resolution result: pass under the owner's explicit disposition. Exactly one axe
+  and one axe-connected ground sweep remain; the three invented upper echoes are gone.
+- 32 px LANCZOS reduction: pass. The bright low sweep, axe head, two-handed action, and impact
+  remain legible without background trail clutter.
+- Master SHA-256: `627B10CB60BDA11021F0B06C3C9FA689F59DABBD2036600742C6FC4760D97E04`.
