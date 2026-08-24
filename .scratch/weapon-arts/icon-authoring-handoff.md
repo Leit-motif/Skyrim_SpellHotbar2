@@ -7,10 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **17 — Dual Flurry** (`aow_17_dual_flurry`)
-- Status: **in progress; generation paused while the Skyrim visual context and prompt-authoring
-  workflow are validated**
-- Inventory: **15 of 57 finalized; 42 remain**
+- Active art: **18 — Earth Shatter** (`aow_18_earth_shatter`)
+- Status: **not started**
+- Inventory: **16 of 57 finalized; 41 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -47,6 +46,16 @@ animation evidence, and Flaming Strike payload interpretation are recorded under
 
 ## Dual Flurry context-layer pivot
 
+Final disposition: the owner supplied and approved an externally generated Gemini final cut on
+2026-08-23 after the Codex generation attempts repeatedly failed to keep the axe heads, cutting
+directions, and energy trails physically coherent. The exact uploaded PNG is canonical. It shows a
+leaping blond Nord barbarian whose two inward-facing axes generate the crossed crimson trails along
+their curved lines of motion. The approved master, 128 px atlas input, provenance record, and
+animation evidence are stored under `python_scripts/weapon_art_icons/`.
+
+The prompt-layer history below remains useful as a record of the failure and the context work, but
+its draft is superseded and must not be used to regenerate or replace the approved final cut.
+
 Several unapproved candidates exposed a prompt-authoring problem rather than an image-backend
 problem: race labels were treated as costumes, prior rejected candidates carried visual content
 forward, effect geometry overruled body action, and generic fantasy armor displaced the requested
@@ -58,10 +67,10 @@ Canonical context now begins at:
 - `python_scripts/weapon_art_icons/prompt-brief-template.md`
 - `.agents/skills/skyrim-weapon-art-icon-prompter/SKILL.md`
 
-The current prompt-only forward test is
+The superseded prompt-only forward test is
 `.scratch/weapon-arts/prompt-drafts/aow_17_dual_flurry-context-v1.md`. It resolves Dual Flurry as a
 leaping Nord barbarian in rough fur and hide, using two compact one-handed axes to physically create
-two red trails that cross once. Do not generate until the owner accepts that prompt's meaning.
+two red trails that cross once. Do not use it to replace the approved owner-supplied final.
 
 ## Earlier Divided Strike stopping point
 

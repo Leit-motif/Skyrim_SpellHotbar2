@@ -1,5 +1,9 @@
 # Dual Flurry context-layer forward test
 
+> **Superseded 2026-08-23.** The owner approved an externally generated final cut. This document is
+> retained as prompt-workflow evidence only and must not be used to regenerate or replace
+> `python_scripts/weapon_art_icons/source/aow_17_dual_flurry.png`.
+
 Status: prompt-only validation draft; generation paused
 
 ## Resolved brief

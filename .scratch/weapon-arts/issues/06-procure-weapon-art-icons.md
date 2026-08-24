@@ -172,10 +172,16 @@ Session 2026-08-23: **Dual Flurry** (`aow_17_dual_flurry`) is in progress. The 1
 dual-wield clip advances roughly 284 units and delivers two simultaneous paired-weapon hits; the
 second pair carries knockback. The first candidate is pending.
 
-Context-layer pivot 2026-08-23: Dual Flurry generation is paused after repeated semantic drift.
+Historical context-layer pivot 2026-08-23: Dual Flurry generation was paused after repeated semantic drift.
 The project now separates race, archetype or faction, equipment family, physical action, and effect
 instead of allowing a race palette or prior candidate to choose the rest. Skyrim visual vocabulary,
 a semantic prompt brief, and the project-local prompt-authoring skill live under
 `python_scripts/weapon_art_icons/` and `.agents/skills/skyrim-weapon-art-icon-prompter/`. The first
 prompt-only forward test is `.scratch/weapon-arts/prompt-drafts/aow_17_dual_flurry-context-v1.md`;
-owner semantic acceptance is required before generation resumes.
+that draft is superseded by the final disposition below.
+
+Owner 2026-08-23: **Dual Flurry** is finalized as `aow_17_dual_flurry` from the exact 1024 x 1024
+Gemini-generated PNG supplied by the owner. It depicts a leaping blond Nord barbarian whose two
+inward-facing one-handed axes physically generate the crossed crimson trails along their curved
+lines of motion. Earlier Codex candidates remain rejected calibration output. Sixteen of 57 icons
+are finalized, leaving 41.
