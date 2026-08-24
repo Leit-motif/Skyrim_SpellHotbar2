@@ -241,6 +241,14 @@ icon distills that sequence to one faceless Nord, one connected long hooked grea
 tangent rising wake. No three-hit diagram, fog magic, or paralysis color is invented. Full and 32
 px results passed.
 
+## Magnetic Throw disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The Generic clip makes one early contact, retreats about
+68 units, then rapidly contacts seven times on the same weapon node. The icon uses one faceless
+Breton in Dwemer-salvage gear, one joined brass throwing disc, and one continuous blue-white line
+from open palm to disc hub. No projectile copies or lightning web are invented. Full and 32 px
+results passed.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on

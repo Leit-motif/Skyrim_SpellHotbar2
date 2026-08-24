@@ -325,3 +325,9 @@ attempt. Its three high-damage 2H contacts become one terminal faceless Nord gre
 connected hooked blade and one tangent rising wake. Unresolved fog/paralysis names add no magic or
 colored aura. Full and 32 px results passed. Thirty-five of 57 icons are finalized; 20 remain
 unprocessed and two are hard failures.
+
+Goal mode 2026-08-24: **Magnetic Throw** (`aow_39_magnetic_throw`) is finalized from its single
+generation attempt. Eight same-node contacts become one faceless Breton action source, one brass
+throwing disc, and one unbroken blue-white palm-to-hub return line, not eight projectiles. Full and
+32 px results passed. Thirty-five of 57 icons are finalized; 19 remain unprocessed and three are
+recorded hard failures.
