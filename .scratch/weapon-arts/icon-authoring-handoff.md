@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **52 — Soul Cleaver** (`aow_52_soul_cleaver`)
+- Active art: **53 — Soulless Swing** (`aow_53_soulless_swing`)
 - Status: **not started**
-- Inventory: **45 of 57 finalized; 7 unprocessed and 5 recorded hard failures remain**
+- Inventory: **46 of 57 finalized; 6 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -348,6 +348,12 @@ Goal-mode one-shot finalized on 2026-08-24. One short hit with explicit shield-b
 boss-centered impact on one connected Nordic round shield, driven by one weaponless Nord. Shield,
 shoulder, torso, legs, and trailing arm pass physics. No paralysis magic is inferred. Full and
 32 px passed.
+
+## Soul Cleaver disposition
+
+Goal-mode one-shot finalized on 2026-08-24. Two close physical hits become one Orsimer executioner
+chop with one connected two-handed single-edged war cleaver and one edge-led wake. Grip, stance,
+leverage, and edge path pass physics. No soul/paralysis magic is inferred. Full and 32 px passed.
 
 ## Dual Flurry context-layer pivot
 
