@@ -2,6 +2,7 @@
 #include "art_driver.h"
 #include "clip_translation_driver.h"
 #include "combo_cache.h"
+#include "combo_probe.h"
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -86,6 +87,10 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			actor->SetGraphVariableInt("MCO_nextpowerattack", combo.nextPowerAttack);
 			logger::debug("SH2 cast: restored MCO_nextattack={} MCO_nextpowerattack={}",
 				combo.nextAttack, combo.nextPowerAttack);
+			// Ticket-28 probe: the holder write above reaches one graph, and which one is the
+			// open question. Read every graph back at the same point so the log says whether the
+			// value landed where MCO reads it.
+			ComboProbe::probe_read_graphs(actor, "after write_mco"sv);
 		}
 
 		void arm_restore()
@@ -220,6 +225,12 @@ namespace SpellHotbar::casts::MscoCastDriver {
 				// back instead; the next real swing consumes it.
 				if (const auto combo = g_rolling.peek()) {
 					write_mco(a_player, *combo);
+					// Probe mode 3: the same value into every graph, in case the holder write
+					// above lands somewhere MCO's AttackNodes_StateMachine never reads.
+					if (ComboProbe::mode() == 3) {
+						ComboProbe::probe_write_graphs(a_player, combo->nextAttack,
+							combo->nextPowerAttack, "mode3 winclose-write"sv);
+					}
 				}
 			} else if (should_record_mco_combo_sample(is_active() || ArtDriver::is_active())) {
 				McoCombo sample{};
@@ -351,6 +362,16 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		trace_budget.store(0, std::memory_order_relaxed);
 		g_castIndex.reset();
 		ClipTranslationDriver::reset();
+	}
+
+	bool combo_restore_pending()
+	{
+		return g_rolling.restore_pending();
+	}
+
+	std::optional<McoCombo> combo_restore_peek()
+	{
+		return g_rolling.peek();
 	}
 
 	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc)

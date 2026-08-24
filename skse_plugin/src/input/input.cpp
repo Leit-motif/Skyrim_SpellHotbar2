@@ -10,6 +10,7 @@
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
 #include "../casts/combo_cache.h"
+#include "../casts/combo_probe.h"
 #include "../casts/msco_cast_driver.h"
 #include "../casts/art_driver.h"
 #include "../storage/storage.h"
@@ -479,6 +480,29 @@ namespace SpellHotbar::Input {
                                     }
                                 }
 
+                            }
+                        }
+                    }
+
+                    // Ticket-28 probe (throwaway). Deliberately ungated: every other branch below
+                    // is conditioned on one of our own states being live, and the press that
+                    // matters here is the ordinary swing AFTER a cast, when none of them are. This
+                    // is the moment MCO itself reads MCO_nextattack, so it is the only reading
+                    // that says whether the write-back survived and in which graph.
+                    if (pc && bEvent->IsDown() && in_ingame_state()) {
+                        const uint32_t probe_attack_key = get_attack_key(key_device);
+                        if (probe_attack_key != RE::ControlMap::kInvalid && key_code == probe_attack_key) {
+                            const auto pending = casts::MscoCastDriver::combo_restore_peek();
+                            logger::info("SH2 probe: attack press pending={} next={} power={}",
+                                casts::MscoCastDriver::combo_restore_pending(),
+                                pending ? pending->nextAttack : -1,
+                                pending ? pending->nextPowerAttack : -1);
+                            casts::ComboProbe::probe_read_graphs(pc, "attack press"sv);
+                            // Mode 2 writes before the press travels on, so MCO reads the value
+                            // this frame rather than the frame after.
+                            if (pending && casts::ComboProbe::mode() == 2) {
+                                casts::ComboProbe::probe_write_graphs(pc, pending->nextAttack,
+                                    pending->nextPowerAttack, "mode2 press-write"sv);
                             }
                         }
                     }

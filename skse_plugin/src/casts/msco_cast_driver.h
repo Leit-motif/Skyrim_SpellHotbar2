@@ -93,6 +93,14 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void reset_session();
 
 	/**
+	 * Read-only view of the armed combo restore, for the ticket-28 probe. Throwaway: it
+	 * exists so the input thread can report what the driver is holding at the moment of an
+	 * attack press without reaching into the cache or changing its one-shot semantics.
+	 */
+	bool combo_restore_pending();
+	std::optional<McoCombo> combo_restore_peek();
+
+	/**
 	 * Interrupt the left MagicCaster when that hand holds a spell. Driver Cast
 	 * begin, Ability begin, and yielding our shtb clip all use this so a cancelled
 	 * MSCO left charge cannot stick IsCasting until sheathe.
