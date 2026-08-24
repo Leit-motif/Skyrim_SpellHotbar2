@@ -57,9 +57,18 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return tag == "PIE"sv;
 		}
 
+		// The ready edges only exist on some weapon graphs: the 1H trace passes attackStop /
+		// SBF_ReadyStart / MSCO_MagicReady on the way out of our state (ticket 10), but a
+		// greatsword session fired neither ready tag after SH2_CastExit (measured 2026-08-24),
+		// so a pending restore was never consumed and the stomp-undo branch rewrote the stale
+		// index over every later swing's WinClose teaching -- the combo pinned at the restored
+		// attack. The initiate tags are the consume edge that exists on every weapon: they fire
+		// on the fresh swing itself, after the engine has already read the variable, and our own
+		// Driver Cast never raises them.
 		bool is_restore_edge(std::string_view tag)
 		{
-			return tag == "SBF_ReadyStart"sv || tag == "MSCO_MagicReady"sv;
+			return tag == "SBF_ReadyStart"sv || tag == "MSCO_MagicReady"sv ||
+				   tag == "MCO_AttackInitiate"sv || tag == "MCO_PowerAttackInitiate"sv;
 		}
 
 		bool sample_mco(RE::Actor* actor, McoCombo& out)
