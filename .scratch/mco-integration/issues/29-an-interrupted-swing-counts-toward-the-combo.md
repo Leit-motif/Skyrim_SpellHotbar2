@@ -1,5 +1,7 @@
 # 29 — An interrupted swing counts toward the combo
 
+Status: claimed
+
 Opened 2026-08-24, carved out of ticket 28. Owner ruling, verbatim intent:
 
 > should a swing that's interrupted after its hit but before its advance still count? — yes. the
@@ -41,6 +43,43 @@ lands. Constraints and tensions to resolve:
 - Whatever the mechanism, verification is by the OAR Animation Log clip name (or the
   `MCO_currentattack` probe if ticket 30 makes it readable) — never by graph teachings alone
   (trap documented twice in `28-progress-2026-08-24-combo-fix.md`).
+
+## Design decision (2026-08-24, this session)
+
+Two findings reframe the candidate list:
+
+1. **The `@SGVI` advance almost certainly DOES reach the sink — in the event's `payload` field.**
+   The engine splits an annotation `PIE.@SGVI|MCO_nextattack|3` at the first `.`: tag `PIE`,
+   payload `@SGVI|MCO_nextattack|3`. The driver already receives tag-`PIE` events (it keys the
+   reset re-write on them), but `Animation_event_hook` never forwards `a_event->payload` — the
+   16e0b82 parser only ever saw tags. So "SGVI never reaches the sink" was measured against the
+   wrong field. Pending live confirmation this run.
+2. **The pre-advance sample is disambiguable.** At `MCO_AttackInitiate` the variable reads back
+   as the playing swing's index N (measured 2026-08-24). A begin()-time live sample equal to N
+   is therefore pre-advance (the swing would replay); a sample different from N is the successor.
+
+Mechanism (preserve, never derive — every number is one a clip taught):
+
+- Forward the payload; parse `@SGVI` out of it. The advance is then sampled at the moment the
+  clip writes it, which also catches an advance landing inside the ShoutMCO deferral gap.
+- Track the open swing: `(kind, playing index, taught-by-restore)` opened at
+  `MCO_AttackInitiate`/`MCO_PowerAttackInitiate` (real swings only), closed at
+  `attackStop`/`MCO_EndAnimation`/our own clip's initiate.
+- Learn a successor table `successor[weaponType][playing] = advance value` from the clips' own
+  teachings (payload edge primary, WinClose pair fallback). Entries are pack data observed at
+  runtime, never arithmetic; swings entered off a restore don't teach pairs (their playing index
+  is unverified while ticket 30 is open). Weapon-type keying stops a pack switch from handing a
+  successor into a moveset that never taught it.
+- At begin(), a pre-advance sample (v == playing) substitutes the learned successor; unknown
+  successor keeps today's behavior (truthful replay) and logs it.
+
+The ready-enter/AttackState-exit reset payloads (`@SGVI|MCO_nextattack|1` from #0009/#0786) are
+excluded from learning by the swing tracker + IsAttacking gate — recording them would re-open the
+exact stomp the rolling cache exists to outlive.
+
+Rejected: delaying the cut to the advance point (up to ~0.8s input latency), a static
+annotation-dump table (requires replicating OAR's runtime condition resolution), and `sample+1`
+(ticket 11's standing rejection — wrap points are pack data).
 
 ## Dependencies
 
