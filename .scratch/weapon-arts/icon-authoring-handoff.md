@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **24 — Focused Cross** (`aow_24_focused_cross`)
+- Active art: **25 — Focused Strike** (`aow_25_focused_strike`)
 - Status: **not started**
-- Inventory: **21 of 57 finalized; 35 unprocessed and 1 recorded hard failure remain**
+- Inventory: **21 of 57 finalized; 34 unprocessed and 2 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -102,6 +102,16 @@ steel-white trails read at 32 px, the Orsimer became a large character-art subje
 one-dominant-head battleaxe became double-bitted. It is not finalized and has no master or atlas
 input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt, hash,
 and failure reasons are recorded in `prompts/aow_23_flurry_strike.md`. No regeneration was attempted.
+
+## Focused Cross exception
+
+The single goal-mode generation attempt failed the hard gate on 2026-08-23. The horizontal dash
+wake and descending arc intersect clearly at 32 px and the Dunmer figure remains subordinate, but
+the figure's long haft reaches the impact while a separate mace head rides the upper arc. Those
+pieces do not form one physically connected weapon. It is not finalized and has no master or atlas
+input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
+hash, and failure reasons are recorded in `prompts/aow_24_focused_cross.md`. No regeneration was
+attempted.
 
 ## Dual Flurry context-layer pivot
 

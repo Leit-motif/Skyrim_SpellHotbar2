@@ -224,3 +224,11 @@ Orsimer was character-key-art scale and the battleaxe became double-bitted despi
 single-head brief. Full and 32 px evidence are preserved under the ignored `pilot/` tree; no master
 or atlas input exists and no regeneration was attempted. Twenty-one of 57 icons are finalized;
 35 remain unprocessed and one is a recorded hard failure.
+
+Goal mode 2026-08-23: **Focused Cross** (`aow_24_focused_cross`) is a recorded one-shot hard
+failure, not a finalized icon. The effect-first horizontal dash wake and descending mace arc remain
+clear at 32 px, but the figure's long haft ends at the central impact while a separate mace head
+rides the upper arc, so the weapon construction and effect causality are broken. Full and 32 px
+evidence are preserved under the ignored `pilot/` tree; no master or atlas input exists and no
+regeneration was attempted. Twenty-one of 57 icons are finalized; 34 remain unprocessed and two
+are recorded hard failures.
