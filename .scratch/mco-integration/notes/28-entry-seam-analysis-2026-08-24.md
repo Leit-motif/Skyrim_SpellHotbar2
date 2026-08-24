@@ -352,3 +352,192 @@ Duplicate check: the base `variableNames` array holds 230 entries and contains n
 
 Not run: Nemesis. The `shtb` patch's file set changed (a new behavior folder), so this needs
 Update Engine before Launch.
+
+---
+
+## Round 2: the greatsword divergence — there isn't one in the graphs
+
+Second read, after the `0_master` declaration was generated and measured live: **1H sword fixed
+(a1 → a2 → cast → attack3), greatsword still resets to attack1 with the root variable provably
+holding 3, and the owner then reported WARHAMMER fails identically.** The brief was to find the hop
+on the 2H chain that still lacks the variable name and patch it.
+
+**Headline: no such hop exists. The 2H light-attack entry path is node-for-node identical to the
+1H one, and both terminate at the same single object.** Nothing was authored, because there is
+nothing in a Nemesis-patchable behavior to author. Files re-decompiled fresh from the current
+winners with `hkxc convert -v xml`; all object indices below are from those dumps.
+
+### R2.1 Winners re-confirmed against the profile, and there is no 2H behavior file
+
+Enumerated every `MODS\mods\*\meshes\actors\character\behaviors\` against
+`profiles\Nolvus Awakening\modlist.txt` (top line = highest priority):
+
+| file | providers (modlist line, enabled) | winner |
+|---|---|---|
+| `1hm_behavior.hkx` | Nemesis Output (616 +), TK Dodge RE (991 +), TK Dodge (993 +) | Nemesis Output |
+| `0_master.hkx` | Nemesis Output (616 +), Jump Behavior Overhaul (1356 +) | Nemesis Output |
+| `MCO_Attack.hkx` | ADXP MCO 1.6.0.6 Bug Fixes (110 +), ADXP - MCO (1002 +) | Bug Fixes |
+
+**No mod anywhere ships `2hm_behavior.hkx`, and none exists in vanilla** — it is not in Nemesis's
+patchable set either. All melee, 1H and 2H alike, lives in `1hm_behavior`. `0_master` reaches it
+through exactly one ground-path reference, `#0531 'Weap_BehaviorBFR'`; the only other
+`behaviors\1hm_behavior.hkx` references are `#2403 Jumping_Attacking_BFR`, `#2408
+Jumping_Block_BFR`, `#2540 Falling_Attacking_BFR`, `#2548 Falling_Block_BFR`, `#2685
+Landing_Attacking_BFR` — jump/fall/land, not the ground press. **One graph instance serves every
+weapon on the ground.**
+
+`1HM_Behavior` `#0003` has 41 states and exactly **one** ready state, `1HM_Ready_State` (`#0005`,
+`stateId 0`) — there is no separate 2H ready state, so SH2's cast states and their `toStateId 0`
+exits are shared by both weapon classes by construction.
+
+### R2.2 The two entry chains, walked from the state info upward — identical
+
+Ancestor walk of the four MCO-fed attack state infos (parent map built over every `#NNNN`
+cross-reference in the file):
+
+```
+1H sword                                  2HM sword                                 2H warhammer/axe
+#1015 1HM_AttackRight_DefaultState id 0   #1148 Default2HM_AttackRight   id 0        #1253 3rdP_2HW_AttackRightState id 0
+ └#1013 AttackRight_1HM_Behavior           └#1146 AttackRight_2HM_SwordBehavior       └#1251 AttackRight_2HW_Behavior
+   └#1012 AttackRight_1HM_iStateGen          └#1145 AttackRight_2HM_iStateGen           └#1250 DefaultAttackRight_2HW
+     └#1011 1hm_Not_Jumping_State             └#1144 Not_Jumping_2hm_State               └#1248 AttackRight_2HWBehavior
+       └#1009 1hm_JumpChecker                   └#1142 2hm_JumpChecker                     └#1247 AttackRight_2HW_iStateGen
+         └#1008 AttackRight_1HMSword id 1         └#1141 AttackRight_2HM_Sword id 5          └#1246 Not_Jumping_2hw_State
+           └#0848 AttackRight_WeapTypeSelection     └#0848 (same machine)                      └#1244 2hw_JumpChecker
+             └#0846 AttackRightMSG …                                                             └#1243 AttackRight_2HW id ?
+                                                                                                   └#0848 (same machine)
+```
+
+Same shape (`BSiStateTaggingGenerator` → jump checker → weapon-type state), same
+`AttackRight_WeapTypeSelection` `#0848`, same `AttackRightMSG` `#0846` → `AttackRightMod` `#0840`
+→ `AttackRight_State` `#0822` → `1HM_AttackBehavior` `#0820` → `AttackState` `#0781`. 2HW carries
+one extra pass-through level (`#1251`/`#1250`/`#1248`); it is a plain state machine, not a graph
+boundary.
+
+**And all four states name the same generator.** `#1015`, `#1148`, `#1253` and `#0862` each carry
+`<hkparam name="generator">#0863</hkparam>` — a single `hkbBehaviorReferenceGenerator
+'MCO_BRG_Attack' -> Behaviors\MCO_Attack.hkx`. `1hm_behavior` contains exactly one reference to
+that file (grep of `behaviorName` returns 14 hits; one is `MCO_Attack`). So there is **one**
+nested-graph boundary and **one** nested `MCO_Attack.hkb` instance on the ground path, entered by
+every melee weapon class. There is no 2H-side intermediate BRG, no extra nested graph, and
+therefore no hop that could be missing a declaration.
+
+### R2.3 Inside `MCO_Attack.hkx`: one selector, both machines, no weapon gate
+
+- `#0029 AttackNodes_StateMachine` and `#0099 AttackNodes_StateMachine_Duplicate` both declare
+  `variableBindingSet #0030`, and `#0030` is a single binding `startStateId -> variableIndex 230`
+  (`= MCO_nextattack`). Confirmed by re-dump, answering round 2's question 2 directly.
+- Both machines' ten states are index-identical: `AttackNodesState<N>` (`stateId N`) →
+  `hkbModifierGenerator` whose expression is `MCO_currentattack = N` → clip
+  `Animations\MCO_attack<N>.hkx`. `enterNotifyEvents`, `exitNotifyEvents` and `transitions` are
+  `null` on all twenty states.
+- The only other selector in the file is `Main_StateMachine #0003`, `startStateId` bound to index
+  241 `MCO_Attack_StartStateId` (the ping-pong), plus `#0085 BRG_Transitions ->
+  Behaviors\MCO_TransitionsNormalToPower.hkx`, reachable only from `TransitionState` (`stateId 2`),
+  i.e. the power-attack transition, not the light chain.
+- Nothing in the file reads `iRightHandType` or any weapon-type variable, and there is no second
+  2H-side AttackNodes machine.
+
+### R2.4 Who writes `MCO_nextattack`, per graph — all three writers are weapon-agnostic
+
+Every object in `1hm_behavior` whose text contains `MCO_nextattack` (4 hits, one being the string
+table):
+
+| object | kind | owner | reaches |
+|---|---|---|---|
+| `#0009` | `hkbStringEventPayload` `@SGVI\|MCO_nextattack\|1` | `#0006`, enter set of `1HM_Ready_State` `#0005` | every weapon |
+| `#0786` | `hkbStringEventPayload` `@SGVI\|MCO_nextattack\|1` | `#0783`, **exit** set of `AttackState` `#0781` | every weapon |
+| `#0814` | `hkbExpressionDataArray` `MCO_nextattack = 1` | `#0813 MCO_ResetVariables_EEM` ← `#0812 MCO_ResetVariables_EDM` (activate `501 MCO_ResetVariables`, deactivate `502`) ← `#0807 ModifierList00` ← `#0806 1HM_AttackState_Generator` ← `AttackState` | every weapon |
+
+Event `501 MCO_ResetVariables` is emitted from five state infos only — `AttackPowerFwd #1787`,
+`AttackPowerBwd #1929`, `AttackPowerLft #1966`, `AttackPowerRt #2003`, `DualWield_Attack #2249` —
+all under `1HM_AttackBehavior #0820`, all power/dual-wield, none of them 2H-specific and none on
+the light-attack path. Both payload writers are the PIE (`event id 666`, Payload Interpreter)
+form.
+
+Subtree diff for completeness: descending `#1008` (1H sword), `#1129` (1H axe), `#1141` (2HM
+sword), `#1243` (2HW) and scanning every object for `MCO` expressions or payloads returns **zero
+hits in any of the four**. The weapon-type subtrees contain no MCO variable writer at all; the 1H
+subtrees are larger only because the 1H jumping blend under `1hm_Jumping_State #1033` pulls in the
+vanilla clip forest.
+
+### R2.5 Variable declarations along the 2H chain — all present
+
+| graph | declares `MCO_nextattack` | index / total |
+|---|---|---|
+| `0_master.hkx` (Nemesis Output, post-`63fcf81`) | yes | appended by the `shtb` patch |
+| `1hm_behavior.hkx` (Nemesis Output, regenerated) | yes | **106** of 154 (`107 MCO_nextpowerattack`, `108 MCO_currentattack`, `109 MCO_currentpowerattack`, `110 MCO_AttackSpeed`, `142 MSCO_attackspeed`) |
+| `MCO_Attack.hkx` | yes | 230 of 246 |
+
+The chain root → `1hm_behavior` → `MCO_Attack` carries the name at every hop, and the 2H entry
+crosses **exactly** those graphs and no others. **Question 3 answers itself: there is no hop on the
+2H chain that lacks the declaration, because the 2H chain crosses no graph the 1H chain does not.**
+
+### R2.6 Therefore: nothing authored, and the fix is not a Nemesis patch
+
+Per the brief's rule ("if the file is NOT Nemesis-patchable or the divergence is structural, do NOT
+author anything"), no patch was written. The divergence is neither: it is *absent* at the topology
+layer. A weapon-class-wide failure with a weapon-agnostic graph means the difference lives in the
+only layer that IS weapon-specific — the animation data OAR feeds into those fixed clip generators,
+and the timing of the PIE writes those animations carry.
+
+### R2.7 What actually is weapon-specific, measured
+
+The clips are chosen by `Nolvus OAR Stance Combat Framework`, whose per-stance folders ship only a
+`config.json`; the `.hkx` are merged in by other mods at the same VFS path. Enabled contributors and
+their annotation content (`hkxc-anno-cli dump`):
+
+| stance folder | winning contributor (modlist line) | indices shipped | advance annotation |
+|---|---|---|---|
+| `Sword Neutral` | `Elder Creed - Blade` (1448 +) — every other sword contributor is disabled | 1–5 | `PIE.@SGVI\|MCO_nextattack\|N+1` at `MCO_WinOpen`, 0.63 s of a 1.8 s clip; **attack5 has no advance** |
+| `Greatsword Neutral` | `Animations - Mercenary Greatsword` (256 +) over `Berserker Greatsword Moveset` (1428 +) | 1,2,3,4,9,10 | advance at `MCO_WinOpen`, 0.82 s of a 2.17 s clip; **attack4 → 1** (four-hit loop); extra `PIE.@SGVF\|MCO_AttackSpeed\|1.15` at t=0.06 |
+| `Warhammer Neutral` | `For Honor in Skyrim` (1461 +) | 1–10 | advance at **t = 0.000000**, i.e. clip start, not `MCO_WinOpen` |
+
+Two facts worth keeping: index 3 exists in all three packs, so "greatsword plays attack1" is not an
+OAR fallback for a missing `MCO_attack3.hkx`; and the SH2 cast clips (`MSCO_left*/right*` from
+`Magic Casting Behavior Overhaul`) write only `PIE.@SGVI|msco_nextright|2` — they never touch
+`MCO_nextattack`, so the cast itself is not the stomp.
+
+Note the timing spread: the 1H pack publishes its advance 0.63 s in, the greatsword pack 0.82 s in,
+the warhammer pack at 0 s. Every one of those writes is a PIE payload processed by an SKSE plugin
+off the animation-event sink, not by Havok inline. A race between that asynchronous write, the
+ready-enter stomp to 1, SH2's re-assert, and the moment Havok syncs the
+`VARIABLE_MODE_DISCARD_WHEN_INACTIVE` nested copy at activation is the only remaining shape that
+can produce a weapon-class-wide split over a weapon-agnostic graph. This is a hypothesis, not a
+finding — a static read cannot order those four events.
+
+### R2.8 Smallest viable next step, and a cheap oracle the graph already contains
+
+**`MCO_currentattack` is written by the playing state itself** — `AttackNodesState<N>`'s modifier
+evaluates `MCO_currentattack = N` (R2.3). It is therefore an exact, in-graph name for the clip that
+loaded, and it does not depend on the owner keeping the OAR Animation Log window open, which is the
+constraint that has made every measurement in this ticket expensive. It is declared in
+`1hm_behavior` (108) and `MCO_Attack` (232) but **not** in `0_master`, so the DLL cannot read it
+today.
+
+Recommended, in order:
+
+1. Add `MCO_currentattack` (and `MCO_currentpowerattack`) to the same three arrays the `shtb`
+   `0_master` folder already appends to (`#0106`/`#0107`/`#0108`), then log, per press and per
+   weapon: `MCO_nextattack` at SH2 exit, at ready-enter, at the press, and `MCO_currentattack` one
+   frame after the press. That single run distinguishes "the value never reached the nested copy"
+   from "the value reached it and the machine read it anyway", and it makes the greatsword and
+   warhammer cases self-reporting. Cost: one Nemesis run **with Update Engine** (the `shtb` file set
+   changed at `63fcf81` and would change again), and it perturbs the patch that currently makes 1H
+   work — which is why it is left for the coordinator to authorize rather than done here.
+2. If (1) shows the nested copy holding 1 while the root holds 3, the seam is the activation sync
+   and the lever is §6's option 2 (keep `MCO_Attack.hkb` warm, or re-enter it), not another
+   declaration.
+3. If it shows the nested copy holding 3 while `MCO_currentattack` reads 1, the machine is being
+   activated before the sync lands, and the fix has to move the write earlier — the exit-payload
+   route of §6 option 1, authored on SH2's own exit edge inside `1hm_behavior`.
+
+### Files read in round 2
+
+- `C:\Nolvus\Instances\Nolvus Awakening\MODS\mods\Nemesis Output\meshes\actors\character\behaviors\1hm_behavior.hkx`, `0_master.hkx`
+- `C:\Nolvus\Instances\Nolvus Awakening\MODS\mods\ADXP MCO 1.6.0.6 Bug Fixes\meshes\actors\character\behaviors\MCO_Attack.hkx`
+- `C:\Nolvus\Instances\Nolvus Awakening\MODS\profiles\Nolvus Awakening\modlist.txt`
+- `…\MODS\mods\Animations - Mercenary Greatsword\…\Greatsword Neutral\mco_attack{1,2,3,4,9,10}.hkx`
+- `…\MODS\mods\Elder Creed - Blade\…\Sword Neutral\mco_attack{1..5}.HKX`
+- `…\MODS\mods\For Honor in Skyrim\…\Warhammer Neutral\MCO_Attack{1..10}.hkx`
+- `…\MODS\mods\Magic Casting Behavior Overhaul\meshes\actors\character\animations\MSCO_left{1,2}.hkx`, `MSCO_right2.hkx`
