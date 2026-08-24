@@ -314,3 +314,41 @@ established. Neither touches MCO's files.
 - `C:\Nolvus\Instances\Nolvus Awakening\MODS\mods\ADXP MCO 1.6.0.6 Bug Fixes\meshes\actors\character\behaviors\MCO_Attack.hkx`
 - `C:\Nolvus\Projects\spell-hotbar-2\nemesis\Nemesis_Engine\mod\shtb\1hm_behavior\#4872.txt`,
   `#shtb$1.txt`, `#shtb$2.txt`, `#shtb$24.txt`, `#0085.txt`
+
+### Patch authored
+
+`nemesis/Nemesis_Engine/mod/shtb/0_master/` now declares `MCO_nextattack` and
+`MCO_nextpowerattack` (both `VARIABLE_TYPE_INT32`, initial value `1`) in the character root
+behavior. The experiment: Havok links a nested graph's variables to the parent's by NAME, so a
+parent-declared `MCO_nextattack` should sync into `MCO_Attack.hkb`'s
+`VARIABLE_MODE_DISCARD_WHEN_INACTIVE` copy at activation, instead of that copy re-initialising
+from its own defaults while actor-level writes never reach it.
+
+Node IDs targeted — the three parallel structures, appended at the END of each array:
+
+| Node | Class | Array | Base count | After |
+|---|---|---|---|---|
+| `#0106` | `hkbBehaviorGraphStringData` | `variableNames` | 230 | 232 |
+| `#0107` | `hkbVariableValueSet` | `wordVariableValues` | 230 | 232 |
+| `#0108` | `hkbBehaviorGraphData` | `variableInfos` | 230 | 232 |
+
+`numelements` is left at the base `230` in all three, exactly as every installed patch does —
+Nemesis recomputes the count from the merged array. Only the three arrays above are touched;
+`eventNames`, `quadVariableValues`, `characterPropertyInfos`, and `eventInfos` stay untouched base.
+
+Numbering cribbed from five installed mods that patch the same node set, all of which agree:
+ADXP MCO 1.6.0.6 Bug Fixes (`amco`), True Directional Movement (`tdmv`), Precision (`colis`),
+Throwable Weapons SKSE (`throwws`), and SCAR (`scar`, `#0106`/`#0108` only). Verified mechanically
+rather than by eye: stripping each mod's own `MOD_CODE`/`ORIGINAL`/`CLOSE` blocks out of its
+`#0106`/`#0107`/`#0108` yields a byte-identical base per node across all five (SHA-256
+`23CA468D2BBC5CA1…` / `5ED39FD7105161AB…` / `921C3FED154242B1…`), and stripping the shtb blocks
+back out of the three new files reproduces those same three hashes. Marker form is identical to
+`amco`'s: markers at column 0, no `<!-- ORIGINAL -->` arm (pure append), content at the array's own
+tab depth, CRLF, no BOM.
+
+Duplicate check: the base `variableNames` array holds 230 entries and contains neither
+`MCO_nextattack` nor `MCO_nextpowerattack`; MCO's own `0_master` patch adds only
+`MCO_IsInSprintAttackCooldown`. That confirms the 290-name observation above from the patch side.
+
+Not run: Nemesis. The `shtb` patch's file set changed (a new behavior folder), so this needs
+Update Engine before Launch.
