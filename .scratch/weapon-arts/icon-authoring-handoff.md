@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **25 — Focused Strike** (`aow_25_focused_strike`)
+- Active art: **26 — Furious Charge** (`aow_26_furious_charge`)
 - Status: **not started**
-- Inventory: **23 of 57 finalized; 34 unprocessed remain**
+- Inventory: **24 of 57 finalized; 33 unprocessed remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -112,6 +112,16 @@ That edit is final. The effect-first dash/swing intersection remains readable at
 held weapon and no detached mace. Original failure evidence remains in ignored `pilot/`; the
 initial prompt, failure, correction prompt, provenance, and hashes remain auditable in
 `prompts/aow_24_focused_cross.md`.
+
+## Focused Strike disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified 1H clip advances about 246 units and
+contains three timed hits, with unresolved `$HitFog` and `$ES_Paralysis` names on the final beat.
+The icon deliberately depicts one defining final strike rather than multiplying those hits into
+echo trails: one ivory-white descending diagonal remains physically attached to one Altmer elven
+sword. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
+input, prompt, provider hash, evidence, and model-decision provenance are recorded under
+`python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 

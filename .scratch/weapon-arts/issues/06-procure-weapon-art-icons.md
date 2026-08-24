@@ -227,3 +227,10 @@ Goal mode 2026-08-23: **Focused Cross** (`aow_24_focused_cross`) initially faile
 one-shot gate because a detached mace rode the upper arc. The owner explicitly requested a narrow
 correction removing that floating weapon. The corrected effect-first cross impact remains readable
 at 32 px and is finalized. Twenty-three of 57 icons are finalized; 34 remain unprocessed.
+
+Goal mode 2026-08-23: **Focused Strike** (`aow_25_focused_strike`) is finalized from its single
+generation attempt. Its three timed 1H hits are distilled to one defining final low lunge and one
+connected ivory-white diagonal sword path; unresolved paralysis and fog names contribute no
+invented magic. The faceless Altmer uses race-guided gold, ivory, emerald, and deep green. The full
+result and 32 px LANCZOS reduction passed the hard gate. Twenty-four of 57 icons are finalized;
+33 remain unprocessed.
