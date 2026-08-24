@@ -320,6 +320,17 @@ airborne faceless Argonian, one connected two-handed poleaxe, one descending wak
 dust impact. No second-hit diagram, shockwave ring, or element is invented. Full and 32 px results
 passed. Thirty-four of 57 icons are finalized; 21 remain unprocessed and two are hard failures.
 
+Owner correction 2026-08-24: **Leap Slam** was researched and replaced. Official Murkmire concept
+art supports bare-headed Dead-Water fighters with natural horns/crests, lean shell/scute armor,
+moss cloth, leather lashings, bone accents, and wrapped long-haft weapons. The final uses that
+language with one connected asymmetric hooked poleaxe, one descending wake, and one impact. The
+helmeted generic dragon-plate version is preserved only as ignored evidence. Full and 32 px passed.
+
+Owner refinement 2026-08-24: targeted official research replaced the bare natural crest with one
+open Elder Argonian purple brow circlet, bronze/turquoise fitting, and exactly five rear-swept
+cream/rust/dark-brown feathers while leaving the snout and jaw exposed. The Dead-Water armor,
+connected poleaxe, single wake, and impact remain. The bare-head intermediate is ignored evidence.
+
 Goal mode 2026-08-24: **Long Claw** (`aow_38_long_claw`) is finalized from its single generation
 attempt. Its three high-damage 2H contacts become one terminal faceless Nord greatsword cut with one
 connected hooked blade and one tangent rising wake. Unresolved fog/paralysis names add no magic or

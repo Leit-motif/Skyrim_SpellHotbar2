@@ -227,11 +227,15 @@ recorded under `python_scripts/weapon_art_icons/`.
 
 ## Leap Slam disposition
 
-Goal-mode one-shot finalized on 2026-08-24. The verified 2H clip lands an initial hit, then surges
-about 305 units into a terminal hit with AoE knockback, dust, and shake. The icon shows only that
-endpoint: one airborne faceless Argonian, one connected two-handed poleaxe, one descending physical
-wake, and one compact dust impact. Full and 32 px results passed; no duplicate hit or magical
-element is introduced.
+Finalized under owner-directed researched correction on 2026-08-24. The verified 2H clip lands an
+initial hit, then surges about 305 units into a terminal hit with AoE knockback, dust, and shake.
+The initial helmeted generic-plate Argonian and a bare-head intermediate were superseded. The
+approved icon uses official Murkmire/Dead-Water armor and Elder Argonian headwear language: exposed
+snout/jaw beneath an open purple brow circlet with bronze/turquoise fitting and five rear-swept
+feathers, lean slate shell/scute armor, moss cloth, leather lashings, pale bone accents, and one
+wrapped-marshwood hooked poleaxe. The action retains one descending wake and one compact impact.
+Full and 32 px passed; research and provenance are recorded under `.scratch/weapon-arts/research/`
+and `python_scripts/weapon_art_icons/`.
 
 ## Long Claw disposition
 
