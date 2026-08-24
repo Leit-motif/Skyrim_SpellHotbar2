@@ -307,3 +307,9 @@ generation attempt. Because its 1H clip has zero annotations, the icon claims on
 physical action: a faceless Bosmer, one connected bone-bound stone mace, and one tangent wake. No
 victim, blood, hit-count diagram, or element is invented. Full and 32 px results passed. Thirty-three
 of 57 icons are finalized; 22 remain unprocessed and two are recorded hard failures.
+
+Goal mode 2026-08-24: **Leap Slam** (`aow_37_leap_slam`) is finalized from its single generation
+attempt. Its initial hit and rapid forward surge are distilled to the supported terminal event: one
+airborne faceless Argonian, one connected two-handed poleaxe, one descending wake, and one compact
+dust impact. No second-hit diagram, shockwave ring, or element is invented. Full and 32 px results
+passed. Thirty-four of 57 icons are finalized; 21 remain unprocessed and two are hard failures.

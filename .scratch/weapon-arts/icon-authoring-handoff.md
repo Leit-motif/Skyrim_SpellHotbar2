@@ -224,6 +224,14 @@ downward blow with one connected bone-bound stone mace and one tangent physical 
 blood, or magical death effect is invented. Full and 32 px results passed; the evidence boundary is
 recorded under `python_scripts/weapon_art_icons/`.
 
+## Leap Slam disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified 2H clip lands an initial hit, then surges
+about 305 units into a terminal hit with AoE knockback, dust, and shake. The icon shows only that
+endpoint: one airborne faceless Argonian, one connected two-handed poleaxe, one descending physical
+wake, and one compact dust impact. Full and 32 px results passed; no duplicate hit or magical
+element is introduced.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on
