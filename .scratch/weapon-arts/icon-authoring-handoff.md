@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **41 — Orbital Cleave** (`aow_41_orbital_cleave`)
+- Active art: **42 — Piercing Leap** (`aow_42_piercing_leap`)
 - Status: **not started**
-- Inventory: **36 of 57 finalized; 18 unprocessed and 3 recorded hard failures remain**
+- Inventory: **37 of 57 finalized; 17 unprocessed and 3 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -261,6 +261,13 @@ units and makes four closely spaced weapon contacts. The icon distills those bea
 physical cut: one faceless Dunmer Morag Tong assassin, one connected chitin/ebony shortsword, and
 one continuous ivory-gray blade wake. Unresolved unbalance/paralysis names add no darkness,
 paralysis color, or other magic. Full and 32 px results passed.
+
+## Orbital Cleave disposition
+
+Goal-mode one-shot finalized on 2026-08-24. One long WEAPON collision window and one terminal hit
+become one sustained physical orbiting cut: one faceless Redguard, one connected two-handed curved
+greatsword, and one continuous blade-led ivory-gold wake. Unresolved endurance, paralysis, and
+enchantment names add no magic. Full and 32 px results passed.
 
 ## Dual Flurry context-layer pivot
 

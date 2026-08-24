@@ -343,6 +343,13 @@ throwing disc, and one unbroken blue-white palm-to-hub return line, not eight pr
 32 px results passed. Thirty-five of 57 icons are finalized; 19 remain unprocessed and three are
 recorded hard failures.
 
+Goal mode 2026-08-24: **Orbital Cleave** (`aow_41_orbital_cleave`) is finalized from its single
+generation attempt. One long weapon-collision window and one hit become one sustained physical
+orbiting cut by a faceless Redguard using one connected two-handed curved greatsword and one
+continuous blade-led ivory-gold wake. Unresolved payload names add no magic. Full and 32 px results
+passed. Thirty-seven of 57 icons are finalized; 17 remain unprocessed and three are recorded hard
+failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
