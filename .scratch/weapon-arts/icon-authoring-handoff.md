@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **49 — Shadow Slash** (`aow_49_shadow_slash`)
+- Active art: **50 — Shoulder Slam** (`aow_50_shoulder_slam`)
 - Status: **not started**
-- Inventory: **42 of 57 finalized; 10 unprocessed and 5 recorded hard failures remain**
+- Inventory: **43 of 57 finalized; 9 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -328,6 +328,12 @@ Goal-mode one-shot finalized on 2026-08-24. Three 2H hits and a jump-attack fini
 Khajiit landing cut with one connected crescent battleaxe and one neutral physical wake. Hand
 spacing, stance, hips, shoulders, edge, and wake pass physics. No shadow effect is inferred from
 the name or unresolved annotations. Full and 32 px results passed.
+
+## Shadow Slash disposition
+
+Goal-mode one-shot finalized on 2026-08-24. Two 2H hits across a roughly 637-unit advance become one
+low Imperial greatsword dash and one connected horizontal wake. Both hands, wrists, shoulders,
+hips, legs, edge, and trail pass physics. No shadow effect is inferred. Full and 32 px passed.
 
 ## Dual Flurry context-layer pivot
 

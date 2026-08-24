@@ -397,6 +397,12 @@ connected crescent battleaxe and one neutral physical wake. Grip, stance, edge, 
 physics gate; no shadow magic is invented. Full and 32 px passed. Forty-two icons are finalized;
 10 remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Shadow Slash** (`aow_49_shadow_slash`) is finalized from its single
+generation attempt. Two 2H hits across a roughly 637-unit advance become one low Imperial
+greatsword dash and one connected horizontal wake. Grip, joints, stance, edge, and trail pass the
+physics gate; no shadow magic is invented. Full and 32 px passed. Forty-three icons are finalized;
+nine remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
