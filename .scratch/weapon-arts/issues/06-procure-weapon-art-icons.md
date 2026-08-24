@@ -256,11 +256,12 @@ construction. Full and 32 px evidence are preserved under the ignored `pilot/` t
 atlas input exists and no regeneration was attempted. Twenty-six of 57 icons are finalized;
 30 remain unprocessed and one is a recorded hard failure.
 
-Goal mode 2026-08-23: **Head Tap** (`aow_29_head_tap`) is finalized from its single generation
-attempt. Six timed 2H hits and an unresolved heavy-launch payload are distilled to one defining
-vertical Argonian warhammer contact. One hammer, two hands on one haft, one short trail, and one
-physical impact remain clear at full size and 32 px. Twenty-seven of 57 icons are finalized;
-29 remain unprocessed and one is a recorded hard failure.
+Goal mode 2026-08-24: **Head Tap** (`aow_29_head_tap`) is finalized under explicit owner direction.
+The initial and first rework hammer/Argonian versions were rejected; the next Altmer version still
+over-indexed on six counted beats. The approved result ignores that encoding and uses the figure:
+one sleek faceless Altmer, one held Alinorian saber, and one smooth ivory-gold wake. The full result
+and 32 px LANCZOS reduction passed. Twenty-eight of 57 icons are finalized; 27 remain unprocessed
+and two are recorded hard failures.
 
 Goal mode 2026-08-23: **Heart Lunge** (`aow_30_heart_lunge`) is finalized from its single
 generation attempt. Its two right-hand hits and roughly 392-unit advance become one neutral

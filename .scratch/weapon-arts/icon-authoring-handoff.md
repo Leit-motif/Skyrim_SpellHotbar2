@@ -154,13 +154,13 @@ attempted.
 
 ## Head Tap disposition
 
-Goal-mode one-shot finalized on 2026-08-23. The verified 2H clip advances about 232 units and
-contains six timed hits before an unresolved heavy-launch payload. Installed Argonian heavy-weapon
-annotations reuse that payload name, supporting the Argonian warhammer pairing but proving no
-element or VFX. The icon depicts only one defining final hit: one foreshortened rectangular
-warhammer, two hands on one haft, one vertical trail, and one physical contact. The full image and
-32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash,
-evidence, and payload uncertainty are recorded under `python_scripts/weapon_art_icons/`.
+The owner rejected the initial single-impact hammer, then rejected the hammer/Argonian direction
+after its six-beat rework detached the terminal weapon. A subsequent Altmer/Alinorian saber version
+was mechanically clean but still over-indexed on six counted beats. Final owner direction was to
+ignore the six-hit encoding and use the figure. The approved icon therefore uses one sleek faceless
+Altmer, one connected Alinorian saber, and one smooth ivory-gold wake. Full and 32 px results passed.
+All superseded versions remain auditable under ignored `pilot/`; prompts, hashes, dispositions, and
+the final master are recorded in `prompts/aow_29_head_tap.md`.
 
 ## Heart Lunge disposition
 
