@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **48 — Shadow Reave** (`aow_48_shadow_reave`)
+- Active art: **49 — Shadow Slash** (`aow_49_shadow_slash`)
 - Status: **not started**
-- Inventory: **41 of 57 finalized; 11 unprocessed and 5 recorded hard failures remain**
+- Inventory: **42 of 57 finalized; 10 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -321,6 +321,13 @@ Recorded one-shot hard failure on 2026-08-24. The Bosmer lunge, support, arm lin
 anatomically coherent, but the requested forearm-scale long dagger became an unmistakable full
 sword with oversized guard. Weapon family is a hard field. Evidence is ignored-pilot only; no
 master/input or retry.
+
+## Shadow Reave disposition
+
+Goal-mode one-shot finalized on 2026-08-24. Three 2H hits and a jump-attack finisher become one
+Khajiit landing cut with one connected crescent battleaxe and one neutral physical wake. Hand
+spacing, stance, hips, shoulders, edge, and wake pass physics. No shadow effect is inferred from
+the name or unresolved annotations. Full and 32 px results passed.
 
 ## Dual Flurry context-layer pivot
 

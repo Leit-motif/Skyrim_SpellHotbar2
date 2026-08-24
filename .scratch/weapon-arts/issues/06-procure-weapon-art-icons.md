@@ -391,6 +391,12 @@ dagger became an unmistakable full sword. Weapon family remains a hard field. Ev
 pilot only; no master/input or retry. Forty-one icons are finalized; 11 remain unprocessed and five
 are hard failures.
 
+Goal mode 2026-08-24: **Shadow Reave** (`aow_48_shadow_reave`) is finalized from its single
+generation attempt. Three 2H hits and a jump finisher become one Khajiit landing cut with one
+connected crescent battleaxe and one neutral physical wake. Grip, stance, edge, and trail pass the
+physics gate; no shadow magic is invented. Full and 32 px passed. Forty-two icons are finalized;
+10 remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
