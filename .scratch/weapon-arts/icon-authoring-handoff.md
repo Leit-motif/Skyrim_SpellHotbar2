@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **20 — Elegant Slash** (`aow_20_elegant_slash`)
+- Active art: **21 — Enrage (F)** (`aow_21_enrage_f`)
 - Status: **not started**
-- Inventory: **18 of 57 finalized; 39 remain**
+- Inventory: **19 of 57 finalized; 38 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -63,6 +63,15 @@ one continuous white-green beam, and one compact terminal flare; the warm fringe
 to that payload-proven endpoint. The full image and 32 px LANCZOS reduction passed the hard gate.
 The master, 128 px atlas input, prompt, hashes, and evidence are recorded under
 `python_scripts/weapon_art_icons/`.
+
+## Elegant Slash disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified clip is a single-weapon, roughly 421-unit
+forward burst with one enlarged collision and one terminal hit. Its `$ES_Paralysis` definition was
+unresolved, so the final glyph adds no paralysis element or invented magic. One broad ivory-white
+rising blade path remains the icon; a tiny faceless lunging duelist and one sword explain its
+source. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
+input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 

@@ -199,3 +199,9 @@ generation attempt. The resolved payload stages three casting effects and then f
 glyph uses one small braced caster, one continuous horizontal white-green beam, and one compact
 endpoint whose warm fringe stays subordinate. The full result and 32 px LANCZOS reduction passed
 the hard gate. Eighteen of 57 icons are finalized, leaving 39.
+
+Goal mode 2026-08-23: **Elegant Slash** is finalized as `aow_20_elegant_slash` from its single
+generation attempt. Its roughly 421-unit single-weapon lunge becomes one broad rising ivory-white
+blade path with a tiny faceless duelist only to show causality. The unresolved `$ES_Paralysis`
+payload contributes no invented element or color. The full result and 32 px LANCZOS reduction
+passed the hard gate. Nineteen of 57 icons are finalized, leaving 38.
