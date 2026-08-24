@@ -433,6 +433,12 @@ dagger and one tiny point marker. Blade scale, grip, wrist, stance, and path pas
 ice-rune effect is invented. Full and 32 px passed. Forty-eight icons are finalized; four remain
 unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Tornado Leap** (`aow_55_tornado_leap`) is finalized from its single
+generation attempt. Three right-weapon hits with tripled trail persistence become one airborne
+Bosmer rotation, one connected handaxe, and one open spiral physical wake. Body tuck, grip,
+clearance, and axe path pass physics; no literal wind magic is invented. Full and 32 px passed.
+Forty-nine icons are finalized; three remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
