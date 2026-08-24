@@ -211,3 +211,9 @@ attempt. Its one-hit clip explicitly requests a 2.5-intensity deep-crimson weapo
 becomes the open crescent icon while a small faceless female fighter only marks the source. The
 full result and 32 px LANCZOS reduction passed the hard gate. Twenty of 57 icons are finalized,
 leaving 37.
+
+Goal mode 2026-08-23: **Enrage (M)** is finalized as `aow_22_enrage_m` from its single generation
+attempt. Its weaponless five-second clip stages a blast and heavy battle shout; unresolved `$FZ*`
+payloads authorize no element. Broken ivory-white pressure bands form the icon above a tiny
+faceless source figure. The full result and 32 px LANCZOS reduction passed the hard gate. Twenty-one
+of 57 icons are finalized, leaving 36.

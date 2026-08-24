@@ -7,9 +7,14 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **22 — Enrage (M)** (`aow_22_enrage_m`)
+- Active art: **23 — Flurry Strike** (`aow_23_flurry_strike`)
 - Status: **not started**
-- Inventory: **20 of 57 finalized; 37 remain**
+- Inventory: **21 of 57 finalized; 36 remain**
+
+Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
+across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
+Orsimer, Altmer, Dunmer, axes, maces, and other compatible silhouettes instead of defaulting to a
+neutral sword fighter. Animation and payload evidence still win, and race never invents an element.
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -80,6 +85,15 @@ explicitly sets a deep-crimson weapon trail at 2.5 times intensity. The open cri
 the ability glyph; the faceless female fighter is only a small black source marker, with no face or
 costume showcase. The full image and 32 px LANCZOS reduction passed the hard gate. The master,
 128 px atlas input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
+
+## Enrage (M) disposition
+
+Goal-mode one-shot finalized on 2026-08-23. This is not a male reskin of Enrage (F): the verified
+five-second clip has no weapon and stages a blast, shout, heavy camera shake, and final self effect.
+Because all `$FZ*` definitions are unresolved, the glyph uses neutral physical force rather than an
+invented element. Three broken ivory-white pressure bands dominate above a tiny faceless weaponless
+figure. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
+input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
