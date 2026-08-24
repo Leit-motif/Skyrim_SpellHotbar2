@@ -427,6 +427,12 @@ mace and one head-centered wake. Grip, wrist, stance, striking faces, and trail 
 soul/fog/paralysis magic is invented. Full and 32 px passed. Forty-seven icons are finalized; five
 remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Subtle Stab** (`aow_54_subtle_stab`) is finalized from its single generation
+attempt. Three close contacts become one compact Morag Tong thrust with one true forearm-scale
+dagger and one tiny point marker. Blade scale, grip, wrist, stance, and path pass physics; no
+ice-rune effect is invented. Full and 32 px passed. Forty-eight icons are finalized; four remain
+unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink

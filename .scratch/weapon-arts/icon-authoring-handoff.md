@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **54 — Subtle Stab** (`aow_54_subtle_stab`)
+- Active art: **55 — Tornado Leap** (`aow_55_tornado_leap`)
 - Status: **not started**
-- Inventory: **47 of 57 finalized; 5 unprocessed and 5 recorded hard failures remain**
+- Inventory: **48 of 57 finalized; 4 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -360,6 +360,13 @@ leverage, and edge path pass physics. No soul/paralysis magic is inferred. Full 
 Goal-mode one-shot finalized on 2026-08-24. Four 1H hits become one Redguard terminal backhand with
 one connected flanged mace and one head-centered wake. Grip, attached pommel, wrist, arm, stance,
 striking faces, and trail pass physics. No soul/fog/paralysis magic is inferred. Full and 32 px
+passed.
+
+## Subtle Stab disposition
+
+Goal-mode one-shot finalized on 2026-08-24. Three close contacts over only 30 units become one
+compact Morag Tong thrust with one true forearm-scale dagger and one tiny point marker. Blade scale,
+grip, wrist, forearm, stance, and path pass physics. No ice-rune effect is inferred. Full and 32 px
 passed.
 
 ## Dual Flurry context-layer pivot
