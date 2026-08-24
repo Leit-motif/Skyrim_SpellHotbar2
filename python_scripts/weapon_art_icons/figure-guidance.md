@@ -4,6 +4,11 @@ Owner-provided reference for choosing a race-coded silhouette. This is thematic 
 requirement to show a specific race in every icon. Prefer a neutral, generalized figure when the
 art's weapon compatibility or animation does not support a clear choice.
 
+Current atlas balance direction (2026-08-24): prioritize Nord, Dunmer, Breton, and Redguard. The
+run already has sufficient Khajiit and Argonian representation, so do not add another Argonian.
+Deliberately vary female and male presentation instead of defaulting every action figure to male.
+When Khajiit recur, vary visible fur color and markings rather than repeating one tawny pattern.
+
 Race is not a costume. Resolve culture or faction, combat archetype, equipment family, physical
 action, and effect separately through `skyrim-visual-language.md`. Several races have no dedicated
 vanilla Skyrim cultural armor family; do not invent one from generic fantasy associations.

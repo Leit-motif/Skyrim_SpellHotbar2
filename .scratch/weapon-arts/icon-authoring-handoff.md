@@ -11,10 +11,12 @@ Updated: 2026-08-23
 - Status: **not started**
 - Inventory: **49 of 57 finalized; 2 unprocessed and 6 recorded hard failures remain**
 
-Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
-across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
-Orsimer, Altmer, Dunmer, axes, maces, and other compatible silhouettes instead of defaulting to a
-neutral sword fighter. Animation and payload evidence still win, and race never invents an element.
+Ongoing owner direction: deliberately vary race/archetype, sex presentation, race-guided palette,
+weapon family, and visible Khajiit fur pattern across the atlas. Prioritize Nord, Dunmer, Breton,
+and Redguard figures; Khajiit and Argonian representation is already sufficient, so use no more
+Argonians in this run. Include female figures, axes, maces, and other compatible silhouettes instead
+of defaulting to a male neutral sword fighter. Animation and payload evidence still win, and race
+never invents an element.
 
 Mandatory owner physics gate from 2026-08-24: before finalizing any generation, verify that anatomy
 and physics are possible. Check supported center of gravity, joint ranges, hand placement and grip
@@ -269,15 +271,12 @@ paralysis color, or other magic. Full and 32 px results passed.
 
 ## Orbital Cleave disposition
 
-Goal-mode one-shot finalized on 2026-08-24. One long WEAPON collision window and one terminal hit
-become one sustained physical orbiting cut: one faceless Redguard, one connected two-handed curved
-greatsword, and one continuous blade-led ivory-gold wake. Unresolved endurance, paralysis, and
-enchantment names add no magic. Full and 32 px results passed.
-
-Owner correction: the first otherwise-polished result had an impossible two-handed sword grip and
-was superseded. The corrected master places both closed hands on one continuous long hilt with
-plausible spacing, neutral wrists, connected forearms, supported stance, and a blade-led wake. This
-correction established the mandatory anatomy-and-physics gate for every subsequent generation.
+Owner-directed reference-based correction finalized on 2026-08-24. Three generated compositions
+were rejected for impossible grips, weapon identity, or duplicate-arm anatomy. The accepted master
+uses Figure 12 from the U.S. Army's public-domain 1907 *Provisional Regulations for Saber Exercise*
+as its physical base: one female Redguard, one right-hand saber grip, the left hand secured behind
+the back, a stable bent-knee base, and one blade-connected ivory-gold moulinet wake. Full and 32 px
+results pass. Rejected versions remain under the ignored pilot tree; do not reuse their prompts.
 
 ## Piercing Leap disposition
 

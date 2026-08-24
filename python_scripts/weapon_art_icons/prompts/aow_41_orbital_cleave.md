@@ -54,5 +54,20 @@ Keep it a crisp graphical Elder Scrolls MMO hotbar icon at 1:1, with the full-bo
   two-handed cleave.
 - 32 px LANCZOS reduction: pass. The bright open orbit and the dark curved blade remain a strong
   distinct glyph with no duplicate weapon.
-- Corrected master SHA-256: `3AD0FAEFE2EC4B3CEDCC6D243983FAE52F2ADB88C01CB98450FA14A370BFFFF8`.
-- No autonomous regeneration beyond the explicit owner-directed correction was attempted.
+- That correction was rejected again because the two-handed sword motion remained physically
+  implausible. A fresh one-handed attempt then generated a mace-like weapon and malformed handle;
+  it was also rejected. Both are preserved under the ignored pilot tree and their prompts are dead.
+
+## Reference-based owner correction
+
+- Physical inspiration: Figure 12, page 22 of the U.S. Army's 1907 *Provisional Regulations for
+  Saber Exercise*: `https://www.anesi.com/prse22.jpg`.
+- The scan was used only for stance, limb topology, and saber-arm mechanics. No printed text,
+  page layout, or period illustration is reproduced in the shipped original.
+- The accepted composition translates the reference into a faceless female Redguard: right hand
+  alone closes around one saber grip, left hand stays behind the back, knees remain flexed over a
+  stable base, and one open ivory-gold moulinet wake stays attached behind the cutting edge.
+- Full-resolution result: pass. Exactly one head, torso, pair of arms, pair of hands, pair of legs,
+  and pair of feet; shoulder, elbow, wrist, fist, guard, grip, and blade form one continuous path.
+- 32 px LANCZOS reduction: pass. Saber and connected wake remain the dominant readable glyph.
+- Final master SHA-256: `7852717EEE22EB852BC3918CCE12F0C3831FA7E994ED81A419835213BBC043BA`.
