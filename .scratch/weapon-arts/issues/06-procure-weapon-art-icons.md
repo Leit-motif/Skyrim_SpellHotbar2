@@ -313,3 +313,9 @@ attempt. Its initial hit and rapid forward surge are distilled to the supported 
 airborne faceless Argonian, one connected two-handed poleaxe, one descending wake, and one compact
 dust impact. No second-hit diagram, shockwave ring, or element is invented. Full and 32 px results
 passed. Thirty-four of 57 icons are finalized; 21 remain unprocessed and two are hard failures.
+
+Goal mode 2026-08-24: **Long Claw** (`aow_38_long_claw`) is finalized from its single generation
+attempt. Its three high-damage 2H contacts become one terminal faceless Nord greatsword cut with one
+connected hooked blade and one tangent rising wake. Unresolved fog/paralysis names add no magic or
+colored aura. Full and 32 px results passed. Thirty-five of 57 icons are finalized; 20 remain
+unprocessed and two are hard failures.

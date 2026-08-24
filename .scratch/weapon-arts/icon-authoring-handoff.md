@@ -232,6 +232,14 @@ endpoint: one airborne faceless Argonian, one connected two-handed poleaxe, one 
 wake, and one compact dust impact. Full and 32 px results passed; no duplicate hit or magical
 element is introduced.
 
+## Long Claw disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified 2H clip advances about 334 units and makes
+three high-damage contacts, ending with unresolved heavy-paralysis/smash-fog names and shake. The
+icon distills that sequence to one faceless Nord, one connected long hooked greatsword, and one
+tangent rising wake. No three-hit diagram, fog magic, or paralysis color is invented. Full and 32
+px results passed.
+
 ## Dual Flurry context-layer pivot
 
 Final disposition: the owner supplied and approved an externally generated Gemini final cut on
