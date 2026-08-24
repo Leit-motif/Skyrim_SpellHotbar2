@@ -155,6 +155,93 @@ end and the channel ends separately at release with `combo restore armed next=2`
 - Do not restore `MscoCastDriver::replay`. It restarted the single-play throw clip every half
   second, which is a stutter, not a loop.
 
+## Spike result — 2026-08-23
+
+**The spike's question is answered YES: OAR replaces the animation on a `MODE_LOOPING`
+generator the `shtb` patch authors on the shout-inhale path.** The held-state half is only
+partly proven and carries one open defect; see below.
+
+Frames live under `.scratch/mco-integration/evidence/28-channel-spike/` (gitignored, local).
+
+### The path and the registration — both settled, and the ticket's phrasing was slightly off
+
+`AnimationsHM_Shout_Inhale.HKX` is the right path, and it is better than "probably". It is the
+**only** clip every non-idle concentration submod replaces — all 22 of them carry
+`1hm_shout_inhale.hkx`, and nothing else is common to all. One generator therefore covers every
+family, with no per-family clip selection in the patch.
+
+Registration needed nothing new, but not for the reason the ticket gave. The animation list is
+**per character, not per behavior**: `AnimationsHM_Shout_Inhale.HKX` lives in `defaultmale.hkx`
+and `defaultfemale.hkx` `hkbCharacterStringData::animationNames`, and is played in vanilla by
+`shout_behavior`, not by `1hm_behavior`. A clip generator in `1hm_behavior` or `magicbehavior`
+resolves it fine because the list is shared across the project's graphs.
+
+### What the patch builds
+
+`SH2_CastChannel` enters `SH2_Channel_State` (id 746006) in both `1hm_behavior` and
+`magicbehavior`. The clip is `MODE_LOOPING` with `triggers null`, so there is no end-of-clip
+trigger to raise `SH2_CastExit` each cycle, and `variableBindingSet null` so a stale
+`MSCO_attackspeed` from the previous cast cannot rescale the loop. Exit is `SH2_CastExit`, plus a
+`shoutStart` escape. The fire-and-forget clip set and its entries are untouched.
+
+**`eventNames` and `eventInfos` are parallel arrays.** Adding `SH2_CastChannel` to `#0085` /
+`#0077` needs a matching entry in `#0087` / `#0079`. Without it Nemesis compiles the XML and then
+fails both graphs at serialization with `ERROR(1003): Failed to output hkx file`, naming only
+`magicbehavior.xml`. Worth knowing: the error names one graph and the real fault was in both.
+
+### Evidence — OAR swap, proven by A/B/A on global `815`
+
+Weapon drawn, `835 = 0`, `834 = 1`, entered by `player.sae SH2_CastChannel`:
+
+| Frame | `815` | Pose |
+|---|---|---|
+| `t28-01-drawn` | — | drawn idle, before entry |
+| `t28-02-channel-t0` | 1001 | out of idle, right arm extended |
+| `t28-04-anim0-nomatch` | 0 | arms in, upright — the vanilla shout inhale |
+| `t28-05-anim1001-again` | 1001 | arm extended forward again |
+
+The control matters: with `815 = 0` no submod's conditions match, so the generator plays vanilla
+`1HM_Shout_Inhale`. Flipping the global back reproduces the swapped pose. The clip on the fork's
+own looping generator is therefore chosen by OAR at runtime, from the global, exactly as the
+fire-and-forget path's clips are. That is the whole premise the build depends on.
+
+### Open defect — the state does not hold for the whole hold
+
+`t28-h3` shows the channel pose live at +3s. `t28-h6` shows the drawn idle at +6s, with no
+`SH2_CastExit` sent by anything. So the state survives well past a single play of a ~1s clip, and
+a `MODE_LOOPING` generator cannot end itself, yet something leaves the state between +3s and +6s.
+
+Not diagnosed. Three candidates, cheapest first:
+
+1. A **wildcard transition** on the root state machine. Wildcards fire from any state, so a
+   vanilla entry — an idle-manager force, `IdleForceDefaultState`, a locomotion event — can pull
+   the actor out of a state whose own transition array never lists it.
+2. The **`shoutStart` escape this patch added** to the channel state's transitions. It is the one
+   non-essential exit in the patch and the cheapest to remove and re-test.
+3. An **annotation in the replacement clip**. The concentration clips are authored for vanilla's
+   inhale state, so any event they carry now arrives in a graph that reads it differently.
+
+The driver's own graph trace would name the event outright, and it did not run here: this test
+fired the notify by hand, so `MscoCastDriver::is_active()` was false and
+`should_trace_graph_events()` never returned true. Wiring `begin()` to send `SH2_CastChannel` for
+a channel turns that trace on, which makes this defect cheap to diagnose during the build rather
+than before it.
+
+### Commitment point — decision
+
+Use **ADR-0006's authored-cast-time floor**, not an annotation on the fork's state. The clip that
+plays is chosen by OAR per family at runtime, so a trigger authored on this patch's generator
+would fire at a time unrelated to whichever clip is actually playing. The floor is the charge time
+the spell already declares, and `CastingInstanceSpellConcentration::update` already commits on it:
+once `m_cast_timer` passes `m_release_anim_time` the charge finishes with no SpellFire needed.
+`is_anim_ok()` stays true throughout because the state is live, so the charge loop will not cancel.
+
+One driver change this implies, for the build: `observe_graph_event`'s `SH2_CastExit` branch warns
+`press produced no payload` and resets the cast index when `clip_committed` is false. A channel
+never sets it, so a channel would reset the fire-and-forget combo index on every release. Gate
+that branch on `CastShape::fire_and_forget` — a pure predicate, so it belongs in `combo_cache.h`
+with a test beside the existing ones.
+
 ## Acceptance
 
 Live only. A build or a static check diagnoses; it never proves an animation.
