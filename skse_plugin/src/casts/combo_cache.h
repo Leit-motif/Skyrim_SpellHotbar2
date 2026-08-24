@@ -52,6 +52,12 @@ public:
 		return restore_;
 	}
 
+	[[nodiscard]] bool restore_pending() const
+	{
+		std::lock_guard lock{ mutex_ };
+		return pending_;
+	}
+
 	[[nodiscard]] std::optional<McoCombo> peek() const
 	{
 		std::lock_guard lock{ mutex_ };
@@ -166,6 +172,39 @@ enum class HotbarCastPress {
 {
 	return tag == "MSCO_WinClose" || tag == "MCO_WinClose" || tag == "MSCO_winclose" ||
 		   tag == "MCO_winclose";
+}
+
+// Where MCO writes `MCO_nextattack`, and therefore the only place worth sampling it.
+//
+// Measured live 2026-08-24 over a four-hit chain: every `MCO_WinClose` carries the index the NEXT
+// swing will use (1, 2, 3, 4), and each following `MCO_AttackInitiate` reads that same value back
+// as the swing it is playing.
+//
+// Sampling at attack time therefore captured the swing that was ALREADY playing, so restoring it
+// repeated that attack instead of continuing past it. Reading the window-close edge preserves a
+// value MCO itself wrote -- ticket 11's "preserve, never derive" stands, because moveset length
+// still lives in the annotations and is never computed here.
+//
+// `attackStop` is deliberately NOT an edge, though it carries a value. It is MCO's end-of-swing
+// reset to 1 -- the stomp this whole rolling cache exists to outlive (ticket 11: "already ended
+// and stomped MCO_nextattack to 1 ... this is why thuum carries a RollingCombo"). Sampling it
+// overwrites the good index with the reset and restores 1, measured live before it was excluded.
+[[nodiscard]] constexpr bool is_mco_combo_index_edge(std::string_view tag) noexcept
+{
+	return is_msco_combo_window_close_event(tag);
+}
+
+// What a window-close means depends on whether we are holding a restore.
+//
+// Measured live 2026-08-24: after a Driver Cast writes the sampled index back, a further
+// `MCO_WinClose` arrives carrying 1 -- the ready-state reset -- before MCO reads the variable for
+// the next swing. Sampling that reset both learned the wrong value AND dropped the pending
+// restore (record() clears it, by design, because a real SWING invalidates one). A reset is not a
+// swing. So while a restore is pending, a window-close is a stomp to put back, not a value to
+// learn from; the restore stays authoritative until an actual attack consumes it.
+[[nodiscard]] constexpr bool window_close_is_a_stomp_to_undo(bool restore_pending) noexcept
+{
+	return restore_pending;
 }
 
 // MSCO v2 charge time → clip playback speed. Defaults match the shipped MSCO.ini

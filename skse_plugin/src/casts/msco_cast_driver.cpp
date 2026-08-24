@@ -51,10 +51,35 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return kCastEvents[static_cast<size_t>(index - 1)];
 		}
 
-		bool is_attack_time(std::string_view tag)
+		// TEMPORARY probe (ticket 28). MCO's own clip annotations set MCO_nextattack to the NEXT
+		// index partway through a swing (@SGVI, ticket 11). Sampling reads 1 throughout attack1,
+		// so the sample is being taken before that write lands. Log both counters at every
+		// candidate edge to find where the advance actually happens. Remove once the sampling
+		// point is settled.
+		bool is_probe_tag(std::string_view tag)
 		{
-			return tag == "MCO_AttackInitiate"sv || tag == "MCO_PowerAttackInitiate"sv ||
-				   tag == "HitFrame"sv;
+			return tag == "MCO_AttackInitiate"sv || tag == "HitFrame"sv || tag == "preHitFrame"sv ||
+				   tag == "weaponSwing"sv || tag == "attackStop"sv || tag == "attackStart"sv ||
+				   tag == "MCO_WinOpen"sv || tag == "MSCO_WinOpen"sv || tag == "MCO_WinClose"sv ||
+				   tag == "MSCO_WinClose"sv || tag == "PIE"sv || tag == "SBF_ReadyStart"sv ||
+				   tag == "MSCO_MagicReady"sv;
+		}
+
+		void probe_mco(RE::Actor* actor, std::string_view tag)
+		{
+			if (!actor) {
+				return;
+			}
+			std::int32_t next = 0;
+			std::int32_t power = 0;
+			std::int32_t cur = 0;
+			std::int32_t curPower = 0;
+			const bool okNext = actor->GetGraphVariableInt("MCO_nextattack", next);
+			actor->GetGraphVariableInt("MCO_nextpowerattack", power);
+			const bool okCur = actor->GetGraphVariableInt("MCO_currentattack", cur);
+			actor->GetGraphVariableInt("MCO_currentpowerattack", curPower);
+			logger::debug("SH2 probe: {} -> next={}{} cur={}{} nextPower={} curPower={}", tag, next,
+				okNext ? "" : "(unread)", cur, okCur ? "" : "(unread)", power, curPower);
 		}
 
 		// PIE is #0006's reset payload. The original handler applies it before this
@@ -223,15 +248,26 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
 
-		if (is_attack_time(tag) &&
-			should_record_mco_combo_sample(is_active() || ArtDriver::is_active())) {
-			McoCombo sample{};
-			if (sample_mco(a_player, sample)) {
-				g_rolling.record(sample, now_ms());
-				logger::debug("SH2 cast: sampled MCO next={} power={} at {}", sample.nextAttack,
-					sample.nextPowerAttack, tag);
-			} else {
-				g_rolling.disarm();
+		if (is_probe_tag(tag)) {
+			probe_mco(a_player, tag);
+		}
+
+		if (is_mco_combo_index_edge(tag)) {
+			if (window_close_is_a_stomp_to_undo(g_rolling.restore_pending())) {
+				// The ready-state reset lands here and would otherwise be read as the player's
+				// position. Put ours back instead; the next real swing consumes it.
+				if (const auto combo = g_rolling.peek()) {
+					write_mco(a_player, *combo);
+				}
+			} else if (should_record_mco_combo_sample(is_active() || ArtDriver::is_active())) {
+				McoCombo sample{};
+				if (sample_mco(a_player, sample)) {
+					g_rolling.record(sample, now_ms());
+					logger::debug("SH2 cast: sampled MCO next={} power={} at {}", sample.nextAttack,
+						sample.nextPowerAttack, tag);
+				} else {
+					g_rolling.disarm();
+				}
 			}
 		}
 

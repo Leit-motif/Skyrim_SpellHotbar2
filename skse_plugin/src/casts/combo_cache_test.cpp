@@ -22,6 +22,8 @@ using SpellHotbar::casts::MscoChargeCurve;
 using SpellHotbar::casts::charge_time_to_anim_speed;
 using SpellHotbar::casts::is_msco_combo_window_close_event;
 using SpellHotbar::casts::is_msco_combo_window_open_event;
+using SpellHotbar::casts::is_mco_combo_index_edge;
+using SpellHotbar::casts::window_close_is_a_stomp_to_undo;
 using SpellHotbar::casts::AbilityLatch;
 using SpellHotbar::casts::classify_ability_latch;
 using SpellHotbar::casts::is_ability_hit_frame_event;
@@ -491,6 +493,40 @@ void a_channel_does_not_open_the_follow_up_press_window()
 		"a second hotbar cast during a hold is a refusal, not a chain");
 }
 
+void the_combo_index_is_sampled_where_mco_writes_it()
+{
+	// Measured live: MCO_WinClose carries the NEXT swing's index; MCO_AttackInitiate and
+	// HitFrame carry the swing already playing, which is why sampling there repeated an attack.
+	expect(is_mco_combo_index_edge("MCO_WinClose"), "MCO advances the index at window close");
+	expect(is_mco_combo_index_edge("MSCO_WinClose"), "the MSCO spelling counts too");
+	expect(!is_mco_combo_index_edge("attackStop"),
+		"attackStop is MCO's reset to 1 -- the stomp the rolling cache exists to outlive");
+	expect(!is_mco_combo_index_edge("MCO_AttackInitiate"),
+		"attack time reads the swing already playing, one step behind");
+	expect(!is_mco_combo_index_edge("HitFrame"), "so does HitFrame");
+	expect(!is_mco_combo_index_edge("MCO_WinOpen"), "window open is still pre-advance");
+}
+
+void a_pending_restore_survives_the_ready_reset()
+{
+	expect(window_close_is_a_stomp_to_undo(true),
+		"with a restore pending, a window-close is the ready reset and must be put back");
+	expect(!window_close_is_a_stomp_to_undo(false),
+		"with nothing pending, a window-close is MCO's genuine next index and is sampled");
+
+	// The live failure: restore 3, the reset writes 1, and sampling it dropped the pending
+	// restore so the next swing started the chain over.
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 3, .nextPowerAttack = 3 }, 0.0);
+	cache.arm(0.0);
+	expect(cache.restore_pending(), "armed restore is pending");
+	const auto put_back = cache.peek();
+	expect(put_back && put_back->nextAttack == 3, "the reset is undone with our own index");
+	expect(cache.restore_pending(), "putting it back does not consume it");
+	const auto consumed = cache.consume();
+	expect(consumed && consumed->nextAttack == 3, "the next real swing takes 3");
+}
+
 void a_hold_does_not_age_out_the_combo_position()
 {
 	// The failure this fixes: attack1, hold Flames five seconds, swing -- and the swing came
@@ -595,6 +631,8 @@ int main()
 	a_channel_enters_by_its_own_notify();
 	a_channel_exit_without_spellfire_is_not_a_dropped_press();
 	a_channel_does_not_open_the_follow_up_press_window();
+	the_combo_index_is_sampled_where_mco_writes_it();
+	a_pending_restore_survives_the_ready_reset();
 	a_hold_does_not_age_out_the_combo_position();
 	a_gap_before_the_hold_still_ages_out();
 	a_channel_is_chainable_out_only_once_it_streams();
