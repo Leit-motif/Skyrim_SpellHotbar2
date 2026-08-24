@@ -185,3 +185,10 @@ Gemini-generated PNG supplied by the owner. It depicts a leaping blond Nord barb
 inward-facing one-handed axes physically generate the crossed crimson trails along their curved
 lines of motion. Earlier Codex candidates remain rejected calibration output. Sixteen of 57 icons
 are finalized, leaving 41.
+
+Goal mode 2026-08-23: **Earth Shatter** is finalized as `aow_18_earth_shatter` from its single
+generation attempt. The verified clip advances about 101 units from a high two-handed wind-up into
+one downward hit. With no elemental payload proven, the glyph uses an Orsimer-coded warhammer slam
+whose white compression flare, dust, and stone originate at the hammer-ground contact. The full
+result and 32 px LANCZOS reduction passed the hard gate. Seventeen of 57 icons are finalized,
+leaving 40.

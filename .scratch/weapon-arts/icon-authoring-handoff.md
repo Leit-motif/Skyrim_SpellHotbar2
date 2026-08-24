@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **18 — Earth Shatter** (`aow_18_earth_shatter`)
+- Active art: **19 — Eldritch Beam** (`aow_19_eldritch_beam`)
 - Status: **not started**
-- Inventory: **16 of 57 finalized; 41 remain**
+- Inventory: **17 of 57 finalized; 40 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -43,6 +43,15 @@ square, with a small faceless warrior behind them. Symmetrical flame curls sugge
 swept horns without depicting a literal dragon. The approved master, 128 px atlas input, prompt,
 animation evidence, and Flaming Strike payload interpretation are recorded under
 `python_scripts/weapon_art_icons/`.
+
+## Earth Shatter disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified 2.533333-second clip raises both arms,
+advances about 101 units, and lands one downward hit at 0.916666 seconds without an elemental
+payload. The final glyph uses a vertical Orsimer warhammer slam with one hammer-sourced white
+compression flare, ochre-gray dust, and stone fragments. The full image and its 32 px LANCZOS
+reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash, evidence,
+and model-decision provenance are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
