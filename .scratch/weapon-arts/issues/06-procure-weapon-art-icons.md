@@ -421,6 +421,12 @@ two-handed single-edged war cleaver and one edge-led wake. Grip, stance, leverag
 physics; no soul/paralysis magic is invented. Full and 32 px passed. Forty-six icons are finalized;
 six remain unprocessed and five are hard failures.
 
+Goal mode 2026-08-24: **Soulless Swing** (`aow_53_soulless_swing`) is finalized from its single
+generation attempt. Four 1H hits become one Redguard terminal backhand with one connected flanged
+mace and one head-centered wake. Grip, wrist, stance, striking faces, and trail pass physics; no
+soul/fog/paralysis magic is invented. Full and 32 px passed. Forty-seven icons are finalized; five
+remain unprocessed and five are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
