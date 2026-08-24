@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **47 — Sacrifice Stab** (`aow_47_sacrifice_stab`)
+- Active art: **48 — Shadow Reave** (`aow_48_shadow_reave`)
 - Status: **not started**
-- Inventory: **41 of 57 finalized; 12 unprocessed and 4 recorded hard failures remain**
+- Inventory: **41 of 57 finalized; 11 unprocessed and 5 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -314,6 +314,13 @@ Goal-mode one-shot finalized on 2026-08-24. The long alternating Dual chain beco
 Altmer shearing cut with two independently held Alinorian short sabers and exactly one short wake
 per blade. The grips, joints, stance, and converging paths pass physics; unresolved storm/fog/time/
 paralysis implications add no magic. Full and 32 px results passed.
+
+## Sacrifice Stab disposition
+
+Recorded one-shot hard failure on 2026-08-24. The Bosmer lunge, support, arm line, grip, and wake are
+anatomically coherent, but the requested forearm-scale long dagger became an unmistakable full
+sword with oversized guard. Weapon family is a hard field. Evidence is ignored-pilot only; no
+master/input or retry.
 
 ## Dual Flurry context-layer pivot
 

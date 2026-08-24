@@ -385,6 +385,12 @@ held Alinorian short sabers and one connected wake per blade. Independent grips,
 and blade paths pass physics; no clock or unresolved-name magic is invented. Full and 32 px passed.
 Forty-one of 57 icons are finalized; 12 remain unprocessed and four are hard failures.
 
+Goal mode 2026-08-24: **Sacrifice Stab** (`aow_47_sacrifice_stab`) is a recorded one-shot hard
+failure. Its Bosmer lunge, support, arm line, grip, and wake pass anatomy, but the requested long
+dagger became an unmistakable full sword. Weapon family remains a hard field. Evidence is ignored-
+pilot only; no master/input or retry. Forty-one icons are finalized; 11 remain unprocessed and five
+are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
