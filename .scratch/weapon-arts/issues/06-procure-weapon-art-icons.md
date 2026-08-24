@@ -276,3 +276,9 @@ trail, but the mace and partial haft float at its endpoint while the Breton hold
 and 32 px evidence are preserved under the ignored `pilot/` tree; no master or atlas input exists
 and no regeneration was attempted. Twenty-eight of 57 icons are finalized; 27 remain unprocessed
 and two are recorded hard failures.
+
+Goal mode 2026-08-24: **Heavy Swing** (`aow_32_heavy_swing`) is finalized from its single generation
+attempt. Its clear late 2H swing becomes one connected Breton claymore backhand with one broad
+silver-white wake and one endpoint. The earlier contact and unresolved generic launch payload add
+no duplicate trail or invented element. The full result and 32 px LANCZOS reduction passed.
+Twenty-nine of 57 icons are finalized; 26 remain unprocessed and two are recorded hard failures.

@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **32 — Heavy Swing** (`aow_32_heavy_swing`)
+- Active art: **33 — High Kick** (`aow_33_high_kick`)
 - Status: **not started**
-- Inventory: **28 of 57 finalized; 27 unprocessed and 2 recorded hard failures remain**
+- Inventory: **29 of 57 finalized; 26 unprocessed and 2 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -179,6 +179,15 @@ endpoint while the Breton's hands hold no weapon. It is not finalized and has no
 input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt,
 hash, and failure reasons are recorded in `prompts/aow_31_heart_strike.md`. No regeneration was
 attempted.
+
+## Heavy Swing disposition
+
+Goal-mode one-shot finalized on 2026-08-24. The verified 2H clip advances about 183 units and has
+one clear late weapon swing/hit after an earlier contact; its generic launch payload is unresolved.
+The icon uses one closed-helm Breton, one connected two-handed claymore, and one broad silver-white
+backhand sweep with no duplicated trail or invented element. The full image and 32 px LANCZOS
+reduction passed. The master, 128 px atlas input, prompt, provider hash, evidence, and uncertainty
+are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
