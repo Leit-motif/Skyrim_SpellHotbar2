@@ -277,8 +277,9 @@ and 32 px evidence are preserved under the ignored `pilot/` tree; no master or a
 and no regeneration was attempted. Twenty-eight of 57 icons are finalized; 27 remain unprocessed
 and two are recorded hard failures.
 
-Goal mode 2026-08-24: **Heavy Swing** (`aow_32_heavy_swing`) is finalized from its single generation
-attempt. Its clear late 2H swing becomes one connected Breton claymore backhand with one broad
-silver-white wake and one endpoint. The earlier contact and unresolved generic launch payload add
-no duplicate trail or invented element. The full result and 32 px LANCZOS reduction passed.
-Twenty-nine of 57 icons are finalized; 26 remain unprocessed and two are recorded hard failures.
+Goal mode 2026-08-24: **Heavy Swing** (`aow_32_heavy_swing`) is finalized under explicit owner
+direction. The initial Breton/claymore result was replaced by an Elder Scrolls-coded Orsimer in
+Orcish mail using one connected two-handed single-bit battleaxe and one broad silver-white sweep.
+The earlier contact and unresolved generic launch payload add no duplicate trail or invented
+element. The full result and 32 px LANCZOS reduction passed. Twenty-nine of 57 icons are finalized;
+26 remain unprocessed and two are recorded hard failures.

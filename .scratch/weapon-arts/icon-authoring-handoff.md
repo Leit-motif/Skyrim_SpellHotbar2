@@ -182,12 +182,13 @@ attempted.
 
 ## Heavy Swing disposition
 
-Goal-mode one-shot finalized on 2026-08-24. The verified 2H clip advances about 183 units and has
-one clear late weapon swing/hit after an earlier contact; its generic launch payload is unresolved.
-The icon uses one closed-helm Breton, one connected two-handed claymore, and one broad silver-white
-backhand sweep with no duplicated trail or invented element. The full image and 32 px LANCZOS
-reduction passed. The master, 128 px atlas input, prompt, provider hash, evidence, and uncertainty
-are recorded under `python_scripts/weapon_art_icons/`.
+Finalized under explicit owner direction on 2026-08-24. The verified 2H clip advances about 183
+units and has one clear late weapon swing/hit after an earlier contact; its generic launch payload
+is unresolved. The initial Breton/claymore result was superseded. The approved icon uses one
+closed-helm Orsimer in Elder Scrolls-coded Orcish mail, one connected two-handed single-bit
+battleaxe, and one broad silver-white sweep with no duplicate trail or invented element. Full and
+32 px results passed. The master, atlas input, prompt, provider hash, provenance, and superseded
+result are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
