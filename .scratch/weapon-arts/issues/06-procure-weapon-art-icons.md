@@ -342,3 +342,8 @@ generation attempt. Eight same-node contacts become one faceless Breton action s
 throwing disc, and one unbroken blue-white palm-to-hub return line, not eight projectiles. Full and
 32 px results passed. Thirty-five of 57 icons are finalized; 19 remain unprocessed and three are
 recorded hard failures.
+
+Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
+superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
+blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
+psychic color, or branching lightning remains. Full and 32 px passed.

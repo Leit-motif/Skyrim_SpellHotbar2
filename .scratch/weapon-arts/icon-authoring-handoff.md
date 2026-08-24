@@ -247,10 +247,11 @@ px results passed.
 
 ## Magnetic Throw disposition
 
-Goal-mode one-shot finalized on 2026-08-24. The Generic clip makes one early contact, retreats about
-68 units, then rapidly contacts seven times on the same weapon node. The icon uses one faceless
-Breton in Dwemer-salvage gear, one joined brass throwing disc, and one continuous blue-white line
-from open palm to disc hub. No projectile copies or lightning web are invented. Full and 32 px
+Finalized under owner-directed replacement on 2026-08-24. The Generic clip makes one early contact,
+retreats about 68 units, then rapidly contacts seven times on the same weapon node. The rejected
+Breton/Dwemer disc was replaced by one faceless Altmer arcane assassin, one cobalt-blue psychic
+Alinorian shadow blade, and one continuous magnetic return tether from open palm to blade pommel.
+No projectile copies, gadget disc, pink psychic color, or lightning web remains. Full and 32 px
 results passed.
 
 ## Dual Flurry context-layer pivot
