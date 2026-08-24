@@ -261,3 +261,10 @@ attempt. Six timed 2H hits and an unresolved heavy-launch payload are distilled 
 vertical Argonian warhammer contact. One hammer, two hands on one haft, one short trail, and one
 physical impact remain clear at full size and 32 px. Twenty-seven of 57 icons are finalized;
 29 remain unprocessed and one is a recorded hard failure.
+
+Goal mode 2026-08-23: **Heart Lunge** (`aow_30_heart_lunge`) is finalized from its single
+generation attempt. Its two right-hand hits and roughly 392-unit advance become one neutral
+Redguard straight-sword thrust with one collinear wake and one endpoint. The unresolved generic
+launch payload and ability name contribute no heart symbol, blood, or red energy. The full result
+and 32 px LANCZOS reduction passed the hard gate. Twenty-eight of 57 icons are finalized;
+28 remain unprocessed and one is a recorded hard failure.

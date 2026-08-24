@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **30 — Heart Lunge** (`aow_30_heart_lunge`)
+- Active art: **31 — Heart Strike** (`aow_31_heart_strike`)
 - Status: **not started**
-- Inventory: **27 of 57 finalized; 29 unprocessed and 1 recorded hard failure remain**
+- Inventory: **28 of 57 finalized; 28 unprocessed and 1 recorded hard failure remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -161,6 +161,15 @@ element or VFX. The icon depicts only one defining final hit: one foreshortened 
 warhammer, two hands on one haft, one vertical trail, and one physical contact. The full image and
 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash,
 evidence, and payload uncertainty are recorded under `python_scripts/weapon_art_icons/`.
+
+## Heart Lunge disposition
+
+Goal-mode one-shot finalized on 2026-08-23. The verified right-hand clip advances about 392 units,
+lands two hits, and carries an unresolved generic strike-launch payload on the second. Neither the
+name nor payload proves blood or literal heart imagery, so the icon uses one neutral physical
+Redguard straight-sword thrust, one collinear wake, and one endpoint. The full image and 32 px
+LANCZOS reduction passed the hard gate. The master, 128 px atlas input, prompt, provider hash,
+evidence, and negative inference are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Dual Flurry context-layer pivot
 
