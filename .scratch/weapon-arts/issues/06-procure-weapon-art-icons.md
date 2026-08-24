@@ -156,3 +156,9 @@ a Breton-coded dark spellsword, radiant diagonal gold-white sword smite, termina
 circular divine halo, and pale-blue enchant wisps. The owner selected the original two-handed-grip
 render over the later one-handed correction; the exact attached PNG is canonical despite the
 catalogue's `1H` class. Thirteen of 57 icons are finalized, leaving 44.
+
+Owner 2026-08-23: **Double Slash** is finalized as `aow_15_double_slash`. Its two swing events and
+roughly 151-unit advance are distilled into one dominant silver-blue slash and amber endpoint for
+hotbar clarity. A small French-medieval knight-coded Breton in closed bascinet, mail, plate, and
+blue/burgundy surcoat remains subordinate to the effect. Fourteen of 57 icons are finalized,
+leaving 43.

@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **15 — Double Slash** (`aow_15_double_slash`)
-- Status: **in progress; first Double Slash candidate pending**
-- Inventory: **13 of 57 finalized; 44 remain**
+- Active art: **16 — Dragon Strike** (`aow_16_dragon_strike`)
+- Status: **in progress; first Dragon Strike candidate pending**
+- Inventory: **14 of 57 finalized; 43 remain**
 
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
@@ -26,6 +26,14 @@ The owner approved the attached original two-handed-grip Divine Smite render on 
 the later one-handed correction. The exact attachment is the approved master. Its 128 px atlas
 input, prompt, animation/effect evidence, and catalogue-class mismatch note are recorded under
 `python_scripts/weapon_art_icons/`.
+
+## Double Slash disposition
+
+The owner approved `double_slash_breton_knight_candidate_v5.png` on 2026-08-23. The final
+effect-first MMO glyph intentionally retains one dominant slash despite two swing events and the
+ability name. Its source figure is a small French-medieval knight-coded Breton rather than a
+portrait or character illustration. The approved master, 128 px atlas input, prompt, and evidence
+are recorded under `python_scripts/weapon_art_icons/`.
 
 ## Earlier Divided Strike stopping point
 
