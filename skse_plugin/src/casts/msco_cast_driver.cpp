@@ -204,6 +204,12 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			return false;
 		}
 		(void)hand;
+		// Ticket-28 measurement: what did every graph hold at the moment the cast started? This
+		// is the fallback sampling seam if the @SGVI payloads above prove invisible to the sink.
+		// Read-only; nothing here changes the cast path.
+		logger::info("SH2 probe: cast begin | shape={}",
+			shape == CastShape::channel ? "channel"sv : "fnf"sv);
+		ComboProbe::probe_read_graphs(pc, "cast begin"sv);
 		cast_shape.store(shape, std::memory_order_relaxed);
 		channel_started_ms.store(
 			shape == CastShape::channel ? now_ms() : 0.0, std::memory_order_relaxed);
@@ -217,6 +223,39 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag)
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
+
+		// The clip's own advance, taken at the moment it is written. This is the primary edge:
+		// a cast that interrupts a swing lands after the WinOpen-time advance but before
+		// WinClose, so WinClose alone never learned the interrupted swing's teaching. The value
+		// comes from the TAG, never from a graph read here -- the Payload Interpreter's write
+		// may race this dispatch.
+		if (const auto sgvi = parse_mco_sgvi_sample(tag)) {
+			const bool pending = g_rolling.restore_pending();
+			const bool record = !pending && should_record_mco_combo_sample(
+				is_active() || ArtDriver::is_active());
+			// Ticket-28 measurement: does an @SGVI payload reach this sink at all? One line
+			// per tag, so the log answers that without a second run.
+			logger::info("SH2 probe: sgvi {}={} pending={} record={}",
+				sgvi->variable == McoSgviVariable::next_attack ? "MCO_nextattack"sv
+															  : "MCO_nextpowerattack"sv,
+				sgvi->value, pending, record);
+			if (pending) {
+				// Same rule as the window-close stomp-to-undo branch: while a restore is
+				// pending the payload we are seeing is the ready reset's, not a swing's, so
+				// put ours back rather than learning from it. Parity note: like that branch,
+				// this does not distinguish a genuine real swing arriving while a restore is
+				// still pending -- the same accepted gap, kept identical on purpose.
+				if (const auto combo = g_rolling.peek()) {
+					write_mco(a_player, *combo);
+				}
+			} else if (record) {
+				if (sgvi->variable == McoSgviVariable::next_attack) {
+					g_rolling.record_next_attack(sgvi->value, now_ms());
+				} else {
+					g_rolling.record_next_power_attack(sgvi->value, now_ms());
+				}
+			}
+		}
 
 		if (is_mco_combo_index_edge(tag)) {
 			if (window_close_is_a_stomp_to_undo(g_rolling.restore_pending())) {

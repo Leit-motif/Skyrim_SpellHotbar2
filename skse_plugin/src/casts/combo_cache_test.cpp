@@ -23,6 +23,9 @@ using SpellHotbar::casts::charge_time_to_anim_speed;
 using SpellHotbar::casts::is_msco_combo_window_close_event;
 using SpellHotbar::casts::is_msco_combo_window_open_event;
 using SpellHotbar::casts::is_mco_combo_index_edge;
+using SpellHotbar::casts::McoSgviVariable;
+using SpellHotbar::casts::parse_mco_sgvi_sample;
+using SpellHotbar::casts::parse_sgvi_int;
 using SpellHotbar::casts::window_close_is_a_stomp_to_undo;
 using SpellHotbar::casts::AbilityLatch;
 using SpellHotbar::casts::classify_ability_latch;
@@ -498,7 +501,7 @@ void the_combo_index_is_sampled_where_mco_writes_it()
 	// Measured live: MCO_WinClose carries the NEXT swing's index; MCO_AttackInitiate and
 	// HitFrame carry the swing already playing, which is why sampling there repeated an attack.
 	expect(is_mco_combo_index_edge("MCO_WinClose"),
-		"window close is the one conventional edge always after the clip's SGVI advance");
+		"window close is retained as the fallback edge after the clip's SGVI advance");
 	expect(is_mco_combo_index_edge("MSCO_WinClose"), "the MSCO spelling counts too");
 	expect(!is_mco_combo_index_edge("attackStop"),
 		"attackStop is MCO's reset to 1 -- the stomp the rolling cache exists to outlive");
@@ -507,6 +510,108 @@ void the_combo_index_is_sampled_where_mco_writes_it()
 	expect(!is_mco_combo_index_edge("HitFrame"), "so does HitFrame");
 	expect(!is_mco_combo_index_edge("MCO_WinOpen"),
 		"this load order's packs annotate AT window open, so that edge races the write");
+}
+
+void the_sgvi_payload_carries_the_clips_own_advance()
+{
+	const auto next = parse_sgvi_int("@SGVI|MCO_nextattack|3", "MCO_nextattack");
+	expect(next && *next == 3, "the clip's own advance is read out of the tag, not the graph");
+	const auto power = parse_sgvi_int("@SGVI|MCO_nextpowerattack|2", "MCO_nextpowerattack");
+	expect(power && *power == 2, "the power counter parses the same way");
+	const auto wrap = parse_sgvi_int("@SGVI|MCO_nextattack|1", "MCO_nextattack");
+	expect(wrap && *wrap == 1, "a wrap back to 1 is a real advance, not a stomp to ignore");
+	const auto wide = parse_sgvi_int("@SGVI|MCO_nextattack|12", "MCO_nextattack");
+	expect(wide && *wide == 12, "a moveset longer than nine steps still parses");
+}
+
+void a_sgvi_tag_for_another_variable_is_rejected()
+{
+	expect(!parse_sgvi_int("@SGVI|msco_nextright|2", "MCO_nextattack").has_value(),
+		"an unrelated clip counter must not be learned as a combo position");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattackfoo|2", "MCO_nextattack").has_value(),
+		"the variable name is matched in full, not as a prefix");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattac|2", "MCO_nextattack").has_value(),
+		"a truncated name is not the variable");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextpowerattack|2", "MCO_nextattack").has_value(),
+		"the power counter is a different variable");
+}
+
+void a_malformed_sgvi_tag_is_rejected()
+{
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattack|", "MCO_nextattack").has_value(),
+		"a payload with no value teaches nothing");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattack|x", "MCO_nextattack").has_value(),
+		"a non-integer value is not an index");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattack|2x", "MCO_nextattack").has_value(),
+		"trailing junk invalidates the whole value");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattack", "MCO_nextattack").has_value(),
+		"the value separator is required");
+	expect(!parse_sgvi_int("@SGVI|MCO_nextattack|-", "MCO_nextattack").has_value(),
+		"a lone sign is not an integer");
+}
+
+void a_non_sgvi_tag_is_rejected()
+{
+	expect(!parse_sgvi_int("MCO_WinClose", "MCO_nextattack").has_value(),
+		"an ordinary animation event is not an SGVI payload");
+	expect(!parse_sgvi_int("@SGVF|MCO_nextattack|3", "MCO_nextattack").has_value(),
+		"the float payload is a different annotation");
+	expect(!parse_sgvi_int("", "MCO_nextattack").has_value(), "an empty tag parses to nothing");
+	expect(!parse_sgvi_int("@SGVI|", "MCO_nextattack").has_value(), "a bare prefix parses to nothing");
+}
+
+void the_sgvi_sampler_routes_each_variable_to_its_own_field()
+{
+	const auto attack = parse_mco_sgvi_sample("@SGVI|MCO_nextattack|3");
+	expect(attack && attack->variable == McoSgviVariable::next_attack && attack->value == 3,
+		"MCO_nextattack routes to the attack field");
+	const auto power = parse_mco_sgvi_sample("@SGVI|MCO_nextpowerattack|4");
+	expect(power && power->variable == McoSgviVariable::next_power_attack && power->value == 4,
+		"MCO_nextpowerattack routes to the power field");
+	expect(!parse_mco_sgvi_sample("@SGVI|msco_nextright|2").has_value(),
+		"a variable that is neither counter is not sampled at all");
+	expect(!parse_mco_sgvi_sample("MCO_WinClose").has_value(),
+		"a window-close is handled by the fallback edge, not by this parser");
+}
+
+void a_partial_update_keeps_the_other_field_and_refreshes_the_age()
+{
+	// The two counters arrive as separate events, so a clip that writes only MCO_nextattack
+	// must not blank the power position it was never told about.
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 2, .nextPowerAttack = 4 }, 0.0);
+	cache.record_next_attack(3, 4000.0);
+	const auto got = cache.usable(4000.0);
+	expect(got && got->nextAttack == 3, "the taught value replaces the attack field");
+	expect(got && got->nextPowerAttack == 4, "the untold field keeps its last value");
+	expect(cache.usable(4000.0 + RollingMcoCombo::kMaxAgeMs).has_value(),
+		"the partial update refreshes the sample's age");
+	expect(!cache.usable(4000.0 + RollingMcoCombo::kMaxAgeMs + 1.0).has_value(),
+		"and it is measured from the partial update, not the earlier full record");
+}
+
+void a_partial_update_drops_a_pending_restore()
+{
+	RollingMcoCombo cache;
+	cache.record(McoCombo{ .nextAttack = 2, .nextPowerAttack = 1 }, 0.0);
+	cache.arm(0.0);
+	expect(cache.restore_pending(), "armed restore is pending");
+	cache.record_next_attack(3, 10.0);
+	expect(!cache.restore_pending(), "a real swing's own advance invalidates a pending restore");
+	expect(!cache.consume().has_value(), "so there is nothing left to write back");
+}
+
+void a_partial_power_update_leaves_the_attack_field_alone()
+{
+	RollingMcoCombo cache;
+	cache.record_next_power_attack(2, 0.0);
+	const auto first = cache.usable(0.0);
+	expect(first && first->nextPowerAttack == 2, "an empty cache can be seeded by one counter");
+	expect(first && first->nextAttack == 1, "the untouched field stays at its default");
+	cache.record_next_attack(4, 10.0);
+	const auto both = cache.usable(10.0);
+	expect(both && both->nextAttack == 4 && both->nextPowerAttack == 2,
+		"two events across one swing build the whole position");
 }
 
 void a_pending_restore_survives_the_ready_reset()
@@ -635,6 +740,14 @@ int main()
 	a_channel_exit_without_spellfire_is_not_a_dropped_press();
 	a_channel_does_not_open_the_follow_up_press_window();
 	the_combo_index_is_sampled_where_mco_writes_it();
+	the_sgvi_payload_carries_the_clips_own_advance();
+	a_sgvi_tag_for_another_variable_is_rejected();
+	a_malformed_sgvi_tag_is_rejected();
+	a_non_sgvi_tag_is_rejected();
+	the_sgvi_sampler_routes_each_variable_to_its_own_field();
+	a_partial_update_keeps_the_other_field_and_refreshes_the_age();
+	a_partial_update_drops_a_pending_restore();
+	a_partial_power_update_leaves_the_attack_field_alone();
 	a_pending_restore_survives_the_ready_reset();
 	a_hold_does_not_age_out_the_combo_position();
 	a_gap_before_the_hold_still_ages_out();

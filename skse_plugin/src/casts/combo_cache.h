@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
 #include <mutex>
 #include <optional>
 #include <string_view>
@@ -30,6 +31,30 @@ public:
 		valid_ = true;
 		takenAtMs_ = nowMs;
 		sample_ = sample;
+		pending_ = false;
+	}
+
+	// The clip teaches its two counters in SEPARATE `@SGVI` events, so the SGVI sampling path
+	// can only ever update one field at a time. The other field keeps its last known value
+	// rather than being reset: an attack clip that writes only `MCO_nextattack` must not blank
+	// the power chain's position. Otherwise these are `record()` -- same timestamp refresh,
+	// same valid_ latch, same pending_ clear, under the same mutex, because a real swing
+	// teaching its advance invalidates a restore we were holding just as a full sample does.
+	void record_next_attack(int nextAttack, double nowMs)
+	{
+		std::lock_guard lock{ mutex_ };
+		valid_ = true;
+		takenAtMs_ = nowMs;
+		sample_.nextAttack = nextAttack;
+		pending_ = false;
+	}
+
+	void record_next_power_attack(int nextPowerAttack, double nowMs)
+	{
+		std::lock_guard lock{ mutex_ };
+		valid_ = true;
+		takenAtMs_ = nowMs;
+		sample_.nextPowerAttack = nextPowerAttack;
 		pending_ = false;
 	}
 
@@ -174,22 +199,31 @@ enum class HotbarCastPress {
 		   tag == "MCO_winclose";
 }
 
-// Where MCO writes `MCO_nextattack`, and therefore the only place worth sampling it.
+// The SGVI payload is the primary sampling edge; window-close is the retained fallback.
 //
-// Measured live 2026-08-24 over a four-hit chain: every `MCO_WinClose` carries the index the NEXT
-// swing will use (1, 2, 3, 4), and each following `MCO_AttackInitiate` reads that same value back
-// as the swing it is playing.
+// The advance itself is a clip annotation, `@SGVI|MCO_nextattack|<N>`, and its TIME is pack data
+// rather than an MCO guarantee. Thuum's reference clips annotate at t=0.06 (before HitFrame);
+// this load order's stance packs (Elder Creed - Blade, Mercenary Greatsword; dumps 2026-08-24)
+// annotate AT `MCO_WinOpen`. Measured live 2026-08-24 over a four-hit chain, every `MCO_WinClose`
+// carries the index the NEXT swing will use (1, 2, 3, 4), and each following `MCO_AttackInitiate`
+// reads that value back as the swing it is playing -- so WinClose really is always after the
+// advance, and attack-time edges are one step behind.
 //
-// The write itself is a clip annotation, and its TIME is pack data, not an MCO guarantee.
-// Thuum's reference clips annotate at t=0.06 (before HitFrame); this load order's stance packs
-// (Elder Creed - Blade, Mercenary Greatsword; dumps 2026-08-24) annotate AT `MCO_WinOpen`, the
-// same timestamp, so WinOpen-or-earlier edges race the write or lose to it outright. WinClose is
-// the one conventional edge that is always after the advance. Sampling at attack time captured
-// the swing ALREADY playing under these packs, so restoring it repeated that attack -- and the
-// same edges were right under early-annotating clips, which is why ticket 13 once verified
-// clean. Reading window-close preserves a value the clip itself wrote -- ticket 11's "preserve,
-// never derive" stands, because moveset length still lives in the annotations and is never
-// computed here.
+// What WinClose alone could not survive is an INTERRUPTION (measured 2026-08-24; sword attack2
+// advances at 0.633s and closes at 1.467s). A hotbar cast during a swing lands between those two
+// moments: the advance has already happened but WinClose never fires, so the cache still holds
+// the PREVIOUS swing's teaching and the restore repeats the attack that was interrupted -- owner-
+// observed on both 1H and greatsword. Sampling the `@SGVI` payload itself takes the value at the
+// moment the clip writes it, so an interrupted swing has already taught its advance.
+//
+// The payload's VALUE is parsed from the tag, never read back off the graph at that moment: the
+// Payload Interpreter's own write may race the event dispatch. That keeps ticket 11's "preserve,
+// never derive" intact -- the number is the clip's own, and moveset length still lives only in
+// the annotations.
+//
+// WinClose stays an edge as a fallback: if `@SGVI` tags do not reach the sink under some pack,
+// behaviour degrades to exactly what shipped before. A WinClose arriving after an SGVI simply
+// re-records the same value.
 //
 // `attackStop` is deliberately NOT an edge, though it carries a value. It is MCO's end-of-swing
 // reset to 1 -- the stomp this whole rolling cache exists to outlive (ticket 11: "already ended
@@ -198,6 +232,71 @@ enum class HotbarCastPress {
 [[nodiscard]] constexpr bool is_mco_combo_index_edge(std::string_view tag) noexcept
 {
 	return is_msco_combo_window_close_event(tag);
+}
+
+// `@SGVI|<variable>|<integer>` -- the Payload Interpreter's set-graph-variable-int annotation, as
+// it arrives at the animation-event sink. The variable name is matched IN FULL: `msco_nextright`
+// and other variables sharing a prefix must be rejected, or an unrelated clip counter would be
+// learned as a combo position. Allocation-free so it can run on the animation thread.
+[[nodiscard]] constexpr std::optional<int> parse_sgvi_int(
+	std::string_view tag, std::string_view variable) noexcept
+{
+	constexpr std::string_view kPrefix{ "@SGVI|" };
+	if (variable.empty() || tag.size() <= kPrefix.size() ||
+		tag.substr(0, kPrefix.size()) != kPrefix) {
+		return std::nullopt;
+	}
+	const std::string_view rest = tag.substr(kPrefix.size());
+	if (rest.size() <= variable.size() || rest.substr(0, variable.size()) != variable ||
+		rest[variable.size()] != '|') {
+		return std::nullopt;
+	}
+	const std::string_view digits = rest.substr(variable.size() + 1);
+	if (digits.empty()) {
+		return std::nullopt;
+	}
+	std::size_t i = 0;
+	bool negative = false;
+	if (digits[0] == '-' || digits[0] == '+') {
+		negative = digits[0] == '-';
+		i = 1;
+		if (digits.size() == 1) {
+			return std::nullopt;
+		}
+	}
+	int value = 0;
+	for (; i < digits.size(); ++i) {
+		const char c = digits[i];
+		if (c < '0' || c > '9') {
+			return std::nullopt;
+		}
+		value = value * 10 + (c - '0');
+	}
+	return negative ? -value : value;
+}
+
+// Which of the two counters a clip just taught. They arrive as separate events, so the cache
+// takes them as separate partial updates.
+enum class McoSgviVariable {
+	next_attack,
+	next_power_attack,
+};
+
+struct McoSgviSample {
+	McoSgviVariable variable = McoSgviVariable::next_attack;
+	int value = 1;
+};
+
+[[nodiscard]] constexpr std::optional<McoSgviSample> parse_mco_sgvi_sample(
+	std::string_view tag) noexcept
+{
+	if (const auto next = parse_sgvi_int(tag, "MCO_nextattack")) {
+		return McoSgviSample{ McoSgviVariable::next_attack, *next };
+	}
+	if (const auto power = parse_sgvi_int(tag, "MCO_nextpowerattack")) {
+		return McoSgviSample{ McoSgviVariable::next_power_attack, *power };
+	}
+	return std::nullopt;
 }
 
 // What a window-close means depends on whether we are holding a restore.
