@@ -296,6 +296,12 @@ Dunmer with two hand-connected chitin blades and one leading connected wake. The
 no literal or magical thorns because the clip proves none. Full and 32 px results passed.
 Thirty-one of 57 icons are finalized; 24 remain unprocessed and two are recorded hard failures.
 
+Owner correction 2026-08-24: **Holding Thorns** is no longer finalized. The owner requested Morag
+Tong armor and a transparent background. The one edit preserved the action and improved the armor,
+but returned opaque RGB with a baked checkerboard rather than real alpha. The stitcher supports
+RGBA-to-DXT5 transparency; the result itself does not. Both versions are preserved as ignored
+evidence, the canonical master/input were removed, and no autonomous retry was attempted.
+
 Goal mode 2026-08-24: **Iai Slash** (`aow_35_iai_slash`) is finalized from its single generation
 attempt. One fast 1H collision and hit becomes a low faceless Imperial Akaviri draw-cut with one
 connected katana, one empty scabbard, and one blade-tangent wake. Unresolved knockback contributes

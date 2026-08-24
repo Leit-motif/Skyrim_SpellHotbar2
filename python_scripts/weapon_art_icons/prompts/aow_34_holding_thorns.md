@@ -1,8 +1,9 @@
 # Holding Thorns
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-24
+**Status:** Owner-directed Morag Tong/transparent-background edit hard failure on 2026-08-24
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** One initial Codex generation, followed by one owner-directed edit using the
+initial result as the sole image reference
 
 **Stable icon key:** `aow_34_holding_thorns`
 
@@ -51,4 +52,20 @@ exactly one faceless full-body Dunmer, exactly two connected one-handed chitin w
 - 32 px LANCZOS reduction: pass. The dual-blade silhouette and one amber cutting wake remain clear;
   Bonemold/chitin color and shape cues survive without portrait framing.
 - Master SHA-256: `0CE069B80C44A5FEB6D649E566C60D1B8C8E31289951F6C8F7D9AA656E0242FB`.
-- No autonomous regeneration was attempted.
+- This initial Bonemold result was superseded by the owner's request for unmistakable Morag Tong
+  armor and a clear/transparent background. It is preserved only as ignored evidence at
+  `python_scripts/weapon_art_icons/pilot/aow_34_holding_thorns_bonemold_superseded.png`.
+
+## Owner-directed edit and hard failure
+
+- Requested change: retain the action, two connected chitin blades, and one leading wake; replace
+  the armor with Dunmer Morag Tong assassin armor and remove the background to true transparency.
+- Pipeline validation: transparent input is supported. `stitch_icon_atlas.py` reads RGBA, preserves
+  each icon alpha channel, multiplies it by the project alpha mask, and writes DXT5 DDS.
+- Edit result: the Morag Tong armor and weapon construction passed visually, but the provider baked
+  a gray checkerboard into an opaque RGB image instead of returning alpha.
+- Provider result mode: `RGB`; alpha channel: absent; corner pixel: `(235, 235, 234, 255)` after
+  RGBA conversion. This is fake transparency and cannot be accepted as an atlas input.
+- Failed result preserved at
+  `python_scripts/weapon_art_icons/pilot/aow_34_holding_thorns_morag_tong_fake_transparency.png`.
+- No canonical master or 128 px atlas input remains. No autonomous retry was attempted.

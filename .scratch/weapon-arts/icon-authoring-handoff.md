@@ -201,12 +201,13 @@ recorded under `python_scripts/weapon_art_icons/`.
 
 ## Holding Thorns disposition
 
-Goal-mode one-shot finalized on 2026-08-24. The verified dual-weapon clip advances about 252 units
-through dense alternating right- and left-hand contacts, but carries no thorn, plant, poison, or
-elemental payload. The icon distills that sequence to one faceless Dunmer in Bonemold/chitin, two
-clearly held short chitin blades, and one wake connected to the leading saber. No hit-count diagram
-or literal magical thorns are introduced. Full and 32 px results passed; provenance and uncertainty
-are recorded under `python_scripts/weapon_art_icons/`.
+Owner-directed edit is a recorded hard failure on 2026-08-24. The initial Bonemold/chitin Dunmer
+result passed mechanically, then the owner requested unmistakable Morag Tong armor and a transparent
+background. The single edit delivered the requested armor and retained two connected blades plus
+one leading wake, but baked a checkerboard into an opaque RGB image with no alpha channel. The atlas
+pipeline itself does support transparency through RGBA and DXT5; this provider result does not.
+Neither version is canonical. Both are preserved under the ignored `pilot/` tree, and no autonomous
+retry was attempted.
 
 ## Iai Slash disposition
 
