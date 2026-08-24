@@ -1,56 +1,55 @@
 # Furrow Strike
 
-**Status:** Finalized by goal-mode hard gate on 2026-08-23
+**Status:** Owner-approved silhouette regeneration, finalized 2026-08-24
 
-**Generation path:** One Codex built-in image-generation call; no image references
+**Generation path:** Three new Codex built-in generations from the canonical brief. The first revision made the humanoid primary but cropped away the emanating furrow; the second overcorrected to a distant figure. The final owner-approved medium-crop revision was generated from a new prompt. No rejected Furrow Strike image was used as a reference or edit target. Crane Style, Aimed Blow, Blood Flurry, Champion's End, and Dragon Strike were attached as grammar-only references.
 
 **Stable icon key:** `aow_27_furrow_strike`
 
 ## Evidence and interpretation
 
-- The active definition redirects to `Nolvus Ashes of War Stance Framework/Furrow Strike`.
-  Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Furrow Strike/AABL_Attack_A.HKX`;
-  SHA-256 `248B72C7256AC0D2F2F009050230ADE9E60C829E9893CA76C9C9F928B53A6839`.
-- Animation-proven: the 3.000000-second, 99-track, 2H-class clip advances about 208 units. A weaker
-  0.5-damage weapon collision begins at 1.333333 seconds; the defining 1.5-damage collision begins
-  at 1.750000, triples trail lifetime, doubles trail brightness, triggers `$AoW_Dust`, then lands
-  at 1.833333 with `$AoW_Knockback` and camera shake.
-- Payload resolution: no active definitions were found for `$AoW_Dust` or `$AoW_Knockback`.
-  Physical dust, displaced soil, stone, and impact force follow the animation names and collision;
-  no element or magical color was inferred.
-- Agent composition choice: one tiny faceless Nord with one two-handed steel greatsword carves one
-  continuous perspective furrow. The weaker setup collision is not depicted as another trail.
-- Atlas choice: the bright cut narrows from the lower-left foreground toward its upper-right source,
-  contrasting with the preceding foreshortened shield wedge and flat diagonals.
+- The active definition redirects to `Nolvus Ashes of War Stance Framework/Furrow Strike`. Selected enabled provider: `Ashes of War - Weapon Art Via Additional Attack/.../Furrow Strike/AABL_Attack_A.HKX`; SHA-256 `248B72C7256AC0D2F2F009050230ADE9E60C829E9893CA76C9C9F928B53A6839`.
+- Animation-proven: the 3.000000-second, 99-track, 2H-class clip advances about 208 units. A weaker 0.5-damage weapon collision begins at 1.333333 seconds; the defining 1.5-damage collision begins at 1.750000, triples trail lifetime, doubles trail brightness, triggers `$AoW_Dust`, then lands at 1.833333 with `$AoW_Knockback` and camera shake.
+- Payload resolution: no active definitions were found for `$AoW_Dust` or `$AoW_Knockback`. Physical dust, displaced soil, stone, and impact force follow the animation names and collision; no element or magical color was inferred.
+- Owner corrections: the humanoid attacker must remain the focal subject; the camera must leave room for a furrow to emanate from the strike; use a medium crop between the close and wide revisions; preserve the earth-tone direction.
+- Owner-approved composition: a medium-crop Nord silhouette occupies the upper-left/center. One connected greatsword terminates at a contact just right of center, and one medium furrow originates there and travels into the lower-right.
+
+## Reference roles
+
+- `aow_08_crane_style.png`, `aow_02_aimed_blow.png`, `aow_04_blood_flurry.png`, `aow_07_champions_end.png`, and `aow_16_dragon_strike.png`: approved icon grammar only—faceless mass, abstraction, limited palette, glow, and 32 px readability.
+- Their poses, figures, weapons, facing directions, palettes, and compositions were explicitly excluded.
+- All rejected Furrow Strike images were excluded from generation inputs.
 
 ## Final generation prompt
 
 ```text
-Create ONE square 1:1 raster image: an original polished MMO/RPG hotbar ABILITY ICON for a Skyrim-style two-handed weapon art named "Furrow Strike". This is an ability glyph, not a portrait, character key art, splash illustration, wallpaper, or scene.
+Use case: stylized-concept
+Asset type: original square MMO/RPG hotbar ability glyph for Skyrim Spell Hotbar 2, designed first for crisp 32x32 readability
+Primary request: Furrow Strike — use a medium crop balancing the prior close figure and the prior wide figure. The humanoid attacker is the clear subject, and a medium-length earth furrow visibly emanates from the weapon's ground strike.
+Reference roles: the five supplied approved icons are grammar-only references. Match their faceless near-black abstraction, limited palette, compact glow, painterly massing, and hotbar readability. Do not copy any reference pose, figure, weapon, facing direction, palette, or composition. Do not use any rejected Furrow Strike generation as a visual reference.
 
-PRIMARY GLYPH AND CAMERA:
-A single freshly carved ground furrow dominates 85-88% of the square in dramatic depth perspective. Camera low and slightly overhead along the cut: the furrow begins broad in the lower-left foreground, with two dark displaced-earth banks and one bright ivory-gray compression seam, then narrows toward the greatsword contact point near the upper-right/center. The furrow is ONE continuous physical path caused by ONE low two-handed blade cut. It is not a separate magic beam or decorative trail.
-At the narrow source end, one practical steel greatsword cutting edge is visibly embedded just above the ground and tangent to the same furrow axis. A compact burst of ochre dust, small stones, and restrained steel sparks erupts exactly where blade meets earth. No extra slash arcs, echo trails, rings, cracks radiating in other directions, or floating effects.
+Exact frozen action and camera: medium-distance side-on three-quarter action view. Place one broad Nord warrior in the upper-left/center, occupying about 37-40% of the square—larger and more immediate than a distant full-body figure, but with enough lower-right space to show the result of the strike. The warrior drives left-to-right in a low two-handed greatsword follow-through: torso pitched forward, front knee deeply bent, rear leg braced near the crop, shoulders rotating through the cut. Both connected hand masses sit on one connected grip. The practical straight blade descends from the hands to one ground-contact point slightly right and below center.
+Orientation and hierarchy: the humanoid silhouette reads first, the connected blade second, and the emanating furrow third. The complete causal chain is unmistakable: humanoid pose -> connected greatsword -> bright ground contact -> outward earth furrow.
 
-FIGURE AND WEAPON:
-One tiny faceless Nord two-handed warrior occupies no more than 12-15% at the upper-right source end, subordinate to the foreground furrow. Freeze the final low follow-through: broad compact silhouette leaning forward, front knee bent, rear leg braced, both hands clearly spaced on one long greatsword grip, shoulders and blade aligned with the ground cut. Closed shadowed helmet; no visible face.
-Exactly ONE practical Skyrim-style two-handed steel greatsword, one blade, two hands on one grip, plausible proportions. No axe, hammer, mace, shield, second sword, or detached blade.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: broad shoulders, compact nasal-helm mass, powerful
+forward-driving proportion. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory.
+The figure is the small anonymous verb; the effect and weapon path are the subject.
+Owner hierarchy clarification: set the silhouette around 37-40%, so it remains the dominant identifiable subject while leaving a purposeful lower-right channel for the furrow.
 
-EVIDENCE AND VISUAL LANGUAGE:
-The verified clip advances roughly 208 units, uses a weaker setup weapon collision, then one stronger final weapon collision with extended bright trail, dust payload, camera shake, and knockback. Depict only the defining final strike and one furrow, not two collisions or multiple trails. The exact dust and knockback payload definitions are unresolved, so use only nonmagical physical soil, stone, and steel.
-Nord identity through economical silhouette and material cues: simplified steel-gray armor, weathered brown leather, a narrow dark-red cloth accent, and restrained cold blue-gray edging. No anatomy detail, face, costume showcase, or scenic landscape.
+Weapon and physics: exactly one plausible Skyrim-style two-handed steel greatsword, one continuous blade and grip, visibly connected to both hand masses. The cutting edge terminates at the ground-contact point. Pose, supported center of gravity, shoulder rotation, and blade angle prove force.
 
-STYLE:
-Bold painterly graphical MMO ability icon optimized for 32x32 readability; compact masses, strong negative space, high contrast, restrained texture. Palette: ivory-gray compression seam, steel gray, cold blue-gray, dark earth brown, ochre dust, charcoal, tiny rust-orange sparks. Quiet dark field and vignette. Edge-to-edge icon art, safe crop.
-
-HARD CONSTRAINTS:
-exactly one tiny faceless full-body figure, exactly one two-handed greatsword, exactly one connected ground furrow, one contact burst. No portrait, large character, face, multiple slashes, multiple furrows, energy beam, magic, fire, frost, lightning, rune, victim, gore, scenery, text, logo, watermark, border, or UI frame.
+Causal furrow: one compact ivory-white compression flash and restrained rust-orange sparks at the blade-ground contact. Starting EXACTLY at that contact, one continuous MEDIUM-LENGTH physical furrow travels diagonally toward the lower-right edge. It occupies about 22-28% of the square—longer and clearer than a tiny scrape, shorter and less dominant than a foreground trench. Show dark umber displaced-earth banks, ochre dust, a narrow ivory-gray compression seam, and a few small stones. The furrow must emerge forward from the strike point with no gap; it is not behind the blade, not a detached beam, and not a separate magical trail.
+Color palette: deep umber, bark brown, ochre dust, charcoal, weathered steel gray, small ivory compression core and seam, tiny rust-orange sparks, and at most one restrained dark-red wedge. No elemental color.
+Style/medium: polished painterly graphical MMO ability icon; bold compact masses, strong negative space, controlled edge light, dark warm-earth atmospheric field, safe crop, no scenic horizon.
+Constraints: one humanoid, one greatsword, one contact, one connected medium furrow. No distant tiny figure, no extreme close-up, no full-square trench, no portrait, no face, no costume plate, no second weapon, no victim, no magic, fire, frost, lightning, runes, text, logo, watermark, border, or UI frame.
 ```
 
 ## Final hard-gate result
 
-- Full-resolution result: pass. One greatsword enters one continuous perspective furrow at one
-  compact dust-and-stone contact; the source warrior is small, distant, and faceless.
-- 32 px LANCZOS reduction: pass. The sword and narrowing ivory ground seam remain a single readable
-  glyph rather than resolving as a landscape.
-- Master SHA-256: `DBE93DBE68478F595E7C374AC1E3AFE7F39B93E20300299ABED8C2660D01DF4F`.
+- Full generated intermediate: pass. The medium-crop faceless attacker is the dominant identifiable mass; both hands connect to one greatsword and the blade terminates at one ground contact.
+- 128 px atlas input: pass. Figure, blade, contact, and the medium outward furrow form one readable causal chain without returning to the original trench-dominant composition.
+- 32 px reduction: pass. The humanoid silhouette remains the first read and the bright earth seam visibly continues from the sword contact.
+- Only the owner-approved 128x128 atlas input is retained in the project. Generated intermediates remain outside the project workspace.
+- Rejected prior master and 128 px revisions are archived under `python_scripts/weapon_art_icons/pilot/silhouette-drift/`.
+- Atlas-input SHA-256: `972E86E430B2DD96D7F5673203240D1528016A0DFF9106D5129F537A89E284CC`.
