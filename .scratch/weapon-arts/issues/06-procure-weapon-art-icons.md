@@ -217,3 +217,10 @@ attempt. Its weaponless five-second clip stages a blast and heavy battle shout; 
 payloads authorize no element. Broken ivory-white pressure bands form the icon above a tiny
 faceless source figure. The full result and 32 px LANCZOS reduction passed the hard gate. Twenty-one
 of 57 icons are finalized, leaving 36.
+
+Goal mode 2026-08-23: **Flurry Strike** (`aow_23_flurry_strike`) is a recorded one-shot hard
+failure, not a finalized icon. The three repeated trails survived at 32 px, but the generated
+Orsimer was character-key-art scale and the battleaxe became double-bitted despite the practical
+single-head brief. Full and 32 px evidence are preserved under the ignored `pilot/` tree; no master
+or atlas input exists and no regeneration was attempted. Twenty-one of 57 icons are finalized;
+35 remain unprocessed and one is a recorded hard failure.

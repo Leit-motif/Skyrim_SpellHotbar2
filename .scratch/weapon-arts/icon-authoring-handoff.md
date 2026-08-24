@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **23 — Flurry Strike** (`aow_23_flurry_strike`)
+- Active art: **24 — Focused Cross** (`aow_24_focused_cross`)
 - Status: **not started**
-- Inventory: **21 of 57 finalized; 36 remain**
+- Inventory: **21 of 57 finalized; 35 unprocessed and 1 recorded hard failure remain**
 
 Ongoing owner direction: deliberately vary race/archetype, race-guided palette, and weapon family
 across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; include supported
@@ -94,6 +94,14 @@ Because all `$FZ*` definitions are unresolved, the glyph uses neutral physical f
 invented element. Three broken ivory-white pressure bands dominate above a tiny faceless weaponless
 figure. The full image and 32 px LANCZOS reduction passed the hard gate. The master, 128 px atlas
 input, prompt, hash, and evidence are recorded under `python_scripts/weapon_art_icons/`.
+
+## Flurry Strike exception
+
+The single goal-mode generation attempt failed the hard gate on 2026-08-23. Although its three
+steel-white trails read at 32 px, the Orsimer became a large character-art subject and the requested
+one-dominant-head battleaxe became double-bitted. It is not finalized and has no master or atlas
+input. Full and 32 px evidence remain in the ignored `pilot/` tree; the evidence, final prompt, hash,
+and failure reasons are recorded in `prompts/aow_23_flurry_strike.md`. No regeneration was attempted.
 
 ## Dual Flurry context-layer pivot
 
