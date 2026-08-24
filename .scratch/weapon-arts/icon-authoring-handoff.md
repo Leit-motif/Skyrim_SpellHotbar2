@@ -16,6 +16,11 @@ across the remaining atlas. Use `figure-guidance.md` and `color-guidance.md`; in
 Orsimer, Altmer, Dunmer, axes, maces, and other compatible silhouettes instead of defaulting to a
 neutral sword fighter. Animation and payload evidence still win, and race never invents an element.
 
+Mandatory owner physics gate from 2026-08-24: before finalizing any generation, verify that anatomy
+and physics are possible. Check supported center of gravity, joint ranges, hand placement and grip
+continuity, wrist/elbow/shoulder force path, weapon leverage and counterbalance, striking-edge
+direction, and trail causality. A polished image with an impossible grip or action is a hard failure.
+
 Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
 prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
 
@@ -268,6 +273,11 @@ Goal-mode one-shot finalized on 2026-08-24. One long WEAPON collision window and
 become one sustained physical orbiting cut: one faceless Redguard, one connected two-handed curved
 greatsword, and one continuous blade-led ivory-gold wake. Unresolved endurance, paralysis, and
 enchantment names add no magic. Full and 32 px results passed.
+
+Owner correction: the first otherwise-polished result had an impossible two-handed sword grip and
+was superseded. The corrected master places both closed hands on one continuous long hilt with
+plausible spacing, neutral wrists, connected forearms, supported stance, and a blade-led wake. This
+correction established the mandatory anatomy-and-physics gate for every subsequent generation.
 
 ## Dual Flurry context-layer pivot
 

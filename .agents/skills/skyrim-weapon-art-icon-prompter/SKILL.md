@@ -87,8 +87,13 @@ an edit target only when the user explicitly wants to preserve substantial parts
 Before calling an image tool, verify all of the following:
 
 - the figure is performing the requested action rather than posing;
+- the anatomy and physics are possible: center of gravity is supported, joints stay within plausible
+  range, hands close around the intended grip, wrists and elbows can transmit the stated force, and
+  the weapon's mass has a believable counterbalance;
 - clothing and armor match the resolved Skyrim archetype;
 - weapon type, count, grip, and visible geometry are correct;
+- the cutting edge or striking face leads the instantaneous motion, and the trail follows that same
+  mechanically possible path rather than disguising a broken pose;
 - each dominant effect is physically connected to its source;
 - the camera and action axis are explicit;
 - the image remains an MMO ability glyph rather than portrait or key art;

@@ -1,6 +1,6 @@
 # Orbital Cleave
 
-**Status:** Finalized from the single goal-mode generation attempt on 2026-08-24
+**Status:** Finalized by owner-directed anatomical correction on 2026-08-24
 
 **Stable icon key:** `aow_41_orbital_cleave`
 
@@ -31,7 +31,28 @@ HARD CONSTRAINTS: exactly one faceless full-body Redguard, exactly one connected
 
 ## Final hard-gate result
 
-- Full-resolution result: pass. One connected curved greatsword visibly leads one continuous orbiting wake; the Redguard figure explains the motion without becoming portrait framing.
-- 32 px LANCZOS reduction: pass. The bright open orbit and the dark curved blade remain a strong distinct glyph with no duplicate weapon.
-- Master SHA-256: `841FFCD2406C81D169120834440C159168D271AB21DE373F2861A2F8161631BD`.
-- No autonomous regeneration was attempted.
+- The initial result failed owner review because its two-handed grip was anatomically and
+  mechanically implausible. It is preserved at
+  `python_scripts/weapon_art_icons/pilot/aow_41_orbital_cleave_bad_grip_superseded.png`.
+
+## Owner-directed correction prompt
+
+```text
+Redo the supplied Orbital Cleave MMO ability icon while preserving its strongest identity: one faceless Redguard, one curved two-handed greatsword, the indigo/bronze/sand palette, and one bright circular blade-connected physical wake. Correct the entire pose and grip so the weapon physics are anatomically possible.
+
+The sword must have one continuous long hilt behind the guard, visibly long enough for two hands. Put the lead hand fully closed around the leather-wrapped grip immediately behind the guard. Put the rear hand fully closed around the same grip near the pommel, with clear space between the hands. Both thumbs and knuckles align for the same horizontal cut; both wrists remain neutral rather than bent backward. No finger, palm, or hand touches the blade, spine, guard, empty air, or pommel knob. Both forearms connect naturally to those hands, elbows flex within normal range, shoulders rotate with the torso, and the planted legs visibly counterbalance the sword's forward mass.
+
+Freeze one plausible terminal horizontal cleave from left toward right: hips and shoulders rotated together, front knee bent, rear foot braced, sword edge leading its path. The one ivory-gold wake must be tangent to and immediately behind the moving cutting edge, remain visibly connected to the sword tip, and sweep around the body as one open near-circle. It may not hide the corrected hands or hilt.
+
+Keep it a crisp graphical Elder Scrolls MMO hotbar icon at 1:1, with the full-body action subordinate to the sword and one wake. Exactly one figure, one anatomically gripped connected sword, and one connected wake. No second blade, floating weapon, detached hilt, extra hand, missing finger mass, crossed wrists, hand on blade, perfect halo, extra trail, magic element, portrait, text, logo, border, or scenery.
+```
+
+## Corrected hard-gate result
+
+- Full-resolution result: pass. Both hands close around one continuous hilt with plausible spacing;
+  wrists, elbows, shoulders, hips, planted legs, blade edge, and trailing wake agree on one horizontal
+  two-handed cleave.
+- 32 px LANCZOS reduction: pass. The bright open orbit and the dark curved blade remain a strong
+  distinct glyph with no duplicate weapon.
+- Corrected master SHA-256: `3AD0FAEFE2EC4B3CEDCC6D243983FAE52F2ADB88C01CB98450FA14A370BFFFF8`.
+- No autonomous regeneration beyond the explicit owner-directed correction was attempted.

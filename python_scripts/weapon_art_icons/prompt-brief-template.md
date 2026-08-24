@@ -18,7 +18,9 @@ meaning; the agent owns the prompt engineering.
 - Body state: grounded, airborne, turning, recoiling, retreating, or braced:
 - Center of gravity and direction of travel:
 - Torso, shoulders, arms, and legs:
-- Weapon count, type, grip, paths, and final endpoints:
+- Weapon count, type, grip, hand spacing, leverage, paths, and final endpoints:
+- Anatomy/physics sanity: supported center of gravity; plausible joint ranges; wrists, elbows, and
+  shoulders able to transmit the force; weapon mass visibly counterbalanced:
 - Camera and dominant action axis:
 
 ## Skyrim identity
@@ -49,6 +51,8 @@ not inherited.
 - [ ] The owner-directed action is visible in the body, not only in VFX.
 - [ ] The archetype is specific enough that clothing cannot drift into another Skyrim identity.
 - [ ] Weapon count, type, grip, and trajectory are coherent.
+- [ ] Anatomy and physics are possible: weight is supported, joints are plausible, every hand closes
+      on its intended grip, and the weapon can actually be accelerated along the depicted path.
 - [ ] Every dominant trail is physically caused by a weapon or body path.
 - [ ] Camera, crop, and action axis are explicit.
 - [ ] The effect and figure remain readable at 32 px.
