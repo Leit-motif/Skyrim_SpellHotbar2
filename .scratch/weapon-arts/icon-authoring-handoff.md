@@ -7,9 +7,9 @@ Updated: 2026-08-23
 - Worktree: `C:\Nolvus\Projects\spell-hotbar-2-ticket-06-icons`
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
-- Active art: **57 — Wicked Throw** (`aow_57_wicked_throw`)
+- Active art: **58 — Wind Slice** (`aow_58_wind_slice`)
 - Status: **not started**
-- Inventory: **49 of 57 finalized; 2 unprocessed and 6 recorded hard failures remain**
+- Inventory: **50 of 57 finalized; 1 unprocessed and 6 recorded hard failures remain**
 
 Ongoing owner direction: deliberately vary race/archetype, sex presentation, race-guided palette,
 weapon family, and visible Khajiit fur pattern across the atlas. Prioritize Nord, Dunmer, Breton,
@@ -384,6 +384,15 @@ Recorded one-shot hard failure on 2026-08-24. The two-hand grip, sword, edge, an
 orange trail are mechanically coherent, but literal mountains/battlefield and extensive fiery
 spectacle create scenic key art and imply fire magic. Evidence is ignored-pilot only; no master,
 input, or retry.
+
+## Wicked Throw disposition
+
+Goal-mode one-shot finalized on 2026-08-24 using the owner's earlier arcane-trickster direction.
+The 3.25-second clip's paired mirrored collision volumes, seven rapid contacts, and advance/retract
+root motion become one female Altmer assassin, one released Alinorian saber-dagger, and one pale-blue
+telekinetic out-and-return loop. The throwing hand is visibly empty; stance, joints, blade identity,
+and trajectory causality pass. Full and 32 px passed. No pink psychic color, duplicate blade, disc,
+or paralysis effect was added.
 
 ## Dual Flurry context-layer pivot
 
