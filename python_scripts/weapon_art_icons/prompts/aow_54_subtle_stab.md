@@ -35,3 +35,16 @@ HARD CONSTRAINTS: exactly one faceless Dunmer, exactly one connected held dagger
 - Full resolution and 32 px LANCZOS: pass. The small point line and restrained figure remain legible without sword spectacle or frost.
 - Master SHA-256: `93FCE6069CEC67D4F81EEC7F2148B38C893CDA2BE76E8C394E49813D966D1EB4`.
 - No autonomous regeneration was attempted.
+
+## Owner-directed ethereal-blade correction
+
+- The owner rejected the decorative point line and requested a female stabbing figure with pale
+  misty-blue ethereal glow around the blade.
+- Physical inspiration: Figure 23, page 29 of the U.S. Army's 1907 *Provisional Regulations for
+  Saber Exercise*: `https://www.anesi.com/prse29.jpg`.
+- The accepted replacement uses the scan only for thrust anatomy: one female Dunmer Morag Tong
+  assassin, one collinear held blade, one supported lunge, and mist-blue vapor hugging the steel.
+- Full and 32 px LANCZOS: pass. The blue blade envelope remains the endpoint read; no decorative
+  line, slash trail, extra weapon, or broken joint appears.
+- Superseded male line-based master is preserved under the ignored pilot tree.
+- Corrected master SHA-256: `E959AE992298756040F9DC170E19372C647CDEA444AFFAD0AC88389425C035B8`.

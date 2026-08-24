@@ -35,3 +35,14 @@ HARD CONSTRAINTS: exactly one faceless airborne Bosmer, exactly one connected he
 - Full resolution and 32 px LANCZOS: pass. One continuous spiral ends at one axe head; physical leaves/debris remain subordinate and do not become a separate magic effect.
 - Master SHA-256: `8CF4D124A3FB79803B5E2E16FFDEF9BFB80398C39A8ED359F1CC9B377743F4AB`.
 - No autonomous regeneration was attempted.
+
+## Owner-directed dual-dagger correction
+
+- The owner retained the Bosmer, forest-green/purple field, and leaves, but requested a female Wood
+  Elf with dual daggers spinning through the tornado.
+- The accepted edit has exactly one short dagger in each closed fist. Opposed arms keep both blades
+  clear of the body; exactly one attached wake per dagger continues into one leaf-filled vortex.
+- Full and 32 px LANCZOS: pass. Female Bosmer, two daggers, and one coherent tornado remain readable;
+  grips, shoulders, body tuck, balance, and blade paths pass.
+- Superseded male handaxe master is preserved under the ignored pilot tree.
+- Corrected master SHA-256: `4B26FEE12365AE31EACC5C1D99BF01FAC6B0FA6D713967F85EC63306E7EFCD41`.

@@ -35,3 +35,13 @@ HARD CONSTRAINTS: exactly one weaponless Argonian, left shoulder leading, exactl
 - Full resolution and 32 px LANCZOS: pass. The shell shoulder and connected impact dominate with no weapon or fire invention.
 - Master SHA-256: `AC0FB708D1FEC0DB1AAA6824A01FE48F073709C7754EC32A166D7DA4E763ECD7`.
 - No autonomous regeneration was attempted.
+
+## Owner-directed race, sex, and weapon correction
+
+- The owner requested no more Argonians, a female Nord warrior, and a battleaxe identifier.
+- The fresh replacement keeps the payload-proven left-shoulder collision as the action source while
+  one compact bearded battleaxe is carried low and safely behind in the right hand with no axe wake.
+- Full and 32 px LANCZOS: pass. Left shoulder and one compression wedge dominate; the female Nord
+  silhouette and secondary axe remain legible. Charge support, grip, and weapon clearance pass.
+- Superseded Argonian master is preserved under the ignored pilot tree.
+- Corrected master SHA-256: `7BDE126F4065FDAB6CE9EDE9B48A2381AC969B9C23E0FBF698023A21C50B5C1C`.

@@ -337,10 +337,11 @@ hips, legs, edge, and trail pass physics. No shadow effect is inferred. Full and
 
 ## Shoulder Slam disposition
 
-Goal-mode one-shot finalized on 2026-08-24. The left-upper-arm collision and 463-unit charge become
-one weaponless Dead-Water Argonian body check with a shell-armored left shoulder and one connected
-compression path. Neck, spine, arms, legs, and tail pass physics. Fire-breath sound contributes no
-fire effect. Full and 32 px passed.
+Owner-directed full correction finalized on 2026-08-24. The left-upper-arm collision and 463-unit
+charge become one female Nord body check with a plated left shoulder, one connected compression
+wedge, and one compact bearded battleaxe safely trailing in the rear hand. Neck, spine, arms, legs,
+grip, and axe clearance pass physics. The Argonian original is ignored-pilot history. Fire-breath
+sound contributes no fire effect. Full and 32 px passed.
 
 ## Simple Bash disposition
 
@@ -364,17 +365,18 @@ passed.
 
 ## Subtle Stab disposition
 
-Goal-mode one-shot finalized on 2026-08-24. Three close contacts over only 30 units become one
-compact Morag Tong thrust with one true forearm-scale dagger and one tiny point marker. Blade scale,
-grip, wrist, forearm, stance, and path pass physics. No ice-rune effect is inferred. Full and 32 px
-passed.
+Owner-directed reference-based correction finalized on 2026-08-24. The line-based male original is
+replaced by one female Dunmer Morag Tong straight thrust grounded in Figure 23 of the U.S. Army's
+1907 saber manual. One held blade carries one pale mist-blue ethereal envelope around the steel;
+grip, wrist, elbow, shoulder, legs, and path pass physics. Full and 32 px passed.
 
 ## Tornado Leap disposition
 
-Goal-mode one-shot finalized on 2026-08-24. Three right-weapon hits with explicitly tripled trail
-persistence become one airborne Bosmer rotation, one connected handaxe, and one open spiral physical
-wake. Body tuck, counterbalance, grip, clearance, and axe path pass physics. No literal wind magic
-is inferred. Full and 32 px passed.
+Owner-directed correction finalized on 2026-08-24. Three right-weapon hits with explicitly tripled
+trail persistence become one airborne female Bosmer rotation with exactly two independently held
+short daggers and two causal wakes that form one leaf-filled vortex. The forest-green/purple field,
+leaves, and bark flecks are retained. Body tuck, counterbalance, grips, clearance, and dagger paths
+pass physics. The male handaxe original is ignored-pilot history. Full and 32 px passed.
 
 ## Umbral Torment disposition
 
