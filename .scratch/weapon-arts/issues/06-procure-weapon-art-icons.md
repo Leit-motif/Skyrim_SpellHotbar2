@@ -379,6 +379,12 @@ gate, but literal volcanic mountains, lava, and flying rocks make scenic key art
 hotbar glyph. Evidence is ignored-pilot only; no master/input or retry. Forty of 57 icons are
 finalized; 13 remain unprocessed and four are hard failures.
 
+Goal mode 2026-08-24: **Ripping Hour** (`aow_46_ripping_hour`) is finalized from its single
+generation attempt. The alternating Dual chain becomes one terminal Altmer shearing cut with two
+held Alinorian short sabers and one connected wake per blade. Independent grips, joints, stance,
+and blade paths pass physics; no clock or unresolved-name magic is invented. Full and 32 px passed.
+Forty-one of 57 icons are finalized; 12 remain unprocessed and four are hard failures.
+
 Owner correction 2026-08-24: **Magnetic Throw** was replaced. The gadget-like Breton/Dwemer disc is
 superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psychic Alinorian shadow
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
