@@ -17,10 +17,12 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * plays at MSCO's charge-scaled pace (ticket 18). WASD capture during the state
 	 * is ticket 19; bAnimationDriven comes from the shtb graph wrap (ticket 21).
 	 *
-	 * `shape` says what the state is being entered for. A channel borrows it for the
-	 * start clip only: its SpellFire commits the cast without walking the clip set or
-	 * opening the follow-up window, and the state is then left to end so the OAR idle
-	 * loop can sustain the hold (ADR-0013).
+	 * `shape` picks the entry and what the state is for. A fire-and-forget press enters
+	 * the clip set above. A channel enters SH2_CastChannel instead, a state of its own
+	 * holding a MODE_LOOPING clip on the shout-inhale path, and stays there for the whole
+	 * hold until end_channel sends SH2_CastExit. It walks no clip index and opens no
+	 * follow-up window; OAR still picks the per-family clip from the animation-type
+	 * global, exactly as it does for the throw set (ADR-0013, ticket 28).
 	 */
 	bool begin(RE::PlayerCharacter* pc, hand_mode hand, float charge_time, CastShape shape);
 

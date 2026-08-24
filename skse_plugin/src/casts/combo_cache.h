@@ -364,14 +364,32 @@ enum class AbilityLatch {
 }
 
 // What the shtb cast state is being used for. A fire-and-forget cast owns the state for the
-// whole clip. A concentration channel borrows it for the start clip only and then hands the
-// sustain to the OAR idle loop, which is where every conc submod builds the loop: they replace
-// 1hm_idle / dw1hm1hmidle / staff_idle and the turn family for as long as
-// SpellHotbar_isCastingConcSpell is raised (ADR-0013).
+// whole clip and leaves when the clip ends. A concentration channel owns its own state for the
+// whole hold: SH2_Channel_State plays a MODE_LOOPING generator on the shout-inhale path, which
+// is the one clip every non-idle conc submod replaces, so OAR still picks the per-family clip
+// from SpellHotbar_SpellAnimationType (ADR-0013, ticket 28 spike).
 enum class CastShape {
 	fire_and_forget,
 	channel,
 };
+
+// Which notify enters the state. A fire-and-forget press walks the MSCO_left1..left4 clip set,
+// so its event comes from the cast index; a channel has one entry of its own and never touches
+// that set. Kept here rather than in the driver so the split is testable without a graph.
+[[nodiscard]] constexpr bool cast_entry_walks_clip_set(CastShape shape) noexcept
+{
+	return shape == CastShape::fire_and_forget;
+}
+
+// SH2_CastExit arriving with no SpellFire behind it means a fire-and-forget press produced no
+// payload -- the clip was cut before it committed -- and the cast index must go back to 1. A
+// channel reaches its exit that way by design: it commits on ADR-0006's authored cast-time floor
+// rather than on a clip annotation, so treating its exit as a dropped press would reset the
+// fire-and-forget combo position after every hold.
+[[nodiscard]] constexpr bool exit_without_spellfire_is_a_dropped_press(CastShape shape) noexcept
+{
+	return shape == CastShape::fire_and_forget;
+}
 
 // SH2's cast-combo index walks the MSCO_left1..left4 clip set. A channel is one cast held, not
 // a chain step, so its SpellFire commits the cast without moving the index (ticket 11).

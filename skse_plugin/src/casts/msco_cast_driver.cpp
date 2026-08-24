@@ -123,15 +123,21 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
-		bool send_entry(RE::PlayerCharacter* pc)
+		constexpr std::string_view kChannelEvent{ "SH2_CastChannel"sv };
+
+		bool send_entry(RE::PlayerCharacter* pc, CastShape shape)
 		{
 			const int index = g_castIndex.current();
-			const auto event = event_for(index);
+			const auto event = cast_entry_walks_clip_set(shape) ? event_for(index) : kChannelEvent;
 			const bool sent = pc->NotifyAnimationGraph(event);
 			state_active.store(sent, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			clip_committed.store(false, std::memory_order_relaxed);
-			logger::debug("SH2 cast: notified {} (clip {}) -> {}", event, index, sent);
+			if (cast_entry_walks_clip_set(shape)) {
+				logger::debug("SH2 cast: notified {} (clip {}) -> {}", event, index, sent);
+			} else {
+				logger::debug("SH2 cast: notified {} (held channel) -> {}", event, sent);
+			}
 			return sent;
 		}
 
@@ -204,7 +210,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		interrupt_left_caster_if_spell(pc);
 		load_charge_curve();
 		write_clip_speed(pc, charge_time);
-		return send_entry(pc);
+		return send_entry(pc, shape);
 	}
 
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag)
@@ -242,7 +248,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			if (is_active()) {
 				arm_restore();
 			}
-			if (!clip_committed.load(std::memory_order_relaxed)) {
+			if (!clip_committed.load(std::memory_order_relaxed) &&
+				exit_without_spellfire_is_a_dropped_press(cast_shape.load(std::memory_order_relaxed))) {
 				logger::warn("SH2 cast: graph raised SH2_CastExit before SpellFire (clip {}); press produced no payload",
 					g_castIndex.current());
 				g_castIndex.reset();
@@ -287,10 +294,11 @@ namespace SpellHotbar::casts::MscoCastDriver {
 
 	void end_channel(RE::PlayerCharacter* pc)
 	{
-		// The state is normally already gone: a channel's start clip raises SH2_CastExit on its
-		// own, and the sustain lives in the OAR idle loop from there. What is still owed at
-		// release is the combo position, so the swing after a hold continues the chain the hold
-		// interrupted rather than starting at attack1.
+		// The state is live for the whole hold -- SH2_Channel_State plays a MODE_LOOPING clip and
+		// has no end-of-clip trigger -- so this exit is what ends it. It also hands the combo
+		// position on, so the swing after a hold continues the chain the hold interrupted rather
+		// than starting at attack1. Sent unconditionally either way: the event reaches nothing when
+		// the state is already gone.
 		arm_restore();
 		send_exit(pc);
 		clear_state_flags();

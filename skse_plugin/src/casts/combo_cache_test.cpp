@@ -35,6 +35,8 @@ using SpellHotbar::casts::should_yield_shtb_before_hotbar_shout;
 using SpellHotbar::casts::channel_chain_window_open;
 using SpellHotbar::casts::channel_end_arms_combo_restore;
 using SpellHotbar::casts::should_cut_channel_for_attack;
+using SpellHotbar::casts::cast_entry_walks_clip_set;
+using SpellHotbar::casts::exit_without_spellfire_is_a_dropped_press;
 using SpellHotbar::casts::spellfire_advances_cast_index;
 using SpellHotbar::casts::spellfire_opens_combo_window;
 
@@ -464,6 +466,22 @@ void a_channel_does_not_walk_the_cast_clip_set()
 		"a channel is one cast held, not a chain step");
 }
 
+void a_channel_enters_by_its_own_notify()
+{
+	expect(cast_entry_walks_clip_set(CastShape::fire_and_forget),
+		"a fire-and-forget press picks its entry from the MSCO_left1..left4 cast index");
+	expect(!cast_entry_walks_clip_set(CastShape::channel),
+		"a channel has one entry of its own and never walks the clip set");
+}
+
+void a_channel_exit_without_spellfire_is_not_a_dropped_press()
+{
+	expect(exit_without_spellfire_is_a_dropped_press(CastShape::fire_and_forget),
+		"a throw clip cut before SpellFire produced no payload; the cast index resets");
+	expect(!exit_without_spellfire_is_a_dropped_press(CastShape::channel),
+		"a channel commits on the authored cast-time floor, so its exit must not reset the index");
+}
+
 void a_channel_does_not_open_the_follow_up_press_window()
 {
 	expect(spellfire_opens_combo_window(CastShape::fire_and_forget),
@@ -545,6 +563,8 @@ int main()
 	ability_hitframe_does_not_replace_the_mco_combo_sample();
 	a_legal_hotbar_shout_yields_the_live_shtb_clip();
 	a_channel_does_not_walk_the_cast_clip_set();
+	a_channel_enters_by_its_own_notify();
+	a_channel_exit_without_spellfire_is_not_a_dropped_press();
 	a_channel_does_not_open_the_follow_up_press_window();
 	a_channel_is_chainable_out_only_once_it_streams();
 	an_attack_during_a_streaming_channel_ends_it();
