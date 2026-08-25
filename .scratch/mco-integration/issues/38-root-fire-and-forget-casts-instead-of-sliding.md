@@ -58,3 +58,26 @@ reopens 21 to "fix" it.
 - [ ] Restore fixtures (`slotArt(slot, 0)`) and close Skyrim after agent-only telemetry.
 
 ## Comments
+
+**2026-08-25 — agent: built, deployed, runtime cells pending a fixture window.**
+Commit `0da06b7`: cast clips no longer bind in `ClipTranslationDriver`, `MscoCastDriver` gate
+arm removed, unit tests green. DLL deployed to `Dev - Spell Hotbar 2` 11:33 and is the running
+build. First telemetry attempt was contaminated: the ticket-16 art sweep was driving the same
+instance (slotArt/castSlot interleaved with my samples), and a later `castSpell` probe was a
+silent no-op with the player parked in the river at Z −342 — no log line, no movement, casts
+refused. Moved to QASmoke; usage ran out before the cells landed.
+
+Open observations for the runtime session:
+- An art with 160 animmotion keys (art 15) played during the contaminated window with no
+  visible XY. Either that art is near-stationary or the gate edit regressed art motion — the
+  Disengage cell (~318 units, known) decides.
+- Disengage's clip is now ticket-16's stamped byte-unique copy (backup at
+  `C:\Nolvus\_backups\art-pack-prestamp-20260825`); animation data verified identical, but
+  cite the stamped file in evidence.
+- Ticket-16's sweep saw 30/57 presses dropped by the ticket-36 4s latch cap. If a driver
+  state outlives its clip in my cells, tell spell-hotbar-2-f1 — may be the same defect.
+
+Fixture queue (agreed cross-session): owner manual pass (tickets 25/06/14) → ticket-16 sweep
+re-run → my ~5-min window (slotArt/castSlot slot 0, cleared after; no relaunch, no deploy).
+Owner-eyes cell may close during the owner's pass: any hotbar FF cast, weapon drawn — glide
+gone?
