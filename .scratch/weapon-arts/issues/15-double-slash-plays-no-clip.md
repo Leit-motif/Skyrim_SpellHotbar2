@@ -128,3 +128,27 @@ reporting the fault correctly, not causing it. Not the Binding Menu.
 Owner 2026-08-23: reported during the wa13 acceptance pass — "the AoW Double Slash does nothing
 (but goes on cooldown)". Filed with the evidence rather than actioned; owner chose to leave the
 OAR config alone for now.
+
+## Direction settled 2026-08-25 — fixed by owning the bytes
+
+The duplicate-filter lead above is now the accepted cause, and the fix is
+[ticket 16](16-ship-byte-unique-art-clips.md): ship our own copies of the art clips, each stamped
+with one benign annotation so its hash differs from the stance clip it currently collides with.
+A submod that owns its bytes cannot be collapsed into another one. See
+[ADR-0017](../../../docs/adr/0017-the-shipped-art-pack-carries-its-own-clip-bytes.md).
+
+Ruled out as fixes, so they are not re-proposed here: renaming our copies (the filter hashes
+content, and OAR binds a replacement to its base animation by path, so the file stays
+`AABL_Attack_A.hkx`), and turning `bFilterOutDuplicateAnimations` off (Nolvus enables it
+deliberately — 8104 animations collapsed in `DefaultMale` on the 2026-08-25 launch — and shipping
+cannot dictate a user's ini; one flip is a diagnostic, never the fix).
+
+Corroboration from a second failure, 2026-08-24: the in-DLL generator (`d70cc09`) produced this
+exact signature on all 57 arts across three launches, while the byte-identical shipped pack played
+art 2 correctly. Same fingerprint, universal instead of intermittent. That is consistent with the
+filter and not yet explained by it — a race should not be that one-sided — so ticket 16's phase 1
+is the discriminator for both.
+
+This ticket stays open until ticket 16's phase 1 acceptance passes: 57 arts binding real clips
+across three consecutive launches. One clean launch proves nothing, because the defect takes one
+or two arts at random.

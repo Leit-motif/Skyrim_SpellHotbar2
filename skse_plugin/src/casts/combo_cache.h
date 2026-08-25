@@ -686,6 +686,32 @@ enum class AbilityLatch {
 	return !local_latch_open;
 }
 
+// A waiting state that cannot time out is a bug, not a feature: ShoutMCO bounds every one of its
+// own waits, and the local latch was the only waiter in this stack with no cap. These match its
+// pressCapMs and shoutCapMs, so a press and a cast state expire on the same clocks either side of
+// the boundary.
+inline constexpr double kLocalLatchCapMs = 4000.0;
+inline constexpr double kCastStateCapMs = 8000.0;
+
+[[nodiscard]] constexpr bool local_latch_hold_expired(
+	double now_ms, double retained_at_ms, double cap_ms) noexcept
+{
+	return (now_ms - retained_at_ms) >= cap_ms;
+}
+
+// The cast state ends when the graph raises SH2_CastExit, and the graph is free to refuse the
+// notify that asks it to. A held concentration channel is the one case where a long-lived state is
+// correct -- it owns the state for the whole hold -- so it is never watched. Zero means no entry
+// was recorded, which is not an elapsed time.
+[[nodiscard]] constexpr bool cast_state_watchdog_expired(bool state_active, bool is_channel,
+	double now_ms, double entered_at_ms, double cap_ms) noexcept
+{
+	if (!state_active || is_channel || entered_at_ms <= 0.0) {
+		return false;
+	}
+	return (now_ms - entered_at_ms) >= cap_ms;
+}
+
 [[nodiscard]] constexpr bool should_cut_ability_for_attack(
 	bool art_active, bool latch_open, bool is_attack_press) noexcept
 {
