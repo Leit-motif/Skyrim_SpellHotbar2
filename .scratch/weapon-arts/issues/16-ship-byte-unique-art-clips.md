@@ -34,6 +34,12 @@ Read ADR-0017 for the full argument. The three ideas it rules out, so nobody re-
    `SH2_PackStamp` — so its hash differs from the original. `hkxc-anno-cli` reads and writes these,
    and `custom_ability_runtime` already drives an `update -a` pass over `.hkx` at runtime, so the
    tooling exists.
+
+   **The stamp must be unique per submod, not one shared token** (measured 2026-08-25).
+   Two of our own arts resolve to the same author file -- `Pirate's Slash` and `Wind Slice`
+   are byte-identical -- so a single shared `SH2_PackStamp` would leave those two identical
+   to each other and the filter would still collapse them. The stamp carries the submod's
+   name: `SH2_PackStamp_<slug>`.
 3. **Confirm the stamp is inert before trusting the result.** Annotations surface as animation
    events. Drive one art and read `SpellHotbar2.log` for anything reacting to the stamp; the
    graph-event trace in `animationeventhook.cpp` only prints tags this integration matches, so
