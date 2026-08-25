@@ -9,7 +9,8 @@ clips. Requested 2026-08-25. **The local test below needs no permission** — co
 files on one machine is not redistribution — so the mechanism can be proven while the answer is
 outstanding.
 
-**Status:** ready-for-agent for phase 1 (the local proof). Phase 2 (ship it) waits on the answer.
+**Status:** phase 1 HALF DONE (2026-08-25). The clips are stamped and statically verified; the
+live acceptance is NOT met and needs an exclusive game. See "Phase 1 progress" below.
 
 **Settles:** [ticket 15](15-double-slash-plays-no-clip.md) for the shipped set.
 **Decision:** [ADR-0017](../../../docs/adr/0017-the-shipped-art-pack-carries-its-own-clip-bytes.md).
@@ -77,3 +78,46 @@ three launches, while the byte-identical shipped pack worked. If phase 1 clears 
 duplicate filter was the cause of both. If phase 1 passes and the generator still fails, they were
 two problems and the generator's next step is OAR's in-game replacer-mod list — not another
 restart bisect, which produced no convergence across five cycles.
+
+
+## Phase 1 progress, 2026-08-25
+
+**Done, and it holds.** All 57 submods now own a byte-unique `AABL_Attack_A.hkx` and no longer
+point anywhere. Built by `python_scripts/stamp_art_clips.py` (committed; `--verify` re-checks the
+pack on disk). Static results: 57 clips, 57 distinct hashes, none matching any of the author's
+originals, `hkxc verify` reports complete reproduction on all 57. The round-trip changes nothing
+but the stamp -- Double Slash dumps identically before and after apart from one added line, with
+all 160 animmotion keys and the duration intact. Pre-stamp backup lives under `_backups` as
+`art-pack-prestamp-20260825`.
+
+The measured premise, for the record: 96 author art folders carry only **56 unique byte sets**,
+and **38 of our 57 arts were byte-identical to a stance folder**. ADR-0017's claim, confirmed.
+
+**Not done: the three-launch acceptance.** Launch 1's sweep is not valid evidence and is kept only
+as a harness artifact (`../evidence/16-sweep-launch1.json`). Of 57 presses:
+
+- **8 reached the art code and every one bound its correct clip**, key count matching its own dump
+  exactly (Aimed Blow 200, Blood Flurry 540, Double Slash 160, ...). Zero mis-binds. Double Slash
+  is ticket 15's canonical victim, so this is encouraging -- but 8 arts is not the bar.
+- **18 were refused for Art Class mismatch.** Expected: the sweep ran with a greatsword throughout,
+  and 1H/Dual arts need their own weapon. The re-run must swap weapons.
+- **31 never reached the art code at all.** They were retained on the cast-intent local latch and
+  dropped at its 4-second cap (ticket 36's bound, working and saying so: 29 x `local latch dropped
+  slot 0 after ~4001ms cap`). So a driver state sat active-with-latch-closed across those presses.
+  Cause not established -- sweep pacing too tight, a stuck `ArtDriver` state, or an interaction
+  with the ticket-38 DLL deployed into the same running game at 11:33. **Settle this before
+  re-running**, because a sweep that cannot deliver a press cannot measure a clip. If a slower
+  re-run still trips it, it belongs to ticket 37, not to a workaround here.
+
+**The blocker is the fixture, not the code.** Three sessions shared one Skyrim instance during this
+run, and one of them redeployed `SpellHotbar2.dll` mid-sweep. A three-launch acceptance means three
+launches of a fixture nobody else is mutating. Schedule it exclusively.
+
+### Harness note
+
+`../evidence/16-clip-oracle.json` is the expected table: per art, the animmotion count,
+winopen/hitframe, and duration read from the clip's own dump. Build it before believing any runtime
+line. It already earned itself -- `Enrage (M)` and `Killing Blow` legitimately produce
+`latch 2 (winopen=false hitframe=false)`, the exact string the acceptance calls the defect
+signature, and four arts legitimately have zero animmotion keys. Scoring those as failures would
+have manufactured two false defects.
