@@ -162,3 +162,10 @@ times inside 8 s with no player-visible residue beyond one refused press. Eviden
 `../evidence/`: `36-session.log` (full run), `36-watchdog-traces.log` (both recoveries),
 `36-combat-repro.png` (live Bandit Warrior during round 2). The wedged baseline session is
 `T36-local-latch-wedge-2026-08-25.log` in the same directory.
+
+**Agent, 2026-08-25, post-review.** A second-model review (Cursor grok-4.6) of the diff confirmed
+the fix and surfaced two residuals outside this ticket's scope — no ArtDriver watchdog (a wedged
+Ability still eat-drop-loops, bounded but unrecovered) and both caps running on wall clock through
+pauses. Filed as ticket 37 rather than widening this one. It also caught an overclaiming comment
+at the `poll_watchdog` call site (the recovery frame's release is a loud refusal while the wedged
+instance is still live, not a fire); the comment now says what the trace shows.

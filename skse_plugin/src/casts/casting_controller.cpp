@@ -837,8 +837,10 @@ namespace SpellHotbar::casts::CastingController {
 			player->GetGraphVariableBool("IsShouting"sv, is_shouting);
 			update_deferred_power_restore(delta, is_shouting);
 			// Before the latch poll, not after: clearing a wedged state here lets the same
-			// frame's poll release a press that is still inside its cap, so it fires rather
-			// than being dropped one frame later.
+			// frame's poll attempt a press that is still inside its cap. The attempt can still
+			// be refused -- the wedged cast's own instance is torn down later this frame, and a
+			// live instance refuses a new press -- but a loud refusal is the contract; what must
+			// not happen is the press waiting out its cap behind a state already known dead.
 			MscoCastDriver::poll_watchdog(player);
 		}
 		CastIntent::poll_local_release();
