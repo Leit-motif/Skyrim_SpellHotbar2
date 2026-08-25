@@ -1,6 +1,6 @@
 # Head Chopper
 
-**Status:** Hard failure after the one permitted generation attempt on 2026-08-23; not finalized
+**Status:** Autonomous from-scratch completion regeneration passed at 128 px on 2026-08-24
 
 **Generation path:** One Codex built-in image-generation call; no image references
 
@@ -59,3 +59,33 @@ exactly one tiny faceless full-body Khajiit, exactly two one-handed single-bit a
   `aow_28_head_chopper_hard_failure_32.png`.
 - Failure image SHA-256: `0CB61A03EA4DC0FC851698E8F7246499824D31581EF62A54600AC3F2C2F2FFF5`.
 - Per the one-shot goal, no regeneration was attempted and no master or atlas input was created.
+
+## Completion regeneration
+
+**Generation path:** New Codex built-in generation from scratch. The five approved keeper icons
+were grammar-only references; the failed Head Chopper plate was excluded. Only the 128 px atlas
+input is retained in the project.
+
+```text
+Use case: stylized-concept
+Asset type: one original square MMO/RPG hotbar ability glyph for Skyrim Spell Hotbar 2, optimized for crisp 32x32 readability.
+Primary request: Head Chopper, a physical dual-axe finishing chop. The humanoid action must be readable, not a floating effect.
+Reference roles: all five supplied images are approved grammar-only references for faceless near-black abstraction, limited palette, compact glow, painterly massing, and hotbar readability. Do not copy their pose, figure, weapon, facing, effect, palette, or composition. Do not use any prior Head Chopper image.
+Animation evidence: a 2.1667-second Dual clip advances about 348 units, begins with simultaneous right/left swings and paired hits, then separate right- and left-hand follow-ups. No element or colored VFX is proven.
+Orientation: near-horizontal right-to-left finishing action, seen in tight three-quarter crop.
+Frozen action: one Khajiit dual-wielder occupies about 35% at lower-right, torso twisted into a forceful left-hand chop at head height. The left arm extends across the body; the right arm remains low and drawn back. Exactly two practical short one-handed single-bit axes, one connected to each hand mass. The active left axe has a compact head and a short haft no longer than shoulder-to-hand distance; the passive right axe is equally compact and untrailed.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: two ear points, short muzzle wedge, tail completing the
+lunge. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the small
+anonymous verb; the effect and weapon path are the subject.
+Causal effect: exactly one broad ivory-steel physical cutting wake begins directly behind the leading edge of the left axe and sweeps toward upper-right, with a compact ochre spark nick at the edge. The right axe has no trail. Pose, connected hand masses, compact hafts, shoulder rotation, and blade-edge direction prove the physics.
+Palette: warm brown, deep plum, ochre, charcoal, ivory steel, tiny muted-gold wedge. Quiet abstract smoky field only.
+Hard constraints: one silhouette; exactly two connected compact one-handed axes; exactly one blade-connected trail; no polearm-length haft, oversized crescent head, double-bitted axe, detached weapon, second trail, X, ring, victim, gore, scenery, horizon, portrait, costume plate, text, logo, watermark, border, or UI frame.
+```
+
+### Final hard-gate result
+
+- 128 px: pass. Both one-handed axes are compact, connected to their hand masses, and distinct;
+  only the active axe owns the single cutting wake.
+- 32 px: pass. Dual-axe silhouette and one high physical arc remain distinct.
+- Atlas-input SHA-256: `AC0C7E6A7D343279BFEC3CEFFDAD18AE133226164DCB521DF9A62C30AFDA6E1A`.

@@ -1,6 +1,6 @@
 # Heart Strike
 
-**Status:** Hard failure after the one permitted generation attempt on 2026-08-23; not finalized
+**Status:** Autonomous from-scratch completion regeneration passed at 128 px on 2026-08-24
 
 **Generation path:** One Codex built-in image-generation call; no image references
 
@@ -57,3 +57,33 @@ exactly one tiny faceless full-body Breton, exactly one one-handed mace, exactly
   `aow_31_heart_strike_hard_failure_32.png`.
 - Failure image SHA-256: `DC114A71374EFA8F4D6269C4B73379C4FADD60BFAFFAE6EED6B5EC46DD02CDF6`.
 - Per the one-shot goal, no regeneration was attempted and no master or atlas input was created.
+
+## Completion regeneration
+
+**Generation path:** New Codex built-in generation from scratch. The five approved keeper icons
+were grammar-only references; the failed Heart Strike plate was excluded. Only the 128 px atlas
+input is retained in the project.
+
+```text
+Use case: stylized-concept
+Asset type: one original square MMO/RPG hotbar ability glyph for Skyrim Spell Hotbar 2, optimized for crisp 32x32 readability.
+Primary request: Heart Strike, a driving one-handed mace upswing. The title does not authorize hearts or blood.
+Reference roles: all five supplied images are approved grammar-only references for faceless near-black abstraction, limited palette, compact glow, painterly massing, and hotbar readability. Do not copy their pose, figure, weapon, facing, effect, palette, or composition. Do not use any prior Heart Strike image.
+Animation evidence: a 1.6667-second 1H clip advances about 390 units and makes three equal weapon contacts; each triples trail lifetime and brightness, and the terminal hit carries unresolved knockback. No heart, blood, element, or exact VFX is proven.
+Orientation: tight rising diagonal from lower-right toward upper-left, framed as a compact cross-body release.
+Frozen action: one Breton fighter occupies about 32-36% at lower-right, crouched with torso rotating left, right arm driving a mace upward across the body, empty left hand tucked close. Exactly one practical one-handed flanged mace: compact connected steel head, one short continuous haft, one closed right-hand mass on its grip. Keep figure, hand, haft, head, and trail in one visibly uninterrupted causal chain.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: closed bascinet mass, compact knight proportion, one
+burgundy wedge. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is
+the small anonymous verb; the effect and weapon path are the subject.
+Causal effect: exactly one open silver-blue physical crescent begins behind the moving mace head and tapers toward lower-right; one ivory pressure nick and sparse pale-gold steel sparks sit at the upper-left leading contact. Distill three contacts into one persistent final upswing.
+Palette: burgundy-charcoal atmospheric field, royal-blue wedge, dark steel, silver-blue wake, muted gold sparks. Abstract field only.
+Hard constraints: one silhouette; exactly one connected held mace; exactly one head-connected rising trail; no floating mace, detached head, missing grip, second weapon, heart symbol, blood, second trail, ring, X, victim, magic, scenery, horizon, portrait, costume plate, text, logo, watermark, border, or UI frame.
+```
+
+### Final hard-gate result
+
+- 128 px: pass. The held mace is continuous from hand through haft to head, and the single rising
+  crescent begins behind that head.
+- 32 px: pass. Mace, source figure, rising arc, and terminal contact remain legible.
+- Atlas-input SHA-256: `D0A446843F93405388DC278A5716BEC2A108035CF1B234419CD29048D327CE98`.
