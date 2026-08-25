@@ -14,6 +14,18 @@ Selector 0 is left to the original worn-item configs.
 Custom Ability folders (`Custom_Ability_1`..N) are emitted into the core tree with selector
 conditions only — they own a dropped (or missing) AABL_Attack_A.hkx and do not
 use overrideAnimationsFolder. Ash regen preserves those folders.
+
+`--core` and `--overlay` MUST be different directories, and the check below enforces it.
+They hold different KINDS of thing: `--core` takes the twelve hand-authored Custom Ability
+templates, which ship with the mod and are the same on every machine; `--overlay` takes the
+generated named-art submods, which are pointers into whatever Ashes of War content THIS machine
+has installed and are therefore per-machine output, not source.
+
+Pointing both at one directory is silently destructive in a way that outlives the run: the two
+sets pile up in the same folder, that folder now also exists in the other MO2 mod, and MO2's
+VFS quietly serves whichever mod sits higher in the load order. Edits to the losing copy then
+have no effect at all, with no error anywhere. That cost a session two full in-game test cycles
+on 2026-08-24 before the duplicate was spotted (ADR-0016).
 """
 
 from __future__ import annotations
@@ -551,6 +563,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _same_dir(a: Path, b: Path) -> bool:
+    """Do two paths name the same directory? Compared after resolve(), so `.`, `..`, a trailing
+    separator, and a symlink or junction into the same place all count as the same directory."""
+    try:
+        return Path(a).resolve() == Path(b).resolve()
+    except OSError:
+        return False
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.emit_templates:
@@ -565,6 +586,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not args.scan or args.arts_csv is None or args.overlay is None:
         print("--scan, --arts-csv, and --overlay are required unless --emit-templates", file=sys.stderr)
+        return 2
+    # Refuse the one mistake whose symptom is silence: templates and generated arts landing in
+    # one folder, duplicated into two MO2 mods, with the VFS quietly picking a winner. See the
+    # module docstring.
+    if args.core is not None and _same_dir(args.core, args.overlay):
+        print(
+            "--core and --overlay must be different directories: "
+            f"both resolve to {Path(args.core).resolve()}",
+            file=sys.stderr,
+        )
         return 2
     previous_paths = _previous_from_csv(args.previous_csv) if args.previous_csv else None
     previous_icons = _previous_icons_from_csv(args.previous_csv) if args.previous_csv else None

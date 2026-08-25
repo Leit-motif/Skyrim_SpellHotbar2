@@ -517,3 +517,43 @@ class CustomArtFolderTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CoreOverlayCollisionTest(unittest.TestCase):
+    """--core and --overlay pointing at one directory is the mistake that fails silently."""
+
+    def test_same_directory_is_refused(self):
+        from generate_art_pack import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "both"
+            shared.mkdir()
+            code = main([
+                "--scan", str(Path(tmp) / "scan"),
+                "--arts-csv", str(Path(tmp) / "arts.csv"),
+                "--overlay", str(shared),
+                "--core", str(shared),
+            ])
+        self.assertEqual(code, 2, "a shared core/overlay directory must be refused, not generated into")
+
+    def test_same_directory_via_dot_segments_is_refused(self):
+        from generate_art_pack import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "both"
+            shared.mkdir()
+            code = main([
+                "--scan", str(Path(tmp) / "scan"),
+                "--arts-csv", str(Path(tmp) / "arts.csv"),
+                "--overlay", str(shared),
+                "--core", str(shared / "." / ".." / "both"),
+            ])
+        self.assertEqual(code, 2, "the check resolves paths, so '.'/'..' cannot smuggle the collision through")
+
+    def test_different_directories_pass_the_check(self):
+        from generate_art_pack import _same_dir
+
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "core"; a.mkdir()
+            b = Path(tmp) / "overlay"; b.mkdir()
+            self.assertFalse(_same_dir(a, b), "distinct directories must not trip the guard")
