@@ -7,7 +7,14 @@ shadowed by another mod's shout clips.
 
 **Blocked by:** None. Independent of the graph work and can proceed in parallel.
 
-**Status:** ready-for-agent
+**Status:** CLOSED 2026-08-23 by owner ruling — *"this isn't relevant any more. no t-pose
+anywhere."* The T-pose this ticket existed to chase is gone from the load order as the owner
+observes it, so there is nothing left to resolve and it is no longer a publication gate. The
+corresponding row in the thuum repo's ticket 18 is struck. **Reopen only on a fresh sighting**,
+with the save, profile and a captured frame — this closes on an observation, not on a fix, so
+the evidence for it is an absence and absences do not stay true by themselves.
+
+~~ready-for-agent~~
 
 > **Owner report 2026-08-08:** the currently enabled MCBO probe still T-poses. Treat that as a
 > reproduced-user report, not closed diagnosis: capture the failing frame and OAR winner in one

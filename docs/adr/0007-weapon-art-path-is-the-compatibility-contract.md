@@ -2,11 +2,11 @@
 
 Date: 2026-08-12
 
-Status: superseded by ADR-0009
+Status: superseded by ADR-0011
 
 The `AABL_Attack_A.hkx` path was a ticket-01 placeholder so an existing Ashes of War OAR pack
 could win on a familiar filename. The product does not require that name or that pack's
-machinery. See ADR-0009.
+machinery. See ADR-0011.
 
 ## Context
 

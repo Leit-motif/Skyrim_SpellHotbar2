@@ -470,6 +470,7 @@
 				<hkcstring>SH2_Cast4</hkcstring>
 				<hkcstring>SH2_ArtStart</hkcstring>
 				<hkcstring>SH2_ArtExit</hkcstring>
+				<hkcstring>SH2_CastChannel</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="attributeNames" numelements="0"></hkparam>
@@ -577,6 +578,7 @@
 				<hkcstring>iCrossbowState</hkcstring>
 <!-- MOD_CODE ~shtb~ OPEN -->
 				<hkcstring>MSCO_attackspeed</hkcstring>
+				<hkcstring>SH2_ArtSelector</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="characterPropertyNames" numelements="9">

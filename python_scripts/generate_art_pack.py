@@ -5,7 +5,7 @@ gate on the Ashes of War items plugin) and emits:
 
 1. arts.csv rows for the Ability catalogue
 2. Spell Hotbar 2 OAR submods (config.json only) that CompareValues
-   SpellHotbar_ArtSelector and point at the author's clip via
+   the SH2_ArtSelector graph variable and point at the author's clip via
    overrideAnimationsFolder
 
 Never copies .hkx files. Never writes user.json onto foreign folders.
@@ -14,6 +14,18 @@ Selector 0 is left to the original worn-item configs.
 Custom Ability folders (`Custom_Ability_1`..N) are emitted into the core tree with selector
 conditions only — they own a dropped (or missing) AABL_Attack_A.hkx and do not
 use overrideAnimationsFolder. Ash regen preserves those folders.
+
+`--core` and `--overlay` MUST be different directories, and the check below enforces it.
+They hold different KINDS of thing: `--core` takes the twelve hand-authored Custom Ability
+templates, which ship with the mod and are the same on every machine; `--overlay` takes the
+generated named-art submods, which are pointers into whatever Ashes of War content THIS machine
+has installed and are therefore per-machine output, not source.
+
+Pointing both at one directory is silently destructive in a way that outlives the run: the two
+sets pile up in the same folder, that folder now also exists in the other MO2 mod, and MO2's
+VFS quietly serves whichever mod sits higher in the load order. Edits to the losing copy then
+have no effect at all, with no error anywhere. That cost a session two full in-game test cycles
+on 2026-08-24 before the duplicate was spotted (ADR-0016).
 """
 
 from __future__ import annotations
@@ -29,8 +41,13 @@ from typing import Callable, Iterable
 
 AABL_CLIP = "aabl_attack_a.hkx"
 AOW_ITEMS_PLUGIN = "ashes of war additional attack v items.esp"
-ART_SELECTOR_PLUGIN = "SpellHotbar.esp"
-ART_SELECTOR_FORM_ID = "D63"
+# The art selector is a behavior-graph variable, not an ESP record (ADR-0016). The global it
+# used to be, `SpellHotbar_ArtSelector` / `D63` in `SpellHotbar.esp`, is not in stock Spell
+# Hotbar 2 -- it only ever existed in a hand-edited copy of the upstream plugin -- so a generated
+# pack that gated on it worked on the author's machine and nowhere else. `SH2_ArtSelector` is
+# declared by SH2's own `shtb` Nemesis patch in `0_master` and written by the DLL, so the pack
+# now depends on nothing but Spell Hotbar 2 itself.
+ART_SELECTOR_GRAPH_VARIABLE = "SH2_ArtSelector"
 SH2_PACK_NAME = "SpellHotbar2Arts"
 # Stance-default "Ashes of War Sword Neutral" is 1001002544. A reserved SH2
 # band above 2e9 beats that without depending on their numbers.
@@ -74,6 +91,7 @@ def generate(
     arts_csv: Path,
     overlay_root: Path,
     previous_paths: dict[str, str] | None = None,
+    previous_icons: dict[str, str] | None = None,
     log: LogFn | None = None,
 ) -> GenerateResult:
     write_log = log or (lambda _msg: None)
@@ -126,7 +144,7 @@ def generate(
                 (
                     str(art_id),
                     sub.name,
-                    DEFAULT_ICON,
+                    (previous_icons or {}).get(sub.name, DEFAULT_ICON),
                     str(art_id),
                     sub.art_class,
                     DEFAULT_STAMINA,
@@ -339,10 +357,8 @@ def _selector_condition(selector: float) -> dict:
         "condition": "CompareValues",
         "requiredVersion": "1.0.0.0",
         "Value A": {
-            "form": {
-                "pluginName": ART_SELECTOR_PLUGIN,
-                "formID": ART_SELECTOR_FORM_ID,
-            }
+            "graphVariable": ART_SELECTOR_GRAPH_VARIABLE,
+            "graphVariableType": "Int",
         },
         "Comparison": "==",
         "Value B": {"value": selector},
@@ -494,6 +510,21 @@ def _previous_from_csv(path: Path) -> dict[str, str]:
     return previous
 
 
+def _previous_icons_from_csv(path: Path | None) -> dict[str, str]:
+    icons: dict[str, str] = {}
+    if path is None:
+        return icons
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return icons
+    for line in text.splitlines()[1:]:
+        cols = line.split("\t")
+        if len(cols) >= 3 and cols[1].strip() and cols[2].strip():
+            icons[cols[1].strip()] = cols[2].strip()
+    return icons
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -532,6 +563,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _same_dir(a: Path, b: Path) -> bool:
+    """Do two paths name the same directory? Compared after resolve(), so `.`, `..`, a trailing
+    separator, and a symlink or junction into the same place all count as the same directory."""
+    try:
+        return Path(a).resolve() == Path(b).resolve()
+    except OSError:
+        return False
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.emit_templates:
@@ -547,12 +587,24 @@ def main(argv: list[str] | None = None) -> int:
     if not args.scan or args.arts_csv is None or args.overlay is None:
         print("--scan, --arts-csv, and --overlay are required unless --emit-templates", file=sys.stderr)
         return 2
+    # Refuse the one mistake whose symptom is silence: templates and generated arts landing in
+    # one folder, duplicated into two MO2 mods, with the VFS quietly picking a winner. See the
+    # module docstring.
+    if args.core is not None and _same_dir(args.core, args.overlay):
+        print(
+            "--core and --overlay must be different directories: "
+            f"both resolve to {Path(args.core).resolve()}",
+            file=sys.stderr,
+        )
+        return 2
     previous_paths = _previous_from_csv(args.previous_csv) if args.previous_csv else None
+    previous_icons = _previous_icons_from_csv(args.previous_csv) if args.previous_csv else None
     result = generate(
         scan_roots=args.scan,
         arts_csv=args.arts_csv,
         overlay_root=args.overlay,
         previous_paths=previous_paths,
+        previous_icons=previous_icons,
         log=lambda msg: print(msg, file=sys.stderr),
     )
     print(f"emitted {result.emitted} arts; missing {len(result.missing)}")

@@ -105,6 +105,7 @@
 				<hkcstring>SH2_Cast2</hkcstring>
 				<hkcstring>SH2_Cast3</hkcstring>
 				<hkcstring>SH2_Cast4</hkcstring>
+				<hkcstring>SH2_CastChannel</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="attributeNames" numelements="0"></hkparam>

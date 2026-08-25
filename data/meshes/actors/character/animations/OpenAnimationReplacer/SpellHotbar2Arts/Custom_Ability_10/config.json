@@ -7,10 +7,8 @@
             "condition": "CompareValues",
             "requiredVersion": "1.0.0.0",
             "Value A": {
-                "form": {
-                    "pluginName": "SpellHotbar.esp",
-                    "formID": "D63"
-                }
+                "graphVariable": "SH2_ArtSelector",
+                "graphVariableType": "Int"
             },
             "Comparison": "==",
             "Value B": {

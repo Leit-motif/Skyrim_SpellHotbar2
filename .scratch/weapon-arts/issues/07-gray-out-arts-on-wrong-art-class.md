@@ -72,3 +72,5 @@ Grill 2026-08-18: W chosen after costing it against fall-through. Dual is its ow
 2026-08-19: Owner cells 1–3 on Nolvus Awakening. Wrong-class arts gray, refuse with MagFail, no selector write, no stamina spend. Matching class plays the correct clip. Swap un-grays. Ticket closed.
 
 Side note (not this ticket): ashes do not combo into or out of attacks — must return to idle. Filed as [10](10-queue-arts-into-and-out-of-attacks.md).
+
+2026-08-21: Binding Menu list gray-out (selected bar, not live weapon) is [13](13-gray-out-ineligible-abilities-in-bind-menu.md). Do not reopen this ticket for that.

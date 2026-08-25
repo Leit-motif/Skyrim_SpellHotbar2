@@ -2,7 +2,15 @@
 
 **Type:** task (Core Fork)
 
-**Status:** ready-for-agent
+**Status:** resolved 2026-08-23 — **the v1 SH2 gate is closed.** The build shipped
+(`cast_intent.{h,cpp}`, delivered inside weapon-arts ticket 10); the early-press cell's
+upstream blocker, **thuum ticket 54, is `resolved` with runtime evidence** (release moved to
+`inRdy`, every cast played); the owner drove mixed chains again on 2026-08-23 (log snapshot in
+evidence); the fail-open-controls cell closed by owner ruling (*"users need to download
+requirements"*); and the no-polling and provenance rows closed the same day — every inherited
+acceptance row now carries evidence or a ruling. Residual cells that stay *recorded but
+non-blocking*: `kBehindShout`, death, gameplay-control loss, blocking menus, and watchdog
+abandonment remain unobserved live; they reopen this ticket only on a real-world failure.
 
 **Blocked by:** nothing. **ShoutMCO ticket 50 delivered 2026-08-12** and this is now the next step
 toward comboing SH2 casts into and out of MCO attacks.
@@ -159,8 +167,10 @@ cast normally.
 
 ### Cells still open, named exactly
 
-- **The early-press cell stays open until ShoutMCO's release point moves.** Nothing to do on this
-  side.
+- ~~**The early-press cell stays open until ShoutMCO's release point moves.** Nothing to do on
+  this side.~~ **CLOSED 2026-08-23: thuum 54 resolved 2026-08-12** — the release point moved to
+  `inRdy`, driven live from the engine side with this mod as the consumer: six deferrals, six
+  releases, every one on `inRdy`, every cast played.
 - **Death, gameplay-control loss, blocking menu, and watchdog abandonment are untested at
   runtime.** Only load/new-game is covered by code (`Storage::LoadCallback` withdraws), and even
   that was not exercised live.
@@ -182,3 +192,63 @@ new defer). ShoutMCO still defers mid-swing and releases while `IsAttacking=1` (
 this session). Recovery-tail cadence is now
 [ticket 20](20-chain-a-hotbar-cast-in-during-mco-recovery.md). Early-press `released -> false`
 at `preHitFrame` remains this ticket's ShoutMCO ordering bug.
+
+## Absorbed from ShoutMCO ticket 51, 2026-08-23
+
+Owner ruling: *"this isn't even a ticket -- can this just be rolled into 04? All these duplicate tickets are confusing."* The provider/consumer split was a repository boundary, not two pieces of work -- ShoutMCO's side (its ticket 50) shipped 2026-08-12, so everything left is here. **This ticket now owns both the build and the proof, and it is a v1 publication gate** (owner, same day: SH2 integration is mandatory for v1).
+
+**One row of 51 does NOT come across.** Its T-pose criterion is struck: the owner ruled 2026-08-23 that there is no T-pose anywhere in the load order, and sibling ticket 05 closed on that observation.
+
+### Acceptance criteria, inherited verbatim
+
+- [x] During both light and power MCO attacks, early/pre-hit/post-hit/recovery-tail Direct Cast
+      requests preserve the attack and start the cast exactly once after confirmed ready —
+      late presses in the 2026-08-12 session here; early presses closed by thuum 54's
+      resolution drive (every release on `inRdy`, every cast played); recovery-tail cadence is
+      ticket 18's shipped GCD
+- [x] Spell Hotbar revalidates slot assignment, cooldown, resources, and player state at release;
+      an invalid payload is discarded once with no retry — discard-once observed on every failed
+      release, 2026-08-12
+- [x] Newest-intent replacement works across vanilla shout and Spell Hotbar requests — two rapid
+      presses, two deferrals, exactly one release (09:44:21); vanilla-press displacement is the
+      engine side's `REPLACED` cell, driven in thuum's own sessions
+- [x] Engine absent and incompatible-major controls fail open and show `unavailable` or
+      `incompatible` in Spell Hotbar's read-only status — **closed by owner ruling 2026-08-23**:
+      *"dont care--users need to download requirements."* The code paths exist
+      (`cast_intent.cpp:211–221`: null export → `unavailable`, wrong major → `incompatible`,
+      both leaving `api` null so every call site falls through to prior behaviour) and are not
+      driven live.
+- [x] Runtime evidence shows no per-frame polling, new worker thread, or hot-path filesystem
+      access — closed 2026-08-23, static + runtime:
+      - *Static:* `api->Status` has zero callers; `Request`/`Cancel` run only on a press and
+        inside the callback. `poll_local_release()` (`cast_intent.cpp:308`, called from
+        `update_cast`) exits on three bool loads unless a **local** payload is retained, and
+        never touches the API — a ShoutMCO-held intent (`live_handle` set) returns
+        immediately and waits for the callback. `cast_intent.cpp` contains no thread creation
+        and no filesystem include at all.
+      - *Runtime:* the owner's 2026-08-23 play session (10:59–11:35, debug level) logged 1129
+        lines over ~130k frames; the most frequent source is the event-driven animation hook
+        (281 lines). Every cast-intent line sits at a press/defer/release instant; negotiation
+        logged exactly once. Log snapshot:
+        `evidence/t04/SpellHotbar2-20260823-owner-session.log` (gitignored, local).
+- [x] ~~Spell Hotbar's intended animation plays without T-pose~~ — STRUCK 2026-08-23, no T-pose remains; see ticket 05
+- [x] Named save/profile, tested commits, deployed binaries, keys, slots, spells, and attack kinds
+      are recorded — the 2026-08-12 *Runtime evidence* section above records the original drive
+      (save `Save63…`, profile, both DLL SHA256s, commits, key "1"/slot 0, Flames/rapier,
+      light + power). Today's session: profile `Nolvus Awakening` (MO2 `selected_profile`),
+      character CS-Test (latest saves `Save17`/`Save18…20260823`), deployed
+      `Dev - Spell Hotbar 2\SKSE\Plugins\SpellHotbar2.dll` SHA256 `9effa025…` — byte-identical
+      to the repo build at `skse_plugin/build/release/` — and `ShoutMCO.dll` SHA256 `346ddc7e…`.
+      One caveat recorded rather than hidden: the deployed DLL's mtime (12:31) postdates the
+      11:35 session end, so the session binary is attested by its log line numbers
+      (`cast_intent.cpp:302/303/198/171/130`), which match the current source exactly. Slots 0
+      and 3 drove deferrals (handles 1–4+), every release at `IsAttacking=0`, every fire
+      `-> true` — today's log independently re-proves row 1 on the thuum-54-fixed engine.
+
+## Comments
+
+### 2026-08-22 — still the integration gate, not next
+
+Ticket 54 unblocked Spell Hotbar 2 ticket 04's early-press cell (`inRdy` release). The T-pose
+cell is Spell Hotbar-owned (`shtb` / OAR), not a shout-clip conflict. This ticket stays blocked
+on that repo's 04/05 closeout. Owner path today is the Thu'um pack (10 → 11), not this.

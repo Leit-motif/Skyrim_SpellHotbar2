@@ -1,0 +1,13 @@
+{
+  "projectType": "skse",
+  "name": "Spell Hotbar 2 Weapon Art Icons",
+  "developmentModName": "Dev - Spell Hotbar 2 Weapon Art Icons",
+  "mo2ModsRoot": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\mods",
+  "mo2ProfileDir": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\profiles\\Nolvus Awakening",
+  "spriggitPackageVersion": "0.40.1",
+  "assetDirectories": ["dist"],
+  "buildCommand": {
+    "command": "powershell.exe",
+    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".\\build.ps1"]
+  }
+}

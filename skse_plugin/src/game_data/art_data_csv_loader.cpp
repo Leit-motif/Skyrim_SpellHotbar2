@@ -1,5 +1,7 @@
 #include "art_data_csv_loader.h"
 #include "art_definition.h"
+#include "custom_ability_config.h"
+#include "custom_ability_runtime.h"
 #include "csv_loader.h"
 #include "game_data.h"
 #include "../logger/logger.h"
@@ -94,14 +96,20 @@ namespace SpellHotbar::ArtDataCSVLoader {
 			if (!number) {
 				continue;
 			}
-			const auto art = custom_art_from_folder(*number, name, read_text(entry.path() / "name.txt"),
-				read_text(entry.path() / "icon.txt"), folder_has_aabl(entry.path()));
+			auto art = custom_art_from_folder(*number, name, read_text(entry.path() / "name.txt"),
+				read_text(entry.path() / "icon.txt"), folder_has_aabl(entry.path()),
+				read_text(entry.path() / custom_ability_sidecar_filename));
+			art.folder_path = entry.path().string();
 			if (!art.has_clip) {
 				logger::warn("SH2 art: empty Custom Ability {} (no AABL_Attack_A.hkx)", name);
 			}
 			logger::info("Loaded custom art {} '{}' selector={} clip={}", art.id, art.display_name, art.selector,
 				art.has_clip);
 			GameData::set_art(art);
+			if (art.has_clip) {
+				stamp_custom_ability_clip(art);
+			}
 		}
+		emit_custom_ability_pi_config();
 	}
 }

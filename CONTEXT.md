@@ -37,8 +37,16 @@ The independently validated Installed Configuration before any behavior customiz
 _Avoid_: Build success, provisional smoke test
 
 **Dual-Input Compatibility**:
-Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them.
+Compatibility of the Installed Configuration with both native keyboard input and native gamepad input, including the user's reWASD mappings between them. That bar includes configuring binds and using the bind menu, not only Direct Cast.
 _Avoid_: Controller-only support, keyboard-only support
+
+**Mod Control Panel**:
+SKSE Menu Framework's in-game menu that hosts this fork's configuration pages and native editor windows after ADR-0012.
+_Avoid_: MCM, SkyUI config, Prisma menu
+
+**ImGui Host**:
+The single plugin allowed to own the Dear ImGui context and the presentation and UI-input hooks. This fork is a guest of SKSE Menu Framework, not a second host.
+_Avoid_: Shared imgui, dual overlay, SH2 renderer as host
 
 **Material Interaction**:
 A repeatable Nolvus-specific conflict, regression, stability problem, or meaningful behavioral deviation from normal upstream expectations that prevents acceptance.
@@ -51,6 +59,20 @@ _Avoid_: Build success, undocumented smoke test
 **Driver Cast**:
 The mod's casting mechanism: a hotbar cast enters one of `SH2_CastRight_State` / `SH2_Cast2_State` / `SH2_Cast3_State` / `SH2_Cast4_State`, states this mod's own `shtb` Nemesis patch appends to the root state machine of `magicbehavior` and `1hm_behavior`. Entry is the matching `SH2_CastRight` / `SH2_Cast2` / `SH2_Cast3` / `SH2_Cast4` notify's own true return; the clip set is `MSCO_left1` through `left4`, walked by SH2's own cast index. The state ends on `SH2_CastExit`, from its end-of-clip trigger or from the mod. Combo-position restore for a Driver Cast this mod started is this mod's work (ADR-0005 named exception), not ShoutMCO's release-timing API. Supersedes **Shout-Graph Cast**, which described the retired voice path (ADR-0006, tickets 07 and 08).
 _Avoid_: Shout-Graph Cast, shout, spell casting animation, magic behavior
+
+**Cast Channel**:
+A concentration cast held from a hotbar slot. It enters `SH2_Channel_State`, its own `shtb` state
+entered by `SH2_CastChannel`, whose `MODE_LOOPING` generator carries no end-of-clip trigger and so
+is held for the whole hold, ending on `SH2_CastExit` at release. The generator's path is
+`Animations\1HM_Shout_Inhale.HKX` — the one clip every non-idle concentration submod replaces — so
+OAR still picks the per-family clip from `SpellHotbar_SpellAnimationType` (ADR-0013, ticket 28).
+A channel does not walk the cast-combo index and does not open the follow-up-press window — both
+belong to a clip that is still playing — and it commits on the authored cast-time floor rather
+than a clip's SpellFire, because these clips carry none (ADR-0006). It remains a member of the MCO
+combo chain: its chain-out window is the hold itself, an attack inside it ends the channel and
+becomes the swing, and the hold is credited back against the combo sample's staleness cap so a
+hold of any length still hands its position on.
+_Avoid_: looping cast state, concentration Driver Cast, held cast clip
 
 **Cast Plant**:
 Input lock for a live shtb state (Driver Cast or Ability): WASD cannot steer or walk the actor out of the clip. The animation may still translate the body through its own `animmotion` keys or overlays — that motion is separate, not cancelled by the plant. Ticket 19 is the plant; abilities ticket 05 applies clip translation from the playing file’s `animmotion` (supersedes the deferred mco-integration ticket 21). Abilities reuse the same plant.
@@ -65,17 +87,13 @@ A mod that owns a cast payload and asks ShoutMCO whether the request should pass
 _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
 
 **Cast Intent**:
-One pending request to activate a hotbar payload. Spell Hotbar 2 retains and revalidates it; ShoutMCO owns only its release or abandonment timing.
-_Avoid_: Copied spell payload, queued spell object
+One pending hotbar activation (spell, Ability, or hotbar shout). Last tap wins. Spell Hotbar 2
+retains and revalidates it. ShoutMCO owns release only when the player is in someone else’s MCO
+swing or a real shout; this mod owns release when the player is in a Driver Cast or Ability.
+_Avoid_: Copied spell payload, queued spell object, separate queues per slot kind
 
 **Ability**:
-A special animation bound to a hotbar slot and played on press, without equipping anything.
-The slot holds an ability id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and
-cooldown. PIE / clip annotations own hits, windows, and motion. The clip may be any MCO-annotated
-HKX the load order can see — not only `AABL_Attack_A.hkx`. Ashes of War is the concept (named
-special attacks), not the machinery (slot-55 items, AABL hotkey). Pointer-pack ashes and Custom
-Abilities are both Abilities. _Avoid_: weapon art, art (as the product name), power attack,
-additional attack, ash of war (as a system).
+A bindable animation launched from a hotbar slot without equipping anything. The slot holds an ability id, not a FormID. SH2 owns bind, notify, state, Cast Plant, stamina, and cooldown. PIE / clip annotations own hits, windows, and motion. The clip may be any MCO-annotated HKX the load order can see — not only `AABL_Attack_A.hkx` (ADR-0011). Ashes of War is the concept (named special attacks), not the machinery (slot-55 items, AABL hotkey). Pointer-pack ashes and Custom Abilities are both Abilities. An Ability is a member of the MCO combo chain: the swing after it continues the sampled index; it does not reset to hit 1. _Avoid_: weapon art, art (as the product name), power attack, additional attack, ash of war (as a system).
 
 **Ability Selector**:
 The TESGlobal SH2 writes to name which Ability is live so OAR or PIE conditions can read it.
@@ -88,17 +106,47 @@ A folder of clips plus catalogue rows that name those files, keyed to the Abilit
 generated from an installed Ashes of War tree; it is not that mod's OAR-on-AABL machinery. The
 on-disk pack folder remains `SpellHotbar2Arts`. _Avoid_: animation mod, moveset.
 
+**Weapon Art Icon Brief**:
+The semantic contract written before an Ability icon prompt: frozen animation moment, body
+mechanics, Skyrim archetype, clothing construction, weapon paths, causal VFX, camera, palette, and
+32 px hierarchy. The owner approves its meaning; the agent owns conversion into image-model prose.
+_Avoid_: raw prompt, mood board, generated candidate
+
+**Skyrim Visual Language**:
+The project vocabulary that grounds original Ability icons in Skyrim through archetype, material,
+construction, weapon silhouette, wear, and physical action. It guides new art without copying game
+assets or treating a race name as a costume. Canonical source:
+`python_scripts/weapon_art_icons/skyrim-visual-language.md`.
+_Avoid_: generic fantasy style, Bethesda asset library, race palette alone
+
 **Ability Class**:
 The coarse weapon-class tag on an Ability used for gray-out and refuse: **1H**, **2H**, **Dual**, or **Generic**. Live when the player's current `EquippedType` matches that tag; otherwise the slot is gray and the press is refused. Catalogue files still use an `ArtClass` column. Not OAR `IsEquippedType` and not a worn keyword. _Avoid_: weapon type, ash keyword, stance.
 
 **Custom Ability**:
-An Ability the player fills. Core ships drop-in folders `Custom_Ability_1` … `N` (plus extras). Catalogue name is **Custom Ability N** unless `name.txt` is present. A catalogue row, not a hotbar slot index. _Avoid_: slot folder, moveset slot.
+An Ability the player fills. Core ships drop-in folders `Custom_Ability_1` … `N` (plus extras). Default catalogue name is **Custom Ability N** until the Ability Editor sets another. A catalogue row, not a hotbar slot index. _Avoid_: slot folder, moveset slot.
 
 **Custom Ability Folder**:
-The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key.
+The on-disk OAR submod for a Custom Ability (`Custom_Ability_N`). The folder name is the scan key. Name, icon, cooldown, GCD, Ability Class, and Ability Costs live in that folder, not in the save, not in Payload Interpreter config, and not as `name.txt` / `icon.txt`. Custom Ability Spell keys may round-trip in the sidecar unused (ticket 12).
+_Avoid_: icon_edits JSON as the definition, co-save.
+
+**Ability Editor**:
+The in-game ImGui that configures one Ability: name, atlas icon, Ability Class, cooldown, GCD, and Ability Costs. Opened from the Abilities tab for Custom Abilities and pointer-pack ashes. It does not author clips and does not assign a Custom Ability Spell (ticket 12).
+_Avoid_: Weapon Arts editor, ash editor, Spell Editor (that surface edits spell FormIDs).
+
+**Custom Ability Spell**:
+Parked (ticket 12). The fire-and-forget spell that would be assigned to a Custom Ability Folder's Payload Interpreter instruction. Until 12 ships, dropped clips fire their author `@CAST` / `@CASTSPELL` / `SoundPlay`. Vanilla Firebolt is the unused sidecar default. Includes ritual fire-and-forget, lesser/greater powers, and voice spells. Not concentration, potions, scrolls, or a TESShout form.
+_Avoid_: art effect, Ashes of War payload as SH2 assignment.
+
+**Ability Cost**:
+Stamina, magicka, and health spent by SH2 when an Ability starts. Defaults: 25 stamina, 0 magicka, 0 health, 8s cooldown, 1s GCD. The editor may change those numbers. Assigning a Custom Ability Spell (ticket 12, parked) does not seed or overwrite them. The press is refused if any required meter is short. Payload Interpreter costs stay at zero.
+_Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost seeding from an assigned spell.
 
 **Terminal Ability / Chaining Ability**:
-An ability whose clip does not, or does, carry MCO window annotations. A property of the clip, never of the binding.
+An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.
+
+**Committed Action**:
+An action the actor cannot steer out of once it starts — an MCO attack, a shout, a Driver Cast, a Weapon Art. Commitment is authored on the behavior state that owns the action and nowhere else (ADR-0015), so every actor entering that state is committed, player and NPC alike. The fork's bar, stated by the owner 2026-08-24: a seamless modernized MCO-feel combat experience with Spell Hotbar 2 as the interface, which means every action a hotbar slot can start commits the same way.
+_Avoid_: Movement lock, input block, rooting as a DLL feature, player-only commitment
 
 ## Findings
 
@@ -170,6 +218,10 @@ conditions to pick the clip. Animation id `0` is named "Skyrim Shout" — the va
 A cast that looks like an unmodified vanilla shout may therefore be an unmapped spell rather
 than a design limit. Check the in-game spell editor's animation assignment before treating it
 as a defect.
+
+Concentration still uses those animation ids (aimed 1001, self 1002, ritual 11001, ward 1003)
+but the Driver Cast shtb clips are fire-and-forget single-play. Looping concentration types
+are mco-integration ticket 25.
 
 ### 6. ~~The MCO shout behavior engine needs no changes to serve this mod~~ — WITHDRAWN 2026-08-05
 
@@ -286,6 +338,13 @@ tracking here.
 **Scope note 2026-08-12:** that sentence is the release-timing rule. Sampling attack/ready tags to
 restore `MCO_nextattack` / `MCO_nextpowerattack` across a Driver Cast this mod started is
 ADR-0005's named exception, not a second hold policy. See ticket 12.
+
+**Mechanism 2026-08-24 (ADR-0014):** that restore lands in the **root** graph, because Havok links
+a nested graph's variable names to the root's ids and `MCO_Attack.hkb` reads the root's storage
+when it reactivates. The `shtb` patch's `0_master` declaration of `MCO_nextattack` is what makes
+that storage exist; without it every weapon replays `attack1`. The value itself is never derived —
+a successor table learns `playing → advance` pairs from the clips' own `@SGVI` annotations, which
+arrive as event `Pie` carrying a **payload**, not as a tag.
 
 One correction to carry across with it, because it cost a build to learn: **`MCO_WinOpen` is not
 proof a swing happened.** On the measured power attack the window opens ~180 ms *before*

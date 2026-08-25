@@ -8,7 +8,26 @@ rather than from reading.
 **Blocked by:** None, but explicitly **secondary**. It is not a prerequisite for any
 integration ticket and must not be bundled into one.
 
-**Status:** ready-for-agent
+**Status:** resolved 2026-08-23 — rescoped to the crash guard the same day, then shipped
+(commit `de4b79f`, merged `b48560c`). All four sites (`save_bars_to_json`,
+`persist_user_art_icons`, `save_icon_edits_to_json`, `save_preset`) now skip an empty
+`parent_path` and use the `error_code` overload, logging once on failure. Built clean with all
+five test executables passing; compile-verified only — the deployed Dev DLL predates the fix
+until the next deploy. The general measure-and-optimize pass is dropped as stale unless the
+owner re-raises it.
+
+Adjacent throwing-filesystem calls found during the fix, recorded rather than fixed (different
+failure mode, lower certainty):
+
+- `papyrus_functions.cpp:245/:249/:252` call throwing `std::filesystem::exists()` on raw
+  Papyrus strings. A bare filename is safe (`exists` returns false), but an OS-rejected path
+  (reserved device name, invalid characters) throws the same unwinding error from the same
+  Papyrus-reachable entry. One-line `error_code` swaps if ever wanted.
+- Throwing `directory_iterator` (plus throwing `exists`/`is_directory` guards) in
+  `user_data_io.cpp:413`, `csv_loader.h:13`, `spell_data_csv_loader.cpp:186/:197`,
+  `texture_csv_loader.cpp:240/:250`, `render_manager.cpp:680`. These iterate mod-install
+  folders at load, not Papyrus strings; the newer house style (`art_data_csv_loader.cpp`,
+  `custom_ability_runtime.cpp`) already passes `ec`.
 
 The owner named this as a secondary goal alongside MCO integration. Keeping it in its own
 ticket keeps integration diffs reviewable — a chain-out fix and a refactor in the same commit

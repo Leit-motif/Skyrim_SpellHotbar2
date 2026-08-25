@@ -8,7 +8,16 @@ that a weapon-drawn cast lands on the `CombatReady_*` branch instead of the shea
 **Blocked by:** None. Independent of ticket 01 — this is true regardless of how the open
 question resolves.
 
-**Status:** ready-for-agent
+**Status:** superseded 2026-08-23 — do not implement this file. Audit against the current
+source, on the owner's ruling that the pre-08 MCO tickets are out of date: the premise died
+with ticket 08. A hotbar cast no longer enters the shout graph at all — every spell start path
+(`start_cast`, `start_conc_cast`, `start_ritual_conc_cast`, `start_ritual_cast`) goes through
+`MscoCastDriver::begin()` into the shtb states distributed into the weapon behaviour graphs,
+so no cast can land on the sheathed `MT_*` branch, drawn or not. The unconditional
+`MT_BreathExhaleShort` this ticket targets survives only as dead code:
+`CastingInstance::get_end_anim()` (`casting_controller.cpp:379`) has no caller. Stance-correct
+animation is what ticket 08 shipped and the owner accepted; the `CombatReady_*` branch is
+ShoutMCO's concern for real shouts, which this mod does not route.
 
 This is the precondition for any chaining integration. MCO chaining only ever concerns the
 `CombatReady_*` branch (nested states 1, 12 and 13 of the inhale's transition array `#0244`).

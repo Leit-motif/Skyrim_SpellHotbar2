@@ -128,8 +128,12 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertNotIn("IsWornHasKeyword", kinds)
         self.assertNotIn("IsEquippedType", kinds)
         selector_cond = next(c for c in config["conditions"] if c["condition"] == "CompareValues")
-        self.assertEqual(selector_cond["Value A"]["form"]["pluginName"], "SpellHotbar.esp")
-        self.assertEqual(selector_cond["Value A"]["form"]["formID"], "D63")
+        # The selector is a behavior-graph variable, never an ESP form: gating on a record that
+        # only exists in a hand-edited copy of upstream's plugin is what shipped a pack that
+        # worked on one machine (ADR-0016).
+        self.assertNotIn("form", selector_cond["Value A"])
+        self.assertEqual(selector_cond["Value A"]["graphVariable"], "SH2_ArtSelector")
+        self.assertEqual(selector_cond["Value A"]["graphVariableType"], "Int")
         self.assertEqual(selector_cond["Comparison"], "==")
         self.assertEqual(selector_cond["Value B"]["value"], selector)
         actor = next(c for c in config["conditions"] if c["condition"] == "IsActorBase")
@@ -397,6 +401,39 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertEqual([c["condition"] for c in kinds], ["CompareValues", "IsActorBase"])
 
 
+    def test_regen_preserves_icon_by_display_name(self):
+        sub = _submod(self.scan, "AoW Pack", "Disengage")
+        _write(sub / "config.json", json.dumps(_worn_config("Disengage")))
+        _write(sub / "animations" / AABL, "clip")
+        prior = self.root / "prior.csv"
+        _write(
+            prior,
+            "ArtID\tDisplayName\tIcon\tSelector\tArtClass\tStaminaCost\tCooldown\tGlobalCooldown\n"
+            "12\tDisengage\tDESTRUCTION_FIRE_ADEPT\t12\tGeneric\t25\t8s\t1.0\n",
+        )
+        from generate_art_pack import _previous_from_csv, _previous_icons_from_csv
+
+        result = self._generate(
+            previous_paths=_previous_from_csv(prior),
+            previous_icons=_previous_icons_from_csv(prior),
+        )
+
+        self.assertEqual(result.emitted, 1)
+        row = [line for line in self.arts_csv.read_text(encoding="utf-8").splitlines() if "Disengage" in line][0]
+        cols = row.split("\t")
+        self.assertEqual(cols[2], "DESTRUCTION_FIRE_ADEPT")
+
+    def test_new_ash_without_prior_icon_uses_default(self):
+        sub = _submod(self.scan, "AoW Pack", "Flurry Strike")
+        _write(sub / "config.json", json.dumps(_worn_config("Flurry Strike")))
+        _write(sub / "animations" / AABL, "clip")
+
+        self._generate()
+
+        row = [line for line in self.arts_csv.read_text(encoding="utf-8").splitlines() if "Flurry Strike" in line][0]
+        self.assertEqual(row.split("\t")[2], "GREATER_POWER")
+
+
 class CustomArtFolderTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
@@ -480,3 +517,43 @@ class CustomArtFolderTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CoreOverlayCollisionTest(unittest.TestCase):
+    """--core and --overlay pointing at one directory is the mistake that fails silently."""
+
+    def test_same_directory_is_refused(self):
+        from generate_art_pack import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "both"
+            shared.mkdir()
+            code = main([
+                "--scan", str(Path(tmp) / "scan"),
+                "--arts-csv", str(Path(tmp) / "arts.csv"),
+                "--overlay", str(shared),
+                "--core", str(shared),
+            ])
+        self.assertEqual(code, 2, "a shared core/overlay directory must be refused, not generated into")
+
+    def test_same_directory_via_dot_segments_is_refused(self):
+        from generate_art_pack import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "both"
+            shared.mkdir()
+            code = main([
+                "--scan", str(Path(tmp) / "scan"),
+                "--arts-csv", str(Path(tmp) / "arts.csv"),
+                "--overlay", str(shared),
+                "--core", str(shared / "." / ".." / "both"),
+            ])
+        self.assertEqual(code, 2, "the check resolves paths, so '.'/'..' cannot smuggle the collision through")
+
+    def test_different_directories_pass_the_check(self):
+        from generate_art_pack import _same_dir
+
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "core"; a.mkdir()
+            b = Path(tmp) / "overlay"; b.mkdir()
+            self.assertFalse(_same_dir(a, b), "distinct directories must not trip the guard")

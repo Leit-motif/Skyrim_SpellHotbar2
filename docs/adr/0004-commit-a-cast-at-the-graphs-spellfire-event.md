@@ -26,3 +26,15 @@ already-started cast. It remains correct: `Voice_SpellFire_Event` is still the c
 ADR-0005 adds a different API at a different seam: before a Direct Cast starts during an active
 MCO attack, Spell Hotbar retains the payload while ShoutMCO decides when to release or abandon the
 input intent. That API neither reports spellfire nor changes this decision.
+
+## Scope amendment — 2026-08-23
+
+The commitment event followed the cast into the weapon graphs. Ticket 08 moved every hotbar cast
+out of the shout graph and into the shtb Driver Cast states, whose clips carry their own spellfire
+annotation; the committing event is therefore `MLh_SpellFire_Event` on the playing clip (+0.46s on
+`MSCO_left1`, runtime-verified 2026-08-11), not `Voice_SpellFire_Event`. The principle is
+unchanged: a cast commits at the spellfire event the playing graph raises, and no cross-mod
+handshake exists. The `IsShouting` defect this decision fixed is now gone at the root — no cast
+path reads `IsShouting` at all — but the commitment gate remains load-bearing for the narrower
+hazard: a chain-out cut taken before the clip's spellfire still cancels, and ticket 10's chain-out
+gates on commitment for exactly that reason. Ticket 07 closed against this ADR on 2026-08-23.

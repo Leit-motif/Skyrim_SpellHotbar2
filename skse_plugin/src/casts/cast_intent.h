@@ -3,19 +3,19 @@
 #include "../input/input.h"
 
 /**
- * Consumer side of ShoutMCO's optional cast-intent driver API (ADR-0005).
+ * One last-wins Cast Intent (ADR-0005, Ability queue ticket 10).
  *
- * ShoutMCO owns release timing: whether a hotbar press may start now, or must wait for a
- * confirmed legal graph state, and when that state arrives. Spell Hotbar 2 owns the payload —
- * what the slot means and whether it can still cast when the release comes. Nothing here
- * observes MCO animation events, gates on `HitFrame`, polls, or runs a timer; all of that
- * lives in ShoutMCO.
+ * Spell Hotbar 2 owns the payload — slot, type, and FormID or Ability id — and
+ * revalidates it once on fire. Two clocks decide the legal frame:
  *
- * The whole module fails open. With no ShoutMCO, no export, or no shared major version, every
- * call is a no-op and Direct Cast behaves exactly as it did before this existed.
+ * - ShoutMCO, when the player is in someone else's MCO swing or a real shout.
+ * - This mod's latch, when the player is in a Driver Cast or Ability we started.
  *
- * Everything here runs on the main thread: the input hook, the papyrus `castSlot` task, and
- * ShoutMCO's callback all do. No locking, no atomics.
+ * ShoutMCO is optional. Mid-swing with no API fails open (dead press). SH2-owned
+ * latches still buffer.
+ *
+ * Everything here runs on the main thread: the input hook, the papyrus `castSlot`
+ * task, ShoutMCO's callback, and the game-loop poll. No locking, no atomics.
  */
 namespace SpellHotbar::casts::CastIntent {
 
@@ -42,15 +42,38 @@ namespace SpellHotbar::casts::CastIntent {
 	const char* status_name();
 
 	/**
-	 * Offer the pressed slot as a cast intent, at the seam where the graph refused entry.
+	 * Offer the pressed slot as a Cast Intent.
 	 *
-	 * Snapshots the slot's current assignment as the payload and returns true only when
-	 * ShoutMCO deferred it, meaning exactly one release or abandon callback follows and the
-	 * press must be reported as accepted rather than failed. Any other answer — no API, the
-	 * request rejected, or nothing to wait for — returns false, and the caller reports the
-	 * refusal it already had.
+	 * Snapshots the slot's current assignment. Returns true when the press is retained —
+	 * either locally until this mod's latch opens, or by ShoutMCO until its release
+	 * callback. The caller reports that as accepted rather than failed. Any other
+	 * answer — no API for a ShoutMCO clock, the request rejected, or nothing to wait
+	 * for — returns false, and the caller reports the refusal it already had.
 	 */
 	bool offer(size_t slot, const Input::KeyBind& keybind);
+
+	/**
+	 * True while a retained payload is being fired. Start paths must not offer
+	 * again, or a still-true IsShouting bit would drop a hotbar shout on release.
+	 */
+	bool is_firing();
+
+	/**
+	 * True while this mod retains a payload that has not yet fired. A hotbar shout
+	 * must not inject a `"Shout"` ButtonEvent until that payload is released.
+	 */
+	bool is_pending();
+
+	/**
+	 * True when our Driver Cast or Ability is live and its latch is still closed.
+	 */
+	bool should_retain_now();
+
+	/**
+	 * If a locally retained payload's latch is now open (or our shtb state has ended),
+	 * fire it once. No-op for a ShoutMCO-owned handle.
+	 */
+	void poll_local_release();
 
 	/**
 	 * Withdraw a pending intent, if this mod owns one, and drop the payload immediately. Safe to

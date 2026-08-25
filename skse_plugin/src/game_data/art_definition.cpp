@@ -1,4 +1,5 @@
 #include "art_definition.h"
+#include "custom_ability_config.h"
 
 #include <algorithm>
 #include <charconv>
@@ -193,8 +194,11 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 		art.selector = to_int(cell(cols, index, "Selector")).value_or(0);
 		art.art_class = parse_art_class(cell(cols, index, "ArtClass"));
 		art.stamina_cost = to_float(cell(cols, index, "StaminaCost")).value_or(0.0f);
+		art.magicka_cost = to_float(cell(cols, index, "MagickaCost")).value_or(0.0f);
+		art.health_cost = to_float(cell(cols, index, "HealthCost")).value_or(0.0f);
 		art.gcd = to_float(cell(cols, index, "GlobalCooldown")).value_or(1.0f);
-		if (const auto cd = parse_art_duration_days(cell(cols, index, "Cooldown"))) {
+		art.cooldown_text = cell(cols, index, "Cooldown");
+		if (const auto cd = parse_art_duration_days(art.cooldown_text)) {
 			art.cooldown_days = *cd;
 		} else {
 			art.cooldown_days = -1.0f;
@@ -216,25 +220,72 @@ std::optional<int> parse_custom_art_folder_number(std::string_view folder_name)
 }
 
 ArtDefinition custom_art_from_folder(int folder_number, std::string_view /*folder_name*/,
-	std::string_view name_file, std::string_view icon_file, bool has_clip)
+	std::string_view name_file, std::string_view icon_file, bool has_clip,
+	std::string_view sidecar_text)
 {
+	CustomAbilitySidecar sidecar = sidecar_text.empty()
+		? default_custom_ability_sidecar(folder_number)
+		: parse_custom_ability_sidecar(sidecar_text, folder_number);
+	if (sidecar_text.empty()) {
+		const auto name = first_nonempty_line(name_file);
+		if (!name.empty()) {
+			sidecar.name = name;
+		}
+		const auto icon = first_nonempty_line(icon_file);
+		if (!icon.empty()) {
+			sidecar.icon = icon;
+		}
+	}
 	ArtDefinition art;
 	art.id = custom_art_id_base + static_cast<std::uint32_t>(folder_number);
 	art.selector = static_cast<int>(art.id);
-	art.art_class = ArtClass::Generic;
-	art.stamina_cost = 25.0f;
-	art.cooldown_days = parse_art_duration_days("8s").value_or(-1.0f);
-	art.gcd = 1.0f;
 	art.has_clip = has_clip;
-	art.display_name = first_nonempty_line(name_file);
-	if (art.display_name.empty()) {
-		art.display_name = "Custom Ability " + std::to_string(folder_number);
-	}
-	art.icon = first_nonempty_line(icon_file);
-	if (art.icon.empty()) {
-		art.icon = "GREATER_POWER";
-	}
+	apply_custom_ability_sidecar(art, sidecar, folder_number);
 	return art;
+}
+
+void apply_art_player_overlay(ArtDefinition& art, const ArtPlayerOverlay& overlay)
+{
+	if (!overlay.display_name.empty()) {
+		art.display_name = overlay.display_name;
+	}
+	art.icon = overlay.icon;
+	art.icon_form = overlay.icon_form;
+	art.art_class = overlay.art_class;
+	art.stamina_cost = overlay.stamina_cost;
+	art.magicka_cost = overlay.magicka_cost;
+	art.health_cost = overlay.health_cost;
+	art.gcd = overlay.gcd;
+	if (!overlay.cooldown.empty()) {
+		art.cooldown_text = overlay.cooldown;
+		if (const auto days = parse_art_duration_days(art.cooldown_text)) {
+			art.cooldown_days = *days;
+		}
+	}
+}
+
+ArtPlayerOverlay art_player_overlay_from(const ArtDefinition& art)
+{
+	return ArtPlayerOverlay{
+		.display_name = art.display_name,
+		.icon = art.icon,
+		.icon_form = art.icon_form,
+		.art_class = art.art_class,
+		.stamina_cost = art.stamina_cost,
+		.magicka_cost = art.magicka_cost,
+		.health_cost = art.health_cost,
+		.cooldown = art.cooldown_text,
+		.gcd = art.gcd,
+	};
+}
+
+bool art_matches_catalogue_tuning(const ArtDefinition& live, const ArtDefinition& catalogue) noexcept
+{
+	return live.display_name == catalogue.display_name && live.icon == catalogue.icon &&
+		   live.icon_form == catalogue.icon_form && live.art_class == catalogue.art_class &&
+		   live.stamina_cost == catalogue.stamina_cost && live.magicka_cost == catalogue.magicka_cost &&
+		   live.health_cost == catalogue.health_cost && live.gcd == catalogue.gcd &&
+		   live.cooldown_text == catalogue.cooldown_text;
 }
 
 }  // namespace SpellHotbar

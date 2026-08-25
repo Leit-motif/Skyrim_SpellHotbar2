@@ -2,14 +2,14 @@
 
 Date: 2026-08-12
 
-Status: accepted (amended by ADR-0009)
+Status: accepted (amended by ADR-0011)
 
 The Art Selector is SH2's name for which art is live. It is not Ashes of War's worn-item
 keyword. The graph is not required to play `AABL_Attack_A.hkx`.
 
 ## Context
 
-ADR-0009: the live art is SH2 data, not a hardcoded AABL path. Something still has to name
+ADR-0011: the live art is SH2 data, not a hardcoded AABL path. Something still has to name
 *which* art is playing so OAR or PIE conditions can branch.
 
 The fork already runs a TESGlobal for cast animations. The Ability Selector is that pattern for

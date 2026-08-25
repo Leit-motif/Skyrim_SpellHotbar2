@@ -9,10 +9,103 @@
 #include "art_driver.h"
 #include "combo_cache.h"
 #include "cast_intent.h"
+#include "../game_data/custom_ability_config.h"
 
 namespace SpellHotbar::casts::CastingController {
 
 	std::unique_ptr<BaseCastingInstance> current_cast = nullptr;
+
+	// THE DEFERRED selectedPower WRITE-BACK (thuum ticket 62).
+	//
+	// A hotbar shout swaps its own form into the player's selectedPower so the injected "Shout"
+	// button press fires OUR shout instead of the equipped one. The cast instance dies at GCD
+	// expiry, which is ~1.8s BEFORE the graph leaves the shout (measured 2026-08-22: restore at
+	// 55.114, shoutStop at 56.959), and the old code restored there. Words two and three of a
+	// three-word shout echo after that point, and everything that reads selectedPower then sees
+	// the equipped shout: SKSE's kVoiceFire reported the wrong form to our own bookkeeping, and
+	// OAR re-selected the exhale clip against it. That is the misroute.
+	//
+	// The window we need therefore outlives the instance, so the hold lives here on the
+	// controller. The instance hands over its pair of forms and dies on schedule; nothing about
+	// set_casted, the GCD, or cooldown timing moves.
+	struct DeferredPowerRestore {
+		RE::TESForm* swapped{ nullptr };   // what we wrote into selectedPower
+		RE::TESForm* old_form{ nullptr };  // what belongs there
+		float age{ 0.0f };
+		bool active{ false };
+	};
+	DeferredPowerRestore deferred_restore{};
+
+	// Belt and braces. If IsShouting never falls — graph wedged, actor yanked out of the clip,
+	// a mod holding the variable — the swap must not outlive the shout by much. The longest
+	// vanilla three-word shout is comfortably inside this.
+	constexpr float deferred_restore_timeout{ 8.0f };
+
+	// Put the old power back, but only if the slot is still holding what we put there: the
+	// player may have equipped something else in the meantime, and that choice wins.
+	void write_back_power(RE::TESForm* swapped, RE::TESForm* old_form, const char* why)
+	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc) {
+			return;
+		}
+		auto& dat = pc->GetActorRuntimeData();
+		const auto cur_id = dat.selectedPower ? dat.selectedPower->GetFormID() : 0u;
+		const bool applied = dat.selectedPower == swapped;
+		if (applied) {
+			dat.selectedPower = old_form;
+		}
+		logger::debug("SH2 power: restored selectedPower {:08X} -> {:08X} (applied={}, {})", cur_id,
+			old_form ? old_form->GetFormID() : 0u, applied, why);
+	}
+
+	void flush_deferred_power_restore()
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		write_back_power(deferred_restore.swapped, deferred_restore.old_form, "flush");
+		deferred_restore = {};
+	}
+
+	// Forget a pending write-back without performing it. Used on a game load, where the save
+	// being read owns selectedPower and a pre-load form must never be written over it.
+	void discard_deferred_power_restore()
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		logger::debug("SH2 power: dropping deferred selectedPower restore to {:08X}",
+			deferred_restore.old_form ? deferred_restore.old_form->GetFormID() : 0u);
+		deferred_restore = {};
+	}
+
+	void defer_power_restore(RE::TESForm* swapped, RE::TESForm* old_form)
+	{
+		flush_deferred_power_restore();  // never stack two holds
+		deferred_restore.swapped = swapped;
+		deferred_restore.old_form = old_form;
+		deferred_restore.age = 0.0f;
+		deferred_restore.active = true;
+		logger::debug("SH2 power: holding selectedPower {:08X} until IsShouting falls (restores {:08X})",
+			swapped ? swapped->GetFormID() : 0u, old_form ? old_form->GetFormID() : 0u);
+	}
+
+	void update_deferred_power_restore(float delta, bool is_shouting)
+	{
+		if (!deferred_restore.active) {
+			return;
+		}
+		deferred_restore.age += delta;
+		if (!is_shouting) {
+			write_back_power(deferred_restore.swapped, deferred_restore.old_form, "IsShouting fell");
+			deferred_restore = {};
+		}
+		else if (deferred_restore.age > deferred_restore_timeout) {
+			write_back_power(deferred_restore.swapped, deferred_restore.old_form, "timeout");
+			deferred_restore = {};
+		}
+	}
 
 	// THE COMMITMENT POINT (ADR 0004 as amended by ADR 0006, ticket 07).
 	//
@@ -84,6 +177,65 @@ namespace SpellHotbar::casts::CastingController {
 				   MscoCastDriver::combo_window_open()) != HotbarCastPress::refuse;
 	}
 
+	bool is_live_concentration()
+	{
+		return current_cast && dynamic_cast<CastingInstanceSpellConcentration*>(current_cast.get());
+	}
+
+	CastingInstanceSpellConcentration* live_channel()
+	{
+		if (!current_cast) {
+			return nullptr;
+		}
+		auto* channel = dynamic_cast<CastingInstanceSpellConcentration*>(current_cast.get());
+		return (channel && !channel->casted()) ? channel : nullptr;
+	}
+
+	bool is_channel_chainable()
+	{
+		auto* channel = live_channel();
+		return channel_chain_window_open(channel != nullptr, channel && channel->is_streaming());
+	}
+
+	void cut_channel_for_attack(RE::PlayerCharacter* pc)
+	{
+		if (auto* channel = live_channel()) {
+			logger::debug("SH2 cast: attack pressed on a streaming channel; ending the channel");
+			channel->end_channel(pc);
+		}
+	}
+
+	bool our_latch_is_closed()
+	{
+		return CastIntent::should_retain_now();
+	}
+
+	void yield_shtb_for_non_chain_start()
+	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		if (ArtDriver::is_active()) {
+			ArtDriver::cancel(pc);
+		}
+		if (MscoCastDriver::is_active()) {
+			MscoCastDriver::cancel(pc);
+		}
+		MscoCastDriver::interrupt_left_caster_if_spell(pc);
+		if (current_cast) {
+			current_cast->on_reset();
+			current_cast.reset();
+			clear_spellfire();
+		}
+	}
+
+	void yield_if_our_latch_is_open()
+	{
+		if (should_yield_shtb_before_hotbar_shout(ArtDriver::is_active(), ArtDriver::latch_open()) ||
+			should_yield_shtb_before_hotbar_shout(
+				MscoCastDriver::is_active(), MscoCastDriver::combo_window_open())) {
+			yield_shtb_for_non_chain_start();
+		}
+	}
+
 	void reset_cast() {
 		current_cast->on_reset();
 		current_cast.reset();
@@ -92,10 +244,14 @@ namespace SpellHotbar::casts::CastingController {
 
 	void drop_live_cast()
 	{
+		// Dropped for a game load: the save being read owns selectedPower, so a hold from the
+		// session being left behind is forgotten rather than written over it.
+		discard_deferred_power_restore();
 		current_cast.reset();
 		clear_spellfire();
 		ArtDriver::reset_session();
 		MscoCastDriver::reset_session();
+		CastIntent::cancel();
 		logger::info("SH2: dropped live cast for game load");
 	}
 
@@ -321,11 +477,6 @@ namespace SpellHotbar::casts::CastingController {
 		return handle;
 	}
 
-	bool BaseCastingInstance::blocks_movement() const
-	{
-		return false;
-	}
-
 	bool BaseCastingInstance::has_cuttable_cast_state() const
 	{
 		return false;
@@ -474,16 +625,10 @@ namespace SpellHotbar::casts::CastingController {
 		m_gcd = 1.5f;
 	}
 
-	bool CastingInstanceRitual::blocks_movement() const
-	{
-		return m_cast_timer >= -0.5f; //!m_casted &&
-	}
-
-	CastingInstanceSpellConcentration::CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, bool blocksMovement)
+	CastingInstanceSpellConcentration::CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot)
 		: CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc),
 		m_keybind(keybind),
-		m_slot(slot),
-		m_blocks_movement(blocksMovement)
+		m_slot(slot)
 	{
 		m_cast_timer = 0;
 		m_total_casttime = spell->data.castDuration;
@@ -595,10 +740,14 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::global_casting_conc_spell->value = 1.0f;
 			}
 			else if (static_cast<int>(timer_old / loop_timer) < static_cast<int>(m_cast_timer / loop_timer)) {
-				//Check for anim reloop & do loop callbacks
+				//Per-loop callbacks. The animation is not re-sent here: the start clip ends the
+				//shtb state on its own and the hold is sustained by the OAR idle loop, which
+				//every conc submod builds by replacing the idle and locomotion set while
+				//SpellHotbar_isCastingConcSpell is raised (ADR-0013). Re-notifying the entry
+				//restarted the single-play start clip every half second and held the actor out
+				//of the idle that owns the loop.
 
 				if (keydown) {
-					MscoCastDriver::replay(pc);
 					RenderManager::highlight_skill_slot(m_slot, loop_timer*2.0f, false);
 					auto spell = m_form->As<RE::SpellItem>();
 					if (spell != nullptr) {
@@ -621,20 +770,7 @@ namespace SpellHotbar::casts::CastingController {
 			}
 
 			if (!keydown) {
-				//trigger gcd and stop cast
-				set_casted();
-				stop_cast_loop_sound();
-				stop_charge_sound();
-				RE::MagicSystem::CastingSource src = static_cast<RE::MagicSystem::CastingSource>(std::clamp(static_cast<int>(SpellHotbar::GameData::global_casting_source->value), 0, 3));
-				auto playerCaster = pc->GetMagicCaster(src);
-				if (playerCaster) {
-					playerCaster->InterruptCast(false);
-				}
-				GameData::reset_animation_vars();
-				MscoCastDriver::cancel(pc);
-				play_release_sound();
-				apply_cooldown();
-				consume_items();
+				end_channel(pc);
 			}
 
 		}
@@ -642,14 +778,36 @@ namespace SpellHotbar::casts::CastingController {
 		return cancel;
 	}
 
+	void CastingInstanceSpellConcentration::end_channel(RE::PlayerCharacter* pc)
+	{
+		if (m_casted) {
+			//Already ended -- an attack cut it and this is the update tick behind it.
+			return;
+		}
+		//trigger gcd and stop cast
+		set_casted();
+		stop_cast_loop_sound();
+		stop_charge_sound();
+		RE::MagicSystem::CastingSource src = static_cast<RE::MagicSystem::CastingSource>(std::clamp(static_cast<int>(SpellHotbar::GameData::global_casting_source->value), 0, 3));
+		auto playerCaster = pc->GetMagicCaster(src);
+		if (playerCaster) {
+			playerCaster->InterruptCast(false);
+		}
+		GameData::reset_animation_vars();
+		if (channel_end_arms_combo_restore(m_spell_started)) {
+			MscoCastDriver::end_channel(pc);
+		}
+		else {
+			MscoCastDriver::cancel(pc);
+		}
+		play_release_sound();
+		apply_cooldown();
+		consume_items();
+	}
+
 	bool CastingInstanceSpellConcentration::is_gcd_expired() const
 	{
 		return m_gcd <= 0;
-	}
-
-	bool CastingInstanceSpellConcentration::blocks_movement() const
-	{
-		return m_blocks_movement && !m_casted;
 	}
 
 	bool CastingInstanceSpellConcentration::has_cuttable_cast_state() const
@@ -672,6 +830,14 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
+		// One bool graph read per unpaused frame on the player: the shout's own liveness, which
+		// is what a deferred selectedPower write-back is waiting on.
+		if (auto* player = RE::PlayerCharacter::GetSingleton()) {
+			bool is_shouting{ false };
+			player->GetGraphVariableBool("IsShouting"sv, is_shouting);
+			update_deferred_power_restore(delta, is_shouting);
+		}
+		CastIntent::poll_local_release();
 		if (current_cast) {
 			if (!current_cast->casted()) {
 				auto pc = RE::PlayerCharacter::GetSingleton();
@@ -727,7 +893,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceSpell>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::fire_and_forget)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -755,10 +921,10 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::set_animtype_global(anim);
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
-				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
+				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot));
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::channel)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -786,7 +952,7 @@ namespace SpellHotbar::casts::CastingController {
 				current_cast = std::make_unique<CastingInstanceSpellRitualConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), pre_release_anim);
 
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::channel)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -816,7 +982,7 @@ namespace SpellHotbar::casts::CastingController {
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
 				current_cast = std::make_unique<CastingInstanceRitual>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc);
 				arm_spellfire(used_hand);
-				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime)) {
+				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::fire_and_forget)) {
 					return start_result::started;
 				}
 				current_cast.reset();
@@ -852,6 +1018,12 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
+		if (our_latch_is_closed()) {
+			return CastIntent::offer(slot, keybind);
+		}
+		if (ArtDriver::is_active() && ArtDriver::latch_open()) {
+			yield_shtb_for_non_chain_start();
+		}
 		const auto press = classify_hotbar_cast_press(
 			current_cast != nullptr, is_committed_cast_holding_graph(),
 			MscoCastDriver::combo_window_open());
@@ -867,10 +1039,7 @@ namespace SpellHotbar::casts::CastingController {
 			CastIntent::cancel();
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
-				bool is_shouting{ false };
-				pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
-
-				if (!is_shouting && (form->GetFormType() == RE::FormType::Spell || form->GetFormType() == RE::FormType::Scroll)) {
+				if (form->GetFormType() == RE::FormType::Spell || form->GetFormType() == RE::FormType::Scroll) {
 					RE::SpellItem* spell = form->As<RE::SpellItem>();
 
 					//check if spell is still known/enough scrolls in inv
@@ -963,7 +1132,7 @@ namespace SpellHotbar::casts::CastingController {
 						RE::PlaySound(Input::sound_MagFail);
 					}
 				}
-				else if (!is_shouting && (form->GetFormType() == RE::FormType::AlchemyItem)) {
+				else if (form->GetFormType() == RE::FormType::AlchemyItem) {
 					return start_potion_use(form);
 				}
 			}
@@ -993,18 +1162,26 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
+		auto pc = RE::PlayerCharacter::GetSingleton();
+		bool is_shouting{ false };
+		if (pc) {
+			pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
+		}
+		const bool is_shout = form && form->GetFormType() == RE::FormType::Shout;
+		if (is_shout && !CastIntent::is_firing() && (our_latch_is_closed() || is_shouting)) {
+			return CastIntent::offer(slot, keybind);
+		}
+		if (is_shout) {
+			yield_if_our_latch_is_open();
+		}
 		if (can_start_new_cast()) {
 			clear_spellfire();
 			// A power or shout press is a newer input too, so it supersedes a waiting intent. A
 			// real shout also reaches ShoutMCO's own hook and would displace it there, but a
 			// voice-slot power never does — nothing on that path touches the driver at all.
 			CastIntent::cancel();
-			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (form && pc) {
-				bool is_shouting{ false };
-				pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
-
-				if (!is_shouting && form->GetFormType() == RE::FormType::Shout) {
+				if (form->GetFormType() == RE::FormType::Shout) {
 
 					if (GameData::individual_shout_cooldowns || pc->GetVoiceRecoveryTime() <= 0.0f) {
 
@@ -1102,20 +1279,6 @@ namespace SpellHotbar::casts::CastingController {
 		return 0.0f;
 	}
 
-	bool is_movement_blocking_cast()
-	{
-		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
-		// owned by the graph wrap (ticket 21), not the DLL. Abilities reuse
-		// the same plant: input lock, clip motion still applies.
-		if (shtb_state_blocks_movement(MscoCastDriver::is_active() || ArtDriver::is_active())) {
-			return true;
-		}
-		if (current_cast) {
-			return current_cast->blocks_movement();
-		}
-		return false;
-	}
-
 	void cast_spell_on_player(RE::SpellItem* spell, float magnitude, bool no_art) {
 		if (!spell) return;
 
@@ -1206,16 +1369,15 @@ namespace SpellHotbar::casts::CastingController {
 		m_pre_release_anim_time = pre_release_anim_time;
 	}
 
-	bool CastingInstanceSpellRitualConcentration::blocks_movement() const
-	{
-		return !m_casted;
-	}
-
 	CastingInstancePower::CastingInstancePower(RE::TESForm* form) : BaseCastingInstance(form, 0.0f), m_old_form(nullptr), m_reequiped(false)
 	{
 		m_gcd = 0.5f;
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (pc) {
+			// A previous hotbar shout may still be holding its write-back (thuum ticket 62).
+			// Settle it first, or this cast would capture that shout as the power to restore
+			// and the player's real one would be lost.
+			flush_deferred_power_restore();
 			auto& dat = pc->GetActorRuntimeData();
 			m_old_form = dat.selectedPower;
 			dat.selectedPower = form;
@@ -1233,9 +1395,16 @@ namespace SpellHotbar::casts::CastingController {
 		if (!m_reequiped) {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
-				auto& dat = pc->GetActorRuntimeData();
-				if (dat.selectedPower == m_form) {
-					dat.selectedPower = m_old_form;
+				// The write-back either happens now (powers, and a shout whose graph is
+				// already done) or is handed to the controller to finish after the clip
+				// (thuum ticket 62). Either way this instance is finished with it, so the
+				// bookkeeping below — m_reequiped, consume_items, the caller's shout
+				// cooldowns — keeps its existing timing.
+				if (defer_power_write_back(pc)) {
+					defer_power_restore(m_form, m_old_form);
+				}
+				else {
+					write_back_power(m_form, m_old_form, "immediate");
 				}
 				m_reequiped = true;
 				consume_items();
@@ -1263,6 +1432,19 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::reset_shout_cd();
 			}
 		}
+	}
+
+	bool CastingInstanceShout::defer_power_write_back(RE::PlayerCharacter* pc) const
+	{
+		if (!pc) {
+			return false;
+		}
+		bool is_shouting{ false };
+		pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
+		// Only hold it if the graph is actually shouting. A cast that died before the graph
+		// ever entered — refused, interrupted, cut for a combo — restores here and now, exactly
+		// as it did before, and never waits for an edge that will not come.
+		return is_shouting;
 	}
 
 	bool CastingInstanceShout::reequip_old_power()
@@ -1337,7 +1519,7 @@ namespace SpellHotbar::casts::CastingController {
 		BaseCastingInstance::on_reset();
 	}
 
-	bool try_start_art(uint32_t art_id, size_t)
+	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind)
 	{
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (!pc) {
@@ -1354,6 +1536,11 @@ namespace SpellHotbar::casts::CastingController {
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
+		if (!pc->AsActorState()->IsWeaponDrawn()) {
+			logger::info("SH2 art: refused, weapon sheathed");
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
 		if (!art_class_is_live(art->art_class, GameData::getPlayerEquipmentType())) {
 			logger::info("SH2 art: art {} refused, Art Class mismatch", art_id);
 			RE::PlaySound(Input::sound_MagFail);
@@ -1364,23 +1551,50 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 		auto* av = pc->AsActorValueOwner();
-		if (art->stamina_cost > 0.0f && av && av->GetActorValue(RE::ActorValue::kStamina) < art->stamina_cost) {
-			logger::info("SH2 art: unaffordable (need {} stamina)", art->stamina_cost);
-			RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+		const float have_stamina = av ? av->GetActorValue(RE::ActorValue::kStamina) : 0.0f;
+		const float have_magicka = av ? av->GetActorValue(RE::ActorValue::kMagicka) : 0.0f;
+		const float have_health = av ? av->GetActorValue(RE::ActorValue::kHealth) : 0.0f;
+		const auto short_meter = unaffordable_art_meter(art->stamina_cost, art->magicka_cost, art->health_cost,
+			have_stamina, have_magicka, have_health);
+		if (short_meter != ArtMeter::None) {
+			RE::ActorValue flash = RE::ActorValue::kStamina;
+			if (short_meter == ArtMeter::Magicka) {
+				flash = RE::ActorValue::kMagicka;
+			} else if (short_meter == ArtMeter::Health) {
+				flash = RE::ActorValue::kHealth;
+			}
+			logger::info("SH2 art: unaffordable (stam {} mag {} hp {})", art->stamina_cost, art->magicka_cost,
+				art->health_cost);
+			RE::HUDMenu::FlashMeter(flash);
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
 
+		if (our_latch_is_closed()) {
+			return CastIntent::offer(slot, keybind);
+		}
+		yield_if_our_latch_is_open();
+
+		CastIntent::cancel();
 		GameData::set_art_selector(art->selector);
 		current_cast = std::make_unique<CastingInstanceWeaponArt>(art_id, art->gcd);
 		if (!ArtDriver::begin(pc)) {
-			logger::info("SH2 art: SH2_ArtStart not consumed (sheathed, mid-swing, or patch missing)");
+			logger::info("SH2 art: SH2_ArtStart not consumed (mid-swing or patch missing)");
 			current_cast.reset();
 			GameData::reset_art_selector();
-			return false;
+			if (CastIntent::is_firing()) {
+				return false;
+			}
+			return CastIntent::offer(slot, keybind);
 		}
 		if (art->stamina_cost > 0.0f && av) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina, -art->stamina_cost);
+		}
+		if (art->magicka_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, -art->magicka_cost);
+		}
+		if (art->health_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth, -art->health_cost);
 		}
 		if (art->cooldown_days > 0.0f) {
 			GameData::add_art_cooldown(art_id, art->cooldown_days);

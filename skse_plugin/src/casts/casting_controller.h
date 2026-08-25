@@ -26,17 +26,14 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool update(RE::PlayerCharacter* pc, float delta) = 0;
 
-		virtual bool blocks_movement() const;
-
 		/**
 		* Does this cast hold a shtb cast state that may be ended early?
 		*
 		* False by default, so only a kind of cast that says otherwise is ever cut. A power, a
 		* shout, and a potion never enter the state at all, and ending one on their behalf would
-		* be a send for a state they do not own. A concentration channel does own the state but
-		* cannot be ended this way either: its own loop re-enters the state within half a
-		* second, so the end would be undone a moment later. Ending a channel properly is its
-		* own ticket.
+		* be a send for a state they do not own. A concentration channel enters the state for
+		* its start clip and then leaves it, so by the time it could be cut there is no state
+		* left to end; ending a channel is `cut_channel_for_attack` instead (ticket 25).
 		*/
 		virtual bool has_cuttable_cast_state() const;
 
@@ -145,8 +142,9 @@ namespace SpellHotbar::casts::CastingController {
 		bool m_last_anim_ok;
 	};
 
-	// Regular FNF spell. Translation is blocked while the shtb state is live
-	// (ticket 19); this class does not override blocks_movement itself.
+	// Regular FNF spell. Translation blocking is owned by the behavior graph --
+	// the shtb state's bAnimationDriven modifier in the Nemesis patch (ADR-0015);
+	// the DLL does not participate.
 	class CastingInstanceSpell : public CastingInstance {
 	public:
 		CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc);
@@ -158,14 +156,12 @@ namespace SpellHotbar::casts::CastingController {
 	public:
 		CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc);
 		virtual ~CastingInstanceRitual() = default;
-
-		virtual bool blocks_movement() const override;
 	};
 
 	//Single handed concentration spell with movement
 	class CastingInstanceSpellConcentration : public CastingInstance {
 	public:
-		CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, bool blocksMovement = false);
+		CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot);
 		virtual ~CastingInstanceSpellConcentration() = default;
 
 		virtual void apply_cast_start_spell(RE::PlayerCharacter* pc) override;
@@ -175,15 +171,26 @@ namespace SpellHotbar::casts::CastingController {
 		virtual bool is_first_time_update() const override;
 		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
 		virtual bool is_gcd_expired() const override;
-		virtual bool blocks_movement() const override;
 		virtual bool has_cuttable_cast_state() const override;
 
 		virtual bool has_duration() const;
 		virtual float get_current_gcd_progress() const override;
+
+		/**
+		 * Is the channel past its commitment point and streaming the spell? Before that there
+		 * is no channel to hand off, only a charge that a cut would throw away.
+		 */
+		inline bool is_streaming() const { return m_spell_started; }
+
+		/**
+		 * End the hold: stop the loop sound, interrupt the caster, drop the animation globals
+		 * so the OAR idle loop reverts, hand the combo position on, and pay the cooldown. The
+		 * player releasing the key and an attack chaining out both come through here.
+		 */
+		void end_channel(RE::PlayerCharacter* pc);
 	protected:
 		const Input::KeyBind& m_keybind;
 		int m_slot;
-		bool m_blocks_movement;
 	};
 
 	//Ritual style concentration spell, 2hands and blocked movement
@@ -191,8 +198,6 @@ namespace SpellHotbar::casts::CastingController {
 	public:
 		CastingInstanceSpellRitualConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, float pre_release_anim_time);
 		virtual ~CastingInstanceSpellRitualConcentration() = default;
-
-		virtual bool blocks_movement() const override;
 	};
 
 	class CastingInstancePower : public BaseCastingInstance {
@@ -206,6 +211,12 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
 	protected:
+		/**
+		* May this instance hand its selectedPower write-back to the controller instead of
+		* performing it now? A plain power restores immediately, as it always has.
+		*/
+		virtual bool defer_power_write_back(RE::PlayerCharacter*) const { return false; }
+
 		RE::TESForm* m_old_form;
 		bool m_reequiped;
 	};
@@ -216,6 +227,13 @@ namespace SpellHotbar::casts::CastingController {
 		virtual ~CastingInstanceShout() = default;
 		virtual bool reequip_old_power() override;
 	protected:
+		/**
+		* A shout's clip outlives its cast instance: the instance dies at GCD expiry while the
+		* graph is still shouting, and words two and three echo after that. Restoring
+		* selectedPower there gives those echoes the *equipped* shout's identity (thuum ticket
+		* 62). Defer while the graph says IsShouting.
+		*/
+		virtual bool defer_power_write_back(RE::PlayerCharacter* pc) const override;
 	};
 
 	class CastingInstancePotionUse : public BaseCastingInstance {
@@ -297,9 +315,26 @@ namespace SpellHotbar::casts::CastingController {
 	 */
 	bool can_accept_hotbar_cast();
 
+	bool is_live_concentration();
+
+	/**
+	 * Is a concentration channel live and streaming, so an attack may chain out of it?
+	 *
+	 * A channel has no clip clock to read: the shtb state ended with its start clip and the
+	 * hold is sustained by the OAR idle loop. Its chain-out window is therefore the hold
+	 * itself, opened at the commitment point and closed when the player lets go.
+	 */
+	bool is_channel_chainable();
+
+	/**
+	 * End a streaming channel because the player attacked. The press itself is untouched and
+	 * reaches the game as an ordinary swing, continuing the combo the channel interrupted.
+	 */
+	void cut_channel_for_attack(RE::PlayerCharacter* pc);
+
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
-	bool try_start_art(uint32_t art_id, size_t slot);
+	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
@@ -318,6 +353,13 @@ namespace SpellHotbar::casts::CastingController {
 
 	void drop_live_cast();
 
+	/**
+	* Perform any selectedPower write-back a finished hotbar shout is still holding, right now
+	* (thuum ticket 62). Called before a new swap and before the game serializes, so the swapped
+	* value can never reach a save or be captured as the next cast's "old" power.
+	*/
+	void flush_deferred_power_restore();
+
 	/*
 	* check if a power is currently tracked as casting instance, and finish it.
 	*/
@@ -327,7 +369,6 @@ namespace SpellHotbar::casts::CastingController {
 	float get_current_gcd_progress();
 	float get_current_gcd_duration();
 
-	bool is_movement_blocking_cast();
 	/**
 	* Actually casts the spell, do not call directly
 	*/

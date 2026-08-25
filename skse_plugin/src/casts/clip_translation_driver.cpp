@@ -2,7 +2,10 @@
 #include "clip_translation.h"
 #include "art_driver.h"
 #include "msco_cast_driver.h"
+#include "combo_cache.h"
 #include "../logger/logger.h"
+#include "../game_data/game_data.h"
+#include "../game_data/custom_ability_runtime.h"
 
 #include <algorithm>
 #include <mutex>
@@ -32,7 +35,7 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 				   name == "SH2_Cast4_Clip"sv;
 		}
 
-		[[nodiscard]] const RE::hkaAnimation* bound_animation(const RE::hkbClipGenerator* clip)
+		[[nodiscard]] RE::hkaAnimation* bound_animation(RE::hkbClipGenerator* clip)
 		{
 			if (!clip || !clip->binding || !clip->binding->animation) {
 				return nullptr;
@@ -81,7 +84,36 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 			if (!is_shtb_clip(raw)) {
 				return;
 			}
-			auto parsed = parse_keys(bound_animation(clip));
+			auto* animation = bound_animation(clip);
+			auto parsed = parse_keys(animation);
+			if (std::string_view{ raw } == "SH2_Art_Clip"sv) {
+				bool has_win_open{ false };
+				bool has_hit_frame{ false };
+				if (animation) {
+					for (const auto& track : animation->annotationTracks) {
+						for (std::int32_t i = 0; i < track.annotations.size(); ++i) {
+							const char* text = track.annotations[i].text.c_str();
+							if (!text) {
+								continue;
+							}
+							const std::string_view tag{ text };
+							if (is_ability_win_open_event(tag)) {
+								has_win_open = true;
+							}
+							if (is_ability_hit_frame_event(tag)) {
+								has_hit_frame = true;
+							}
+						}
+					}
+					if (const int selector = GameData::get_art_selector(); selector > 0) {
+						const auto art_id = static_cast<std::uint32_t>(selector);
+						if (const ArtDefinition* art = GameData::get_art(art_id)) {
+							inject_custom_ability_pie(animation, *art);
+						}
+					}
+				}
+				ArtDriver::bind_latch(has_win_open, has_hit_frame);
+			}
 			std::lock_guard lock{ mutex };
 			bound_clip = clip;
 			keys = std::move(parsed);

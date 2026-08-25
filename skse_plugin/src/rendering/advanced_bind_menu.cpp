@@ -7,6 +7,8 @@
 #include "../bar/hotbars.h"
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
+#include "art_icon_edit_dialog.h"
+#include "ability_editor.h"
 
 namespace SpellHotbar::BindMenu {
 
@@ -140,6 +142,8 @@ namespace SpellHotbar::BindMenu {
 
     void hide()
     {
+        ArtIconEditor::close();
+        AbilityEditor::close();
         show_frame = false;
 
         list_of_skills.clear();
@@ -609,6 +613,15 @@ namespace SpellHotbar::BindMenu {
 
 
 	void drawFrame(ImFont* font_text, ImFont* font_text_big, ImFont* font_title) {
+        if (ArtIconEditor::is_open()) {
+            ArtIconEditor::draw();
+            return;
+        }
+        if (AbilityEditor::is_open()) {
+            AbilityEditor::draw();
+            return;
+        }
+
         ImGui::PushFont(font_text);
         static constexpr ImGuiWindowFlags window_flag = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground;
 
@@ -763,17 +776,47 @@ namespace SpellHotbar::BindMenu {
                         ImGui::TableNextRow();
 
                         ImGui::TableNextColumn();
-                        RenderManager::draw_art_icon(art_id, table_icon_size);
+                        ImVec2 icon_pos = ImGui::GetCursorScreenPos();
+                        const ImVec2 icon_btn_size(static_cast<float>(table_icon_size),
+                            static_cast<float>(table_icon_size));
+                        ImGui::InvisibleButton("##art_icon", icon_btn_size);
                         if (ImGui::IsItemHovered()) {
                             RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(art_id)));
                         }
-                        set_drag_source_art(art_id, scale_factor);
+                        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+                            AbilityEditor::open(art_id);
+                        }
+                        RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
+                        const bool dead_on_bar =
+                            !art_class_is_live_on_bar(art->art_class, Bars::menu_bar_id);
+                        if (dead_on_bar) {
+                            RenderManager::draw_cd_overlay(icon_pos, table_icon_size, 0.0f, IM_COL32_WHITE);
+                        }
+                        if (!ArtIconEditor::is_open() && !AbilityEditor::is_open()) {
+                            set_drag_source_art(art_id, scale_factor);
+                        }
 
+                        // Gray outranks yellow: a dead row is dead (ticket 14).
+                        const bool direct_on_bar =
+                            !dead_on_bar && art_class_is_direct_on_bar(art->art_class, Bars::menu_bar_id);
+                        if (dead_on_bar) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
+                        }
+                        else if (direct_on_bar) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 210, 74, 255));
+                        }
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton(translate_c("$EDIT"))) {
+                            AbilityEditor::open(art_id);
+                        }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
+                        if (dead_on_bar || direct_on_bar) {
+                            ImGui::PopStyleColor();
+                        }
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c("$DASH"));
@@ -1089,6 +1132,11 @@ namespace SpellHotbar::BindMenu {
             else {
                 if (skill.type == slot_type::weapon_art) {
                     drawn_skill = RenderManager::draw_art_icon_in_editor(skill.art_id, bpos, icon_size, skill.color);
+                    const ArtDefinition* slotted_art = GameData::get_art(skill.art_id);
+                    if (slotted_art &&
+                        !art_class_is_live_on_bar(slotted_art->art_class, Bars::menu_bar_id)) {
+                        RenderManager::draw_cd_overlay(bpos, icon_size, 0.0f, IM_COL32_WHITE);
+                    }
                 }
                 else {
                     drawn_skill = RenderManager::draw_skill_in_editor(skill.formID, bpos, icon_size, skill.color);

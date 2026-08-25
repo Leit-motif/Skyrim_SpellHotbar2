@@ -1,0 +1,30 @@
+# Elder Scrolls color guidance
+
+Owner-provided reference for choosing race-coded color. This is thematic shorthand, not a
+requirement to use every listed color in an icon. Ability semantics and hotbar readability remain
+primary; use a race palette to reinforce a figure choice without making the composition busy.
+
+Race color does not select an elemental effect. Animation payloads and owner direction decide fire,
+frost, shock, blood, shadow, or nonmagical force. Do not add orange/teal grading merely because it
+is complementary or cinematic.
+
+| Race | Core colors | Accent colors | Visual feel |
+| --- | --- | --- | --- |
+| Nord | Ice blue, steel gray, weathered brown | White, dark red | Cold, rugged, fur-and-steel |
+| Imperial | Crimson, black, bronze | Gold, ivory | Roman military, disciplined, imperial |
+| Redguard | Deep red, sand, warm brown | Gold, turquoise | Desert warrior, rich textiles, curved steel |
+| Breton | Royal blue, burgundy, charcoal | Silver, muted gold | Medieval knight and courtly mage |
+| High Elf (Altmer) | Gold, ivory, pale yellow | Emerald, deep green | Radiant, aristocratic, ornate |
+| Dark Elf (Dunmer) | Charcoal, ash gray, dark red | Chitin brown, violet | Volcanic, austere, alien |
+| Wood Elf (Bosmer) | Forest green, bark brown, moss | Ochre, bone | Organic, woodland, hunter |
+| Orc (Orsimer) | Iron gray, black, dark green | Rust, blood red | Heavy, industrial, brutal |
+| Khajiit | Warm brown, tan, ochre | Burgundy, purple, gold | Caravan, desert, patterned textiles |
+| Argonian | Swamp green, teal, dark brown | Turquoise, orange | Wetland, tribal, iridescent |
+
+Use a limited subset for each glyph. Put race color in the atmospheric field, the wake, and at
+most one large wedge. A race-coded figure stays a near-black outline; palette must not become a
+costume illustration.
+
+Background hue is also a controlled source of atlas variety. Do not default every icon to a black
+field, but do not force a colored or hazy background where a quieter dark field gives the action
+better hotbar readability.

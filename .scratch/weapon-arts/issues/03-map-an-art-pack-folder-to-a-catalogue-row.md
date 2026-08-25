@@ -31,7 +31,7 @@ fails.
 
 ## Notes
 
-ADR-0009: a Weapon Art is any MCO-annotated attack clip. SH2 / PIE own the machinery. Ashes of
+ADR-0011: a Weapon Art is any MCO-annotated attack clip. SH2 / PIE own the machinery. Ashes of
 War is a content source, not AABL-hotkey / worn-keyword machinery. Do not require the filename
 `AABL_Attack_A.hkx`. Do not redistribute clips.
 

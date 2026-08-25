@@ -49,13 +49,14 @@ HitFrame / window / "may this cast start now" cache. It does not describe combo-
 The Consequences bullet "no independent MCO timing state" is the same rule: no second authority for
 when a press may start. A sample used only to restore combo position is not that state.
 
-**Named exception — combo position across a Driver Cast.** For a Driver Cast this mod itself
-started, Spell Hotbar 2 may sample attack and ready tags and write `MCO_nextattack` /
-`MCO_nextpowerattack` so the swing that follows continues the combo. Preserve the sampled value;
-never derive a next index. Gate the write to a cast this mod started. Do not call ShoutMCO for
-this: its API answers whether a press may start during someone else's animation, not where a cast
-sits in the combo (ownership answer 2026-08-12).
+**Named exception — combo position across a Driver Cast or Ability.** For a Driver Cast or
+Ability this mod itself started, Spell Hotbar 2 may sample attack and ready tags and write
+`MCO_nextattack` / `MCO_nextpowerattack` so the swing that follows continues the combo. Preserve
+the sampled value; never derive a next index. Gate the write to a state this mod started. Do not
+call ShoutMCO for this: its API answers whether a press may start during someone else's animation,
+not where a clip sits in the combo (ownership answer 2026-08-12). Ticket 13 is the Driver Cast
+implementation; weapon-arts ticket 10 extends the same exception to Abilities.
 
 **What the exception is not.** Those tags are not a HitFrame buffer, a chain window, or any other
 "when may this press start" policy. Combo restore and release timing do not share state, callbacks,
-or a cache. Ticket 13 implements the exception against this contract.
+or a cache. Ticket 13 implements the Driver Cast half; weapon-arts ticket 10 the Ability half.
