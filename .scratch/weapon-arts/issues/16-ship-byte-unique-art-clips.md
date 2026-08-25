@@ -9,9 +9,9 @@ clips. Requested 2026-08-25. **The local test below needs no permission** — co
 files on one machine is not redistribution — so the mechanism can be proven while the answer is
 outstanding.
 
-**Status:** phase 1 HALF DONE (2026-08-25). The clips are stamped and statically verified; the
-live acceptance is NOT met and needs an exclusive game. See "Phase 1 progress" below.
-
+**Status:** PARKED for a post-launch refinement pass (owner ruling, 2026-08-25). Phase 1's clips
+are stamped, verified, and live in the fixture; the remaining acceptance is not worth pre-launch
+time. Do not spend more of it here before launch.
 **Settles:** [ticket 15](15-double-slash-plays-no-clip.md) for the shipped set.
 **Decision:** [ADR-0017](../../../docs/adr/0017-the-shipped-art-pack-carries-its-own-clip-bytes.md).
 
@@ -121,3 +121,38 @@ line. It already earned itself -- `Enrage (M)` and `Killing Blow` legitimately p
 `latch 2 (winopen=false hitframe=false)`, the exact string the acceptance calls the defect
 signature, and four arts legitimately have zero animmotion keys. Scoring those as failures would
 have manufactured two false defects.
+
+
+## Parked, 2026-08-25 -- owner ruling
+
+The owner stopped this mid-acceptance: *"we don't need that level of testing... This really should
+be in a refinement pass after launch."* Correct call, and the cost of not making it earlier was a
+three-launch matrix nobody needed. Arts dropping at random is a polish defect, not a ship blocker.
+
+**Leave the stamped pack in place.** It works, and it is now load-bearing for two tickets that
+already passed on it (06's icon acceptance and 25's channel cells were accepted on this fixture).
+Reverting would invalidate accepted evidence for no gain. Pre-stamp backup stays under `_backups`
+as `art-pack-prestamp-20260825` if a before-state is ever needed.
+
+**What is settled and needs no re-testing:** all 57 submods own byte-unique clips (57 distinct
+hashes, none matching upstream, `hkxc verify` clean on all 57, animation data unchanged). On one
+launch, 51 of 57 arts bound their correct clip with the exact animmotion count from their own dump
+-- zero mis-binds, including Double Slash and Focused Cross, the two arts ticket 15 caught failing.
+
+**What is open, for whoever picks this up after launch:**
+
+- The three-launch bar is not met. One launch is not three, and the defect picks a different victim
+  each launch.
+- Six Dual-class arts have never been tested at all: Divided Strike, Dual Flurry, Head Chopper,
+  Holding Thorns, Ripping Hour, Wind Slice. Console cannot arm the left hand with a weapon, so they
+  cannot be driven headlessly by the route tried here. Untried seam worth ten minutes first:
+  `Actor#EquipItemEx` through DevBench's papyrus `self` target
+  (`self={"form":"0x14"}`, equipSlot 2 for left, 1 for right) -- flagged by another session and NOT
+  yet run. If that fails, this is an owner cell.
+- Phase 2 (shipping the stamped clips) still waits on the Ashes of War author's permission.
+
+**New input that may change the whole approach:** the owner has installed something aimed at
+animation load volume. The duplicate filter this ticket works around exists because of animation
+count pressure, so a mod that raises or manages that limit could make the byte-uniqueness fix
+unnecessary, or change which fix is right. Establish what it is and what it does before resuming --
+do not assume this ticket's premise still holds.
