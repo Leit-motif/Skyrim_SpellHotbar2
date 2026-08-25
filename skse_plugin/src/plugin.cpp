@@ -3,6 +3,7 @@
 #include "rendering/render_manager.h"
 #include "storage/storage.h"
 #include "game_data/game_data.h"
+#include "game_data/art_pack_gen.h"
 #include "bar/hotbars.h"
 #include "input/input.h"
 #include "events/eventlistener.h"
@@ -30,6 +31,11 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
             //Every SKSE plugin DLL is loaded by now, so ShoutMCO's optional cast-intent export
             //can be resolved. Absent or incompatible is normal and costs nothing (ADR 0005).
             SpellHotbar::casts::CastIntent::negotiate();
+            //Write the pointer-art OAR pack HERE, not at kDataLoaded: OAR parses config.json
+            //when it builds its replacer mods, which is after this and before our data load, so
+            //generating any later means the arts only appear on the next launch (ADR-0016).
+            //Pure filesystem work, so it needs nothing the game has not set up yet.
+            SpellHotbar::ArtPackGen::generate_and_cache();
         }
         else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             SpellHotbar::GameData::onDataLoad();

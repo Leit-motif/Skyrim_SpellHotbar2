@@ -9,6 +9,7 @@
 #include "custom_transform_csv_loader.h"
 #include "animation_data_csv_loader.h"
 #include "art_data_csv_loader.h"
+#include "art_pack_gen.h"
 #include "keynames_csv_loader.h"
 #include "spell_cast_data.h"
 #include "../input/modes.h"
@@ -442,6 +443,9 @@ namespace SpellHotbar::GameData {
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
+        // After both loaders, and deliberately: a scanned row only fills a gap the catalogue
+        // left. A curated row wins -- see curated_row_wins.
+        ArtPackGen::register_cached_arts();
         load_user_art_icons();
 
         spell_effects_key_indices = nullptr; //no longer need this
@@ -544,6 +548,9 @@ namespace SpellHotbar::GameData {
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
+        // After both loaders, and deliberately: a scanned row only fills a gap the catalogue
+        // left. A curated row wins -- see curated_row_wins.
+        ArtPackGen::register_cached_arts();
         load_user_art_icons();
         spell_effects_key_indices = nullptr;  // no longer need this
     }

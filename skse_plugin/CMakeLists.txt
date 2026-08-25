@@ -105,6 +105,8 @@ set(source_files src/plugin.cpp
                  src/rendering/art_icon_edit_dialog.cpp
                  src/rendering/ability_editor.h
                  src/rendering/ability_editor.cpp
+                 src/game_data/art_pack_gen.h
+                 src/game_data/art_pack_gen.cpp
                  src/game_data/custom_ability_runtime.h
                  src/game_data/custom_ability_runtime.cpp
                  src/casts/spell_proc.h
@@ -127,6 +129,10 @@ target_include_directories(combo_cache_test PRIVATE src/casts)
 add_executable(clip_translation_test src/casts/clip_translation_test.cpp)
 target_compile_features(clip_translation_test PRIVATE cxx_std_23)
 target_include_directories(clip_translation_test PRIVATE src/casts)
+
+add_executable(art_pack_gen_test src/game_data/art_pack_gen_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp src/game_data/custom_ability_config.cpp)
+target_compile_features(art_pack_gen_test PRIVATE cxx_std_23)
+target_include_directories(art_pack_gen_test PRIVATE src/game_data)
 
 add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp src/game_data/custom_ability_config.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)
