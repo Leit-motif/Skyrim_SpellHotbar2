@@ -2,7 +2,7 @@
 
 **Type:** cleanup (DLL), decided by [ADR-0015](../../../docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md)
 
-**Status:** claimed — implementation dispatched 2026-08-24; in-game cell open below.
+**Status:** claimed — landed as commit `c73b4f1` (2026-08-24); only the in-game displacement cell remains open.
 
 **Blocked by:** None.
 
@@ -57,8 +57,11 @@ and each lands on the MCO-consistent side:
 
 ## Acceptance
 
-- [x] DLL builds; `combo_cache_test`, `clip_translation_test`, `art_data_test` pass with the
-      helpers and their tests removed. (Static — see comment when implementation lands.)
+- [x] DLL builds (66/66); all six test binaries pass (`combo_cache_test`,
+      `clip_translation_test`, `art_data_test`, `art_bind_record_test`, `bind_drop_test`,
+      `cast_anim_ids_test`), coordinator-run, with the helpers and their three tests removed.
+      Commit `c73b4f1`; net −108 lines. A case-insensitive grep for the removed names returns
+      nothing outside tracker history.
 - [ ] **In-game, the one cell that matters:** with the new DLL deployed, a fire-and-forget cast,
       a held channel, a ritual, and a weapon art each show zero displacement under a held
       movement key — displacement measured, not footfalls (thuum 66's lesson). A movement press
