@@ -1,6 +1,6 @@
 # Heart Strike
 
-**Status:** Owner-directed red Molag Bal/Daedric edit finalized at 128 px on 2026-08-25
+**Status:** Owner-approved solid-silhouette Molag Bal/Daedric edit finalized at 128 px on 2026-08-25
 
 **Generation path:** One Codex built-in image-generation call; no image references
 
@@ -153,3 +153,36 @@ Hard constraints: compact figure no more than 38%; exact original figure envelop
   shoulder outline survive while the red crescent remains the first read.
 - 32 px: pass. Mace silhouette, red upswing, and compact Daedric source remain separable.
 - Atlas-input SHA-256: `3DDC2A0008203315137DEB17826F48FCAAFDA702B99AA0559500012454CC7FCF`.
+
+## Owner-approved solid-silhouette correction
+
+The prior detailed Daedric variants were rejected. The owner selected the composition generated as
+`exec-7394b02f-c67d-46ab-8d5b-990c2777f44c`, then directed one narrow correction: preserve that
+figure, pose, trail, field, and framing; correct the Mace of Molag Bal outer contour; make the whole
+weapon part of the same solid-black figure glyph; remove all green and internal rendering. The
+owner approved the resulting image on 2026-08-25. Only its 128 px reduction is retained.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon.
+Input images: Image 1 is the exact edit target chosen by the owner. Image 2 is the authoritative Skyrim Mace of Molag Bal shape reference.
+
+Edit ONLY the weapon area around the upper-left hand and impact in Image 1. Do not change the figure, pose, hands, arms, armor silhouette, red trail, impact size, background, crop, lighting, or composition.
+
+Replace the incorrect weapon in Image 1 with a proportionally faithful simplified OUTER SILHOUETTE of Skyrim's Mace of Molag Bal from Image 2. The weapon must connect continuously to the existing hands at the same angle and terminate at the same red-white impact.
+
+Correct outer contour from Image 2: an elongated narrow Daedric mace head, not a radial star. One long central crown spike at the top; a tall narrow central body; one broad crossbar with two angular side wings near the upper-middle; a long tapered lower body; one compact horned flare at the base of the head; then the short haft. The full head is roughly two to three times longer than its crossbar is wide. Preserve the distinctive long cruciform profile rather than inventing extra points.
+
+Make the ENTIRE weapon—head, neck, haft, pommel, and its connection into the gripping hands—the same uniform solid near-black silhouette as the figure. No internal weapon rendering whatsoever. Delete all green. Delete every groove, channel, face, eye, engraving, stud, grip band, metal highlight, gray edge, interior red line, or material detail. Only the weapon's outer contour identifies it. A thin crimson OUTER rim is allowed solely where needed to separate the black weapon from the black-red field, matching the figure's outer rim.
+
+Preserve Image 1 exactly outside the weapon: the flat twin-horn Daedric figure silhouette, shoulder wedges, both existing arm/hand shapes, red crescent, white-red impact, charcoal-red abstract field, brushwork, vignette, and all positions.
+
+Result hierarchy: red action crescent first; one continuous black figure-plus-weapon glyph second. No green anywhere.
+
+Hard constraints: revise Image 1, not any other candidate. One connected solid-black Mace of Molag Bal silhouette. No radial star head, no green, no internal weapon details, no rendered armor, no face, no new object, no extra weapon, no text, no logo, no border.
+```
+
+- 128 px: pass and owner approved. The red crescent remains first read; Daedric figure, hands,
+  haft, and elongated mace head form one uninterrupted solid-black glyph.
+- 32 px: pass. The action path, contact, and connected black weapon silhouette remain legible.
+- Atlas-input SHA-256: `EE96FC95C74AFEA57260FE440EF135BBA22C900E12164FECF4FD8377F33EB58C`.
