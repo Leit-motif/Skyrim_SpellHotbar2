@@ -20,6 +20,8 @@ vcpkg_installed
 
 __pycache__/
 *.py[cod]
+deploy/weapon-art-icons/dist/
+deploy/weapon-art-icons/.skyrim-agent/
 
 # One-off classifier / scratch scripts
 **/_tmp_*
