@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skyrim Weapon Art Icon Prompter"
+  short_description: "Ground MMO icon prompts in Skyrim"
+  default_prompt: "Use $skyrim-weapon-art-icon-prompter to turn this Weapon Art direction into a Skyrim-grounded image-generation prompt."

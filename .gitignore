@@ -25,6 +25,10 @@ __pycache__/
 **/_tmp_*
 python_scripts/_tmp_*.py
 
+# Rejected image-generation calibration outputs; approved Weapon Art assets live beside this
+# folder under source/ and icons/.
+python_scripts/weapon_art_icons/pilot/
+
 # Playtest drops into empty Custom Ability templates (ticket 08). Not shipped.
 **/SpellHotbar2Arts/Custom_Ability_*/AABL_Attack_A.hkx
 **/SpellHotbar2Arts/Custom_Ability_*/AABL_Attack_A.HKX
