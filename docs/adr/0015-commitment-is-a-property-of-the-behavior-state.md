@@ -61,6 +61,30 @@ one FOMOD, and `python_scripts/create_fomod_installer.py` already builds depende
 optional groups. A patch may therefore ship as an option in this installer while being authored
 and owned elsewhere. Shipping a separate small mod for one behavior file is the outcome to avoid.
 
+## Amended 2026-08-24, same day: one rule per action, for every actor
+
+The owner, closing the loop after the NPC question:
+
+> "i want all casts rooted/slowed for concentration for both the player and npc's. seamless. the
+> same rules need to apply to everyone consistently."
+
+That kills the per-actor exemption this ADR's cost section entertained. **Rules are per-action,
+never per-actor**: a fire-and-forget cast roots whoever casts it; a concentration channel moves
+at half speed whoever holds it. The player is not a special case, and neither is the NPC.
+
+It also forces a second primitive, because the two rules are different kinds of thing:
+
+- **Commitment is binary and lives in the behavior state** — the decision above, unchanged. A
+  `BSIsActiveModifier` can stop translation; it cannot express "half."
+- **A graded slow is an actor value and lives in a conditioned magic effect** — a `SpeedMult`
+  modifier active only while the actor is concentration-casting, carried by one ability record
+  every actor gets. One record, one condition, and the player and the enemy mage read the same
+  number.
+
+The split is not a compromise; each primitive is the only one that can do its job. What stays
+forbidden is the third thing: a DLL toggling controls or writing actor values on its own clock,
+which is the shape that slid.
+
 ## The cost we are accepting
 
 A modifier on a shared state catches every actor in it, which is the mechanism above working as

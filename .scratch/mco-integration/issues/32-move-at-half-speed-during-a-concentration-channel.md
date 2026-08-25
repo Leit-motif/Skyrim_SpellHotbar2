@@ -2,9 +2,11 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** needs-triage — **a preference, not a requirement** (owner, 2026-08-24). The spike
-below is specified; the build depends on which route the owner takes, and the two routes are not
-the same size of job. Weigh both against a want rather than a must.
+**Status:** ready-for-agent — **upgraded to a requirement by owner ruling later the same day**
+(2026-08-24): "i want all casts rooted/slowed for concentration for both the player and npc's.
+seamless. the same rules need to apply to everyone consistently." The earlier "not mandatory"
+framing below is kept for the duration rationale it carries, but the decision is made. The spike
+still picks the route; ADR-0015's amendment fixes the mechanism split.
 
 **Blocked by:** None to spike. The build inherits [ticket 28](28-hold-a-looping-state-for-a-concentration-channel.md)'s
 held state and re-opens [ADR-0013](../../../docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md).
@@ -102,7 +104,18 @@ Drive one channel on the chosen route, hold a movement key, and read the OAR Ani
 which clip wins plus `FootLeft`/`FootRight` cadence from the event stream. A frame is not
 enough — a slide and a walk look the same in a still.
 
-## The 50%, once movement is open
+## The 50% — superseded in mechanism by ADR-0015's amendment, same day
+
+The paragraphs below predate the uniform-rules ruling and describe an SH2-applied effect. The
+ruling moves the slow to **one conditioned ability record shared with NPCs** ([ticket
+33](33-commit-npc-concentration-casts.md) owns it): `SpeedMult` −50 conditioned on
+concentration-casting, so the player's hotbar channel, the player's equipped-hand channel, and
+the enemy mage all read the same number from the same record. This ticket keeps only what is
+player-specific: the animation blend (the routes above) and releasing the WASD capture for a
+channel. The magic-effect preference and the −50-points caveat below carry over to ticket 33's
+record unchanged.
+
+## The 50%, once movement is open (superseded — see above)
 
 Apply a `SpeedMult` slow for the hold and drop it at `end_channel` / `on_reset` / cancel, on the
 same edges that already tear the channel down (`casting_controller.h`, `CastingInstanceSpellConcentration::end_channel`).
@@ -114,10 +127,12 @@ same edges that already tear the channel down (`casting_controller.h`, `CastingI
 - **"50%" means −50 points of `SpeedMult`**, which is half speed for an unbuffed player and less
   than half for a buffed one. Say so out loud; a true proportional halving would have to re-read
   the value and would fight anything else modifying it mid-channel.
-- A ritual (two-handed) concentration keeps its full root —
-  `CastingInstanceSpellRitualConcentration::blocks_movement()` returns `!m_casted`
-  (`casting_controller.cpp:1402`) and nothing here changes it. Unless the owner says otherwise,
-  the half-speed rule is the single-hand channel only.
+- Ritual (two-handed) concentration: the uniform ruling ("all casts ... slowed for
+  concentration") reads as covering it, which would drop
+  `CastingInstanceSpellRitualConcentration::blocks_movement()`'s full root
+  (`casting_controller.cpp:1402`). Rituals have no moving-cast clips at all, so this is the
+  hardest blend case — confirm with the owner whether rituals are in scope before building them,
+  and land the single-hand channel first either way.
 
 ## Acceptance
 
