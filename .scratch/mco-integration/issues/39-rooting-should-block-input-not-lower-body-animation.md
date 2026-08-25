@@ -47,6 +47,24 @@ The owner suspects a leftover, and there are two plausible layers:
 Ticket 35 retired the DLL movement capture, so any surviving movement suppression in the plugin is
 by definition a leftover. Check it against the tickets 32 and 34 parked work before assuming.
 
+## Narrowed 2026-08-25 by ticket 38's own telemetry
+
+The ticket-38 session ran both its cells on the deployed DLL right after the owner's pass, and the
+second one is a discriminator for this ticket:
+
+- **Disengage (art 12, stamped clip, 140 animmotion keys) leapt ~315 units XY**, matching ticket
+  05's ~318. So `SH2_Art_Clip` still consumes animmotion and still translates the actor.
+- A fire-and-forget driver cast froze XY to the last digit through the clip, with no
+  `SH2_CastRight_Clip` motion bind.
+
+Motion consumption is therefore alive and working where it is supposed to be. That weakens
+candidate (1) — ticket 38's animmotion change — as the cause of the leg freeze, and points at the
+**`bAnimationDriven` state modifier** side instead. Start there rather than re-running the
+animmotion comparison.
+
+This is telemetry from a peer session, not a frame. It says motion translates; it still does not
+show what the legs do. The frame comparison below is unchanged as the acceptance evidence.
+
 ## Diagnose before building
 
 Do not fix this by reverting ticket 38. The glide removal is wanted; only the leg freeze is not.
