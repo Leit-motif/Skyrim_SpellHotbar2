@@ -1,64 +1,36 @@
-# 31 — Root the player through a hotbar-fired shout
+# 31 — A hotbar-fired shout slides the player
 
-**Type:** verification (may be zero-code)
+**Type:** defect — **owned by ShoutMCO, not this fork**
 
-**Status:** ready-for-agent
+**Status:** wontfix here. Carried to
+[thuum ticket 66](../../../../thuum-fully-animated-shouts-mco/.scratch/shout-mco-engine/issues/66-the-root-stops-the-legs-not-the-translation.md).
 
-**Blocked by:** None.
+## The report and the ruling
 
-## The rule, restated by the owner 2026-08-24
+Owner, 2026-08-24: **"i thought there's a bug/regression because when i used a shout through sh2,
+i slid around instead of movement being blocked. so this is something that's best handled in
+shoutMCO."**
 
-> "shouts should block movement input during the cast (committed) like mco attacks."
+The rule is the one set 2026-08-06 and unchanged: a shout blocks movement input for the whole
+cast, the way an MCO attack does.
 
-This is the same rule the owner set on 2026-08-06 and it is already built — **in ShoutMCO, not
-here.** [thuum ticket 07](../../../../thuum-fully-animated-shouts-mco/.scratch/shout-mco-engine/issues/07-root-the-inhale.md)
-resolved 2026-08-07: the engine writes `SHOUT_lock=1` and raises vanilla `moveStop` at
-`SBF_ShoutStart`, holds it for the whole shout, and clears it at `shoutStop`. Route 1 gates the
-`moveStart` transition on `SHOUT_lock == 0`, so a movement key held across the shout never
-re-enters locomotion. Driven from a running start: 993 ms with zero footfalls against a
-196–677 ms cadence, and the next footfall 9 ms after the unroot. The root is a compile-time
-constant (`kRootDuringChain` in `ShoutChainEngine.cpp`), not an ini knob.
+## Why it is not this fork's
 
-**So nothing new is designed here.** What is unproven is the fork's own path into it.
+A hotbar shout is a real shout. `CastingInstanceShout` swaps `selectedPower`
+(`casting_controller.cpp:1461`) and `VoiceCastDriver` presses the native voice button; from the
+graph's side nothing distinguishes it from a physical shout key. This fork contributes no root of
+its own and should not grow one — `CastingInstanceShout` inherits `blocks_movement() == false`,
+and a second root here fighting ShoutMCO's `SHOUT_lock` is the outcome to avoid.
 
-## Why this ticket exists anyway
+ShoutMCO's root takes the graph out of locomotion and stops the legs; it never removed the
+translation, and the control-map suppression that would have is switched off there
+(`kRootDuringChain = false`, on finding 14). Thuum ticket 66 has the mechanism, the fix, and the
+acceptance. The plant it copies is this fork's own: the `BSIsActiveModifier` bound to
+`bAnimationDriven` that closed [ticket 19](19-root-the-player-during-a-driver-cast.md)
+(`nemesis/Nemesis_Engine/mod/shtb/1hm_behavior/#shtb$11.txt`, `$12.txt`).
 
-A hotbar shout does not shout by itself: `CastingInstanceShout` swaps `selectedPower`
-(`casting_controller.cpp:1461`, `CastingInstancePower` ctor) and `VoiceCastDriver` presses the
-native voice button. That produces a real vanilla shout, so it should raise `SBF_ShoutStart` and
-should be rooted by the same lock. **Should. Every cell in thuum ticket 07 and ticket 43 was
-driven with a physical shout key**, never through the hotbar, and this fork's own
-`CastingInstanceShout` inherits `blocks_movement() == false` from `BaseCastingInstance`
-(`casting_controller.cpp:480`) — the fork contributes no root of its own and is relying entirely
-on the other DLL noticing.
+## The one thing to watch from this side
 
-Two ways it could quietly not hold, both worth a single drive rather than an argument:
-
-1. The proxy-power press path enters the voice state by a route that skips `SBF_ShoutStart`.
-2. SH2's own WASD capture (`is_movement_blocking_cast()`, `input.cpp:468`) and ShoutMCO's
-   control-map toggle (`RestoreMovement`) disagree about who hands movement back, so the player
-   is freed early or left stuck.
-
-## Acceptance
-
-- [ ] A shout fired from a hotbar slot, with a movement key **held across the whole shout**,
-      produces no locomotion — same instrument as thuum ticket 07: `FootLeft`/`FootRight`
-      cadence either side of the shout, from the ShoutMCO trace with `bTrace = 1`.
-- [ ] `SHOUT_lock` goes 1 at `SBF_ShoutStart` and 0 at `shoutStop` for that shout, read back
-      (an undeclared variable reads 0 silently — thuum A45.9).
-- [ ] Movement returns on the first frame after the unroot, and is not still blocked by SH2's
-      own capture.
-- [ ] Evidence names both repositories' commits, both deployed DLL hashes, the save, and the
-      profile.
-
-If all four hold, close this as met by thuum ticket 07 and record the hotbar path as covered.
-If any fails, the fix belongs in ShoutMCO's engine, not in this fork — SH2 should not grow a
-second root that fights the first.
-
-## Scope note: this is a player-only rule
-
-Neither plant reaches an NPC. ShoutMCO hooks `RE::VTABLE_PlayerCharacter[2]` and says so
-(`ShoutChainEngine.cpp:3455`, "Player only for MVP"); extending it is a registration change, not
-a rewrite. SH2's capture reads `ControlMap` bindings out of the player's input dispatch, which
-an NPC has none of. **NPCs keep vanilla shout behavior — they walk while shouting.** If the
-owner wants NPC commitment too, that is new work in ShoutMCO and gets its own ticket there.
+Ticket 66 predicts a native shout key slides too, and that this was never SH2-specific. If the
+drive shows a native press rooting while a hotbar press slides, the difference is in the entry
+path and comes back here.

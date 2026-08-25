@@ -2,8 +2,9 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** needs-triage — the spike below is specified; the build depends on which route the
-owner takes, and the two routes are not the same size of job.
+**Status:** needs-triage — **a preference, not a requirement** (owner, 2026-08-24). The spike
+below is specified; the build depends on which route the owner takes, and the two routes are not
+the same size of job. Weigh both against a want rather than a must.
 
 **Blocked by:** None to spike. The build inherits [ticket 28](28-hold-a-looping-state-for-a-concentration-channel.md)'s
 held state and re-opens [ADR-0013](../../../docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md).
@@ -12,10 +13,22 @@ held state and re-opens [ADR-0013](../../../docs/adr/0013-a-channel-loops-throug
 
 > "for the concentration casts, i would like to open movement but at 50% movement speed."
 
-A fire-and-forget Driver Cast stays fully committed, as
-[ticket 19](19-root-the-player-during-a-driver-cast.md) built it. A held channel is a different
-shape: the player is standing there for as long as they keep the key down, and a full root for
-an unbounded hold is a different cost from a root for a 1.6 s clip.
+And, asked directly how hard a requirement it is:
+
+> "it isn't mandatory that concentration spells should allow movement at half speed, but it would
+> feel better from a gameplay perspective because rooting for 1-2 seconds during an attack is fine,
+> but being rooted for 6-10s channel would not feel great."
+
+**That is the whole case, and it is a duration argument rather than a movement one.** A
+fire-and-forget Driver Cast stays fully committed, as
+[ticket 19](19-root-the-player-during-a-driver-cast.md) built it, and nobody minds — the clip is
+over in 1.6 s. A channel runs as long as the key is held. Commitment that reads as weight at 2 s
+reads as a loss of control at 8 s.
+
+Two consequences for whoever picks this up. A route whose cost is out of proportion to a
+quality-of-life want should be reported back rather than built. And a fix that shortens the felt
+root without opening movement at all would answer the complaint as stated — worth a thought
+before committing to either route below.
 
 ## Where the root actually comes from today — not where it looks like it comes from
 
@@ -57,6 +70,12 @@ ever plays `1HM_Shout_Inhale`, so four of the five files never play. The `_idle`
 clips (including `mt_idle.hkx`) cover the standing-and-turning case in the same way.
 
 ## The two routes
+
+Both are answers to the same requirement: **movement during a channel needs a blend, not a
+state.** That is the general shape of it — vanilla lets you walk while hand-casting a
+concentration spell because vanilla magic casting is an upper-body layer over locomotion, and it
+lets you walk while charging a shout because the shout machine carries its own `mt_` movement
+set. A root-level state playing one clip has neither, which is where the fork's channel sits.
 
 **A — drive concentration back through the vanilla shout graph.** ADR-0013's first open shape.
 The graph blends locomotion natively and picks `mt_shout_inhale` on its own; nothing new is
@@ -111,8 +130,12 @@ same edges that already tear the channel down (`casting_controller.h`, `CastingI
 - [ ] Ritual concentration is still fully rooted.
 - [ ] Evidence names the commit, the DLL hash, the save, and the profile.
 
-## Scope note: this is a player-only rule
+## Scope note: NPCs
 
-The WASD capture reads the player's own input dispatch, and no NPC is ever sent an
-`SH2_CastChannel` notify, so no NPC enters the state. NPC casting is untouched by anything in
-this ticket. See [ticket 31](31-root-a-hotbar-fired-shout.md) for the same note on the shout side.
+Nothing in this ticket reaches an NPC. The WASD capture reads the player's own input dispatch,
+and no NPC is ever sent an `SH2_CastChannel` notify, so no NPC enters the state.
+
+The wider picture, per the owner 2026-08-24: **NPC casts are rooted by MSCO, and MSCO does not
+cover concentration.** So an NPC channelling is unrooted today, by omission rather than by
+decision, and this ticket does not change that either way. If NPC concentration commitment is
+ever wanted it is MSCO's, not this fork's.
