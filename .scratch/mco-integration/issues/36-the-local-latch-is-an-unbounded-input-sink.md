@@ -166,6 +166,6 @@ times inside 8 s with no player-visible residue beyond one refused press. Eviden
 **Agent, 2026-08-25, post-review.** A second-model review (Cursor grok-4.6) of the diff confirmed
 the fix and surfaced two residuals outside this ticket's scope — no ArtDriver watchdog (a wedged
 Ability still eat-drop-loops, bounded but unrecovered) and both caps running on wall clock through
-pauses. Filed as ticket 37 rather than widening this one. It also caught an overclaiming comment
+pauses. Filed as ticket 37 rather than widening this one. **Triaged 2026-08-25: the ArtDriver claim is false** -- `CastingInstanceWeaponArt::update()` already caps a live art at 8s and tears it down through `ArtDriver::cancel()`, so that path was never unbounded. Ticket 37 is now the pause-blind caps alone. It also caught an overclaiming comment
 at the `poll_watchdog` call site (the recovery frame's release is a loud refusal while the wedged
 instance is still live, not a fire); the comment now says what the trace shows.
