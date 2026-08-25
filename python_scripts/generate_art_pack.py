@@ -5,7 +5,7 @@ gate on the Ashes of War items plugin) and emits:
 
 1. arts.csv rows for the Ability catalogue
 2. Spell Hotbar 2 OAR submods (config.json only) that CompareValues
-   SpellHotbar_ArtSelector and point at the author's clip via
+   the SH2_ArtSelector graph variable and point at the author's clip via
    overrideAnimationsFolder
 
 Never copies .hkx files. Never writes user.json onto foreign folders.
@@ -29,8 +29,13 @@ from typing import Callable, Iterable
 
 AABL_CLIP = "aabl_attack_a.hkx"
 AOW_ITEMS_PLUGIN = "ashes of war additional attack v items.esp"
-ART_SELECTOR_PLUGIN = "SpellHotbar.esp"
-ART_SELECTOR_FORM_ID = "D63"
+# The art selector is a behavior-graph variable, not an ESP record (ADR-0016). The global it
+# used to be, `SpellHotbar_ArtSelector` / `D63` in `SpellHotbar.esp`, is not in stock Spell
+# Hotbar 2 -- it only ever existed in a hand-edited copy of the upstream plugin -- so a generated
+# pack that gated on it worked on the author's machine and nowhere else. `SH2_ArtSelector` is
+# declared by SH2's own `shtb` Nemesis patch in `0_master` and written by the DLL, so the pack
+# now depends on nothing but Spell Hotbar 2 itself.
+ART_SELECTOR_GRAPH_VARIABLE = "SH2_ArtSelector"
 SH2_PACK_NAME = "SpellHotbar2Arts"
 # Stance-default "Ashes of War Sword Neutral" is 1001002544. A reserved SH2
 # band above 2e9 beats that without depending on their numbers.
@@ -340,10 +345,8 @@ def _selector_condition(selector: float) -> dict:
         "condition": "CompareValues",
         "requiredVersion": "1.0.0.0",
         "Value A": {
-            "form": {
-                "pluginName": ART_SELECTOR_PLUGIN,
-                "formID": ART_SELECTOR_FORM_ID,
-            }
+            "graphVariable": ART_SELECTOR_GRAPH_VARIABLE,
+            "graphVariableType": "Int",
         },
         "Comparison": "==",
         "Value B": {"value": selector},

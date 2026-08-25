@@ -138,7 +138,6 @@ namespace SpellHotbar::GameData {
     extern RE::TESGlobal* global_casting_source;
     extern RE::TESGlobal* global_vampire_lord_equip_mode;
     extern RE::TESGlobal* global_casting_conc_spell;
-    extern RE::TESGlobal* global_art_selector;
 
     extern RE::SpellItem* spellhotbar_castfx_spell;
     extern RE::SpellItem* spellhotbar_unbind_slot;
@@ -250,8 +249,22 @@ namespace SpellHotbar::GameData {
     bool get_art_catalogue_icon(uint32_t art_id, std::string& out_icon, std::uint32_t& out_icon_form);
     const ArtDefinition* get_art_catalogue(uint32_t art_id);
     std::vector<uint32_t> list_art_ids();
+    /**
+     * Which Ability art is playing, for OAR's benefit (ADR-0008: one selector, not a path per art).
+     *
+     * This used to be a `TESGlobal` in `SpellHotbar.esp` so an OAR `CompareValues` condition could
+     * read it. That form is not in stock Spell Hotbar 2 -- it only ever existed in a hand-edited
+     * copy of the upstream plugin -- so shipping it meant either redistributing his ESP or adding
+     * one of our own. Neither is needed: OAR's built-in `CompareValues` reads a behavior-graph
+     * variable directly, and this mod already ships a Nemesis patch that can declare one
+     * (ADR-0016). `set_art_selector` writes `SH2_ArtSelector` into the graph as well as here.
+     *
+     * The in-process copy is what the clip-translation path reads, off the animation thread, so
+     * the accessors stay atomic; the graph write is the half OAR sees.
+     */
     void set_art_selector(int value);
     void reset_art_selector();
+    int get_art_selector();
     void add_art_cooldown(uint32_t art_id, float days);
     bool is_art_on_cd(uint32_t art_id);
     std::tuple<float, float> get_art_gametime_cooldown(float curr_game_time, uint32_t art_id);

@@ -105,8 +105,8 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 							}
 						}
 					}
-					if (GameData::global_art_selector) {
-						const auto art_id = static_cast<std::uint32_t>(GameData::global_art_selector->value);
+					if (const int selector = GameData::get_art_selector(); selector > 0) {
+						const auto art_id = static_cast<std::uint32_t>(selector);
 						if (const ArtDefinition* art = GameData::get_art(art_id)) {
 							inject_custom_ability_pie(animation, *art);
 						}

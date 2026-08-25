@@ -128,8 +128,12 @@ class GenerateArtPackTest(unittest.TestCase):
         self.assertNotIn("IsWornHasKeyword", kinds)
         self.assertNotIn("IsEquippedType", kinds)
         selector_cond = next(c for c in config["conditions"] if c["condition"] == "CompareValues")
-        self.assertEqual(selector_cond["Value A"]["form"]["pluginName"], "SpellHotbar.esp")
-        self.assertEqual(selector_cond["Value A"]["form"]["formID"], "D63")
+        # The selector is a behavior-graph variable, never an ESP form: gating on a record that
+        # only exists in a hand-edited copy of upstream's plugin is what shipped a pack that
+        # worked on one machine (ADR-0016).
+        self.assertNotIn("form", selector_cond["Value A"])
+        self.assertEqual(selector_cond["Value A"]["graphVariable"], "SH2_ArtSelector")
+        self.assertEqual(selector_cond["Value A"]["graphVariableType"], "Int")
         self.assertEqual(selector_cond["Comparison"], "==")
         self.assertEqual(selector_cond["Value B"]["value"], selector)
         actor = next(c for c in config["conditions"] if c["condition"] == "IsActorBase")

@@ -15,6 +15,7 @@
 #include "../storage/user_data_io.h"
 
 #include <algorithm>
+#include <atomic>
 #include <random>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -49,7 +50,11 @@ namespace SpellHotbar::GameData {
     RE::TESGlobal* global_vampire_lord_equip_mode = nullptr;
     RE::TESGlobal* global_casting_timer = nullptr;
     RE::TESGlobal* global_casting_conc_spell = nullptr;
-    RE::TESGlobal* global_art_selector = nullptr;
+
+    // The Ability art selector. Not a TESGlobal and deliberately not in any plugin -- see the
+    // declaration in game_data.h and ADR-0016. Written on the main thread at Ability start, read
+    // by our OAR condition off the animation path.
+    std::atomic<int> art_selector{ 0 };
 
     RE::SpellItem* spellhotbar_castfx_spell = nullptr;
     RE::SpellItem* spellhotbar_unbind_slot = nullptr;
@@ -369,7 +374,6 @@ namespace SpellHotbar::GameData {
         load_form_from_game(0xCDD84, "Skyrim.esm", &werewolf_beast_race, "Werewolf Beast Race", RE::FormType::Race);
 
         load_form_from_game(0x815, "SpellHotbar.esp", &global_animation_type, "SpellHotbar_SpellAnimationType", RE::FormType::Global);
-        load_form_from_game(0xD63, "SpellHotbar.esp", &global_art_selector, "SpellHotbar_ArtSelector", RE::FormType::Global);
 
         load_form_from_game(0x835, "SpellHotbar.esp", &global_casting_source, "SpellHotbar_CastingSource", RE::FormType::Global);
 
@@ -1564,14 +1568,28 @@ namespace SpellHotbar::GameData {
 
     void set_art_selector(int value)
     {
-        if (global_art_selector) {
-            global_art_selector->value = static_cast<float>(value);
+        art_selector.store(value, std::memory_order_relaxed);
+        // The same value into the behavior graph, because that is where OAR reads it from. The
+        // `shtb` Nemesis patch declares `SH2_ArtSelector` in `0_master`, and an actor-level write
+        // lands in exactly that root storage (ADR-0014) -- which is what a built-in `CompareValues`
+        // condition with a `graphVariable` operand resolves against. No ESP record, no OAR addon.
+        if (auto* pc = RE::PlayerCharacter::GetSingleton()) {
+            const bool wrote = pc->SetGraphVariableInt("SH2_ArtSelector", value);
+            std::int32_t read_back = -1;
+            const bool read = pc->GetGraphVariableInt("SH2_ArtSelector", read_back);
+            logger::debug("SH2 art: SH2_ArtSelector={} wrote={} read={} back={}", value, wrote,
+                read, read ? read_back : -1);
         }
     }
 
     void reset_art_selector()
     {
         set_art_selector(0);
+    }
+
+    int get_art_selector()
+    {
+        return art_selector.load(std::memory_order_relaxed);
     }
 
     void add_art_cooldown(uint32_t art_id, float days)
@@ -1894,9 +1912,7 @@ namespace SpellHotbar::GameData {
          if (global_animation_type) {
              global_animation_type->value = 0.0f;
          }
-         if (global_art_selector) {
-             global_art_selector->value = 0.0f;
-         }
+         reset_art_selector();
          if (global_casting_source) {
              global_casting_source->value = 0.0f;
          }

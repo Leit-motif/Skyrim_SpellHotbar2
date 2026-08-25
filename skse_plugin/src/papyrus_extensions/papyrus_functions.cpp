@@ -70,10 +70,7 @@ void slot_art(RE::StaticFunctionTag*, int slot_index, int art_id)
 
 int get_art_selector(RE::StaticFunctionTag*)
 {
-    if (SpellHotbar::GameData::global_art_selector) {
-        return static_cast<int>(SpellHotbar::GameData::global_art_selector->value);
-    }
-    return 0;
+    return SpellHotbar::GameData::get_art_selector();
 }
 
 int set_number_of_slots(RE::StaticFunctionTag*, int num)

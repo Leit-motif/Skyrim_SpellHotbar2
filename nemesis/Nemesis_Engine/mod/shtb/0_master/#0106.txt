@@ -1455,6 +1455,7 @@
 				<hkcstring>MCO_nextpowerattack</hkcstring>
 				<hkcstring>MCO_currentattack</hkcstring>
 				<hkcstring>MCO_currentpowerattack</hkcstring>
+				<hkcstring>SH2_ArtSelector</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="characterPropertyNames" numelements="15">
