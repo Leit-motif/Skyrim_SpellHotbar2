@@ -6,8 +6,10 @@
 why" section and `docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md` before
 touching anything.
 
-**Status:** ready-for-agent — the spike is fully specified. **The build phase is gated on the
-spike's answer and must not start before it.**
+**Status:** CLOSED 2026-08-24 on the owner's call — see "Closed 2026-08-24" at the bottom. The
+animation half is owner-verified; the combo carve-outs went to tickets 29 and 30, both since
+resolved. (This line stayed "ready-for-agent" for a day after the close and misled a board
+listing; the status line and the closing section must move together.)
 
 ## What this is
 
