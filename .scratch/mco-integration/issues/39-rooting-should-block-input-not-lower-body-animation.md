@@ -1,0 +1,74 @@
+# 39 — Rooting a cast should block input, not freeze the legs
+
+Ticket 38 removed the forward glide from a driver cast, and the glide is gone. But it went too far:
+the character now stands with a still lower body. The owner wants MSCO's own animation preserved —
+the character visibly **steps forward, legs moving** — while the *player's* movement input is what
+gets blocked.
+
+**Blocked by:** nothing. Ticket 38's rooting change is the thing being corrected, so read it and
+`docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md` first.
+
+**Status:** needs-triage
+
+## The distinction this ticket exists to hold
+
+Three separate things have been collapsed into one:
+
+1. **Animation-driven root motion** — the clip's own animmotion track translating the actor.
+2. **Lower-body animation** — the legs playing their authored stepping motion, in place or not.
+3. **Player movement input** — WASD / stick actually steering the character during the cast.
+
+The desired behavior is (2) **kept**, (3) **blocked**, and (1) is the knob ticket 38 turned. The
+current result reads as (2) also being lost, which is what the owner is reporting.
+
+## Owner report 2026-08-25
+
+> Forward Glide is gone, but this was not necessarily the desired behavior. It was a fallback. What
+> I wanted was a preservation of the animations as they are in MSCO — the character actually steps
+> forward, there's leg movement. Whereas with our implementation of these casting animations
+> through Spell Hotbar 2, the interpretation of rooting movement was taken as stopping all lower
+> body movement, which was not correct. We just wanted to block input, and so maybe there's still a
+> holdover that is blocking the legs from moving.
+
+The owner's own hypothesis — a holdover from an earlier rooting attempt still suppressing lower-body
+animation — is the first thing to check, not the last.
+
+## Where to look
+
+The owner suspects a leftover, and there are two plausible layers:
+
+- **The behavior state.** ADR-0015 made commitment a property of the state, and the state-modifier
+  `bAnimationDriven` path is what roots the actor. Whether it also suppresses the lower body is the
+  question; a state that is animation-driven with no motion track can present as planted legs.
+- **Ticket 38's own change.** `SH2_Cast*_Clip` no longer consuming animmotion is precisely (1). If
+  the legs are still moving in the clip data, the freeze is coming from somewhere else and (1) is
+  not the culprit — that is a strong discriminator worth running first.
+
+Ticket 35 retired the DLL movement capture, so any surviving movement suppression in the plugin is
+by definition a leftover. Check it against the tickets 32 and 34 parked work before assuming.
+
+## Diagnose before building
+
+Do not fix this by reverting ticket 38. The glide removal is wanted; only the leg freeze is not.
+Establish which layer kills the lower body first — capture a frame mid-cast and compare against the
+same clip played outside a driver cast (a plain MSCO swing, or the pre-38 build). A frame is the
+evidence here; a log line proving a state is active never shows what the legs did.
+
+## You test this
+
+Profile `Nolvus Awakening`. Weapon drawn, cast a fire-and-forget spell from a hotbar slot.
+
+1. The character's legs play their stepping animation as MSCO authored it.
+2. The character does not glide or translate forward across the ground.
+3. Holding a movement key during the cast does not steer the character.
+
+## What this is not
+
+Not a request to restore the forward glide (ticket 38 removed it deliberately and correctly). Not
+the concentration channel's rooting, which the owner accepted in the same pass ("I was rooted") —
+though if one mechanism serves both, a fix here must not regress that.
+
+## Comments
+
+Owner 2026-08-25: reported during the tickets 25/06/14 acceptance pass, as the answer to ticket
+38's owner-eyes cell. Ticket 38's cell passes on its own terms; this is the follow-on.

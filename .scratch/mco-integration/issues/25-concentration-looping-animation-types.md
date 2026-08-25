@@ -9,10 +9,11 @@ window. The 2026-08-11 spec direction is the tier plan.
 **Superseded for the loop by ticket 28** (`28-hold-a-looping-state-for-a-concentration-channel.md`),
 which carries the corrected design and gates it behind a spike.
 
-**Status:** needs-triage — Phase 1 was built on a false premise and **failed live** on
-2026-08-23. Owner: *"these animations aren't working, it plays the fire-and-forget animations,
-not the looped concentration animations."* The dual-distinctness slice and two smaller pieces
-shipped and stand. See "Phase 1 failed, and why" below; the loop needs a new design.
+**Status:** DONE — owner-accepted 2026-08-25. The loop this ticket asked for exists and works; it
+was built by [ticket 28](28-hold-a-looping-state-for-a-concentration-channel.md) after this
+ticket's own phase 1 failed. See "Owner acceptance 2026-08-25" at the bottom. The sections below
+are kept as the diagnostic record — **the "Status: needs-triage" framing and the failed-phase-1
+narrative are historical, not current.**
 
 ## Owner ask (2026-08-21)
 
@@ -237,3 +238,45 @@ channels out.”
 ## Comments
 
 Owner 2026-08-21: filed from the post-09 punch list. Not specified enough to implement.
+
+## Owner acceptance 2026-08-25 — the channel works
+
+Owner, holding Healing from a hotbar slot: *"it works. I used healing. Pose reverted. I was
+rooted. It looped great. We're good."*
+
+Runtime corroboration from `SpellHotbar2.log`, same session:
+
+```
+15:38:04.292  msco_cast_driver.cpp:193  SH2 cast: notified SH2_CastChannel (held channel) -> true
+15:38:12.001  msco_cast_driver.cpp:560  SH2 cast: channel held 7710ms; discounted from the combo sample age
+```
+
+A 7.7-second held channel with one entry and one exit — no per-cycle re-notify, which is what
+separates ticket 28's held state from the `replay()` stutter this ticket started with. The same
+run shows 23 `shape=fnf, window=true` commitments from ordinary hotbar casts, so the
+fire-and-forget path is untouched, which was this ticket's standing constraint.
+
+Fixture: ticket-38 DLL (11:33 build), ticket-16 stamped art pack, ticket-06 icon atlas at MO2
+priority 4466; save `Save25`, profile `Nolvus Awakening`.
+
+### Acceptance, resolved
+
+- [x] Hold a concentration with a weapon drawn; the clip loops for the whole hold. **PASSES** on
+      Healing, 7710 ms, replacing the 2026-08-23 FAILED result above.
+- [x] Release ends the channel and the pose reverts. Owner-confirmed.
+- [x] A self concentration behaves the same way. Healing is the self family.
+- [x] A fire-and-forget on the same bar still uses its throw type. 23 `shape=fnf` casts in the
+      same run.
+- [x] A fast ritual concentration plays `11001`, not `11003`. Shipped in `cast_anim_ids.h` and
+      recorded above.
+- [x] An attack during a hold ends the channel and swings, continuing the combo. Carried by
+      tickets 29 and 30, both resolved.
+
+**Not exercised, and deliberately not held against this ticket:** the dual-cast pair `11003` /
+`11004`. Healing is a single-hand self cast, so the dual slot went untested here as it did in
+ticket 28. The owner closed on the family working; if a dual channel ever misbehaves it is a new
+report against the shipped behavior, not this ticket reopening.
+
+Rooting during the channel is owner-confirmed ("I was rooted"), which is the ticket-38 behavior —
+and the owner's separate finding about *how* that rooting is implemented is filed as
+[mco-integration 39](39-rooting-should-block-input-not-lower-body-animation.md).

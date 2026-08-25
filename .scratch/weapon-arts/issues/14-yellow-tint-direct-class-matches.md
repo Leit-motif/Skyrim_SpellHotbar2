@@ -7,7 +7,9 @@ player cannot tell the specific ash from the universal one while editing.
 
 **Blocked by:** 13 (resolved)
 
-**Status:** agent-done
+**Status:** DONE — owner-accepted 2026-08-25. The Abilities list passed all three owner cells.
+The bound-slot strip's behavior went to [ticket 17](17-tint-the-bound-slot-strip.md), which this
+ticket explicitly left out of scope.
 
 ## Grill (2026-08-23)
 
@@ -65,3 +67,20 @@ deployed to `Dev - Spell Hotbar 2`; the new build was confirmed loading and rend
 The yellow itself is **not** visually verified. Reaching the Abilities tab and the bar dropdown
 needs a mouse, and DevBench's `input` tool injects button events only — it cannot position the
 cursor. Owner cells 1–3 stand.
+
+Owner acceptance 2026-08-25 — **cells 1–3 PASS.** Fixture: the ticket-38 DLL (11:33 build), the
+ticket-16 stamped art pack, and the ticket-06 icon atlas at MO2 priority 4466; save `Save25`,
+profile `Nolvus Awakening`.
+
+- Two-Handed: Blood Flurry and Crushing Blow render yellow; Aimed Blow, Akatosh Charge, Crane
+  Style, Cyclone Spin, Dash Slam, Disengage render white; Blood Seeker, Blood Spiller,
+  Champion's End, Divided Strike render gray. No Generic art went yellow.
+- Dual Wield: Ripping Hour renders yellow while the surrounding Dual-eligible rows stay white and
+  Shadow Reave / Shadow Slash / Shoulder Slam stay gray.
+- Default: no yellow anywhere. Owner: *"the left side is working perfectly... For default, there
+  is no yellow."*
+
+Owner screenshots (three, 15:24–15:31) are the evidence; they are 3440x1440 BMPs in the profile's
+`STOCK GAME/Screenshots/` and were read directly rather than committed. Note for future passes:
+Community Shaders' screenshot path produced black frames and the owner disabled it to capture
+these.

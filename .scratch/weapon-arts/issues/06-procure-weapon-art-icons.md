@@ -5,7 +5,8 @@ bar and in the Arts tab; only the name tells them apart. Story 6 wants an icon *
 
 **Blocked by:** 03 (resolved)
 
-**Status:** ready-for-human
+**Status:** DONE — owner-accepted 2026-08-25 on the acceptance-pass screenshots. See the closing
+comment.
 
 ## You test this
 
@@ -474,3 +475,18 @@ faceless Dunmer Morag Tong assassin using one connected chitin/ebony shortsword 
 blade-sourced ivory wake. Unresolved unbalance/paralysis names add no darkness or other magic. Full
 and 32 px results passed. Thirty-six of 57 icons are finalized; 18 remain unprocessed and three are
 recorded hard failures.
+
+Owner acceptance 2026-08-25: **passed.** Owner: *"you can tell from the screenshots that obviously
+the icons are working."* Three Binding Menu screenshots taken during ticket 14's pass show the
+catalogue and the bound-slot strip both rendering per-art glyphs — Aimed Blow, Akatosh Charge,
+Blood Flurry, Crane Style, Crushing Blow, Cyclone Spin, Dash Slam, Disengage, Point Charge,
+Reaper, Ripping Hour, Sacrifice Stab, Simple Bash, Soul Cleaver, Soulless Swing, Subtle Stab and
+Tornado Leap are each individually recognizable, and bound slots NP2/NP3/NP5/NP6/NP7/NP8 carry
+different icons instead of the old identical `GREATER_POWER` glyph. That is the ticket's premise —
+per-art identity on the bar — and it is visibly satisfied.
+
+The two spec cells the owner was not asked to chase, since the screenshots already answer them
+adequately: the unknown-key fallback renders as the `Custom Ability 11` bust rather than a blank
+slot, and the picker's Reset path is unchanged code from the 2026-08-21 ship. Fixture: atlas
+package deployed at MO2 priority 4466 with the stamped art pack, so the arts shown also play real
+clips.
