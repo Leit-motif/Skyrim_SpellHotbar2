@@ -2,8 +2,7 @@
 
 **Type:** defect (DLL) — affects ALL hotbar functionality, not shouts
 
-**Status:** ready-for-agent — diagnosed off a live session log, root cause and both fixes named
-below; needs implementation and one in-game reproduction.
+**Status:** closed — both fixes landed and verified in-game (2026-08-25).
 
 **Blocked by:** None.
 
@@ -108,14 +107,58 @@ assumed:
 
 ## Acceptance
 
-- [ ] A press taken onto the local latch is either fired or discarded within the cap; it is never
-      held indefinitely.
-- [ ] With `state_active` forced true and the window closed, the Nth press still reaches the game
-      (or is refused loudly) rather than vanishing.
-- [ ] `notified SH2_CastExit -> false` clears `state_active`, proven by a trace showing a refused
-      exit followed by a successful later cast with no relaunch.
-- [ ] The owner's reproduction — spam the hotbar and the attack button through a combo, repeatedly,
-      before the window is up — leaves the bar working. Drive it in combat, since that is where it
-      was found.
-- [ ] The log distinguishes "retained" from "retained and later dropped by the cap", so the next
-      session can count both.
+- [x] A press taken onto the local latch is either fired or discarded within the cap; it is never
+      held indefinitely. — `kLocalLatchCapMs = 4000` (ShoutMCO's pressCapMs), checked every frame
+      in `poll_local_release()` ahead of the retain bail; each fresh retain replaces the payload
+      and restarts the clock, so no press outlives one cap. Unit-tested
+      (`a_retained_press_is_dropped_once_its_cap_runs_out`).
+- [x] With `state_active` forced true and the window closed, the Nth press still reaches the game
+      (or is refused loudly) rather than vanishing. — verified live: during the 10:05:37 wedge the
+      held press was released at watchdog expiry and *refused loudly* (`fired slot 3 type 3 ->
+      false` + red slot highlight, `IsAttacking=1` at release), and the very next press deferred
+      to ShoutMCO normally (handle 1).
+- [x] A refused exit does not strand the state. — every `send_exit()` caller already ran
+      `clear_state_flags()` unconditionally; what actually stranded the state was a cast whose
+      graph never raised `SH2_CastExit` *at all* (entry `-> true` at 10:05:37, then straight into
+      AttackState). The watchdog (`kCastStateCapMs = 8000`, channels exempt) is the clear path
+      that needs no graph agreement: trace at 10:05:45.286 shows `state watchdog expired after
+      8002ms` → `notified SH2_CastExit -> false` (refused, exactly as diagnosed) → held press
+      released the same frame → later casts `-> true` with no relaunch. See
+      `../evidence/36-watchdog-traces.log`.
+- [x] The owner's reproduction leaves the bar working. — two spam rounds (25 + 20 reps of jammed
+      `castSlot` presses interleaved with attack holds, greatsword, the second round against a
+      live Bandit Warrior in combat at Riverwood edge — `../evidence/36-combat-repro.png`). Totals
+      across the session: 133 retained, 82 released-and-fired, 2 wedges each recovered by the
+      watchdog, and the bar cast normally afterward (`fired slot 3 -> true` at 10:09:21 and
+      10:09:31). Compare the wedged session: 101 retained, 0 released, no recovery.
+- [x] The log distinguishes "retained" from "retained and later dropped by the cap". —
+      `SH2 cast intent: local latch dropped slot {} after {}ms cap` (warn) vs the debug "retained"
+      line. Zero drops occurred live because spam kept refreshing the latch and the watchdog
+      cleared both wedges first; the drop path is unit-tested.
+
+## Comments
+
+**Agent, 2026-08-25.** Implemented and verified. What landed (commit on `ticket-36-latch-bounds`):
+
+- `combo_cache.h`: `kLocalLatchCapMs = 4000`, `kCastStateCapMs = 8000`,
+  `local_latch_hold_expired()`, `cast_state_watchdog_expired()` — engine-free, unit-tested.
+- `cast_intent.cpp`: `retained_at_ms` stamped on every local retain; expiry check first thing in
+  `poll_local_release()`, dropping the payload with a warn line and a red slot highlight.
+- `msco_cast_driver.{h,cpp}`: `state_entered_ms` stamped on an accepted entry notify;
+  `poll_watchdog()` tears a wedged state down through the existing `cancel()`. Held channels are
+  exempt.
+- `casting_controller.cpp`: `poll_watchdog()` runs each frame immediately before
+  `poll_local_release()`, so clearing a wedge releases a still-fresh press the same frame instead
+  of dropping it.
+
+One correction to the diagnosis: fix 2's "clear `state_active` when the exit notify returns
+false" was already the code's behavior — every `send_exit()` caller runs `clear_state_flags()`
+unconditionally. The terminal state came from a cast whose graph accepted the ENTRY and then never
+raised `SH2_CastExit` back (it fell into MCO AttackState instead), a path with no notify to refuse
+and, before this ticket, no clock. The watchdog is that clock.
+
+The wedge reproduced twice under spam (once out of combat, once in combat) and recovered both
+times inside 8 s with no player-visible residue beyond one refused press. Evidence in
+`../evidence/`: `36-session.log` (full run), `36-watchdog-traces.log` (both recoveries),
+`36-combat-repro.png` (live Bandit Warrior during round 2). The wedged baseline session is
+`T36-local-latch-wedge-2026-08-25.log` in the same directory.
