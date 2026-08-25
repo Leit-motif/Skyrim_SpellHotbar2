@@ -1,4 +1,8 @@
-# 39 — Stepping fire-and-forget cast animations
+# 40 — Stepping fire-and-forget cast animations
+
+> Renumbered from 39: that number went to `39-rooting-should-block-input-not-lower-body-animation.md`,
+> filed off the owner's acceptance pass. If ticket 39 finds the MSCO clips already carry stepping
+> and SH2's graph or a DLL holdover suppresses it, this ticket dissolves — no new assets needed.
 
 **Type:** enhancement (animation assets)
 

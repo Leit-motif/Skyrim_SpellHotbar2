@@ -2,7 +2,7 @@
 
 **Type:** defect (presentation) / owner ruling
 
-**Status:** claimed
+**Status:** resolved — all cells green 2026-08-25; owner verdict spawned follow-on ticket 39
 
 **Blocked by:** None.
 
@@ -11,8 +11,8 @@
 Owner, 2026-08-25: the fire-and-forget cast animations slide the character forward with no foot
 movement. Ruling: either the animations gain real foot movement (ideal), or the character roots
 in place (fallback). The ideal path needs authored or sourced stepping animations — the same
-new-asset wall that parked tickets 32 and 34 — so it is parked as ticket 39 and this ticket
-builds the fallback.
+new-asset wall that parked tickets 32 and 34 — so it is parked as ticket 40 (renumbered from
+39) and this ticket builds the fallback.
 
 ## What is already true (do not re-derive)
 
@@ -49,13 +49,15 @@ reopens 21 to "fix" it.
 
 ## Acceptance
 
-- [ ] Agent: Driver Cast of a fire-and-forget spell shows XY delta ≈ 0 across the clip
-      (scene telemetry), where before the fix it stepped.
-- [ ] Agent: Disengage (`slotArt` + `castSlot`) still translates ~318 units.
-- [ ] Agent: cast still commits (SpellFire fires, combo advances) — rooting changed nothing
-      functional.
-- [ ] Owner: no forward glide on fire-and-forget hotbar casts. Visual, owner's eyes.
-- [ ] Restore fixtures (`slotArt(slot, 0)`) and close Skyrim after agent-only telemetry.
+- [x] Agent: Driver Cast of a fire-and-forget spell shows XY delta ≈ 0 across the clip
+      (scene telemetry), where before the fix it stepped. 2026-08-25 15:44.
+- [x] Agent: Disengage (`slotArt` + `castSlot`) still translates ~318 units. Measured ~315.
+- [x] Agent: cast still commits (SpellFire fires, combo advances) — rooting changed nothing
+      functional. `MLh_SpellFire_Event`, `shape=fnf, window=true`.
+- [x] Owner: no forward glide on fire-and-forget hotbar casts. Owner 2026-08-25 via the
+      acceptance pass: "Forward Glide is gone" — with the correction that spawned ticket 39.
+- [x] Restore fixtures (`slotArt(slot, 0)` done) — Skyrim left RUNNING by agreement: the
+      ticket-16 sweep re-run held the next fixture-queue slot.
 
 ## Comments
 
@@ -81,3 +83,23 @@ Fixture queue (agreed cross-session): owner manual pass (tickets 25/06/14) → t
 re-run → my ~5-min window (slotArt/castSlot slot 0, cleared after; no relaunch, no deploy).
 Owner-eyes cell may close during the owner's pass: any hotbar FF cast, weapon drawn — glide
 gone?
+
+**2026-08-25 15:45 — agent: all cells green. Resolved.**
+Telemetry window taken right after the owner's pass (queue reordered: my window came before the
+ticket-16 re-run). PID 25652, Save25's world, Embershard wilderness, weapon drawn, deployed
+ticket-38 DLL (11:33 build).
+
+| Cell | Result |
+|---|---|
+| FF driver cast, owner's slot 3 (skill type 3) | `SH2_CastRight -> true`, `MLh_SpellFire_Event` commit (`shape=fnf, window=true`), `SH2_CastExit`; Z bobbed with the clip; **XY frozen to the last digit** (9139.322265625, -56564.14453125) across pre/0.3/0.6/1.2/2.0s; **no** `SH2 motion: bound SH2_CastRight_Clip` line — the cast clip never bound |
+| Disengage (`slotArt(0,12)` + `castSlot(0)`) | bound `SH2_Art_Clip` (140 animmotion keys, ticket-16 **stamped** copy — bytes differ from the author's file, data verified identical by that ticket), leapt (9139, -56564) → (8878, -56739) ≈ **315 units** with the known settle-back; art motion not regressed |
+| Fixture restore | `slotArt(0,0)`; in-memory only, no save written |
+
+Owner verdict (relayed from the acceptance pass): "Forward Glide is gone" — cell passed — with
+the correction that rooting was only ever meant to block input, not freeze the lower body. The
+leg freeze predates this ticket (the original report was "slides forward, no foot movement"),
+and is now ticket 39, which this ticket's Disengage result already narrows away from the
+animmotion layer toward the `bAnimationDriven` state modifier.
+
+Earlier anomaly closed: art 15 playing with 160 keys and no visible XY during the contaminated
+window was the art being near-stationary in XY, not a motion regression.
