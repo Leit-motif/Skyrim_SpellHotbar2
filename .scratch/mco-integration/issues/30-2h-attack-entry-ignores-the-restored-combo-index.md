@@ -1,5 +1,9 @@
 # 30 — 2H attack entry ignores the restored combo index (and 1H's success is unexplained)
 
+**Status:** resolved 2026-08-24 -- the mechanism is named (the nested MCO selector reads ROOT
+storage; 2H was a write race), recorded in ADR-0014, and the probe suite is retired. The owner's
+bar -- explain why 1H worked -- is met in the analysis below.
+
 Opened 2026-08-24, carved out of ticket 28. The owner's bar, set explicitly: **"it worries me
 that you can't explain why 1H works — i wouldn't call that resolving the ticket."** Acceptance
 here is a MECHANISM that fits every fact below — including the 1H success — plus the fix it

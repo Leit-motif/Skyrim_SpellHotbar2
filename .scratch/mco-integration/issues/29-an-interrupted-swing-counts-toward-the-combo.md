@@ -1,6 +1,6 @@
 # 29 — An interrupted swing counts toward the combo
 
-Status: resolved
+**Status:** resolved 2026-08-24 -- mechanism in ADR-0014; probes retired after owner acceptance.
 
 Opened 2026-08-24, carved out of ticket 28. Owner ruling, verbatim intent:
 
