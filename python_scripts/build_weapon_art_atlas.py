@@ -37,6 +37,11 @@ class IconEntry:
     path: Path
 
 
+def _runtime_icon_key(icon_name: str) -> str:
+    """Return the key SH2 registers for an extra-atlas entry at runtime."""
+    return f"{ATLAS_PATH.name}_{icon_name}"
+
+
 def _next_power_of_two(value: int) -> int:
     return 1 << (value - 1).bit_length()
 
@@ -154,7 +159,7 @@ def _updated_catalogue_text(entries: list[IconEntry], statuses: dict[int, str]) 
                     f"DisplayName mismatch for ArtID {art_id}: "
                     f"manifest={entry.display_name!r}, catalogue={row['DisplayName']!r}"
                 )
-            row["Icon"] = entry.key
+            row["Icon"] = _runtime_icon_key(entry.key)
         else:
             row["Icon"] = PLACEHOLDER_ICON
 
