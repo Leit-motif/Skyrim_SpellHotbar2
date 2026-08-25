@@ -8,8 +8,9 @@ namespace SpellHotbar::casts::ArtDriver {
 
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag);
 
-	// True while SH2_Art_State is live. WASD capture (Cast Plant) follows this,
-	// not the casting instance — same rule as MscoCastDriver::is_active().
+	// True while SH2_Art_State is live — the state, not the casting instance; same
+	// rule as MscoCastDriver::is_active(). Rooting is not read off this: commitment
+	// is the state's own bAnimationDriven modifier in the graph (ADR-0015).
 	bool is_active();
 
 	// Classify the live clip's latch from its annotations (WinOpen else HitFrame

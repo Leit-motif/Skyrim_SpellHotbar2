@@ -14,8 +14,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
 	 *
 	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
-	 * plays at MSCO's charge-scaled pace (ticket 18). WASD capture during the state
-	 * is ticket 19; bAnimationDriven comes from the shtb graph wrap (ticket 21).
+	 * plays at MSCO's charge-scaled pace (ticket 18). Rooting during the state is not
+	 * the DLL's: the state's own bAnimationDriven modifier owns it (ADR-0015).
 	 *
 	 * `shape` picks the entry and what the state is for. A fire-and-forget press enters
 	 * the clip set above. A channel enters SH2_CastChannel instead, a state of its own

@@ -463,26 +463,6 @@ namespace SpellHotbar::Input {
                         }
                     }
 
-                    if (!captureEvent && (key_device == RE::INPUT_DEVICE::kKeyboard || key_device == RE::INPUT_DEVICE::kGamepad || key_device == RE::INPUT_DEVICE::kMouse)) {
-
-                        if (casts::CastingController::is_movement_blocking_cast() && in_ingame_state()) {
-                            auto cm = RE::ControlMap::GetSingleton();
-                            if (cm) {
-                                uint32_t key_forward = cm->GetMappedKey("Forward"sv, key_device);
-                                uint32_t key_back= cm->GetMappedKey("Back"sv, key_device);
-                                uint32_t key_left = cm->GetMappedKey("Strafe Left"sv, key_device);
-                                uint32_t key_right = cm->GetMappedKey("Strafe Right"sv, key_device);
-
-                                if (key_code == key_forward || key_code == key_back || key_code == key_left || key_code == key_right) {
-                                    if (!bEvent->IsUp()) {
-                                        captureEvent = true;
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-
                     // Chain a committed cast into an MCO attack. The shtb cast state has no
                     // transition to the attack states -- SH2's patch authored an entry and a
                     // state-local exit and nothing else -- so a press during the cast is

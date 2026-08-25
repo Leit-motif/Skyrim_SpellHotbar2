@@ -477,11 +477,6 @@ namespace SpellHotbar::casts::CastingController {
 		return handle;
 	}
 
-	bool BaseCastingInstance::blocks_movement() const
-	{
-		return false;
-	}
-
 	bool BaseCastingInstance::has_cuttable_cast_state() const
 	{
 		return false;
@@ -630,16 +625,10 @@ namespace SpellHotbar::casts::CastingController {
 		m_gcd = 1.5f;
 	}
 
-	bool CastingInstanceRitual::blocks_movement() const
-	{
-		return m_cast_timer >= -0.5f; //!m_casted &&
-	}
-
-	CastingInstanceSpellConcentration::CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, bool blocksMovement)
+	CastingInstanceSpellConcentration::CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot)
 		: CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc),
 		m_keybind(keybind),
-		m_slot(slot),
-		m_blocks_movement(blocksMovement)
+		m_slot(slot)
 	{
 		m_cast_timer = 0;
 		m_total_casttime = spell->data.castDuration;
@@ -821,11 +810,6 @@ namespace SpellHotbar::casts::CastingController {
 		return m_gcd <= 0;
 	}
 
-	bool CastingInstanceSpellConcentration::blocks_movement() const
-	{
-		return m_blocks_movement && !m_casted;
-	}
-
 	bool CastingInstanceSpellConcentration::has_cuttable_cast_state() const
 	{
 		return false;
@@ -937,7 +921,7 @@ namespace SpellHotbar::casts::CastingController {
 				GameData::set_animtype_global(anim);
 
 				hand_mode used_hand = GameData::set_weapon_dependent_casting_source(cast_info.m_hand, cast_info.m_dual_cast);
-				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot), cast_info.m_dual_cast);
+				current_cast = std::make_unique<CastingInstanceSpellConcentration>(cast_info.m_spell, cast_info.m_casttime, cast_info.m_manacost, used_hand, cast_info.m_casteffect, cast_info.m_spellproc, keybind, static_cast<int>(slot));
 
 				arm_spellfire(used_hand);
 				if (MscoCastDriver::begin(pc, used_hand, cast_info.m_casttime, CastShape::channel)) {
@@ -1295,20 +1279,6 @@ namespace SpellHotbar::casts::CastingController {
 		return 0.0f;
 	}
 
-	bool is_movement_blocking_cast()
-	{
-		// WASD capture follows the shtb state (ticket 19). bAnimationDriven is
-		// owned by the graph wrap (ticket 21), not the DLL. Abilities reuse
-		// the same plant: input lock, clip motion still applies.
-		if (shtb_state_blocks_movement(MscoCastDriver::is_active() || ArtDriver::is_active())) {
-			return true;
-		}
-		if (current_cast) {
-			return current_cast->blocks_movement();
-		}
-		return false;
-	}
-
 	void cast_spell_on_player(RE::SpellItem* spell, float magnitude, bool no_art) {
 		if (!spell) return;
 
@@ -1397,11 +1367,6 @@ namespace SpellHotbar::casts::CastingController {
 		: CastingInstanceSpellConcentration(spell, casttime, manacost, used_hand, casteffect, spell_proc, keybind, slot)
 	{
 		m_pre_release_anim_time = pre_release_anim_time;
-	}
-
-	bool CastingInstanceSpellRitualConcentration::blocks_movement() const
-	{
-		return !m_casted;
 	}
 
 	CastingInstancePower::CastingInstancePower(RE::TESForm* form) : BaseCastingInstance(form, 0.0f), m_old_form(nullptr), m_reequiped(false)

@@ -13,8 +13,6 @@ using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
 using SpellHotbar::casts::classify_cast_delivery;
 using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
-using SpellHotbar::casts::driver_cast_blocks_movement;
-using SpellHotbar::casts::shtb_state_blocks_movement;
 using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
@@ -363,30 +361,6 @@ void left_hand_press_cuts_a_committed_hotbar_cast()
 		"left attack with a weapon or shield is block, not an MSCO hand cast");
 	expect(!cut_committed_cast_for_left_hand_press(true, true, false),
 		"an unrelated key does not cut");
-}
-
-void driver_cast_roots_while_the_shtb_state_is_live()
-{
-	expect(driver_cast_blocks_movement(true, true),
-		"a live Driver Cast state roots the player");
-	expect(driver_cast_blocks_movement(true, false),
-		"consecutive clips keep the state without a new instance; they stay rooted");
-}
-
-void ticket_10_cut_unroots_even_if_the_instance_is_still_alive()
-{
-	expect(!driver_cast_blocks_movement(false, true),
-		"SH2_CastExit / a ticket-10 cut ends rooting at the state, not when the instance dies");
-	expect(!driver_cast_blocks_movement(false, false),
-		"idle is not rooted");
-}
-
-void live_art_state_plants_wasd()
-{
-	expect(shtb_state_blocks_movement(true),
-		"a live SH2_Art_State plants WASD the same way a Driver Cast does");
-	expect(!shtb_state_blocks_movement(false),
-		"idle does not plant");
 }
 
 void ability_latch_prefers_winopen_then_hitframe_then_artexit()
@@ -957,9 +931,6 @@ int main()
 	losing_the_state_before_the_floor_cancels();
 	already_delivered_does_not_fire_again();
 	left_hand_press_cuts_a_committed_hotbar_cast();
-	driver_cast_roots_while_the_shtb_state_is_live();
-	ticket_10_cut_unroots_even_if_the_instance_is_still_alive();
-	live_art_state_plants_wasd();
 	ability_latch_prefers_winopen_then_hitframe_then_artexit();
 	ability_latch_events_match_the_classified_kind();
 	a_press_behind_our_shtb_is_retained_until_the_latch_opens();

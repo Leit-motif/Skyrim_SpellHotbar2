@@ -26,8 +26,6 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool update(RE::PlayerCharacter* pc, float delta) = 0;
 
-		virtual bool blocks_movement() const;
-
 		/**
 		* Does this cast hold a shtb cast state that may be ended early?
 		*
@@ -144,8 +142,9 @@ namespace SpellHotbar::casts::CastingController {
 		bool m_last_anim_ok;
 	};
 
-	// Regular FNF spell. Translation is blocked while the shtb state is live
-	// (ticket 19); this class does not override blocks_movement itself.
+	// Regular FNF spell. Translation blocking is owned by the behavior graph --
+	// the shtb state's bAnimationDriven modifier in the Nemesis patch (ADR-0015);
+	// the DLL does not participate.
 	class CastingInstanceSpell : public CastingInstance {
 	public:
 		CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc);
@@ -157,14 +156,12 @@ namespace SpellHotbar::casts::CastingController {
 	public:
 		CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc);
 		virtual ~CastingInstanceRitual() = default;
-
-		virtual bool blocks_movement() const override;
 	};
 
 	//Single handed concentration spell with movement
 	class CastingInstanceSpellConcentration : public CastingInstance {
 	public:
-		CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, bool blocksMovement = false);
+		CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot);
 		virtual ~CastingInstanceSpellConcentration() = default;
 
 		virtual void apply_cast_start_spell(RE::PlayerCharacter* pc) override;
@@ -174,7 +171,6 @@ namespace SpellHotbar::casts::CastingController {
 		virtual bool is_first_time_update() const override;
 		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
 		virtual bool is_gcd_expired() const override;
-		virtual bool blocks_movement() const override;
 		virtual bool has_cuttable_cast_state() const override;
 
 		virtual bool has_duration() const;
@@ -195,7 +191,6 @@ namespace SpellHotbar::casts::CastingController {
 	protected:
 		const Input::KeyBind& m_keybind;
 		int m_slot;
-		bool m_blocks_movement;
 	};
 
 	//Ritual style concentration spell, 2hands and blocked movement
@@ -203,8 +198,6 @@ namespace SpellHotbar::casts::CastingController {
 	public:
 		CastingInstanceSpellRitualConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, float pre_release_anim_time);
 		virtual ~CastingInstanceSpellRitualConcentration() = default;
-
-		virtual bool blocks_movement() const override;
 	};
 
 	class CastingInstancePower : public BaseCastingInstance {
@@ -376,7 +369,6 @@ namespace SpellHotbar::casts::CastingController {
 	float get_current_gcd_progress();
 	float get_current_gcd_duration();
 
-	bool is_movement_blocking_cast();
 	/**
 	* Actually casts the spell, do not call directly
 	*/
