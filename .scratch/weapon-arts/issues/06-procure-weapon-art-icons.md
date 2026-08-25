@@ -474,3 +474,11 @@ faceless Dunmer Morag Tong assassin using one connected chitin/ebony shortsword 
 blade-sourced ivory wake. Unresolved unbalance/paralysis names add no darkness or other magic. Full
 and 32 px results passed. Thirty-six of 57 icons are finalized; 18 remain unprocessed and three are
 recorded hard failures.
+
+Atlas completion 2026-08-25: all 57 manifest entries now have shippable 128 x 128 inputs. The
+rebuilt 1024 x 1024 `icons_weapon_arts.png`, UV catalogue, and `arts_ashes.csv` validate with 57
+assigned keys and zero placeholders. The isolated runtime package was deployed through Skyrim
+Agent to the active `Nolvus Awakening` profile as `Dev - Spell Hotbar 2 Weapon Art Icons`; the MO2
+bridge verified it enabled at winning priority 4466, and deployed-file SHA-256 hashes match the
+package. The owner explicitly waived in-game validation for this pass, so Arts-tab/hotbar visual
+acceptance was not run.
