@@ -93,6 +93,17 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	void cancel(RE::PlayerCharacter* pc);
 
 	/**
+	 * Time out a cast state the graph never left. Called once per frame from update_cast.
+	 *
+	 * The state's only ordinary end is the graph raising SH2_CastExit, and the graph is free to
+	 * refuse the notify that asks for it — measured seven times in one session. A state that can
+	 * only be cleared by an event that may never arrive cannot be allowed to own the input latch
+	 * for the rest of the session, so past the cap this tears the cast down as a cancel would.
+	 * A held concentration channel is exempt: it legitimately owns its state for the whole hold.
+	 */
+	void poll_watchdog(RE::PlayerCharacter* pc);
+
+	/**
 	 * Arm the last sampled MCO combo so the next restore edge writes it back.
 	 * Abilities reuse this (ADR-0005 named exception); they must not write
 	 * MCO_nextattack=1 on entry.

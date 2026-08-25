@@ -836,6 +836,10 @@ namespace SpellHotbar::casts::CastingController {
 			bool is_shouting{ false };
 			player->GetGraphVariableBool("IsShouting"sv, is_shouting);
 			update_deferred_power_restore(delta, is_shouting);
+			// Before the latch poll, not after: clearing a wedged state here lets the same
+			// frame's poll release a press that is still inside its cap, so it fires rather
+			// than being dropped one frame later.
+			MscoCastDriver::poll_watchdog(player);
 		}
 		CastIntent::poll_local_release();
 		if (current_cast) {

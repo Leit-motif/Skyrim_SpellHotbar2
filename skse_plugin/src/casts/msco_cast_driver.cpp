@@ -23,6 +23,9 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		// When the live channel entered its state, so the hold can be discounted from the combo
 		// sample's age at release. Zero means no channel is holding.
 		std::atomic<double> channel_started_ms{ 0.0 };
+		// When the entry notify was accepted, so a state the graph never leaves can be timed out.
+		// Zero means no entry is recorded and there is nothing to time.
+		std::atomic<double> state_entered_ms{ 0.0 };
 		constexpr int post_cut_trace_events{ 24 };
 
 		MscoChargeCurve g_curve{};
@@ -159,6 +162,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		void clear_state_flags()
 		{
 			channel_started_ms.store(0.0, std::memory_order_relaxed);
+			state_entered_ms.store(0.0, std::memory_order_relaxed);
 			state_active.store(false, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			cast_shape.store(CastShape::fire_and_forget, std::memory_order_relaxed);
@@ -180,6 +184,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			const auto event = cast_entry_walks_clip_set(shape) ? event_for(index) : kChannelEvent;
 			const bool sent = pc->NotifyAnimationGraph(event);
 			state_active.store(sent, std::memory_order_relaxed);
+			state_entered_ms.store(sent ? now_ms() : 0.0, std::memory_order_relaxed);
 			combo_window.store(false, std::memory_order_relaxed);
 			clip_committed.store(false, std::memory_order_relaxed);
 			if (cast_entry_walks_clip_set(shape)) {
@@ -572,6 +577,22 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		}
 		send_exit(pc);
 		clear_state_flags();
+	}
+
+	void poll_watchdog(RE::PlayerCharacter* pc)
+	{
+		// Ticket 36: `notified SH2_CastExit -> false` is a measured, repeating event, and a graph
+		// that refuses the exit never raises it back -- which used to leave the state live with
+		// nothing able to clear it, and the input latch behind it retaining every press.
+		if (!cast_state_watchdog_expired(is_active(),
+				cast_shape.load(std::memory_order_relaxed) == CastShape::channel, now_ms(),
+				state_entered_ms.load(std::memory_order_relaxed), kCastStateCapMs)) {
+			return;
+		}
+		const double elapsed = now_ms() - state_entered_ms.load(std::memory_order_relaxed);
+		logger::warn("SH2 cast: state watchdog expired after {:.0f}ms; clearing wedged cast state",
+			elapsed);
+		cancel(pc);
 	}
 
 	void finish(RE::PlayerCharacter* pc)

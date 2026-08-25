@@ -38,6 +38,10 @@ using SpellHotbar::casts::should_capture_attack_during_ability;
 using SpellHotbar::casts::should_cut_ability_for_attack;
 using SpellHotbar::casts::should_record_mco_combo_sample;
 using SpellHotbar::casts::should_retain_local_cast_intent;
+using SpellHotbar::casts::cast_state_watchdog_expired;
+using SpellHotbar::casts::kCastStateCapMs;
+using SpellHotbar::casts::kLocalLatchCapMs;
+using SpellHotbar::casts::local_latch_hold_expired;
 using SpellHotbar::casts::should_yield_shtb_before_hotbar_shout;
 using SpellHotbar::casts::channel_chain_window_open;
 using SpellHotbar::casts::channel_end_arms_combo_restore;
@@ -405,6 +409,32 @@ void a_press_behind_our_shtb_is_retained_until_the_latch_opens()
 		"someone else's swing is ShoutMCO's clock, not a local retain");
 	expect(!should_retain_local_cast_intent(true, false, true),
 		"concentration is not this queue");
+}
+
+void a_retained_press_is_dropped_once_its_cap_runs_out()
+{
+	expect(!local_latch_hold_expired(1000.0, 0.0, kLocalLatchCapMs),
+		"a press well inside the cap is still waiting to fire");
+	expect(!local_latch_hold_expired(kLocalLatchCapMs - 1.0, 0.0, kLocalLatchCapMs),
+		"a press one millisecond short of the cap is not dropped yet");
+	expect(local_latch_hold_expired(kLocalLatchCapMs, 0.0, kLocalLatchCapMs),
+		"a press that reaches the cap is dropped rather than held");
+	expect(local_latch_hold_expired(9000.0, 1000.0, kLocalLatchCapMs),
+		"a press long past the cap is dropped whenever the poll next runs");
+}
+
+void a_wedged_cast_state_expires_but_a_held_channel_never_does()
+{
+	expect(cast_state_watchdog_expired(true, false, kCastStateCapMs + 0.5, 0.5, kCastStateCapMs),
+		"a state the graph never exited is cleared once the cap is reached");
+	expect(!cast_state_watchdog_expired(true, false, kCastStateCapMs - 0.5, 0.5, kCastStateCapMs),
+		"a cast still inside the cap is left alone");
+	expect(!cast_state_watchdog_expired(true, true, 60000.0, 0.5, kCastStateCapMs),
+		"a held concentration channel owns its state for the whole hold");
+	expect(!cast_state_watchdog_expired(true, false, 60000.0, 0.0, kCastStateCapMs),
+		"no recorded entry is not an elapsed time");
+	expect(!cast_state_watchdog_expired(false, false, 60000.0, 0.5, kCastStateCapMs),
+		"there is nothing to clear when no cast state is live");
 }
 
 void attack_after_the_ability_latch_cuts_and_is_not_captured()
@@ -934,6 +964,8 @@ int main()
 	ability_latch_prefers_winopen_then_hitframe_then_artexit();
 	ability_latch_events_match_the_classified_kind();
 	a_press_behind_our_shtb_is_retained_until_the_latch_opens();
+	a_retained_press_is_dropped_once_its_cap_runs_out();
+	a_wedged_cast_state_expires_but_a_held_channel_never_does();
 	attack_after_the_ability_latch_cuts_and_is_not_captured();
 	ability_hitframe_does_not_replace_the_mco_combo_sample();
 	a_legal_hotbar_shout_yields_the_live_shtb_clip();
