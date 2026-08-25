@@ -1,4 +1,4 @@
-# 17 -- Ship the stamped art clips once the author answers
+# 18 -- Ship the stamped art clips once the author answers
 
 **Type:** task (packaging), blocked on an external answer.
 

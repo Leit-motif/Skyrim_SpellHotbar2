@@ -10,7 +10,7 @@ files on one machine is not redistribution — so the mechanism can be proven wh
 outstanding.
 
 **Status:** CLOSED 2026-08-25 by owner ruling. The fix is built, verified, and live in the
-fixture. Shipping the clips is a licensing question, not a code one, and is carried by ticket 17.
+fixture. Shipping the clips is a licensing question, not a code one, and is carried by ticket 18.
 **Settles:** [ticket 15](15-double-slash-plays-no-clip.md) for the shipped set.
 **Decision:** [ADR-0017](../../../docs/adr/0017-the-shipped-art-pack-carries-its-own-clip-bytes.md).
 
