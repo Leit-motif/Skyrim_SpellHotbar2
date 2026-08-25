@@ -1,14 +1,13 @@
 # 33 — Commit an NPC's concentration cast
 
-**Type:** spike, then feature (conditioned-ability record + Nemesis coverage check + FOMOD option)
+**Type:** spike, then feature (Nemesis patch + FOMOD option)
 
 **Status:** ready-for-agent — the shape is settled by
-[ADR-0015](../../../docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md) and its
-2026-08-24 amendment (one rule per action, every actor); the open design question below is
-resolved by owner ruling.
+[ADR-0015](../../../docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md) and both
+its 2026-08-24 amendments. The final rule is the simple one: **concentration roots, for every
+actor.** Movement and the half-speed slow are tabled with tickets 32 and 34.
 
-**Blocked by:** None. Shares a decision with
-[ticket 32](32-move-at-half-speed-during-a-concentration-channel.md) — see "The collision".
+**Blocked by:** None. Ticket 32 is tabled, which dissolved this ticket's only design conflict.
 
 ## What the owner asked for
 
@@ -70,41 +69,51 @@ Copy the plant: a `BSIsActiveModifier` on the concentration state binding `bAnim
 `nemesis/Nemesis_Engine/mod/shtb/1hm_behavior/#shtb$11.txt`, `$12.txt`). Nemesis mod code of its
 own, not appended to `shtb`: this patch is optional and `shtb` is not.
 
-## The collision — RESOLVED 2026-08-24 by owner ruling, same day it was posed
+## History of the rule, compressed — three owner rulings in one day, 2026-08-24
 
-> "i want all casts rooted/slowed for concentration for both the player and npc's. seamless. the
-> same rules need to apply to everyone consistently."
+1. First pass: NPC concentration should be covered somewhere, "maybe a separate patch in the
+   fomod." This ticket opened as a root on the vanilla concentration states, flagged as colliding
+   with ticket 32's half-speed want.
+2. Second pass: "the same rules need to apply to everyone consistently" — concentration became
+   half speed for every actor, and this ticket flipped to a shared conditioned `SpeedMult`
+   record.
+3. Final: on learning half speed requires new animation assets, **movement went out of scope.
+   "As long as both players and NPCs are rooted during concentration casts, I think we're good
+   to proceed."** The conditioned record dies unbuilt (design preserved in ADR-0015's first
+   amendment for the future endeavor), and this ticket returns to its original shape.
 
-Of the three ways out, the owner took the third, and hardened it: **rules are per-action, for
-every actor** (ADR-0015 amendment). So this ticket's build is not a root on the concentration
-states after all:
+The collision that shaped versions 1 and 2 no longer exists: rooting the vanilla concentration
+states roots the player's equipped-hand concentration casts too, and that is now the *desired*
+outcome, not a conflict. The player's hotbar channel is already rooted today — ticket 28's held
+`shtb` state plus the WASD capture — so the player's side of this rule costs zero work.
 
-- **Fire-and-forget casts root for everyone.** The player's is built (ticket 19). The NPC side is
-  the spike's question 2: confirm MSCO's plant covers NPC fire-and-forget states, and patch any
-  state it misses with the same modifier shape.
-- **Concentration slows to half for everyone, and is NOT rooted.** The uniform mechanism is a
-  conditioned ability: one record carrying `SpeedMult` −50, its effect conditioned on the actor
-  concentration-casting, applied to player and NPCs alike (SPID or a vanilla-race ability — the
-  spike picks). A behavior state cannot express "half"; an actor value can, and one record gives
-  every actor the same number. No DLL writes the value on its own clock.
+## The build, restated for the final rule
 
-The dependency direction flips too: the NPC needs no animation work — vanilla NPC casting already
-blends locomotion, so a slowed NPC walks correctly today. **The player's hotbar channel is the
-only actor whose pose breaks when movement opens** (ticket 32's static clip). So ticket 32's blend
-route is the long pole, this ticket's slow works for NPCs immediately, and the player's
-equipped-hand concentration casts get the slow for free from the same record.
+Root the concentration states MSCO does not cover, with the plant this stack has proven three
+times: a `BSIsActiveModifier` binding `bAnimationDriven` (with `bAllowRotation` /
+`bHeadTrackSpine` so the caster still pivots and tracks), per SH2's own pair at
+`nemesis/Nemesis_Engine/mod/shtb/1hm_behavior/#shtb$11.txt` / `$12.txt`. Its own Nemesis mod
+code, not appended to `shtb` — this patch is optional and `shtb` is not. Shipped as a
+dependency-gated optional group in the FOMOD (`python_scripts/create_fomod_installer.py`), gated
+on `MSCO.esp`.
+
+The spike above still runs first and unchanged: if MSCO's binding set already covers the
+concentration states and something else defeats it, this becomes a different ticket and no patch
+is written.
 
 ## Acceptance
 
-- [ ] An NPC streaming a concentration spell moves at half its normal rate for the length of the
-      channel — measured translation on a real enemy mage, not a console-summoned one.
-- [ ] An NPC's fire-and-forget cast is rooted, same bar as the player's ticket 19.
-- [ ] The slow lifts on every end path: channel end, interrupt, death, cell change. No `SpeedMult`
-      residue on any actor.
-- [ ] NPC combat AI does not wedge: interrupting the channel, killing the target, or breaking line
-      of sight all return the actor to normal movement.
-- [ ] The player's numbers match the NPC's — same root for fire-and-forget, same −50 for
-      concentration, whether the cast came from a hotbar slot or an equipped hand.
-- [ ] The FOMOD option installs and uninstalls cleanly, and the patch is absent when the option is
-      not chosen.
+- [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
+      measured displacement on a real enemy mage, not a console-summoned one. (Displacement, not
+      footfalls: thuum ticket 66 is the lesson.)
+- [ ] The NPC still turns to track its target — `bAllowRotation` stays unbound or true. A mage
+      frozen facing the wrong way is worse than one that strafes.
+- [ ] An NPC's fire-and-forget cast is rooted, same bar as the player's ticket 19 — confirm
+      MSCO's existing coverage rather than assuming (spike question 2).
+- [ ] The root lifts on every end path: channel end, interrupt, stagger, death. NPC combat AI
+      does not wedge — breaking line of sight or killing the target returns normal movement.
+- [ ] The player's equipped-hand concentration cast is rooted by the same patch, matching the
+      hotbar channel's existing root — one rule, however the cast started.
+- [ ] The FOMOD option installs and uninstalls cleanly, and the patch is absent when the option
+      is not chosen.
 - [ ] Evidence names the commit, the Nemesis regeneration, the save, and the profile.

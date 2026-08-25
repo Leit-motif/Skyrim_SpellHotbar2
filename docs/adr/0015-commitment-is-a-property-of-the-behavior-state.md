@@ -85,6 +85,22 @@ The split is not a compromise; each primitive is the only one that can do its jo
 forbidden is the third thing: a DLL toggling controls or writing actor values on its own clock,
 which is the shape that slid.
 
+## Amended again 2026-08-24, hours later: concentration roots too; the slow is tabled
+
+On learning the half-speed path required new animation assets (the moving-cast blend, and
+authored clips for rituals), the owner cut movement from scope outright:
+
+> "movement is out of scope. As long as both players and NPCs are rooted during concentration
+> casts, I think we're good to proceed, and we can table the movement and blend work for a
+> future endeavor."
+
+So the per-action rule set is now uniform in the simplest possible way: **every cast type in
+scope — fire-and-forget, concentration, ritual — roots every actor**, all through the one
+primitive this ADR names, the behavior-state modifier. The graded-slow primitive (the
+conditioned `SpeedMult` record) was the right design for a rule that no longer exists; it is
+recorded above so the future endeavor does not rediscover it, and nothing builds it now. The
+per-actor exemption stays dead either way — that part of the first amendment survives.
+
 ## The cost we are accepting
 
 A modifier on a shared state catches every actor in it, which is the mechanism above working as

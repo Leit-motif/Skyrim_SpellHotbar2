@@ -2,9 +2,12 @@
 
 **Type:** feature (content — animation assets first, rules second)
 
-**Status:** parked — owner-floated 2026-08-24, deliberately not scheduled. Do not start this
-ahead of [ticket 32](32-move-at-half-speed-during-a-concentration-channel.md)'s blend route or
-[ticket 33](33-commit-npc-concentration-casts.md)'s shared slow; it depends on both.
+**Status:** parked — owner-floated 2026-08-24, then folded into the tabled "future endeavor"
+the same day when movement went out of scope entirely ("we can table the movement and blend work
+for a future endeavor"). Depends on [ticket
+32](32-move-at-half-speed-during-a-concentration-channel.md)'s blend route, itself parked; both
+unpark together or not at all. The conditioned-slow mechanism this referenced lives in
+ADR-0015's first amendment, unbuilt.
 
 ## Where this came from
 

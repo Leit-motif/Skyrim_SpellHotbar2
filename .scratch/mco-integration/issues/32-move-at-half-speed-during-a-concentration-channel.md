@@ -2,11 +2,18 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** ready-for-agent — **upgraded to a requirement by owner ruling later the same day**
-(2026-08-24): "i want all casts rooted/slowed for concentration for both the player and npc's.
-seamless. the same rules need to apply to everyone consistently." The earlier "not mandatory"
-framing below is kept for the duration rationale it carries, but the decision is made. The spike
-still picks the route; ADR-0015's amendment fixes the mechanism split.
+**Status:** parked — **TABLED by owner ruling, 2026-08-24, hours after being upgraded to a
+requirement.** On learning the path here requires new animation assets: "movement is out of
+scope. As long as both players and NPCs are rooted during concentration casts, I think we're
+good to proceed, and we can table the movement and blend work for a future endeavor."
+
+Concentration therefore ROOTS for every actor — [ticket
+33](33-commit-npc-concentration-casts.md) carries that, and the player's channel is already
+rooted today by the held `shtb` state. Everything below — the duration rationale, the two blend
+routes, the route-A recommendation, the conditioned-slow mechanism pointer — is the future
+endeavor's starting brief, preserved as written. It was a requirement for a few hours and is a
+want again; the intermediate rulings live in ticket 33's history section and ADR-0015's two
+amendments. Ticket 34 (movement ritual animations) parks alongside this.
 
 **Blocked by:** None to spike. The build inherits [ticket 28](28-hold-a-looping-state-for-a-concentration-channel.md)'s
 held state and re-opens [ADR-0013](../../../docs/adr/0013-a-channel-loops-through-the-idle-not-the-cast-state.md).
