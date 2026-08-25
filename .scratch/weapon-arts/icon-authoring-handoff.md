@@ -1,6 +1,6 @@
 # Weapon Art icon authoring handoff
 
-Updated: 2026-08-23
+Updated: 2026-08-24
 
 ## Resume here
 
@@ -8,23 +8,30 @@ Updated: 2026-08-23
 - Branch: `ticket-06-weapon-art-icons`
 - Integration target: `weapon-arts`, not `main`
 - Active art: **none — all 57 catalogue entries have a recorded disposition**
-- Status: **goal-mode icon procurement complete; atlas and catalogue wiring intentionally pending**
-- Inventory: **51 of 57 finalized; 0 unprocessed and 6 recorded hard failures remain**
+- Status: **icon authoring and silhouette regeneration complete; SH2 atlas/catalogue wiring built
+  and statically validated; deployment and runtime acceptance pending.**
+- Inventory: **18 finalized keepers; 33 approved silhouette-regeneration inputs; 6 recorded hard
+  failures remain on `GREATER_POWER`.**
+- Generated runtime assets: `data/SKSE/Plugins/SpellHotbar/images/icons_weapon_arts.{png,csv}`.
+- Historical Imagen brief: `.scratch/weapon-arts/silhouette-regen-codex-handoff.md`.
 
-Ongoing owner direction: deliberately vary race/archetype, sex presentation, race-guided palette,
-weapon family, and visible Khajiit fur pattern across the atlas. Prioritize Nord, Dunmer, Breton,
-and Redguard figures; Khajiit and Argonian representation is already sufficient, so use no more
-Argonians in this run. Include female figures, axes, maces, and other compatible silhouettes instead
-of defaulting to a male neutral sword fighter. Animation and payload evidence still win, and race
-never invents an element.
+Ongoing owner direction: vary race/archetype, sex presentation, race-guided field/wake color, and
+weapon family. Encode Khajiit with ear/muzzle/tail outline and field color, not painted fur.
+Prioritize Nord, Dunmer, Breton, and Redguard for any *new* assignments; do not add Argonians.
+Keep already-assigned races on regen icons (including Leap Slam's Argonian) as outline cues only.
+Include female figures, axes, maces, and other compatible silhouettes instead of defaulting to a
+male sword fighter. Animation and payload evidence still win, and race never invents an element.
 
 Mandatory owner physics gate from 2026-08-24: before finalizing any generation, verify that anatomy
 and physics are possible. Check supported center of gravity, joint ranges, hand placement and grip
 continuity, wrist/elbow/shoulder force path, weapon leverage and counterbalance, striking-edge
 direction, and trail causality. A polished image with an impossible grip or action is a hard failure.
 
-Do not restart the set and do not regenerate Crane Style through Disengage. Their approved assets,
-prompts, and notes are already recorded in `python_scripts/weapon_art_icons/manifest.tsv`.
+Do not restart the set. The optional 2026-08-24 candidates for Crushing Blow, Cyclone Spin, Dash
+Slam, and Disengage were not owner-approved and are excluded from the shipped atlas; their last
+approved versions remain canonical. Physics still has to hold in silhouette form: supported center of gravity,
+plausible joints, hand masses on a connected haft, trail starting on the moving edge. Do not prove
+physics by painting gauntlets or armor joints. See the Codex brief for the regen list.
 
 ## Divided Strike disposition
 

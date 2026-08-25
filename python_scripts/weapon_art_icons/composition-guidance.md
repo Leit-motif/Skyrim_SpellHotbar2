@@ -20,5 +20,9 @@ Do not use upper-left to lower-right as an unspoken default. Avoid repeating the
 direction or dominant action vector for more than two consecutive finalized icons. When references
 are supplied for style, explicitly forbid copying their pose, facing direction, and composition.
 
+Keep the figure at 25–45% of the square and crop to torso, weapon, and path. A full-body character
+with headroom is key art, not an icon. Style references (Crane Style and the other keepers) supply
+abstraction only; copy neither their pose nor their facing.
+
 Animation evidence still wins. If a move has a direction essential to recognition, keep it and vary
 camera angle, figure facing, effect placement, or the following icon instead.

@@ -21,8 +21,9 @@ is complementary or cinematic.
 | Khajiit | Warm brown, tan, ochre | Burgundy, purple, gold | Caravan, desert, patterned textiles |
 | Argonian | Swamp green, teal, dark brown | Turquoise, orange | Wetland, tribal, iridescent |
 
-Use a limited subset for each glyph. A race-coded figure remains generalized and faceless; its
-palette supports the ability's identity rather than turning it into a costume illustration.
+Use a limited subset for each glyph. Put race color in the atmospheric field, the wake, and at
+most one large wedge. A race-coded figure stays a near-black outline; palette must not become a
+costume illustration.
 
 Background hue is also a controlled source of atlas variety. Do not default every icon to a black
 field, but do not force a colored or hazy background where a quieter dark field gives the action

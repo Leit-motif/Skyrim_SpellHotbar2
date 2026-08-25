@@ -461,6 +461,13 @@ superseded by an arcane-trickster Altmer assassin throwing one cobalt-blue psych
 blade with one continuous palm-to-pommel magnetic return tether. No disc, projectile copies, pink
 psychic color, or branching lightning remains. Full and 32 px passed.
 
+Atlas wiring 2026-08-24: the repo-local `build_weapon_art_atlas.py` now creates SH2's native
+`icons_weapon_arts.png` plus tab-separated UV catalogue and writes stable keys into
+`arts_ashes.csv`. Static validation covers 51 unique shippable keys; the six recorded hard failures
+(ArtIDs 28, 31, 34, 45, 47, and 56) remain on `GREATER_POWER`. Optional replacement candidates for
+ArtIDs 9–12 were not owner-approved, so the atlas uses their prior approved assets. Deployment and
+the ticket's in-game Arts-tab/hotbar acceptance remain open.
+
 Goal mode 2026-08-24: **Night Flurry** (`aow_40_night_flurry`) is finalized from its single
 generation attempt. Four closely spaced one-handed contacts become one terminal physical cut by a
 faceless Dunmer Morag Tong assassin using one connected chitin/ebony shortsword and one continuous

@@ -2,12 +2,14 @@
 
 Original Weapon Art icon masters and atlas inputs live here.
 
-- `source/` keeps the approved full-resolution image-generation output.
+- `source/` keeps approved full-resolution output when it was retained. The 2026-08-24
+  `silhouette_regen` batch intentionally retained only its approved 128 x 128 deliverables; those
+  rows have a blank `Master` cell and record that exception in `manifest.tsv`.
 - `icons/` keeps the 128 x 128 PNG consumed by the atlas stitcher.
 - `prompts/` records the approved prompt and reference roles.
 - `manifest.tsv` is the handoff contract for generation, review, and later atlas wiring.
-- `figure-guidance.md` records the owner-approved Elder Scrolls race shorthand used when an
-  icon benefits from a race-specific silhouette.
+- `figure-guidance.md` records the owner-approved Elder Scrolls race shorthand and the mandatory
+  silhouette rendering contract (near-black mass, outline cues only, pasteable FIGURE MASS block).
 - `color-guidance.md` records the owner-approved race palette shorthand used when an icon benefits
   from race-coded color.
 - `composition-guidance.md` prevents repeated figure facing and action axes across the atlas.
@@ -22,6 +24,18 @@ Original Weapon Art icon masters and atlas inputs live here.
 The stable icon key is the filename stem. Do not write a key into
 `data/SKSE/Plugins/SpellHotbar/artdata/arts_ashes.csv` until the generated atlas CSV contains
 that key; otherwise the live catalogue would point at a missing atlas entry.
+
+Build the SH2 atlas and wire all usable manifest entries into the Ashes catalogue with:
+
+```powershell
+python python_scripts/build_weapon_art_atlas.py
+python python_scripts/build_weapon_art_atlas.py --check
+```
+
+The builder creates `data/SKSE/Plugins/SpellHotbar/images/icons_weapon_arts.png` and its matching
+tab-separated `.csv`. Only `finalized` and `silhouette_regen` rows are shippable; unknown workflow
+states fail closed. Rows marked `hard_failure` remain on `GREATER_POWER`. This is SH2's native
+PNG/CSV atlas path; the optional Inventory Injector SWF toolchain is not required.
 
 All shipped glyphs must be original. Installed SWFs and screenshots are composition references
 only and are not redistributed.

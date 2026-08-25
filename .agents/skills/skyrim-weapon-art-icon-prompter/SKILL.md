@@ -1,6 +1,6 @@
 ---
 name: skyrim-weapon-art-icon-prompter
-description: Author or revise prompts for Skyrim Weapon Art MMO hotbar icons, especially when animation evidence, race or faction coding, clothing, weapon silhouettes, VFX geometry, or 32 px readability must align before image generation.
+description: Author or revise prompts for Skyrim Weapon Art MMO hotbar icons, especially when animation evidence, race-coded silhouette cues, weapon shapes, VFX geometry, or 32 px readability must align before image generation.
 ---
 
 # Skyrim Weapon Art Icon Prompter
@@ -14,8 +14,9 @@ Before authoring a prompt, read:
 
 - `python_scripts/weapon_art_icons/skyrim-visual-language.md` for Skyrim terms, archetypes,
   materials, and drift checks;
-- `python_scripts/weapon_art_icons/figure-guidance.md` and `color-guidance.md` when a race-coded
-  figure is requested or materially useful;
+- `python_scripts/weapon_art_icons/figure-guidance.md` before writing any figure into a prompt;
+  its rendering contract is mandatory, not optional race flavor;
+- `python_scripts/weapon_art_icons/color-guidance.md` when a race-coded field or accent is useful;
 - `python_scripts/weapon_art_icons/composition-guidance.md` and the last three finalized manifest
   rows when choosing the action axis; read those rows' prompt files for their recorded axes and
   inspect approved masters only when the prose does not establish composition;
@@ -44,12 +45,13 @@ Resolve these fields in this priority order:
    correction. These are hard constraints.
 2. **Frozen action:** one readable instant from the move. Describe the body's center of gravity,
    limb paths, weapon endpoints, and direction of travel.
-3. **Skyrim identity:** choose a specific archetype, not a race label alone. `Nord barbarian`,
-   `Nord housecarl`, and `Nord plate warrior` are different briefs.
+3. **Skyrim identity:** choose a specific archetype, then reduce it to outline cues from
+   `figure-guidance.md`. `Nord barbarian` and `Nord housecarl` differ by helm/shoulder mass and
+   weapon family, not by a clothing construction list.
 4. **Causality:** every dominant trail starts from a moving weapon or body part. The pose must
    create the effect; the effect cannot decorate a static stance.
-5. **Icon hierarchy:** choose the smallest figure that still communicates the action. Preserve one
-   dominant silhouette and 32 px readability.
+5. **Icon hierarchy:** the effect and weapon path own the square. The figure is a 25–45%
+   near-black mass. Preserve one dominant silhouette and 32 px readability.
 6. **Atlas variety:** choose an orientation and palette that fit the move without silently copying
    recent icons.
 
@@ -67,16 +69,22 @@ Use natural, positive art direction in this order:
 
 1. asset and 32 px use;
 2. exact frozen action and camera;
-3. body mechanics and silhouette;
-4. Skyrim archetype, clothing materials, and weapons;
+3. the pasteable **FIGURE MASS** block from `figure-guidance.md`;
+4. weapon as one connected shape, grip implied by hand masses on the haft;
 5. causal VFX geometry and palette;
-6. background and painted MMO-icon finish;
+6. colored atmospheric field and painted MMO-icon finish;
 7. a short constraint list containing only likely high-cost failures.
 
 Describe the desired image before mentioning exclusions. Do not bury the action beneath long
-negative lists. When reference images are used, assign each one a narrow role such as `fur
-construction`, `weapon silhouette`, or `approved icon grammar`; state that its pose and composition
-are not references unless they truly are.
+negative lists. Do not write a clothing, armor, or "construction" paragraph; that is the failure
+that turned later icons into costume plates. "Faceless" and "no portrait" are not a silhouette
+instruction without the figure-mass block.
+
+When reference images are used, assign each one a narrow role such as `weapon silhouette` or
+`approved icon grammar`. Crane Style, Aimed Blow, Blood Flurry, Champion's End, and Dragon Strike
+are grammar references only: match abstraction, faceless mass, limited palette, glow, and 32 px
+readability. Their poses, figures, weapons, and compositions are not references unless the owner
+says they are.
 
 After a rejection that changes subject, action, costume, or composition, write a new prompt from
 the canonical brief. Do not edit or reference the rejected candidate. Use an existing candidate as
@@ -86,17 +94,18 @@ an edit target only when the user explicitly wants to preserve substantial parts
 
 Before calling an image tool, verify all of the following:
 
-- the figure is performing the requested action rather than posing;
-- the anatomy and physics are possible: center of gravity is supported, joints stay within plausible
-  range, hands close around the intended grip, wrists and elbows can transmit the stated force, and
-  the weapon's mass has a believable counterbalance;
-- clothing and armor match the resolved Skyrim archetype;
-- weapon type, count, grip, and visible geometry are correct;
+- the figure is a solid near-black mass performing the action, not a posed or painted character;
+- race is two or three outline cues; no fur, hair, eyes, cloth folds, rivets, or filigree;
+- the figure occupies 25–45% of the square and loses to the effect at 32 px;
+- the anatomy and physics are possible in silhouette: center of gravity is supported, joints stay
+  within plausible range, hand masses sit on a connected haft, and the weapon's mass has a
+  believable counterbalance;
+- weapon type, count, and visible connected geometry are correct;
 - the cutting edge or striking face leads the instantaneous motion, and the trail follows that same
   mechanically possible path rather than disguising a broken pose;
 - each dominant effect is physically connected to its source;
 - the camera and action axis are explicit;
-- the image remains an MMO ability glyph rather than portrait or key art;
+- the image remains an MMO ability glyph rather than portrait, costume plate, or key art;
 - no rejected content reference is being carried forward accidentally.
 
 If the owner has rejected the prior candidate for alignment, present the new plain-language prompt

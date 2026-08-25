@@ -27,8 +27,8 @@ meaning; the agent owns the prompt engineering.
 
 - Race, culture, or faction:
 - Specific archetype:
-- Clothing or armor construction:
-- Materials and wear:
+- Outline cues only (two or three): helm/ear/tail/snout mass, not clothing construction:
+- Weapon as one connected shape:
 - Canonical weapon vocabulary:
 - Skyrim terms or references that require verification:
 
@@ -36,25 +36,26 @@ meaning; the agent owns the prompt engineering.
 
 - Dominant effect geometry and physical source:
 - Effect color and supporting palette:
-- Figure-to-effect hierarchy:
+- Figure-to-effect hierarchy (effect owns the square; figure is a 25–45% near-black mass):
 - Background family:
 - Distinction from the last three finalized icons:
 
 ## Reference roles
 
-For every supplied image, record one or more explicit roles: edit target, icon grammar, material,
-costume construction, weapon silhouette, palette, pose, or composition. A role not listed here is
-not inherited.
+For every supplied image, record one or more explicit roles: edit target, icon grammar, weapon
+silhouette, palette, pose, or composition. Costume construction is not a valid reference role. A
+role not listed here is not inherited.
 
 ## Hard acceptance fields
 
 - [ ] The owner-directed action is visible in the body, not only in VFX.
-- [ ] The archetype is specific enough that clothing cannot drift into another Skyrim identity.
+- [ ] The figure is a solid near-black mass with two or three race outline cues, not a costume plate.
+- [ ] The archetype is specific enough that the outline cannot drift into another Skyrim identity.
 - [ ] Weapon count, type, grip, and trajectory are coherent.
 - [ ] Anatomy and physics are possible: weight is supported, joints are plausible, every hand closes
       on its intended grip, and the weapon can actually be accelerated along the depicted path.
 - [ ] Every dominant trail is physically caused by a weapon or body path.
 - [ ] Camera, crop, and action axis are explicit.
 - [ ] The effect and figure remain readable at 32 px.
-- [ ] The result is an MMO ability glyph, not a portrait, costume plate, or static emblem.
+- [ ] The result is an MMO ability glyph, not a portrait, costume plate, or static emblem. The pasteable FIGURE MASS block from `figure-guidance.md` is in the prompt.
 - [ ] Rejected candidates contribute no unapproved content.
