@@ -131,6 +131,10 @@ _Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost
 **Terminal Ability / Chaining Ability**:
 An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.
 
+**Committed Action**:
+An action the actor cannot steer out of once it starts — an MCO attack, a shout, a Driver Cast, a Weapon Art. Commitment is authored on the behavior state that owns the action and nowhere else (ADR-0015), so every actor entering that state is committed, player and NPC alike. The fork's bar, stated by the owner 2026-08-24: a seamless modernized MCO-feel combat experience with Spell Hotbar 2 as the interface, which means every action a hotbar slot can start commits the same way.
+_Avoid_: Movement lock, input block, rooting as a DLL feature, player-only commitment
+
 ## Findings
 
 Verified 2026-07-31 by static inspection of this repository unless noted. The vanilla
