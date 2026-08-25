@@ -9,9 +9,8 @@ clips. Requested 2026-08-25. **The local test below needs no permission** — co
 files on one machine is not redistribution — so the mechanism can be proven while the answer is
 outstanding.
 
-**Status:** PARKED for a post-launch refinement pass (owner ruling, 2026-08-25). Phase 1's clips
-are stamped, verified, and live in the fixture; the remaining acceptance is not worth pre-launch
-time. Do not spend more of it here before launch.
+**Status:** CLOSED 2026-08-25 by owner ruling. The fix is built, verified, and live in the
+fixture. Shipping the clips is a licensing question, not a code one, and is carried by ticket 17.
 **Settles:** [ticket 15](15-double-slash-plays-no-clip.md) for the shipped set.
 **Decision:** [ADR-0017](../../../docs/adr/0017-the-shipped-art-pack-carries-its-own-clip-bytes.md).
 
@@ -156,3 +155,23 @@ animation load volume. The duplicate filter this ticket works around exists beca
 count pressure, so a mod that raises or manages that limit could make the byte-uniqueness fix
 unnecessary, or change which fix is right. Establish what it is and what it does before resuming --
 do not assume this ticket's premise still holds.
+
+
+## Closed, 2026-08-25
+
+Owner: *"I feel like the ticket can be closed at this point."* Closing on the fix being built and
+demonstrated rather than on the three-launch matrix, which was stopped as not worth pre-launch time.
+
+Delivered: all 57 art submods own byte-unique stamped clips instead of pointing at the author's
+folders -- 57 distinct hashes, none matching upstream, `hkxc verify` clean on all 57, animation data
+unchanged through the annotation round-trip. Built by `python_scripts/stamp_art_clips.py`, which
+re-checks the pack on disk with `--verify`. On the one launch measured, 51 of 57 arts bound their
+correct clip with the exact animmotion count from their own dump, zero mis-binds, including both
+arts ticket 15 caught failing.
+
+Not done, and deliberately so: the three-launch bar, and the six Dual-class arts (no headless route
+arms the left hand; the untried `Actor#EquipItemEx` self-target seam is recorded above). Both belong
+to a post-launch refinement pass if the defect ever resurfaces.
+
+Re-open only if arts start dropping again -- and read the note above about the owner's new
+animation-load mod first, because it may have removed this ticket's premise.

@@ -7,7 +7,7 @@ they never see, and cannot learn which one to avoid.
 
 **Blocked by:** nothing
 
-**Status:** PARKED for a post-launch refinement pass (owner ruling, 2026-08-25). See ticket 16's parked note; the byte-unique fix is live and did not reproduce this defect across 51 arts on one launch, but the three-launch bar was deliberately not pursued.
+**Status:** CLOSED 2026-08-25 by owner ruling, fixed by [ticket 16](16-ship-byte-unique-art-clips.md). The byte-unique clips remove the collision that caused it; the defect did not reproduce across 51 arts on the launch measured. Re-open if arts drop again.
 
 ## What is actually happening
 
