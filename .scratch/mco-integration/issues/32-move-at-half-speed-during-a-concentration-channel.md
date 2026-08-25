@@ -127,12 +127,15 @@ same edges that already tear the channel down (`casting_controller.h`, `CastingI
 - **"50%" means −50 points of `SpeedMult`**, which is half speed for an unbuffed player and less
   than half for a buffed one. Say so out loud; a true proportional halving would have to re-read
   the value and would fight anything else modifying it mid-channel.
-- Ritual (two-handed) concentration: the uniform ruling ("all casts ... slowed for
-  concentration") reads as covering it, which would drop
-  `CastingInstanceSpellRitualConcentration::blocks_movement()`'s full root
-  (`casting_controller.cpp:1402`). Rituals have no moving-cast clips at all, so this is the
-  hardest blend case — confirm with the owner whether rituals are in scope before building them,
-  and land the single-hand channel first either way.
+- Ritual (two-handed) concentration: **RESOLVED 2026-08-24 — rituals stay fully rooted, out of
+  this ticket's scope.** Owner: "i think it was intended that ritual spells should be rooted and
+  it's less of a headache for us now." The evidence agrees on both halves: upstream authored the
+  root deliberately (`CastingInstanceSpellRitualConcentration::blocks_movement()` returns
+  `!m_casted`, `casting_controller.cpp:1402`), and the `cast_ritual_aimed_conc` submod replaces
+  idles, turn-in-place clips, and shout clips — **no walk or run clip anywhere in it**. The
+  author built a caster who plants and pivots. This is a per-action-class rule, so it holds for
+  every actor and does not breach the consistency ruling. A future movement-designed ritual set
+  (floating/hover) is [ticket 34](34-ship-movement-ritual-animations.md), parked.
 
 ## Acceptance
 
