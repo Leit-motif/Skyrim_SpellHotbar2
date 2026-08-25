@@ -1,6 +1,6 @@
 # Reaper
 
-**Status:** Autonomous from-scratch completion regeneration passed at 128 px on 2026-08-24
+**Status:** Owner-directed spectral teal-green palette edit finalized at 128 px on 2026-08-25
 
 **Stable icon key:** `aow_45_reaper`
 
@@ -68,3 +68,28 @@ Hard constraints: one figure; exactly one single-ended hand-connected glaive; ex
   a plain rounded butt, and the sole crescent blade owns the one open wake.
 - 32 px: pass. Glaive crescent, source silhouette, and persistent reap remain readable.
 - Atlas-input SHA-256: `956FC61574460FDDAE6D2531782A463584F1BF3F9A90490210F1535E4D324943`.
+
+## Owner-directed spectral palette edit
+
+Owner direction explicitly supplies the spectral teal-green effect that the animation and name did
+not prove. The successful 128 px icon was the sole edit target; the single-ended glaive, plain butt,
+pose, crop, and single-wake geometry were locked.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon, optimized for 32x32 readability.
+Input image: sole edit target.
+Primary request: recolor Reaper with a spectral teal-green identity.
+Change only color, glow, and restrained spectral texture: replace the ivory-beige reap crescent with a luminous ghostly teal-to-emerald wake, brightest pale mint-white at the blade tip and fading through cyan-teal into deep spectral green. Add only a faint translucent vapor softness inside the existing wake; do not add shapes. Shift the background to deep charcoal, blackened teal, and muted violet so the green wake dominates.
+Preserve exactly: square composition, crop, near-black figure silhouette, helmet, pose, both connected hand masses, continuous single-ended glaive shaft, plain rounded lower butt, sole crescent blade, one open wake, all positions, and painterly MMO-icon finish.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: close ash-hood and mask, lean proportion, one chitin
+blade wedge. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is the
+small anonymous verb; the effect and weapon path are the subject.
+Constraints: exactly one connected single-ended glaive and one spectral teal-green wake. No second blade, spear butt, skull, ghost figure, soul face, extra trail, ring, scenery, text, logo, watermark, border, or UI frame. This is a narrow palette edit, not a redesign.
+```
+
+- 128 px: pass. The sole glaive blade and plain lower butt remain correct; the existing wake now
+  reads as spectral mint, teal, and emerald without introducing ghost figures or extra effects.
+- 32 px: pass. Teal-green reap and connected glaive silhouette remain distinct.
+- Atlas-input SHA-256: `2AD7A507E66888E3E74D20363BA7D3DE125AF2DF2EE7003065DA702FE68BA4FB`.

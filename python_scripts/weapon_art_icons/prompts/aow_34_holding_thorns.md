@@ -1,6 +1,6 @@
 # Holding Thorns
 
-**Status:** Autonomous opaque-field completion regeneration passed at 128 px on 2026-08-24
+**Status:** Owner-directed nature palette edit finalized at 128 px on 2026-08-25
 
 **Generation path:** One initial Codex generation, followed by one owner-directed edit using the
 initial result as the sole image reference
@@ -100,3 +100,28 @@ Hard constraints: one figure at 25-40%; exactly two hand-connected blades; exact
   abstract field; only the hooked lead blade owns the wake.
 - 32 px: pass. Dual-blade source and amber finishing path remain distinct.
 - Atlas-input SHA-256: `00216FA65F23A33EF962CE0BFD3CDF841E03526E3E895B62DC451A144E2C46D4`.
+
+## Owner-directed nature palette edit
+
+Owner direction adds nature coding that the animation did not prove. The successful 128 px icon
+was the sole edit target; the dual-blade action, weapon count, connected geometry, and single-wake
+hierarchy were locked.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon, optimized for 32x32 readability.
+Input image: sole edit target.
+Primary request: give Holding Thorns a restrained nature-themed palette while retaining the exact dual-blade action.
+Change only color, glow, and subtle internal texture: shift the abstract field from blue-red to deep forest green, blackened moss, and bark brown. Recolor the single leading weapon wake to luminous yellow-green and leaf-green with a pale chartreuse core. Within that existing wake only, add a very subtle thorn-vine rhythm as tiny hooked accents, readable as nature energy but not as separate plants or objects. Use restrained ochre sparks at the same impact point.
+Preserve exactly: square composition, crop, near-black hooded figure silhouette, both arm poses, exactly two hand-connected blades, blade shapes, one connected leading wake, impact point, negative space, and painterly MMO-icon finish.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: close mask and hood, lean severe shoulder mass, two
+short chitin blade wedges. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The
+figure is the small anonymous verb; the effect and weapon path are the subject.
+Constraints: exactly two connected blades and one nature-green attached wake. No third blade, detached weapon, large literal vines, leaves, flowers, tree, poison cloud, extra trail, scenery, text, logo, watermark, border, or UI frame. This is a palette treatment, not a composition redesign.
+```
+
+- 128 px: pass. Two connected blades and one lead wake remain intact; forest, moss, chartreuse,
+  and restrained thorn rhythm supply the requested nature identity.
+- 32 px: pass. Green finishing wake and dual-blade silhouette remain legible.
+- Atlas-input SHA-256: `1E1221EA460EA4F8CCABA40E02C1A6876AF746F7E36DED1D1E53D483CCABAC10`.

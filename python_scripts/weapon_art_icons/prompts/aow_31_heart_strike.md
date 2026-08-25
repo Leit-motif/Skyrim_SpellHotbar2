@@ -1,6 +1,6 @@
 # Heart Strike
 
-**Status:** Autonomous from-scratch completion regeneration passed at 128 px on 2026-08-24
+**Status:** Owner-directed red Molag Bal/Daedric edit finalized at 128 px on 2026-08-25
 
 **Generation path:** One Codex built-in image-generation call; no image references
 
@@ -87,3 +87,69 @@ Hard constraints: one silhouette; exactly one connected held mace; exactly one h
   crescent begins behind that head.
 - 32 px: pass. Mace, source figure, rising arc, and terminal contact remain legible.
 - Atlas-input SHA-256: `D0A446843F93405388DC278A5716BEC2A108035CF1B234419CD29048D327CE98`.
+
+## Owner-directed red palette edit
+
+Owner direction supersedes the prior silver-blue composition choice. The successful 128 px icon
+was used as the sole edit target; geometry, pose, weapon connection, crop, and single-wake hierarchy
+were locked.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon, optimized for 32x32 readability.
+Input image: sole edit target.
+Primary request: recolor Heart Strike so the ability is unmistakably red-coded.
+Change only color and glow: replace the blue-white mace crescent with a saturated crimson and claret physical wake, with a narrow red-white core and a compact white-red impact flare. Shift any blue rim light on the figure to restrained dark crimson. Keep the burgundy-charcoal field dark enough for separation.
+Preserve exactly: square composition, crop, figure silhouette, helmet, arm pose, connected hand/haft/mace geometry, mace head shape, single open rising crescent, spark placement, vignette, painterly MMO-icon finish, and all object positions.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: closed bascinet mass, compact knight proportion, one
+burgundy wedge. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure is
+the small anonymous verb; the effect and weapon path are the subject.
+Constraints: one held mace, one connected red crescent, one impact. No heart symbol, blood droplets, gore, fire, extra trail, detached weapon, new objects, scenery, text, logo, watermark, border, or UI frame. This is a narrow recolor, not a redesign.
+```
+
+- 128 px: pass. The connected mace and single crescent are unchanged; crimson, claret, and the
+  red-white contact now make the requested red code immediate.
+- 32 px: pass. Red upswing and source silhouette remain distinct.
+- Atlas-input SHA-256: `A78FFD8FAD13CB55E7B99BC3B4F1C7A6D96187FE7878260A7048C8D357BD898E`.
+
+## Owner-directed Skyrim artifact and armor edit
+
+Owner direction: replace the generic mace with Skyrim's Mace of Molag Bal and the knight mass with
+Skyrim Daedric armor while keeping the red Heart Strike treatment. Visual research used the UESP
+Skyrim item render for the mace and the male Daedric armor screenshot, plus Bethesda-certified
+Daedric armor concept-art provenance. These references supplied item silhouettes only.
+
+- Mace reference: `https://images.uesp.net/3/34/SR-item-Mace_of_Molag_Bal.jpg`
+- Armor reference: `https://images.uesp.net/thumb/e/ef/SR-item-Daedric_Armor_Male.jpg/600px-SR-item-Daedric_Armor_Male.jpg`
+- Official concept-art provenance: `https://www.cookandbecker.com/en/artwork/2300/daedric-armor-skyrim-bethesda-softworks.html`
+
+The first edit was rejected because the detailed armored figure expanded into costume-plate framing.
+The successful pass restarted from the red source and locked the original compact envelope.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon for Skyrim Spell Hotbar 2, optimized for 32x32 readability.
+Input images: Image 1 is the sole edit target and fixes the exact composition, figure bounding box, action, crop, red crescent, and painterly abstraction. Image 2 supplies only Skyrim Mace of Molag Bal weapon silhouette. Image 3 supplies only Skyrim Daedric armor outer silhouette. Never copy reference backgrounds or static poses.
+
+Primary request: make only two identity substitutions inside Image 1's existing occupied pixels: replace the generic mace with Skyrim's Mace of Molag Bal and replace the bascinet/knight outline with Skyrim Daedric armor. Do not enlarge, reposition, or lengthen the figure, arm, weapon reach, or occupied silhouette envelope.
+
+Weapon: one short continuous one-handed haft remains in the exact existing hand and angle. At its existing upper-left endpoint, use a compressed but recognizable Mace of Molag Bal head: tall blackened cross-shaped Daedric mass, one crown spike, two broad angular side points, small horned-face base, sparse narrow sickly-green channels. Keep the entire mace within the original mace-and-arm envelope and tangent to the existing red impact. It is one connected one-handed mace—not a sword, axe, spear, or staff.
+
+Armor: keep the body strictly within Image 1's original compact lower-right silhouette, occupying 32-38% of the square. Encode Daedric armor only through outer contour: small closed twin-horn helm mass, two jagged shoulder wedges, one compact angular torso wedge. Interior stays almost solid black with only restrained thin dark-red edge seams. No readable armor inventory, layered plate showcase, chest ornament, gauntlet detail, or added spikes outside the original figure boundary.
+
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: small twin-horn Daedric helm mass, two jagged shoulder
+wedges, compact one-handed striking proportion. No fur, hair, eyes, cloth folds, rivets, filigree,
+or armor inventory. The figure is the small anonymous verb; the effect and weapon path are the
+subject.
+
+Preserve exactly from Image 1: lower-right-to-upper-left upswing, one open crimson/claret crescent with red-white core, white-red contact, dark burgundy-charcoal field, negative space, vignette, safe crop, and painterly brushwork. Effect remains the dominant first read.
+
+Hard constraints: compact figure no more than 38%; exact original figure envelope; one connected Mace of Molag Bal; one red crescent; no large armored character, costume plate, shoulder filling the right edge, extra weapon, shield, detached head, two-handed haft, green trail, heart, blood, fire, scenery, text, logo, watermark, border, or UI frame.
+```
+
+- 128 px: pass. The tall cross/crown mace head, green channels, twin-horn helm, and jagged Daedric
+  shoulder outline survive while the red crescent remains the first read.
+- 32 px: pass. Mace silhouette, red upswing, and compact Daedric source remain separable.
+- Atlas-input SHA-256: `3DDC2A0008203315137DEB17826F48FCAAFDA702B99AA0559500012454CC7FCF`.

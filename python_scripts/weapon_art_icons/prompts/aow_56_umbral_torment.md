@@ -1,6 +1,6 @@
 # Umbral Torment
 
-**Status:** Autonomous from-scratch completion regeneration passed at 128 px on 2026-08-24
+**Status:** Owner-directed purple palette edit finalized at 128 px on 2026-08-25
 
 **Stable icon key:** `aow_56_umbral_torment`
 
@@ -66,3 +66,28 @@ Hard constraints: one silhouette; exactly one connected two-handed greatsword; e
   and the field contains no scenic battlefield or literal flame spectacle.
 - 32 px: pass. The heavy diagonal greatsword strike and orange trail remain distinct.
 - Atlas-input SHA-256: `C53F69543142386205AB5BDF19DD6BF8072A0187E6414ACAC61F9C240FADBF74`.
+
+## Owner-directed purple palette edit
+
+Owner direction supersedes the animation-proven orange trail color for the atlas presentation.
+The successful 128 px icon was the sole edit target; greatsword construction, grip, pose, crop,
+impact, and single-wake geometry were locked.
+
+```text
+Use case: precise-object-edit
+Asset type: square MMO/RPG hotbar ability icon, optimized for 32x32 readability.
+Input image: sole edit target.
+Primary request: recolor Umbral Torment purple.
+Change only color and glow: replace the orange greatsword wake and impact with a saturated aubergine-to-violet physical wake, a narrow electric-magenta inner edge, and a pale lavender-white impact core. Shift orange edge lighting on the figure and sword to restrained violet. Change the abstract field to charcoal, deep aubergine, muted plum, and cool slate so the purple action remains the first read.
+Preserve exactly: square composition, crop, near-black Redoran silhouette, helmet and shoulder outline, both connected hand masses, one continuous greatsword and grip, blade angle, one edge-connected wake, impact point, brushwork, and painterly MMO-icon finish.
+FIGURE MASS: one solid near-black silhouette, 25-45% of the square, cropped to torso, weapon, and
+path. Face is a void. Race as outline only: closed Redoran helm mass, broad chitin shoulder wedge,
+long two-hand grip. No fur, hair, eyes, cloth folds, rivets, filigree, or armor inventory. The figure
+is the small anonymous verb; the effect and weapon path are the subject.
+Constraints: exactly one connected two-handed greatsword and one purple wake. No orange, literal flames, lightning branches, fog, extra trail, detached blade, new objects, scenery, text, logo, watermark, border, or UI frame. This is a narrow palette edit, not a redesign.
+```
+
+- 128 px: pass. The connected two-handed greatsword and one wake remain unchanged; aubergine,
+  violet, magenta, and lavender now supply the requested umbral-purple read.
+- 32 px: pass. Purple diagonal strike remains legible without orange or scenic drift.
+- Atlas-input SHA-256: `D6A7286EA2D64B49704D8E7F129E83444DE37DC531ADFAD527ED20996C16355D`.
