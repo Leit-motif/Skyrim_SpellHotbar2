@@ -4,10 +4,16 @@
 (merge `9290613`, deployed 2026-08-26 15:04) and caught by the owner within minutes of live
 play, after a headless acceptance matrix passed clean.
 
-**Status:** needs-triage — blocked on the owner naming the triggering button; the rolled-back
-build (pre-46, rebuilt from `1b40411` and deployed 15:53) is what the owner runs now. The
-ticket-46 code is quarantined in the repo: **do not redeploy any of it until this ticket is
-closed.**
+**Status:** CLOSED 2026-08-26 by owner finding — **false alarm, external cause: reWASD.** The
+owner: "it was not your changes. apparently it was rewasd not swapping profiles correctly...or
+something. i dont know. but when i closed rewasd, controls were returned." This explains every
+measurement: engine controls enabled, graph clean, speedmult normal, physical ESC dead — the
+input was eaten upstream of the game by the remapper, not by the DLL. The quarantine is
+lifted; the ticket-46 build redeploys 2026-08-26 for owner manual testing. The measurement
+trail below is kept because it is a clean worked example of discriminating engine-side,
+DLL-side, and OS-side input loss — and because ticket 50 (the real-input harness) was filed
+off this incident and remains open on its own merits: the injected-input blind spot over
+`input.cpp` is real regardless of what caused today's symptom.
 
 ## Owner report (2026-08-26, verbatim fragments)
 
