@@ -50,10 +50,35 @@ Ordered cheapest-first. Climb only as far as the acceptance cell requires.
    identity, colour, "does it look right." Phrase these cells as owner cells from the start; do
    not burn a session approximating them.
 
-**The instrument gap worth building:** OAR exposes a plugin API to other SKSE plugins. A small
-DevBench consumer (or SH2 debug hook) that queries OAR for the active replacement animation on
-the player's graph and logs the resolved clip path would collapse rungs 1–3 into one telemetry
-read. Verify the exact API surface against `OpenAnimationReplacer-API.h` before designing it.
+**The instrument gap worth building — API surface verified 2026-08-26:** OAR's
+`src/API/OpenAnimationReplacerAPI-Animations.h` (ersh1/OpenAnimationReplacer, main branch;
+installed DLL is 3.2.0) exposes exactly the read we want:
+
+```cpp
+struct ReplacementAnimationInfo {
+    RE::BSString animationPath{};   // the resolved clip file path
+    RE::BSString projectName{};
+    RE::BSString variantFilename{};
+    RE::BSString subModName{};      // the OAR submod that won
+    RE::BSString modName{};
+};
+class IAnimationsInterface1 {
+    [[nodiscard]] virtual ReplacementAnimationInfo
+        GetCurrentReplacementAnimationInfo(RE::hkbClipGenerator* a_clipGenerator) noexcept = 0;
+    // + ClearConditionStateData(clipGenerator | TESObjectREFR*)
+};
+// GetAPI(InterfaceVersion::Latest) -> IAnimationsInterface*  (V1 is current)
+```
+
+`subModName` and `modName` are in the struct, so **submod naming — until now an owner-eyes
+cell — becomes headless** once the probe exists. The one engineering question left is supplying
+the `hkbClipGenerator*`: either **pull** (walk the player graph's active nodes on demand — a
+DevBench extension tool returning every active clip's info) or **push** (hook
+`hkbClipGenerator::Activate` and log the info per activation, giving a time-ordered record of
+every clip that played — the "record everything, read back later" shape with no pixels).
+Push is the better fit for cast-matrix cells; a clip can activate and retire between polls.
+Request mechanics follow Ersh's usual pattern (exported `RequestPluginAPI_Animations`;
+`GetAPI` returns nullptr on version mismatch, which doubles as the runtime version check).
 
 ## Why frame capture stays retired
 
@@ -170,8 +195,10 @@ The current work's exact test, fully headless:
 
 ## Open instrument work
 
-- **OAR-API clip-name probe** — the single highest-value build; turns clip identity into one
-  read. Spike against the API header first.
+- **OAR-API clip-name probe** — the single highest-value build; turns clip identity (path,
+  variant, submod, mod) into one read. API surface verified against the header — see the
+  oracle-ladder section; remaining work is the clip-generator supply (push hook preferred) and
+  a live smoke test.
 - **Ticket 50 real-input harness** — upstream injection so input-hook changes stop being
   owner-only.
 - **Pose-trajectory calibration** — one spike to learn whether `record` distinguishes known
