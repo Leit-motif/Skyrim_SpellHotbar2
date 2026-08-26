@@ -8,6 +8,7 @@ using SpellHotbar::GameData::anim_id;
 using SpellHotbar::GameData::CastAnimSlot;
 using SpellHotbar::GameData::concentration_family;
 using SpellHotbar::GameData::fire_and_forget_family;
+using SpellHotbar::GameData::ritual_cast_slot;
 
 namespace {
 
@@ -101,6 +102,20 @@ void fire_and_forget_ids_are_unchanged()
 	expect(fnf(true, true, CastAnimSlot::variant) == 10017, "ritual self shares the self fast cast");
 }
 
+void dual_one_handed_takes_the_variant_slot_at_any_cast_time()
+{
+	expect(ritual_cast_slot(false, true, true) == CastAnimSlot::variant,
+		"fast dual 1H is the dual id");
+	expect(ritual_cast_slot(false, true, false) == CastAnimSlot::variant,
+		"slow dual 1H is still the dual id (ticket 48)");
+	expect(ritual_cast_slot(true, false, true) == CastAnimSlot::variant,
+		"fast ritual borrows the variant slot");
+	expect(ritual_cast_slot(true, false, false) == CastAnimSlot::primary,
+		"slow ritual keeps the ritual id");
+	expect(ritual_cast_slot(true, true, false) == CastAnimSlot::primary,
+		"a two-handed spell picks by speed even when flagged dual");
+}
+
 }  // namespace
 
 int main()
@@ -114,6 +129,7 @@ int main()
 	two_handed_wins_over_ward();
 	concentration_families_never_share_a_primary_id();
 	fire_and_forget_ids_are_unchanged();
+	dual_one_handed_takes_the_variant_slot_at_any_cast_time();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

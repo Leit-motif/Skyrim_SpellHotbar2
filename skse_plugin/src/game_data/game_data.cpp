@@ -1874,6 +1874,9 @@ namespace SpellHotbar::GameData {
      {
          if (global_animation_type) {
              global_animation_type->value = static_cast<float>(value);
+             // The id every OAR cast submod selects on; without this line the chosen cell is
+             // only ever inferred from clip timings (ticket 48's diagnosis).
+             logger::debug("SH2 cast: SpellHotbar_SpellAnimationType={}", value);
          }
      }
      hand_mode set_weapon_dependent_casting_source(hand_mode hand, bool dual_cast)

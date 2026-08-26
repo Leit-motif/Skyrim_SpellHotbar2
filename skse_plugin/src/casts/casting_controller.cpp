@@ -2,6 +2,7 @@
 #include <atomic>
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
+#include "../game_data/cast_anim_ids.h"
 #include "../input/keybinds.h"
 #include "../rendering/render_manager.h"
 #include "spell_proc.h"
@@ -1183,11 +1184,14 @@ namespace SpellHotbar::casts::CastingController {
 		if (!current_cast) {
 			if (pc) {
 				
-				bool is_fast_cast = cast_info.m_casttime <= fast_cast_threshold;
+				const bool is_fast_cast = cast_info.m_casttime <= fast_cast_threshold;
+				const bool use_variant =
+					GameData::ritual_cast_slot(cast_info.m_spell->IsTwoHanded(),
+						cast_info.m_dual_cast, is_fast_cast) == GameData::CastAnimSlot::variant;
 
-				int anim = is_fast_cast ? cast_info.m_animation2 : cast_info.m_animation;
+				int anim = use_variant ? cast_info.m_animation2 : cast_info.m_animation;
 				if (anim < 0) {
-					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, is_fast_cast);
+					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, use_variant);
 				}
 				GameData::set_animtype_global(anim);
 
@@ -1314,6 +1318,11 @@ namespace SpellHotbar::casts::CastingController {
 						}
 						else {
 							if (!spell->IsTwoHanded() && hand == dual_hand && !dual_cast) {
+								// Silent until ticket 48's diagnosis: a level-3 fixture without
+								// the school's dual-cast perk spent a session reading as "the
+								// dual submods never select".
+								logger::debug(
+									"SH2 cast: dual requested but spell is not dual-castable here (perk/spell); downgrading to auto");
 								hand = auto_hand;
 							}
 						}

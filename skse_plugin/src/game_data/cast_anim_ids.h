@@ -25,6 +25,18 @@ struct CastAnimFamily {
 	return slot == CastAnimSlot::variant ? family.variant : family.primary;
 }
 
+// Which slot a fire-and-forget cast through the ritual path takes (ticket 48). The variant
+// slot serves two different axes: for a ONE-HANDED spell it is the dual id, and dual is a
+// hand value, not a speed — a dual cast presents dual at any cast time (ADR-0018, D1). Only
+// a genuine two-handed ritual picks by speed, borrowing the dual id for the short clip.
+[[nodiscard]] constexpr CastAnimSlot ritual_cast_slot(bool two_handed, bool dual_cast, bool is_fast_cast) noexcept
+{
+	if (dual_cast && !two_handed) {
+		return CastAnimSlot::variant;
+	}
+	return is_fast_cast ? CastAnimSlot::variant : CastAnimSlot::primary;
+}
+
 // Fire-and-forget. Aimed and ritual share the fast id 10016, self and ritual-self share 10017.
 // That is upstream's convention for the variant slot and it stays.
 inline constexpr CastAnimFamily kAimed{ 1U, 10016U };
