@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include <string_view>
 #include "../input/keybinds.h"
 #include "../bar/hotbar.h"
 
@@ -332,6 +333,23 @@ namespace SpellHotbar::casts::CastingController {
 	* for the clip's first 0.483s), so a press then must keep today's behaviour.
 	*/
 	bool is_committed_cast_holding_graph();
+
+	/**
+	 * Is the graph in cuttable follow-through — the cast instance already retired at GCD expiry
+	 * (ticket 43) but its clip still playing on a live shtb state?
+	 *
+	 * The attack chain-out reads this beside `is_committed_cast_holding_graph()`: between them
+	 * they cover the whole cuttable span, from the commitment point to clip end. A charging cast
+	 * still has a live instance and is refused here, so it stays protected as before.
+	 */
+	bool is_cuttable_follow_through();
+
+	/**
+	 * Pay out an armed-but-undelivered payload now, naming where from. Safe to call with nothing
+	 * armed. Every seam that takes the graph away from a clip that still owes a payload calls
+	 * this first, so there is one delivery story (ticket 43).
+	 */
+	void deliver_armed_payload(std::string_view reason);
 
 	/**
 	 * May the public hotbar path attempt a Driver Cast right now? True when no cast is live,
