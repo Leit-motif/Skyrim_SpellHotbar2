@@ -2,7 +2,17 @@
 
 Bug against ADR-0018's contract, found by the ticket 44 inventory (§2.2).
 
-**Status:** ready-for-agent
+**Status:** built (commit `35cfa98`, deployed 2026-08-26 16:24) — awaiting live acceptance by
+the owner alongside ticket 46's manual pass. `ritual_cast_slot()` in `cast_anim_ids.h` now
+gives a dual 1H cast the dual id at any cast time; unit cases cover all five cells. Two debug
+lines landed with it: the dual→auto perk downgrade names itself, and `set_animtype_global`
+logs the id it writes.
+
+**Caveat from the same day's diagnosis:** the CS-Test fixture (level 3) lacks dual-casting
+perks, so `player_can_dualcast_spell` fails and every scripted "dual" cast silently downgraded
+to auto→left — the 46 session's "dual never selects" telemetry was this, not the leak. Dual
+cells can only be accepted by a character with the school's dual-cast perk (the owner's), or
+after granting the perk to the fixture in-memory.
 
 **Blocked by:** nothing (independent of tickets 46/47, but its acceptance is easiest to see
 once 46's dual set is live).
