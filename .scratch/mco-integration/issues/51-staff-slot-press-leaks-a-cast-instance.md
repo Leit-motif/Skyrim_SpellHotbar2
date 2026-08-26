@@ -122,3 +122,24 @@ the second.
 
 **Status:** needs-triage -> the bind defect is diagnosed and ready to spec; the LMB interrupt
 needs one instrumented live session with the owner at the keyboard.
+
+### 2026-08-26 — deferred
+
+Owner's call: SH2 does not cover staves at all, so staff behaviour is not worth chasing now.
+Deferred.
+
+On whether the bind guard belongs in upstream's MVP: both sites are upstream's own code
+(`slot_spell` in pWn3d1337's `a7b47ba` "initial commit for v2", the classifier's `default:` arm
+in `3b751f5` "wip stuff"), so this is an upstream defect, not a fork regression. But it is not
+MVP-severe there. Upstream has no cast driver, so an `unknown` slot is simply inert and clears
+by binding over it — one action, no data loss. The damaging half the owner hit (manual LMB cast
+dead until reload) traces to `MscoCastDriver::cancel`, which is fork code; upstream likely does
+not reproduce it.
+
+Still worth fixing, and worth offering upstream as a quality fix rather than an MVP gate:
+`in_binding_menu` deliberately admits the inventory tab, so every weapon, armor piece,
+ingredient and book reaches the same dead slot, and nothing in the codebase ever tells the
+player the bind failed. The fix is a type guard at `slot_spell` — accept Spell, Scroll, Shout,
+AlchemyItem; refuse the rest with the existing failure sound — before the ID reaches storage.
+
+**Status:** deferred.
