@@ -1022,6 +1022,13 @@ namespace SpellHotbar::casts::CastingController {
 		return false;
 	}
 
+	/**
+	 * Ticket 41: from the hotbar, this is only ever reached with no cast instance live --
+	 * InputModeCast::process_input's stock gate refuses the press otherwise. The latch-closed
+	 * offer below and `classify_hotbar_cast_press`'s chain arm therefore have no hotbar caller
+	 * any more; both stay because CastIntent's own release path (fire_payload) still calls in
+	 * here for a deferred art or spell, where a driver cast can legitimately be live.
+	 */
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
 		if (our_latch_is_closed()) {
@@ -1174,6 +1181,8 @@ namespace SpellHotbar::casts::CastingController {
 			pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
 		}
 		const bool is_shout = form && form->GetFormType() == RE::FormType::Shout;
+		// Ticket 41: unreachable from a hotbar press -- the stock gate in process_input already
+		// refused anything arriving while our latch is closed. Live for CastIntent's release path.
 		if (is_shout && !CastIntent::is_firing() && (our_latch_is_closed() || is_shouting)) {
 			return CastIntent::offer(slot, keybind);
 		}
