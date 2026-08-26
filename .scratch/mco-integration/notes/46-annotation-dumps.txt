@@ -1,0 +1,541 @@
+# Ticket 46 -- annotation dumps, MSCO sources BEFORE and SpellHotbar2Casts AFTER
+#
+# Generated 2026-08-26 with hkxc-anno-cli dump. The AFTER dumps are re-read from
+# the written binaries, not from the edit scripts. hkxc verify reports a complete
+# reproduction for all sixteen shipped files; the size growth (e.g. 17376 -> 19744)
+# is serde-hkx's re-serialization layout, not content loss.
+
+==============================================================================
+SOURCES (read-only, MSCO Magic Casting Behavior Overhaul)
+==============================================================================
+
+--- Base - default/MSCO_right1.hkx
+    sha256 089F2A4237A400B9316285A0E4A0ECB8E94D0365D2F33801DB5BBC578F621C22  bytes 17376
+# Animation: MSCO_right1.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 10
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.416667 animmotion 0 -12 0
+0.566667 animmotion 0 45 0
+0.700000 MSCO_WinOpen
+1.633333 MSCO_WinClose
+
+--- Base - default/MSCO_right2.hkx
+    sha256 D53CA7A282513866934A17EA42CDE9925E8DE11DFC3AC85BBEB42E4C8968ADBD  bytes 17264
+# Animation: MSCO_right2.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 10
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|3
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.300000 animmotion 0 0 0
+0.416667 animmotion 0 48 0
+0.740000 MSCO_WinOpen
+1.650000 MSCO_WinClose
+
+--- Base - default/MSCO_right3.hkx
+    sha256 F42F7DB6AEA7512DABD6920A20F4EC55EBD9D8DF7CE176DF6C0505594EC1A592  bytes 17360
+# Animation: MSCO_right3.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 10
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|4
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.333333 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.233333 animmotion 0 0 0
+0.366667 animmotion 0 61 0
+0.530000 MSCO_WinOpen
+1.533333 MSCO_WinClose
+
+--- Base - default/MSCO_right4.hkx
+    sha256 B8360D9D58EE9097679E8A420F10A0F6ECF67509C5E616960942E9287D46B67B  bytes 17744
+# Animation: MSCO_right4.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.600000 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.283333 animmotion 0 0 0
+0.433333 animmotion 0 41 0
+0.666667 animmotion 0 115 0
+0.770000 MSCO_WinOpen
+1.616667 MSCO_WinClose
+
+--- Dual Cast Base/MSCO_dual1.hkx
+    sha256 A350102CC260E6E0FE47906D4E613F2A94779DC7A7E8DF1567993EF862C52FD4  bytes 13392
+# Animation: MSCO_dual1.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|2
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.700000 MLh_SpellFire_Event
+0.800000 MRh_WinStart
+0.800000 MLh_WinStart
+1.300000 MRh_WinEnd
+1.300000 MLh_WinEnd
+1.636667 MCO_Recovery
+0.800000 MSCO_WinOpen
+1.300000 MSCO_WinClose
+
+--- Dual Cast Base/MSCO_dual2.hkx
+    sha256 6F9EFAC1E22451A1BE80675774424BD49B69E4CE6553C767268097267993DE9C  bytes 13536
+# Animation: MSCO_dual2.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|3
+0.000000 PIE.@SGVI|MSCO_nextleft|3
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.800000 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+
+--- Dual Cast Base/MSCO_dual3.hkx
+    sha256 A23033978BB6183B2B507FC4FCC26D11EFA347D8DCF9DAE02691C943BEC8633C  bytes 13312
+# Animation: MSCO_dual3.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|4
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.633333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+
+--- Dual Cast Base/MSCO_dual4.hkx
+    sha256 861E9E3157F78E6A0B1D91855CED6978B5EE2981E6D60462F29C941AE28B9115  bytes 13168
+# Animation: MSCO_dual4.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|1
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.983333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.100000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+
+--- Base - default/MSCO_left4.hkx
+    sha256 436BB1D07068F66FF66656675B3FE366433E82ADC062301E6919ADD6217F990F  bytes 14352
+# Animation: MSCO_left4.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextleft|5
+0.000000 PIE.@SGVI|MSCO_nextright|4
+0.916667 MLh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.283333 animmotion 0 0 0
+0.433333 animmotion 0 0 0
+0.666667 animmotion 0 0 0
+1.100000 MSCO_WinOpen
+1.650000 MSCO_WinClose
+
+--- Base - default/MSCO_left4.hkx.bak_before_root
+    sha256 F2BBE349EA3E96FC52D4E177E568B181C6C9761B6457E4CAB1EDFE80A9957697  bytes 12032
+# Animation: MSCO_left4.hkx.bak_before_root.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextleft|5
+0.000000 PIE.@SGVI|MSCO_nextright|4
+0.916667 MLh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.283333 animmotion 0 0 0
+0.433333 animmotion 0 41 0
+0.666667 animmotion 0 115 0
+1.100000 MSCO_WinOpen
+1.650000 MSCO_WinClose
+
+==============================================================================
+SHIPPED (data/.../OpenAnimationReplacer/SpellHotbar2Casts)
+==============================================================================
+
+--- cast_dual/MSCO_left1.hkx
+    sha256 211189E1BE8C6EAFA7668FF54F0D7069D4820D346902314FB498B703F518DDA1  bytes 15760
+# Animation: MSCO_left1.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|2
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.700000 MLh_SpellFire_Event
+0.800000 MRh_WinStart
+0.800000 MLh_WinStart
+1.300000 MRh_WinEnd
+1.300000 MLh_WinEnd
+1.636667 MCO_Recovery
+0.800000 MSCO_WinOpen
+1.300000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual
+
+--- cast_dual/MSCO_left2.hkx
+    sha256 F838A902870EF57C8CB62A198051970C964A456F021DE322E94DFB1D1D10052A  bytes 15904
+# Animation: MSCO_left2.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|3
+0.000000 PIE.@SGVI|MSCO_nextleft|3
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.800000 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual
+
+--- cast_dual/MSCO_left3.hkx
+    sha256 E2FCD043B1B286C433CA6738B1C777CED5EE910458312F4BE00A87F1E775E28A  bytes 15680
+# Animation: MSCO_left3.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|4
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.633333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual
+
+--- cast_dual/MSCO_left4.hkx
+    sha256 0DC0DA281C92F2825C2EDC7CA03003369C31CF777593B519F3DD96BD01923444  bytes 15536
+# Animation: MSCO_left4.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|1
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.983333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.100000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual
+
+--- cast_dual_self/MSCO_left1.hkx
+    sha256 8DFEDFBD3BA92F3413D89D1AC1FAB5188ABB1056151886063B14323ACF538164  bytes 15760
+# Animation: MSCO_left1.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|2
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.700000 MLh_SpellFire_Event
+0.800000 MRh_WinStart
+0.800000 MLh_WinStart
+1.300000 MRh_WinEnd
+1.300000 MLh_WinEnd
+1.636667 MCO_Recovery
+0.800000 MSCO_WinOpen
+1.300000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual_self
+
+--- cast_dual_self/MSCO_left2.hkx
+    sha256 E4315F9B32C04512000DC6A7567AC6BA5C80AF0FD6C8B88330AB751EAD031A8E  bytes 15904
+# Animation: MSCO_left2.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|3
+0.000000 PIE.@SGVI|MSCO_nextleft|3
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.800000 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual_self
+
+--- cast_dual_self/MSCO_left3.hkx
+    sha256 326D008CF8A79E674111696355770A3840354218E39E9C44BD3C977A062AC759  bytes 15680
+# Animation: MSCO_left3.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|4
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.633333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.000000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual_self
+
+--- cast_dual_self/MSCO_left4.hkx
+    sha256 82C16E044BA0B98DD0699C5F4A3B8166A422BF30128659399D291FEB19C8E775  bytes 15536
+# Animation: MSCO_left4.hkx
+#
+# duration: 1.833333
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 PIE.@SGVI|MSCO_nextdual|1
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.000000 PIE.@SGVI|MSCO_nextright|1
+0.983333 MLh_SpellFire_Event
+1.000000 MRh_WinStart
+1.000000 MLh_WinStart
+1.600000 MRh_WinEnd
+1.600000 MLh_WinEnd
+1.636667 MCO_Recovery
+1.100000 MSCO_WinOpen
+1.600000 MSCO_WinClose
+1.833333 SH2_PackStamp_cast_dual_self
+
+--- cast_right/MSCO_left1.hkx
+    sha256 40DF448D8638FA95DBC46853486458B9E9054F751B7749490632C007C2064FE9  bytes 19744
+# Animation: MSCO_left1.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.416667 animmotion 0 -12 0
+0.566667 animmotion 0 45 0
+0.700000 MSCO_WinOpen
+1.633333 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right
+
+--- cast_right/MSCO_left2.hkx
+    sha256 EB6ABA96EB0930D9D374440492D9AF346935810E67445EB42145E160E2DA7C04  bytes 19632
+# Animation: MSCO_left2.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|3
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.300000 animmotion 0 0 0
+0.416667 animmotion 0 48 0
+0.740000 MSCO_WinOpen
+1.650000 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right
+
+--- cast_right/MSCO_left3.hkx
+    sha256 17DCCB7911F1548C965C5D38DDE4AC0F42B2A6DEA36F04EE5F6896606DCD86D7  bytes 19728
+# Animation: MSCO_left3.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|4
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.333333 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.233333 animmotion 0 0 0
+0.366667 animmotion 0 61 0
+0.530000 MSCO_WinOpen
+1.533333 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right
+
+--- cast_right/MSCO_left4.hkx
+    sha256 8B9ABE8152B3FD19934FF2C35A1A3DFB6CF9F2145AAAD7B0B1757CE10F58B3FA  bytes 20112
+# Animation: MSCO_left4.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.600000 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.283333 animmotion 0 0 0
+0.433333 animmotion 0 0 0
+0.666667 animmotion 0 0 0
+0.770000 MSCO_WinOpen
+1.616667 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right
+
+--- cast_right_self/MSCO_left1.hkx
+    sha256 45AC9F06CFEEAE297E83D2F55FDE808C3048D1338C75C5C634AE7A2EEB5ACE6C  bytes 19744
+# Animation: MSCO_left1.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.416667 animmotion 0 -12 0
+0.566667 animmotion 0 45 0
+0.700000 MSCO_WinOpen
+1.633333 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right_self
+
+--- cast_right_self/MSCO_left2.hkx
+    sha256 53CECAAD72D6CDBBFF8C4C1C79A7DF780B96CAF7596AAF06850D5CD56AACA73C  bytes 19632
+# Animation: MSCO_left2.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|3
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.516667 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.300000 animmotion 0 0 0
+0.416667 animmotion 0 48 0
+0.740000 MSCO_WinOpen
+1.650000 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right_self
+
+--- cast_right_self/MSCO_left3.hkx
+    sha256 DF6259982459A71BE4D34C5B5295B76EF5530114F19BE9E3BA9D5867378F35CC  bytes 19728
+# Animation: MSCO_left3.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 11
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|4
+0.000000 PIE.@SGVI|MSCO_nextleft|1
+0.333333 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.233333 animmotion 0 0 0
+0.366667 animmotion 0 61 0
+0.530000 MSCO_WinOpen
+1.533333 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right_self
+
+--- cast_right_self/MSCO_left4.hkx
+    sha256 C3C6AFBD1D904D027B6DAF241EF865DE0774254C0E0B519D90580EF14AE0E522  bytes 20112
+# Animation: MSCO_left4.hkx
+#
+# duration: 1.666667
+# numberOfTransformTracks: 97
+# annotations: 12
+#
+0.000000 animmotion 0 0 0
+0.000000 PIE.@SGVI|MSCO_nextright|5
+0.000000 PIE.@SGVI|MSCO_nextleft|4
+0.600000 MRh_SpellFire_Event
+1.636667 MCO_Recovery
+0.000000 animmotion 0 0 0
+0.283333 animmotion 0 0 0
+0.433333 animmotion 0 0 0
+0.666667 animmotion 0 0 0
+0.770000 MSCO_WinOpen
+1.616667 MSCO_WinClose
+1.666667 SH2_PackStamp_cast_right_self
