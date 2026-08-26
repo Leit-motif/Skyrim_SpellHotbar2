@@ -143,3 +143,5 @@ player the bind failed. The fix is a type guard at `slot_spell` — accept Spell
 AlchemyItem; refuse the rest with the existing failure sound — before the ID reaches storage.
 
 **Status:** deferred.
+
+The bind guard is now filed separately as ticket 52 and does not wait on this one.
