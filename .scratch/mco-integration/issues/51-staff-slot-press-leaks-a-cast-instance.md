@@ -63,3 +63,62 @@ the mask at cast retire alongside `clear_spellfire()`.
 
 Staff slots were never in ticket 46's scope (staff CELLS are ticket 47, and hotbar staff
 CASTING may be its own feature gap). This ticket is the leak, not staff presentation.
+
+## Comments
+
+### 2026-08-26 — owner answers, and the reframe they force
+
+Owner's answers to the three questions above:
+
+1. The assignment DID stick, as a **question-mark placeholder icon**. The owner adds: "I tried
+   to assign the staff (item) to the bar, I don't even know if you can do this. I don't know how
+   SH2 interacts with staves or how to assign them to the hotbar."
+2. The dead button was **the staff's own slot**, not a neighbouring spell slot.
+3. It stayed dead **until reloading an earlier save that never had the staff assigned** — no
+   in-play recovery. The staff's own manual right-hand cast (left mouse button) was broken for
+   the same span, and also came back only on the reload.
+
+That question mark is `slot_type::unknown`, and it changes the diagnosis.
+
+**Root cause of the dead button (established, static):** SH2 binds whatever form the menu has
+selected with no castability check. `Input::slot_spell` (`input/input.cpp:1009`) passes the
+form's ID straight to `Storage::slotSpell`, and `in_binding_menu` explicitly admits the
+inventory tab (`current_inv_menu_tab_valid_for_hotbar`), where a staff is selectable. The
+classifier then has no arm for `FormType::Weapon`, so `SlottedSkill::update_slot`
+(`bar/hotbar.cpp:1074`) drops it in `default:` as `slot_type::unknown`. There is no staff branch
+anywhere in the DLL — the only `kStaff` reference in the codebase is animation equipment-type
+detection (`game_data/game_data.cpp:814`).
+
+`slot_type::unknown` is produced in three places and **consumed in none**. `InputModeCast::process_input`
+tests `weapon_art`, `spell`, `shout`, `lesser_power`, `power`, `potion` and falls off the end
+(`input/modes.cpp:105`). The press does nothing — not even the red refusal highlight, which
+lives in the `formID == 0` arm. So "the button did not work" is not a leak at all on this path:
+it is a bind the DLL accepts, saves, renders, and then silently cannot act on. Reloading a save
+without the binding is the only cure because the binding is persisted with the bar.
+
+**The type=3 refusal in the evidence window is therefore a different slot.** A Weapon form
+cannot reach `type=3`. The original filing read the `slot 0 ... type=3, cast live=true` line as the
+staff's dead button; it is a spell slot refusing on a live instance. Whether that leak is real
+and separate, or noise from the same session, is still open — it is no longer this ticket's
+headline symptom.
+
+**Still open: why the staff's own LMB cast died.** An `unknown` slot does nothing on press, so
+the interruption has to come from somewhere holding state across presses. The candidate the
+source supports is the attack-key arm at `input/input.cpp:492`: while
+`is_committed_cast_holding_graph() || is_cuttable_follow_through()` admits, every attack press
+runs `MscoCastDriver::cancel(pc)`, and cancel's interrupt path reaches `pc->InterruptCast(false)`
+(`casts/casting_controller.cpp:1622`). A leaked instance that satisfies `is_cuttable_follow_through()`
+would then kill the staff's cast on each LMB press for as long as it lives — matching both
+symptoms from one cause. The log's leak self-cleared in ~18s while the owner's episode lasted
+until reload, so this is a hypothesis, not a finding. Confirming it needs the owner's own press
+(injected input never reaches this hook, verified 2026-08-12) with `is_cuttable_follow_through()`
+logged alongside the existing trace line.
+
+**Scope split proposed.** The bind-validation defect is small, self-contained, and reproducible
+from the menu with no live-cast state: refuse a non-castable form at `slot_spell`, or classify
+and refuse it visibly rather than seating an inert `unknown`. The LMB interrupt is a separate
+investigation that needs a live session. Splitting them lets the first ship without waiting on
+the second.
+
+**Status:** needs-triage -> the bind defect is diagnosed and ready to spec; the LMB interrupt
+needs one instrumented live session with the owner at the keyboard.
