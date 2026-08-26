@@ -9,7 +9,13 @@ from SpellFire to retirement (~0.59→1.0 s at the owner's setting) and false fo
 follow-through, so an attack press waits out the clip. Owner report 2026-08-25: "in order to
 chain into an attack, I have to wait what seems like the entire clip."
 
-**Status:** ready-for-agent
+**Status:** done — built, merged (`3cedae8`), deployed, and owner-accepted 2026-08-26: "all
+tests pass. this feels great!" Log evidence `evidence/t45-acceptance-2026-08-26.log`: three
+`attack pressed on a committed cast; ending the state` cuts (09:43–09:45), and armed payloads
+delivering at their own SpellFire with the slider dialed to 0.5 (`0.51s on the cast clock`) —
+the tunable, the armed delivery, and the chain-out all working together in live play. All
+three owner cells (follow-through chain, slow-clip safety, charge protection) confirmed
+hands-on.
 
 ## The change
 
