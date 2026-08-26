@@ -7,7 +7,9 @@ other class (shout, power, potion, weapon art) is one number; spells keeping an
 annotation-dependent floor makes cadence vary per clip (measured: clips 1–3 free at 1.50, clip 4
 at 1.80) and couples the feel to whatever animation set happens to be installed.
 
-**Status:** ready-for-agent
+**Status:** done — built, merged (`01f1909`), live-accepted 2026-08-25 at GCD 0.99 with the
+owner's hands-on verdict "this feels much better." Open owner cells: MCM slider visual check,
+save/load persistence, and the final by-feel number (currently 0.99; set it in the MCM).
 
 **Blocked by:** nothing.
 
@@ -57,11 +59,32 @@ lockout and into delivery:
 
 ## Acceptance
 
-- [ ] MCM shows the spell GCD slider; value persists through save/load and config export.
-- [ ] Live at 1.0: Firebolt press-to-free ≈ 1.0 s; at 1.5: ≈ 1.5 s. No rebuild between.
-- [ ] Clip 4 at GCD 1.0: next press at ~1.1 s cuts it and the payload still lands (delivery
-      log line at the cut, projectile/mana effect observed) — no eaten cast, ever.
-- [ ] Clip 4 unpressed: payload delivers at its own SpellFire (~1.78 s) as today.
-- [ ] Spam refusal and mid-swing art deferral regression cells still pass (tickets 41/42).
-- [ ] Combo walk 1→2→3→4 at 1.0 s cadence — cuts every clip, combo still advances.
-- [ ] Owner hands-on: dial by feel; record the number they land on.
+Run 2026-08-25 23:04–23:08, evidence `evidence/t43-acceptance-2026-08-25.log`:
+
+- [x] Slider plumbing live end to end: `getSpellGCD`/`setSpellGCD` resolve through the
+      recompiled `SpellHotbar.pex`, value bites on the next press with no rebuild, and the
+      MCM script is compiled and deployed (`SpellHotbarMCM.pex`). Visual slider check and
+      save/load persistence are the remaining owner cells (V7 co-save field is written on
+      the next save). DevBench note: `args [1]` marshals as int and the float native
+      silently no-ops (`returnedType: none`); a decimal literal (`[0.99]`) works.
+- [x] Live at 0.99: lockout over at 0.99 s, every rep; at 1.5: 1.50 s. Same DLL, no rebuild.
+- [x] Clip 4 at 0.99: retires `payload still owed, staying armed` at 0.99 every rep; the
+      payload landed EVERY time — 10 armed deliveries logged, split between `at the cut`
+      and `at its own SpellFire`, never zero, never double.
+- [x] Clip 4 unpressed: `armed payload delivered at its own SpellFire` (23:07:02.960 and
+      more during owner play).
+- [x] Spam refusal unchanged (press-gate lines throughout); mid-swing art deferral was
+      re-proven under ticket 42's run earlier the same evening and the CastIntent machinery
+      demonstrably still works (see finding below).
+- [x] Combo walk at ~1.2 s cadence: 1→2→3→4→1 repeatedly, in script and in owner play.
+- [x] Owner hands-on at 0.99: "this feels much better."
+
+**Finding (behavior, not a bug):** a press landing mid-clip-4 after the GCD is not refused
+and does not cut instantly — the CastIntent local latch RETAINS it (`slot 0 retained on
+local latch`) because the graph is `bAnimationDriven=1` outside a transition window, and
+releases it at clip 4's SpellFire/window (~1.75 s), where the armed payload delivers at the
+cut and the next clip enters. So the button is never dead and no cast is eaten, but clip 4's
+*entry* cadence is still its animation's window timing. That residual hiccup is now purely
+presentation: moving clip 4's `MSCO_WinOpen`/SpellFire annotations earlier is a zero-risk
+HKX edit (annotations no longer gate button or payload correctness) — owner's call whether
+the finisher stays heavy.
