@@ -1,6 +1,6 @@
 {
     "name": "SH2 Cast - Dual (self)",
-    "description": "The same MSCO_dual1-4 art as SH2 Cast - Dual, for a fire-and-forget SELF cast resolved to DUAL. SpellHotbar_SpellAnimationType (0x815) == 10017 is cast_anim_ids.h kSelf.variant; no casting-source condition, per the dual convention. The clips are byte-distinct copies rather than shared bytes (ADR-0017).",
+    "description": "MSCO's Dual Cast Self Variation 2 art on the neutral MSCO_left1-4 path names, for a fire-and-forget SELF cast resolved to DUAL. SpellHotbar_SpellAnimationType (0x815) == 10017 is kSelf.variant; no casting-source condition, per the dual convention. MSCO ships three self-dual clips, so slot 4 wraps back to the first. The clips keep MSCO's MLh_SpellFire_Event; a dual cast arms both hands, so either commits.",
     "priority": 2000001104,
     "ignoreNoTriggersFlag": true,
     "conditions": [

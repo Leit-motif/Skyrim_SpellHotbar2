@@ -1,6 +1,6 @@
 {
     "name": "SH2 Cast - Right (self)",
-    "description": "The same MSCO_right1-4 art as SH2 Cast - Right, for a fire-and-forget SELF cast resolved to the RIGHT hand. SpellHotbar_SpellAnimationType (0x815) == 2 is cast_anim_ids.h kSelf.primary; SpellHotbar_CastingSource (0x835) == 1 is the right hand. The clips are byte-distinct copies rather than shared bytes, because OAR's duplicate filter collapses two submods that reference identical bytes (ADR-0017).",
+    "description": "MSCO's Base - Self Right art (its self-delivery right set) on the neutral MSCO_left1-4 path names, for a fire-and-forget SELF cast resolved to the RIGHT hand. SpellHotbar_SpellAnimationType (0x815) == 2 is kSelf.primary; SpellHotbar_CastingSource (0x835) == 1 is the right hand. Each clip carries MSCO's own MRh_SpellFire_Event; per-file stamps keep every clip byte-unique (ADR-0017).",
     "priority": 2000001102,
     "ignoreNoTriggersFlag": true,
     "conditions": [
