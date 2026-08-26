@@ -107,6 +107,8 @@ namespace SpellHotbar::Input {
         }
         else {
             //error highlight
+            logger::debug("SH2: slot {} refused by the press gate (type={}, cast live={})", i,
+                static_cast<int>(skill.type), !casts::CastingController::can_start_new_cast());
             SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
         }
     }
