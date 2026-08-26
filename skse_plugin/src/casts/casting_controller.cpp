@@ -1127,9 +1127,18 @@ namespace SpellHotbar::casts::CastingController {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 
-				int anim = cast_info.m_dual_cast ? cast_info.m_animation2 : cast_info.m_animation;
-				if (anim < 0) {
-					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, cast_info.m_dual_cast);
+				// Same Animation2 trap as start_ritual_cast: the per-spell column is not the dual
+				// id. Dual concentration only ever worked because conc rows leave it at -1; ask
+				// the family instead so a configured row cannot break the channel's dual pose.
+				int anim;
+				if (cast_info.m_dual_cast) {
+					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
+				}
+				else {
+					anim = cast_info.m_animation;
+					if (anim < 0) {
+						anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, false);
+					}
 				}
 				GameData::set_animtype_global(anim);
 
@@ -1185,13 +1194,24 @@ namespace SpellHotbar::casts::CastingController {
 			if (pc) {
 				
 				const bool is_fast_cast = cast_info.m_casttime <= fast_cast_threshold;
+				const bool dual_1h = cast_info.m_dual_cast && !cast_info.m_spell->IsTwoHanded();
 				const bool use_variant =
 					GameData::ritual_cast_slot(cast_info.m_spell->IsTwoHanded(),
 						cast_info.m_dual_cast, is_fast_cast) == GameData::CastAnimSlot::variant;
 
-				int anim = use_variant ? cast_info.m_animation2 : cast_info.m_animation;
-				if (anim < 0) {
-					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, use_variant);
+				// Upstream's per-spell Animation2 column is NOT the dual id — vanilla aimed rows
+				// carry 10001 (its first-person anim) and mod rows a 100xx variant, so reading it
+				// here presented every configured spell's dual cast as single-hand (owner-observed
+				// 2026-08-26). Dual ids are structural per family (10016/10017); ask the family.
+				int anim;
+				if (dual_1h) {
+					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
+				}
+				else {
+					anim = use_variant ? cast_info.m_animation2 : cast_info.m_animation;
+					if (anim < 0) {
+						anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, use_variant);
+					}
 				}
 				GameData::set_animtype_global(anim);
 
