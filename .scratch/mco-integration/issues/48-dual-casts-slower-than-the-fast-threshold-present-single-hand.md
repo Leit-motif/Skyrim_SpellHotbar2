@@ -2,8 +2,15 @@
 
 Bug against ADR-0018's contract, found by the ticket 44 inventory (§2.2).
 
-**Status:** built (commit `35cfa98`, deployed 2026-08-26 16:24) — awaiting live acceptance by
-the owner alongside ticket 46's manual pass. `ritual_cast_slot()` in `cast_anim_ids.h` now
+**Status:** CLOSED 2026-08-26, owner-accepted with ticket 46's dual cells. TWO fixes were
+needed, not one: `35cfa98` (the time-based slot pick — this ticket's filed defect) and
+`bf366ae` (the deeper one found live: upstream's per-spell `Animation2` column is its
+variant/first-person anim id, NOT the dual id — Firebolt carries 10001 — so both dual paths
+now ask the family for 10016/10017/11003/11004 and never read the column for dual). Owner
+confirmed dual aimed and dual self present dual art in play; the log shows 10016/10017
+written. Honest residue: the literal >1.51s slow-dual cell was never exercised live (the test
+spells are fast); it is covered by the unit case `slow dual 1H is still the dual id` and by
+the fix making cast time structurally irrelevant to the dual id. `ritual_cast_slot()` in `cast_anim_ids.h` now
 gives a dual 1H cast the dual id at any cast time; unit cases cover all five cells. Two debug
 lines landed with it: the dual→auto perk downgrade names itself, and `set_animtype_global`
 logs the id it writes.

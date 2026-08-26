@@ -5,7 +5,27 @@ presentation is OAR submods conditioned on the two ESP globals, following the se
 matrix (`notes/44-selection-matrix.md`) and the spike evidence
 (`notes/44-spike-results-2026-08-26.md`).
 
-**Status:** ready-for-agent
+**Status:** CLOSED 2026-08-26, owner-accepted. Shipped across `d27385a..3dc08ef` (pack,
+arm-aware C++ rework implementing the four deferred Codex findings, self cells rebuilt on
+MSCO's actual self art after the owner exercised the "self split" option). Acceptance:
+- Right aimed/self/conc: owner-confirmed correct art and on-time release in live play; the
+  Animation Log on-screen named `SH2 Cast - Right (aimed)` winning all four clips (owner
+  screenshot); headless log evidence shows MRh commits at each clip's authored frame in BOTH
+  hosting stances, chained walk 1→4, no fallback lines.
+- Dual aimed/self: owner-confirmed after two ticket-48 fixes landed the same day (family id at
+  any cast time, `35cfa98`; family id instead of upstream's Animation2 column, `bf366ae`).
+  Dual-self slot 4 wraps to clip 1 — MSCO ships only three self-dual clips (asset gap, not a
+  bug).
+- Left/auto unchanged and owner-confirmed; conc/ritual/chain-out regressions clean in play.
+- The arm-aware swallow cell (unrelated vanilla cast released mid-driver) is verified at the
+  predicate/unit level only — a live press cannot be produced headlessly (the driver's begin()
+  interrupts any charging caster) and it remains an open owner-hands nicety, not a blocker.
+- MSCO staff hazard (2) resolved in the friendly direction live: its staff submods sit on
+  `MSCO_right*`/`MSCO_lr*` paths, composing with this pack; only `Base - Left Staff` overlaps
+  our left-named paths — ticket 47's problem, evidence attached there.
+- Spawned: ticket 49 (closed, reWASD false alarm), 50 (real-input harness), 51 (staff-slot
+  instance leak). The `allowed_to_cast` refusal line shipped; the stuck-IsCasting
+  characterization moved to 51's orbit (the press-gate `cast live` leak is the live suspect).
 
 **Blocked by:** nothing. The C++ SpellFire contract (per-hand arming, per-hand isolation,
 any-hand commitment point, `MRh` registration in both graphs) already landed with ticket 44.
