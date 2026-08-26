@@ -131,10 +131,14 @@ Custom Abilities (SH2_Art_State + `SH2_ArtSelector`, ADR-0016).
 
 **Initial implementation slice** (per the handoff): fire-and-forget aimed + self, all three
 hands, ordinary equipment, both hosting graphs — with the staff cells expressed in
-conditions but allowed to ride the fallback chain until the owner assigns art. MSCO already
-ships bindable `MSCO_right1..10` and `MSCO_dual1..10` clips and staff submods keyed on
-`IsEquippedType 8` (inventory §6.3), so the right/dual cells are not asset-blocked; which
-specific clips (MSCO's, or Dragon Age donors) fill which cells stays owner-gated.
+conditions but allowed to ride the fallback chain until the owner assigns art.
+
+**Owner asset ruling (2026-08-26):** MSCO's shipped clips fill the cells — `MSCO_right1..N`
+for right, `MSCO_dual1..N` for dual — and MSCO's `Base - Left/Right Staff` sets ARE the
+Dragon Age staff animations (the owner recognized the provenance), so the staff cells reuse
+them too. No donor adaptation pipeline is needed; the handoff's donor contracts section is
+moot for casts. Mechanism decided as shape A in ADR-0018; implementation tickets 46 (right +
+dual pack), 47 (staff cells + left-staff detection), 48 (dual >1.51s family leak).
 
 ## Known hazards the implementation tickets must carry
 

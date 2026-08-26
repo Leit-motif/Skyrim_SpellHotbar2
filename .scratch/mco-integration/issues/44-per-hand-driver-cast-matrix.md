@@ -9,7 +9,12 @@ and the SpellFire contract are left-only (`MscoCastDriver::begin` discards `hand
 wants upstream's distinction restored: left, right, dual — and staff variations — across,
 eventually, every cast family.
 
-**Status:** ready-for-agent (design phase — see deliverable)
+**Status:** closed 2026-08-26. All four deliverables shipped: the selection matrix
+(`notes/44-selection-matrix.md`), the spike run with live evidence in both hosting stances
+(`notes/44-spike-results-2026-08-26.md`, artifacts in `notes/44-spike-artifacts.md`, frame
+`evidence/44-spike/right-cast-magic-2.png`), ADR-0018 (shape A), and implementation tickets
+46/47/48. The spike also landed the per-hand SpellFire contract in C++ (arming, isolation,
+any-hand commitment point, MRh registration in both graphs) and the `setSlotHand` test seam.
 
 **Blocked by:** nothing for the design/spike. Donor clip assignment (Dragon Age pack) is
 owner-gated: do not assign donor clips to cast or Ability roles on the owner's behalf.
