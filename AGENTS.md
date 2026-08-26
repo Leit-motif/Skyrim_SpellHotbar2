@@ -8,6 +8,12 @@ Issues and specs live as local markdown under `.scratch/`. See `docs/agents/issu
 
 Canonical triage roles use the default label strings. See `docs/agents/triage-labels.md`.
 
+### Headless testing
+
+What an agent can and cannot validate through DevBench, the oracle ladder for animation
+identity, and the relaunch-batching economics. See `docs/agents/headless-testing-playbook.md`
+before planning any live-game validation.
+
 ### Domain docs
 
 Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
