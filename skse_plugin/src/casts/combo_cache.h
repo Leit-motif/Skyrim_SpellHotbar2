@@ -632,6 +632,38 @@ enum class CastDelivery {
 	return timer_expired ? CastDelivery::deliver : CastDelivery::cancel;
 }
 
+// TICKET 42: the GCD is the clock, SpellFire is the floor.
+//
+// A cuttable cast that has already delivered used to be held until the clip ended
+// (`MscoCastDriver::is_active()`), which made the lockout the animation's length -- 2.05s for
+// Firebolt, 71% of it follow-through with a dead button. It now retires on its own
+// press-anchored lockout and leaves the clip playing as presentation; the next press enters the
+// next clip from inside the live state, exactly as a ticket-14 chain press does.
+//
+// SpellFire remains a floor under that clock. Unlike WoW's model, this mod's payload IS the
+// animation event: an instance released before the graph reached its commitment point would drop
+// the cast. So the lockout may only end once both are true.
+//
+// `waited_for_spellfire` is the sticky record of the lockout having run out first, and only
+// distinguishes which condition released the instance for the log.
+//
+// A clip with no SpellFire at all never reaches this rule: it delivers through the clip-end
+// fallback in `CastingInstance::update` and is reset from there, i.e. today's behaviour exactly.
+enum class FnfRetire {
+	hold,
+	gcd_expired,
+	spellfire_floor,
+};
+
+[[nodiscard]] constexpr FnfRetire classify_fnf_retirement(
+	bool gcd_expired, bool spellfire_seen, bool waited_for_spellfire) noexcept
+{
+	if (!gcd_expired || !spellfire_seen) {
+		return FnfRetire::hold;
+	}
+	return waited_for_spellfire ? FnfRetire::spellfire_floor : FnfRetire::gcd_expired;
+}
+
 // Ability latch: WinOpen if the bound clip carries it, else HitFrame, else SH2_ArtExit.
 enum class AbilityLatch {
 	winOpen,

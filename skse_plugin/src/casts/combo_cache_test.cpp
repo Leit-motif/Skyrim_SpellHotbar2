@@ -6,6 +6,8 @@
 using SpellHotbar::casts::CastComboIndex;
 using SpellHotbar::casts::CastShape;
 using SpellHotbar::casts::CastDelivery;
+using SpellHotbar::casts::FnfRetire;
+using SpellHotbar::casts::classify_fnf_retirement;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
@@ -347,6 +349,35 @@ void losing_the_state_before_the_floor_cancels()
 {
 	expect(classify_cast_delivery(false, false, false, false) == CastDelivery::cancel,
 		"losing the cast state before the floor and before SpellFire cancels");
+}
+
+void a_delivered_cast_is_held_for_its_whole_lockout()
+{
+	expect(classify_fnf_retirement(false, true, false) == FnfRetire::hold,
+		"a committed cast still inside its 1.5s lockout keeps the button");
+}
+
+void the_lockout_releases_the_cast_while_the_clip_plays_on()
+{
+	expect(classify_fnf_retirement(true, true, false) == FnfRetire::gcd_expired,
+		"Firebolt retires at 1.5s from the press, 0.55s before its clip ends");
+}
+
+void spellfire_is_the_floor_under_the_lockout()
+{
+	expect(classify_fnf_retirement(true, false, false) == FnfRetire::hold,
+		"an expired lockout must not release a cast the graph has not committed -- our payload IS "
+		"the animation event");
+	expect(classify_fnf_retirement(true, true, true) == FnfRetire::spellfire_floor,
+		"a slow cast whose SpellFire lands after the lockout is released by the floor, not the clock");
+}
+
+void a_cast_before_its_commitment_point_is_never_retired()
+{
+	expect(classify_fnf_retirement(false, false, false) == FnfRetire::hold,
+		"neither condition met: nothing to release");
+	expect(classify_fnf_retirement(false, false, true) == FnfRetire::hold,
+		"the sticky floor note never releases an instance on its own");
 }
 
 void already_delivered_does_not_fire_again()
@@ -1006,6 +1037,10 @@ int main()
 	an_interrupted_swing_hands_its_successor_on();
 	a_reset_valued_payload_is_never_recorded_or_learned();
 	an_unlearned_pre_advance_keeps_todays_behaviour();
+	a_delivered_cast_is_held_for_its_whole_lockout();
+	the_lockout_releases_the_cast_while_the_clip_plays_on();
+	spellfire_is_the_floor_under_the_lockout();
+	a_cast_before_its_commitment_point_is_never_retired();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

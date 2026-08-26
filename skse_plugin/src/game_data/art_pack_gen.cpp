@@ -270,7 +270,9 @@ namespace SpellHotbar::ArtPackGen {
 			if (const auto days = parse_art_duration_days(art.cooldown_text)) {
 				art.cooldown_days = *days;
 			}
-			art.gcd = 1.0f;
+			// Ticket 42: the action-class number. This is the live default -- arts.csv ships with
+			// a header and no rows, so every scanned art takes it.
+			art.gcd = 1.5f;
 			art.has_clip = true;
 			GameData::set_art(std::move(art));
 		}

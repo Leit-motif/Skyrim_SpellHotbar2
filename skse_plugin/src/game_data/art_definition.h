@@ -28,7 +28,9 @@ struct ArtDefinition {
 	float magicka_cost{0.0f};
 	float health_cost{0.0f};
 	float cooldown_days{-1.0f};
-	float gcd{1.0f};
+	// Ticket 42: the action-class GCD, matched to the two catalogue default sites so a definition
+	// built without going through either does not silently sit in a different class.
+	float gcd{1.5f};
 	bool has_clip{true};
 	std::uint32_t spell_local_form{0};
 	std::string spell_plugin;

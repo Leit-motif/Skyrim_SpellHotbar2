@@ -17,10 +17,31 @@ namespace SpellHotbar::casts::CastingController {
 
 		float get_current_casttime() const;
 		virtual float get_current_gcd_progress() const;
-		float get_current_gcd_duration() const;
+		virtual float get_current_gcd_duration() const;
 
 		virtual bool advance_time(float delta);
 		virtual bool is_gcd_expired() const;
+
+		/**
+		* Seconds of lockout that have run since this instance was created -- i.e. since the press
+		* (ticket 42). The GCD is measured against this, not against cast completion, so an
+		* instance owns the player's button for `m_gcd` seconds however long its clip runs.
+		*/
+		inline float get_lockout_elapsed() const {
+			return m_press_elapsed;
+		}
+
+		/**
+		* Record that the press-anchored lockout ran out while the graph had not yet reached its
+		* commitment point, so whatever releases this instance later is the SpellFire floor rather
+		* than the clock. Only the retirement log line reads it.
+		*/
+		inline void note_lockout_waiting_for_spellfire() {
+			m_lockout_outran_spellfire = true;
+		}
+		inline bool lockout_outran_spellfire() const {
+			return m_lockout_outran_spellfire;
+		}
 
 		virtual const std::string_view get_start_anim() const;
 
@@ -50,8 +71,13 @@ namespace SpellHotbar::casts::CastingController {
 		inline RE::TESForm* get_form() {
 			return m_form;
 		}
+		/**
+		* Re-aim the lockout so it ends `new_val` seconds from now. The shout re-arm at fire is the
+		* only caller. Anchored on the press clock since ticket 42; the arithmetic it replaces
+		* (`-m_cast_timer + new_val`) meant the same thing on the old cast-completion clock.
+		*/
 		inline void updateGCD(float new_val) {
-			m_gcd = -m_cast_timer + new_val;
+			m_gcd = m_press_elapsed + new_val;
 		}
 
 		void apply_cooldown();
@@ -60,8 +86,15 @@ namespace SpellHotbar::casts::CastingController {
 		RE::TESForm* m_form;
 		float m_cast_timer;
 		float m_total_casttime;
+		/**
+		* The whole lockout this instance owns, measured from the press (ticket 42). Derived
+		* constructors set it; it is no longer a tail added after the cast time.
+		*/
 		float m_gcd;
+		// Seconds since construction, i.e. since the press. The press-anchored clock.
+		float m_press_elapsed;
 		bool m_casted;
+		bool m_lockout_outran_spellfire;
 	};
 
 	//Abstract base for Spell casts
@@ -175,6 +208,12 @@ namespace SpellHotbar::casts::CastingController {
 
 		virtual bool has_duration() const;
 		virtual float get_current_gcd_progress() const override;
+		/**
+		 * A channel is not on the press-anchored clock -- it owns the button for as long as the
+		 * player holds it, and `m_gcd` is only the 0.25s tail after release. Report the same
+		 * denominator its own progress uses, which is what the HUD read before ticket 42.
+		 */
+		virtual float get_current_gcd_duration() const override;
 
 		/**
 		 * Is the channel past its commitment point and streaming the spell? Before that there

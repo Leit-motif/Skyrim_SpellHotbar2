@@ -196,7 +196,9 @@ std::vector<ArtDefinition> parse_art_tsv(std::string_view text)
 		art.stamina_cost = to_float(cell(cols, index, "StaminaCost")).value_or(0.0f);
 		art.magicka_cost = to_float(cell(cols, index, "MagickaCost")).value_or(0.0f);
 		art.health_cost = to_float(cell(cols, index, "HealthCost")).value_or(0.0f);
-		art.gcd = to_float(cell(cols, index, "GlobalCooldown")).value_or(1.0f);
+		// Ticket 42: arts sit in the action class, so an unset GlobalCooldown is the 1.5s action
+		// number rather than the old 1.0.
+		art.gcd = to_float(cell(cols, index, "GlobalCooldown")).value_or(1.5f);
 		art.cooldown_text = cell(cols, index, "Cooldown");
 		if (const auto cd = parse_art_duration_days(art.cooldown_text)) {
 			art.cooldown_days = *cd;
