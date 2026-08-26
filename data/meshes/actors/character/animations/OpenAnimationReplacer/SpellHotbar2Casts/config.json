@@ -1,0 +1,35 @@
+{
+    "name": "Spell Hotbar 2 Casts",
+    "author": "Spell Hotbar 2",
+    "description": "Per-hand fire-and-forget cast presentation for the Driver Cast states (ADR-0018, ticket 46). The four shtb states stay neutral on the Animations\\MSCO_left1-4.hkx path names; these submods select the right-hand and dual-hand clip sets by comparing the two SpellHotbar.esp globals OAR can read while the state is live. Every replacement file therefore keeps the base path's file name and the submod FOLDER is the identity.",
+    "conditionPresets": [
+        {
+            "name": "IsPlayer",
+            "description": "Player or PlayerRef, copied verbatim from upstream SpellHotbar2's own preset so this pack and the upstream tree it competes with agree on who counts as the player.",
+            "conditions": [
+                {
+                    "condition": "OR",
+                    "requiredVersion": "1.0.0.0",
+                    "Conditions": [
+                        {
+                            "condition": "IsActorBase",
+                            "requiredVersion": "1.0.0.0",
+                            "Actor base": {
+                                "pluginName": "Skyrim.esm",
+                                "formID": "14"
+                            }
+                        },
+                        {
+                            "condition": "IsActorBase",
+                            "requiredVersion": "1.0.0.0",
+                            "Actor base": {
+                                "pluginName": "Skyrim.esm",
+                                "formID": "7"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

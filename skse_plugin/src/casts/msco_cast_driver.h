@@ -59,9 +59,15 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * when the initiate belongs to our own borrowed clip), so a cast that interrupts a
 	 * swing can tell a pre-advance sample -- which would replay the interrupted swing --
 	 * from the successor it is supposed to hand on.
+	 *
+	 * `a_spellfire_hand` and `a_armed_mask` are the hook's single decode of the event and the
+	 * arming snapshot it read for it. The graph-side commitment point -- combo window, clip
+	 * committed, cast-index advance -- fires on an ARMED hand's SpellFire only (ticket 46), so
+	 * the caller supplies both rather than this function decoding the tag a second time.
 	 */
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag,
-		const RE::BSFixedString& a_payload);
+		const RE::BSFixedString& a_payload, SpellFireHand a_spellfire_hand,
+		std::uint8_t a_armed_mask);
 
 	/**
 	 * Is the shtb cast state live right now? Raised from the entry notify's own return and

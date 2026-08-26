@@ -1,4 +1,6 @@
 #pragma once
+#include "../casts/casting_controller.h"
+#include "../casts/combo_cache.h"
 #include "../logger/logger.h"
 
 
@@ -20,7 +22,12 @@ namespace SpellHotbar::events {
 		}
 
 	private:
-		static void ProcessEvent(RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource);
+		// The SpellFire hand and the arming snapshot are decoded once by ProcessEvent_PC and
+		// handed down, so isolation and commitment answer from the same read (ticket 46).
+		static void ProcessEvent(RE::BSAnimationGraphEvent* a_event,
+			RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource,
+			casts::SpellFireHand a_spellfire_hand,
+			casts::CastingController::SpellFireArming a_arming);
 
 		static RE::BSEventNotifyControl ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource);
 		//static RE::BSEventNotifyControl ProcessEvent_NPC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource);

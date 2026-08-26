@@ -320,7 +320,8 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	}
 
 	void observe_graph_event(RE::Actor* a_player, const RE::BSFixedString& a_tag,
-		const RE::BSFixedString& a_payload)
+		const RE::BSFixedString& a_payload, SpellFireHand a_spellfire_hand,
+		std::uint8_t a_armed_mask)
 	{
 		const std::string_view tag{ a_tag.c_str() ? a_tag.c_str() : "" };
 		const std::string_view payload{ a_payload.c_str() ? a_payload.c_str() : "" };
@@ -483,7 +484,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			}
 		}
 
-		if (is_msco_combo_window_open_event(tag) && is_active()) {
+		if (is_msco_combo_window_open_event(a_spellfire_hand, a_armed_mask) && is_active()) {
 			const CastShape shape = cast_shape.load(std::memory_order_relaxed);
 			combo_window.store(spellfire_opens_combo_window(shape), std::memory_order_relaxed);
 			bool expected = false;

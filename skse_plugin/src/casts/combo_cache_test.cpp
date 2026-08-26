@@ -19,6 +19,9 @@ using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
 using SpellHotbar::casts::isolate_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::SpellFireHand;
+using SpellHotbar::casts::spellfire_hand_bit;
+using SpellHotbar::casts::spellfire_hand_for_tag;
+using SpellHotbar::casts::spellfire_hand_is_armed;
 using SpellHotbar::casts::isolate_caster_for_driver_cast;
 using SpellHotbar::casts::spellfire_arm_mask;
 using SpellHotbar::casts::keep_commitment_until_cut;
@@ -201,30 +204,49 @@ void live_cast_without_commitment_is_refused()
 		"a window bit without commitment cannot chain");
 }
 
-void spellfire_of_either_hand_opens_the_combo_window()
+// Ticket 46: one decoder for the two SpellFire tags, so isolation and commitment cannot
+// disagree about what an event is.
+void spellfire_tags_decode_to_their_own_hand()
 {
-	expect(is_msco_combo_window_open_event("MLh_SpellFire_Event"),
-		"the borrowed left-hand SpellFire opens the combo window");
+	expect(spellfire_hand_for_tag("MLh_SpellFire_Event") == SpellFireHand::left,
+		"MLh is the left hand's throw frame");
+	expect(spellfire_hand_for_tag("MRh_SpellFire_Event") == SpellFireHand::right,
+		"MRh is the right hand's throw frame");
+	expect(spellfire_hand_for_tag("MSCO_WinOpen") == SpellFireHand::none,
+		"a window tag is not a SpellFire");
+	expect(spellfire_hand_for_tag("") == SpellFireHand::none,
+		"an empty tag names no hand");
+	expect(spellfire_hand_bit(SpellFireHand::none) == 0U,
+		"`none` owns no mask bit, so it can never match an armed hand");
+	expect(!spellfire_hand_is_armed(SpellFireHand::none, 3U),
+		"a dual arming still does not arm a non-SpellFire event");
+}
+
+void spellfire_of_either_armed_hand_opens_the_combo_window()
+{
+	constexpr std::uint8_t left_armed{ 1U };
+	constexpr std::uint8_t right_armed{ 2U };
+	constexpr std::uint8_t dual_armed{ 3U };
+
+	expect(is_msco_combo_window_open_event(SpellFireHand::left, left_armed),
+		"a left cast's own SpellFire opens the combo window");
 	// Ticket 44: any hand's SpellFire is the graph-side commitment point. Keying the
 	// window to MLh alone kept every right-hand clip on cast index 1 (observed live).
-	expect(is_msco_combo_window_open_event("MRh_SpellFire_Event"),
+	expect(is_msco_combo_window_open_event(SpellFireHand::right, right_armed),
 		"right-hand SpellFire opens the combo window too");
-	expect(!is_msco_combo_window_open_event("MSCO_WinOpen"),
-		"WinOpen does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MCO_WinOpen"),
-		"MCO WinOpen does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MSCO_winopen"),
-		"lowercase MSCO WinOpen does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MCO_winopen"),
-		"lowercase WinOpen does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MSCO_WinClose"),
-		"WinClose does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MCO_WinClose"),
-		"MCO WinClose does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MSCO_winclose"),
-		"lowercase MSCO WinClose does not open the cast combo window");
-	expect(!is_msco_combo_window_open_event("MCO_winclose"),
-		"lowercase WinClose does not open the cast combo window");
+	expect(is_msco_combo_window_open_event(SpellFireHand::left, dual_armed) &&
+			is_msco_combo_window_open_event(SpellFireHand::right, dual_armed),
+		"a dual cast arms both, so either authored event is its own");
+	// Ticket 46 (review finding 3): with the per-hand pack live, an unarmed hand's event
+	// belongs to some other cast and must not advance this one's index or open its window.
+	expect(!is_msco_combo_window_open_event(SpellFireHand::right, left_armed),
+		"an equipped right-hand vanilla cast does not commit a left Driver Cast graph-side");
+	expect(!is_msco_combo_window_open_event(SpellFireHand::left, right_armed),
+		"an equipped left-hand vanilla cast does not commit a right Driver Cast graph-side");
+	expect(!is_msco_combo_window_open_event(SpellFireHand::none, dual_armed),
+		"a non-SpellFire tag never opens the cast combo window, however armed the cast is");
+	expect(!is_msco_combo_window_open_event(SpellFireHand::left, 0U),
+		"with nothing armed there is no cast to commit");
 }
 
 void winclose_tags_close_the_combo_window()
@@ -326,11 +348,15 @@ void arm_mask_follows_the_resolved_hand()
 
 void driver_cast_isolates_before_vanilla_sees_left_spellfire()
 {
-	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left) == SpellFireHand::left,
+	constexpr std::uint8_t left_armed{ 1U };
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left, left_armed) ==
+			SpellFireHand::left,
 		"a live Driver Cast must isolate before vanilla processes the clip's left SpellFire");
-	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::left) == SpellFireHand::none,
+	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::left, left_armed) ==
+			SpellFireHand::none,
 		"an ordinary left-hand MSCO cast keeps vanilla SpellFire");
-	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::none) == SpellFireHand::none,
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::none, left_armed) ==
+			SpellFireHand::none,
 		"other graph events still reach vanilla during a Driver Cast");
 }
 
@@ -338,10 +364,38 @@ void driver_cast_isolates_before_vanilla_sees_left_spellfire()
 // right-hand clip silences the RIGHT equipped caster instead of leaving it to fire.
 void driver_cast_isolates_the_hand_the_spellfire_event_names()
 {
-	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::right) == SpellFireHand::right,
+	constexpr std::uint8_t right_armed{ 2U };
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::right, right_armed) ==
+			SpellFireHand::right,
 		"a right-hand clip's MRh SpellFire isolates the right caster, not the left");
-	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::right) == SpellFireHand::none,
+	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::right, right_armed) ==
+			SpellFireHand::none,
 		"an ordinary equipped right-hand cast keeps vanilla SpellFire");
+}
+
+// Ticket 46 (review finding 2). Isolation is what swallows the event before vanilla, so
+// isolating an UNARMED hand ate an unrelated vanilla cast released mid-Driver-Cast. That
+// looseness was load-bearing only while every cell borrowed a left-annotated clip.
+void driver_cast_leaves_an_unarmed_hands_spellfire_to_vanilla()
+{
+	constexpr std::uint8_t left_armed{ 1U };
+	constexpr std::uint8_t right_armed{ 2U };
+	constexpr std::uint8_t dual_armed{ 3U };
+
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::right, left_armed) ==
+			SpellFireHand::none,
+		"a left Driver Cast leaves an equipped right-hand spell's own SpellFire alone");
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left, right_armed) ==
+			SpellFireHand::none,
+		"a right Driver Cast leaves an equipped left-hand spell's own SpellFire alone");
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left, dual_armed) ==
+			SpellFireHand::left &&
+			isolate_caster_before_vanilla_spellfire(true, SpellFireHand::right, dual_armed) ==
+				SpellFireHand::right,
+		"a dual cast arms both hands, so both equipped casters are still silenced");
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left, 0U) ==
+			SpellFireHand::none,
+		"nothing armed isolates nothing, even while the driver holds the graph");
 }
 
 void clip_4_does_not_deliver_during_its_windup()
@@ -1020,7 +1074,8 @@ int main()
 	committed_follow_up_press_chains();
 	committed_press_after_winclose_is_refused();
 	live_cast_without_commitment_is_refused();
-	spellfire_of_either_hand_opens_the_combo_window();
+	spellfire_tags_decode_to_their_own_hand();
+	spellfire_of_either_armed_hand_opens_the_combo_window();
 	arm_mask_follows_the_resolved_hand();
 	winclose_tags_close_the_combo_window();
 	shipped_exponential_curve_is_1_at_base_time();
@@ -1034,6 +1089,7 @@ int main()
 	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();
 	driver_cast_isolates_before_vanilla_sees_left_spellfire();
 	driver_cast_isolates_the_hand_the_spellfire_event_names();
+	driver_cast_leaves_an_unarmed_hands_spellfire_to_vanilla();
 	clip_4_does_not_deliver_during_its_windup();
 	clip_4_delivers_when_spellfire_arrives_past_the_floor();
 	clips_1_to_3_still_deliver_near_the_start();

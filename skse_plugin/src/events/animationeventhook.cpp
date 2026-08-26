@@ -32,7 +32,10 @@ namespace SpellHotbar::events {
 		}
 	}
 
-	void Animation_event_hook::ProcessEvent(RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
+	void Animation_event_hook::ProcessEvent(RE::BSAnimationGraphEvent* a_event,
+		RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource,
+		casts::SpellFireHand a_spellfire_hand,
+		casts::CastingController::SpellFireArming a_arming)
 	{
 		{
 			if (!a_event || !a_event->holder) {
@@ -71,14 +74,12 @@ namespace SpellHotbar::events {
 				// a whole ticket as "these packs emit no SGVI". ArtDriver keeps its two-argument
 				// signature: it matches on event names only and has no payload to read.
 				casts::MscoCastDriver::observe_graph_event(
-					eventHolder->As<RE::Actor>(), a_event->tag, a_event->payload);
+					eventHolder->As<RE::Actor>(), a_event->tag, a_event->payload,
+					a_spellfire_hand, a_arming.mask);
 				casts::ArtDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
-				if (a_event->tag == "MLh_SpellFire_Event"sv) {
-					casts::CastingController::notify_spellfire(true);
-				}
-				else if (a_event->tag == "MRh_SpellFire_Event"sv) {
-					casts::CastingController::notify_spellfire(false);
+				if (a_spellfire_hand != casts::SpellFireHand::none) {
+					casts::CastingController::notify_spellfire(a_spellfire_hand, a_arming.generation);
 				}
 			}
 
@@ -98,15 +99,19 @@ namespace SpellHotbar::events {
 		// Ticket 44 spike: per-hand. The event names the hand, and the matching caster is
 		// the one to interrupt — a right-hand clip left the right caster free to complete
 		// an equipped right-hand spell alongside SH2's payload.
-		const casts::SpellFireHand event_hand =
-			a_event ? (a_event->tag == "MLh_SpellFire_Event"sv  ? casts::SpellFireHand::left
-					   : a_event->tag == "MRh_SpellFire_Event"sv ? casts::SpellFireHand::right
-																 : casts::SpellFireHand::none)
-					: casts::SpellFireHand::none;
+		//
+		// Ticket 46: decoded ONCE here (Codex review finding 8) and answered against ONE
+		// arming snapshot, which every per-hand question downstream reuses — isolation, the
+		// graph-side commitment point, and the delivery latch must not disagree about which
+		// hands this cast owns because they each read the mask at a different instant.
+		const casts::SpellFireHand event_hand = a_event
+			? casts::spellfire_hand_for_tag(a_event->tag.c_str() ? a_event->tag.c_str() : "")
+			: casts::SpellFireHand::none;
+		const auto arming = casts::CastingController::spellfire_arming();
 		const casts::SpellFireHand isolate =
 			(a_event && a_event->holder && a_event->holder->IsPlayerRef())
 				? casts::isolate_caster_before_vanilla_spellfire(
-					  casts::MscoCastDriver::is_active(), event_hand)
+					  casts::MscoCastDriver::is_active(), event_hand, arming.mask)
 				: casts::SpellFireHand::none;
 		if (isolate != casts::SpellFireHand::none) {
 			const bool is_left = isolate == casts::SpellFireHand::left;
@@ -119,7 +124,7 @@ namespace SpellHotbar::events {
 			}
 			logger::debug("SH2 cast: isolated {}-hand caster before vanilla SpellFire",
 				is_left ? "left" : "right");
-			ProcessEvent(a_event, a_eventSource);
+			ProcessEvent(a_event, a_eventSource, event_hand, arming);
 			return RE::BSEventNotifyControl::kContinue;
 		}
 
@@ -127,7 +132,7 @@ namespace SpellHotbar::events {
 		// our observer reads it, so another mod's cleanup cannot land after our
 		// state bookkeeping.
 		const auto result = _ProcessEvent_PC(a_sink, a_event, a_eventSource);
-		ProcessEvent(a_event, a_eventSource);
+		ProcessEvent(a_event, a_eventSource, event_hand, arming);
 		return result;
 	}
 

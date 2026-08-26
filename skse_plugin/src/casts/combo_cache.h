@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <mutex>
 #include <optional>
 #include <string_view>
@@ -189,14 +190,62 @@ enum class HotbarCastPress {
 	return HotbarCastPress::refuse;
 }
 
+// Which hand's MagicCaster a graph SpellFire event belongs to. `none` is both "this
+// event is not a SpellFire" and "nothing to isolate", so one return type answers the
+// question and names the caster in the same value.
+enum class SpellFireHand {
+	none,
+	left,
+	right,
+};
+
+// The one place a SpellFire tag becomes a hand (Codex review finding 8). The hook used to
+// decode the same two strings twice — once for isolation, once for the notify's bool — and
+// two decoders of one wire format drift.
+[[nodiscard]] constexpr SpellFireHand spellfire_hand_for_tag(std::string_view tag) noexcept
+{
+	if (tag == "MLh_SpellFire_Event") {
+		return SpellFireHand::left;
+	}
+	if (tag == "MRh_SpellFire_Event") {
+		return SpellFireHand::right;
+	}
+	return SpellFireHand::none;
+}
+
+// The arming mask's bit for one hand, in `spellfire_arm_mask`'s encoding (1 = left,
+// 2 = right). `none` owns no bit, so it never matches an armed hand.
+[[nodiscard]] constexpr std::uint8_t spellfire_hand_bit(SpellFireHand hand) noexcept
+{
+	switch (hand) {
+	case SpellFireHand::left:
+		return 1U;
+	case SpellFireHand::right:
+		return 2U;
+	default:
+		return 0U;
+	}
+}
+
+[[nodiscard]] constexpr bool spellfire_hand_is_armed(SpellFireHand hand, std::uint8_t armed_mask) noexcept
+{
+	const std::uint8_t bit = spellfire_hand_bit(hand);
+	return bit != 0U && (armed_mask & bit) != 0U;
+}
+
 // Ticket 44: the graph-side commitment point is ANY hand's SpellFire, not the left one.
 // Keying this to MLh alone left an MRh clip unable to open the combo window, mark the clip
 // committed, or advance the cast index — every right cast re-entered clip 1 (observed live
-// 2026-08-26). The arming mask in arm_spellfire still decides which hand may DELIVER; this
-// predicate only says "the clip reached its throw frame".
-[[nodiscard]] constexpr bool is_msco_combo_window_open_event(std::string_view tag) noexcept
+// 2026-08-26).
+//
+// Ticket 46 (Codex review finding 3): "any hand" becomes "any ARMED hand". While every cell
+// borrowed a left-annotated clip, an unarmed event had to be accepted or a right cast never
+// advanced past clip 1; now that each cell plays its own hand's clip, an unrelated vanilla
+// cast's SpellFire must not open the window, mark the clip committed, or advance the index.
+[[nodiscard]] constexpr bool is_msco_combo_window_open_event(
+	SpellFireHand event_hand, std::uint8_t armed_mask) noexcept
 {
-	return tag == "MLh_SpellFire_Event" || tag == "MRh_SpellFire_Event";
+	return spellfire_hand_is_armed(event_hand, armed_mask);
 }
 
 [[nodiscard]] constexpr bool is_msco_combo_window_close_event(std::string_view tag) noexcept
@@ -614,15 +663,6 @@ struct MscoChargeCurve {
 	}
 }
 
-// Which hand's MagicCaster a graph SpellFire event belongs to. `none` is both "this
-// event is not a SpellFire" and "nothing to isolate", so one return type answers the
-// question and names the caster in the same value.
-enum class SpellFireHand {
-	none,
-	left,
-	right,
-};
-
 // InterruptCast at begin() is too early: the caster is idle, and the borrowed clip's
 // SpellFire is ~0.5s later. Vanilla also processes that event before this plugin's
 // observer. Isolate immediately before vanilla sees SpellFire while a Driver Cast is
@@ -634,10 +674,18 @@ enum class SpellFireHand {
 // own hand: a dual cast raises both events and each isolates its own caster, which is
 // exactly right — both equipped hands must be silenced, and the two events still deliver
 // once through the SpellFire latch.
+//
+// Ticket 46 (Codex review finding 2): only an ARMED hand is isolated, and only an armed
+// hand's event is swallowed. Swallowing every hand was correct while every cell borrowed a
+// left-annotated clip — arm-aware swallowing would have let vanilla finish an equipped left
+// spell on a right cast — but with the per-hand pack live it ate an unrelated vanilla cast
+// released mid-Driver-Cast. `armed_mask` is `spellfire_arm_mask`'s encoding.
 [[nodiscard]] constexpr SpellFireHand isolate_caster_before_vanilla_spellfire(
-	bool driver_cast_active, SpellFireHand event_hand) noexcept
+	bool driver_cast_active, SpellFireHand event_hand, std::uint8_t armed_mask) noexcept
 {
-	return driver_cast_active ? event_hand : SpellFireHand::none;
+	return (driver_cast_active && spellfire_hand_is_armed(event_hand, armed_mask))
+		? event_hand
+		: SpellFireHand::none;
 }
 
 // The left control is block when that hand holds a weapon or shield. A

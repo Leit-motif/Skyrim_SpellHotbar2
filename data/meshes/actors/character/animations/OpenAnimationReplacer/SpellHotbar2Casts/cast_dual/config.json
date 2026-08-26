@@ -1,0 +1,27 @@
+{
+    "name": "SH2 Cast - Dual (aimed)",
+    "description": "MSCO_dual1-4 on the neutral MSCO_left1-4 path names, for a fire-and-forget AIMED cast resolved to DUAL. Dual is its own animation-type id and carries NO casting-source condition -- upstream's convention, kept (a dual cast leaves 0x835 at the left source). SpellHotbar_SpellAnimationType (0x815) == 10016 is cast_anim_ids.h kAimed.variant. The clips keep MSCO's MLh_SpellFire_Event; a dual cast arms both hands, so either hand's event commits it.",
+    "priority": 2000001103,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 10016.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

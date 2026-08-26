@@ -1,8 +1,10 @@
 #pragma once
+#include <cstdint>
 #include <optional>
 #include <string_view>
 #include "../input/keybinds.h"
 #include "../bar/hotbar.h"
+#include "combo_cache.h"
 
 namespace SpellHotbar::casts::CastingController {
 
@@ -307,12 +309,28 @@ namespace SpellHotbar::casts::CastingController {
 	extern std::unique_ptr<BaseCastingInstance> current_cast;
 
 	/**
+	* Which hands may commit the current cast, and which cast armed them. Read once per
+	* graph event by the animation-event hook, which then answers every per-hand question
+	* about that event from the same snapshot.
+	*/
+	struct SpellFireArming {
+		std::uint8_t mask;
+		std::uint32_t generation;
+	};
+
+	SpellFireArming spellfire_arming();
+
+	/**
 	* The graph raised a `MLh/MRh_SpellFire_Event`: if the current cast throws with that
 	* hand, it is committed from here and will deliver its spell whatever happens to the
 	* casting state (ADR 0004). Called from the animation-event hook, on the animation
 	* thread.
+	*
+	* `generation` is the one `spellfire_arming()` returned for this event. An arming that
+	* landed since then belongs to a later cast, and this event is dropped rather than
+	* committing a cast whose own clip has not reached its throw frame.
 	*/
-	void notify_spellfire(bool left_hand);
+	void notify_spellfire(SpellFireHand hand, std::uint32_t generation);
 
 	/**
 	* Forget any commitment. Called when a cast starts and when one ends.
