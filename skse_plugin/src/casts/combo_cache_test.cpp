@@ -17,7 +17,8 @@ using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
 using SpellHotbar::casts::classify_cast_delivery;
 using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
-using SpellHotbar::casts::isolate_left_hand_caster_before_vanilla_spellfire;
+using SpellHotbar::casts::isolate_caster_before_vanilla_spellfire;
+using SpellHotbar::casts::SpellFireHand;
 using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
 using SpellHotbar::casts::keep_commitment_until_cut;
 using SpellHotbar::casts::MscoChargeCurve;
@@ -311,12 +312,22 @@ void driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell()
 
 void driver_cast_isolates_before_vanilla_sees_left_spellfire()
 {
-	expect(isolate_left_hand_caster_before_vanilla_spellfire(true, true),
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left) == SpellFireHand::left,
 		"a live Driver Cast must isolate before vanilla processes the clip's left SpellFire");
-	expect(!isolate_left_hand_caster_before_vanilla_spellfire(false, true),
+	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::left) == SpellFireHand::none,
 		"an ordinary left-hand MSCO cast keeps vanilla SpellFire");
-	expect(!isolate_left_hand_caster_before_vanilla_spellfire(true, false),
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::none) == SpellFireHand::none,
 		"other graph events still reach vanilla during a Driver Cast");
+}
+
+// Ticket 44 spike: the same rule, per hand. The event's own hand names the caster, so a
+// right-hand clip silences the RIGHT equipped caster instead of leaving it to fire.
+void driver_cast_isolates_the_hand_the_spellfire_event_names()
+{
+	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::right) == SpellFireHand::right,
+		"a right-hand clip's MRh SpellFire isolates the right caster, not the left");
+	expect(isolate_caster_before_vanilla_spellfire(false, SpellFireHand::right) == SpellFireHand::none,
+		"an ordinary equipped right-hand cast keeps vanilla SpellFire");
 }
 
 void clip_4_does_not_deliver_during_its_windup()
@@ -1007,6 +1018,7 @@ int main()
 	handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell();
 	driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell();
 	driver_cast_isolates_before_vanilla_sees_left_spellfire();
+	driver_cast_isolates_the_hand_the_spellfire_event_names();
 	clip_4_does_not_deliver_during_its_windup();
 	clip_4_delivers_when_spellfire_arrives_past_the_floor();
 	clips_1_to_3_still_deliver_near_the_start();

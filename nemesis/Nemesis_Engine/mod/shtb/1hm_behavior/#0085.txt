@@ -465,6 +465,7 @@
 				<hkcstring>SH2_CastRight</hkcstring>
 				<hkcstring>SH2_CastExit</hkcstring>
 				<hkcstring>MLh_SpellFire_Event</hkcstring>
+				<hkcstring>MRh_SpellFire_Event</hkcstring>
 				<hkcstring>SH2_Cast2</hkcstring>
 				<hkcstring>SH2_Cast3</hkcstring>
 				<hkcstring>SH2_Cast4</hkcstring>
