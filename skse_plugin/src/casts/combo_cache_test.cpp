@@ -9,6 +9,7 @@ using SpellHotbar::casts::CastDelivery;
 using SpellHotbar::casts::ArmedDelivery;
 using SpellHotbar::casts::classify_armed_delivery;
 using SpellHotbar::casts::retired_cast_stays_armed;
+using SpellHotbar::casts::graph_is_in_cuttable_follow_through;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
@@ -382,6 +383,23 @@ void an_armed_payload_delivers_exactly_once()
 		"the cut already delivered this payload; its SpellFire must not deliver it again");
 	expect(classify_armed_delivery(true, false, false) == ArmedDelivery::hold,
 		"nor may the clip-end fallback deliver a payload the cut already sent");
+}
+
+void a_retired_cast_leaves_a_cuttable_follow_through()
+{
+	expect(graph_is_in_cuttable_follow_through(false, true),
+		"ticket 43 retired the instance but the clip plays on: the attack cut must still land");
+	expect(!graph_is_in_cuttable_follow_through(false, false),
+		"clip over and the state left: there is nothing to cut");
+}
+
+void a_live_cast_is_never_follow_through()
+{
+	expect(!graph_is_in_cuttable_follow_through(true, true),
+		"a CHARGING cast still has its instance -- cutting it would cost the player the spell, so "
+		"only the committed gate may admit it");
+	expect(!graph_is_in_cuttable_follow_through(true, false),
+		"a live cast that is not even driving the graph is not follow-through either");
 }
 
 void already_delivered_does_not_fire_again()
@@ -1045,6 +1063,8 @@ int main()
 	an_armed_payload_waits_for_its_own_spellfire();
 	an_armed_payload_falls_back_to_the_clip_end();
 	an_armed_payload_delivers_exactly_once();
+	a_retired_cast_leaves_a_cuttable_follow_through();
+	a_live_cast_is_never_follow_through();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

@@ -480,8 +480,18 @@ namespace SpellHotbar::Input {
                     // the only one available. Leaving the press alone is also what makes this
                     // fail-safe: a graph that refuses the cut gives the player today's behaviour
                     // rather than a swallowed attack.
+                    //
+                    // The gate is BOTH halves of the cuttable span (ticket 45). Ticket 43 retires
+                    // the instance at GCD expiry, so `is_committed_cast_holding_graph` -- which
+                    // needs a live `current_cast` -- goes false while the clip plays on, and the
+                    // follow-through is exactly the tail this cut exists to use. The
+                    // follow-through predicate covers retirement to clip end; together they run
+                    // from the commitment point to the end of the clip. A cast still CHARGING has
+                    // a live instance and no commitment, so neither half admits it and a press
+                    // then keeps today's behaviour.
                     if (!captureEvent && pc && bEvent->IsDown() && in_ingame_state() &&
-                        casts::CastingController::is_committed_cast_holding_graph())
+                        (casts::CastingController::is_committed_cast_holding_graph() ||
+                         casts::CastingController::is_cuttable_follow_through()))
                     {
                         const uint32_t attack_key = get_attack_key(key_device);
                         // Traced for every press during a cast, matching or not, because this is
@@ -492,11 +502,17 @@ namespace SpellHotbar::Input {
                         logger::trace("SH2 cast: press during a committed cast (device={}, key={}, attack key={})",
                             static_cast<int>(key_device), key_code, attack_key);
 
+                        // A payload still owed when the cut lands is paid out first, the same as
+                        // the five other cut seams (ticket 43). The armed poll's clip-end fallback
+                        // would catch it a frame later anyway; delivering here keeps one delivery
+                        // story and one log line per payload.
                         if (is_attack_press(key_code, key_device, attack_key)) {
                             logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
+                            casts::CastingController::deliver_armed_payload("the cut (attack)");
                             casts::MscoCastDriver::cancel(pc);
                         } else if (is_left_hand_cast_press(pc, key_code, key_device)) {
                             logger::debug("SH2 cast: left-hand cast pressed on a committed cast; ending the state");
+                            casts::CastingController::deliver_armed_payload("the cut (attack)");
                             casts::MscoCastDriver::cancel(pc);
                         }
                     }

@@ -677,6 +677,26 @@ enum class ArmedDelivery {
 	return clip_active ? ArmedDelivery::hold : ArmedDelivery::on_clip_end;
 }
 
+// TICKET 45: the clip outlives the instance, and the cut has to outlive it too.
+//
+// Since ticket 43 retires a fire-and-forget cast at GCD expiry, `current_cast` is gone for the
+// whole follow-through while the borrowed clip keeps playing. `is_committed_cast_holding_graph`
+// therefore reads false from retirement to clip end, and the attack chain-out it gates went with
+// it -- the owner had to wait out the entire clip to swing (report 2026-08-25).
+//
+// What is left standing after retirement is the driver: the shtb state is still active, so there
+// is still a state to end and still a tail to turn into the start of a swing. That is the whole
+// rule -- no live cast, driver still active.
+//
+// A CHARGING cast is the case this must not swallow, and it is excluded by the same first term: a
+// pre-SpellFire cast still has `current_cast` set, so it reads false here and stays protected by
+// the committed gate exactly as before, where a cut would cost the player the spell.
+[[nodiscard]] constexpr bool graph_is_in_cuttable_follow_through(
+	bool has_live_cast, bool driver_active) noexcept
+{
+	return !has_live_cast && driver_active;
+}
+
 // Ability latch: WinOpen if the bound clip carries it, else HitFrame, else SH2_ArtExit.
 enum class AbilityLatch {
 	winOpen,

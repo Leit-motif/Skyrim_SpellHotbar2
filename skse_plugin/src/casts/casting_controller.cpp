@@ -172,6 +172,14 @@ namespace SpellHotbar::casts::CastingController {
 			   MscoCastDriver::is_active();
 	}
 
+	// Ticket 45. The other half of the cut gate: the instance is gone (retired at GCD expiry) but
+	// the clip is still playing on a live shtb state, so there is still something to end. A
+	// charging cast still has `current_cast` and is refused here, staying protected by the
+	// committed gate above.
+	bool is_cuttable_follow_through() {
+		return graph_is_in_cuttable_follow_through(current_cast != nullptr, MscoCastDriver::is_active());
+	}
+
 	// Ticket 41: no callers. It reports the pre-revert admission rule -- a press inside the
 	// SpellFire-to-WinClose window is a combo step rather than a refusal -- which the stock gate
 	// in InputModeCast::process_input now shadows for every hotbar press. Kept because pruning
