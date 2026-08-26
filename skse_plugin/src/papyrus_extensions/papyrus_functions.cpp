@@ -68,6 +68,32 @@ void slot_art(RE::StaticFunctionTag*, int slot_index, int art_id)
     });
 }
 
+/* Test seam (ticket 44): assign a slot's hand the way the binding menu's rotate does, so
+ * runtime verification can drive explicit left/right/dual assignments headlessly. The
+ * ImGui menu is mouse-only and synthetic OS input does not reach an unfocused window. */
+void set_slot_hand(RE::StaticFunctionTag*, int slot_index, int hand)
+{
+    SKSE::GetTaskInterface()->AddTask([slot_index, hand]() {
+        using namespace SpellHotbar;
+        if (slot_index < 0 || slot_index >= static_cast<int>(max_bar_size)) {
+            logger::warn("setSlotHand({}, {}): slot index out of range", slot_index, hand);
+            return;
+        }
+        if (hand < 0 || hand >= static_cast<int>(hand_mode::end)) {
+            logger::warn("setSlotHand({}, {}): hand out of range", slot_index, hand);
+            return;
+        }
+        uint32_t bar_id = Bars::getCurrentHotbar_ingame();
+        if (!Bars::hotbars.contains(bar_id)) {
+            logger::warn("setSlotHand({}, {}): no current hotbar", slot_index, hand);
+            return;
+        }
+        auto& skill = Bars::hotbars.at(bar_id).get_skill_in_bar_by_ref(slot_index, Bars::get_current_modifier());
+        skill.hand = static_cast<hand_mode>(hand);
+        logger::info("setSlotHand: bar slot {} hand set to {}", slot_index, hand);
+    });
+}
+
 int get_art_selector(RE::StaticFunctionTag*)
 {
     return SpellHotbar::GameData::get_art_selector();
@@ -657,6 +683,7 @@ bool toggle_individual_shout_cooldowns(RE::StaticFunctionTag*) {
 bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("castSlot", "SpellHotbar", cast_slot);
     vm->RegisterFunction("slotArt", "SpellHotbar", slot_art);
+    vm->RegisterFunction("setSlotHand", "SpellHotbar", set_slot_hand);
     vm->RegisterFunction("getArtSelector", "SpellHotbar", get_art_selector);
     vm->RegisterFunction("getNumberOfSlots", "SpellHotbar", get_number_of_slots);
     vm->RegisterFunction("setNumberOfSlots", "SpellHotbar", set_number_of_slots);
