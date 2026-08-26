@@ -47,9 +47,16 @@ namespace SpellHotbar::Input {
         // Ticket 41: one gate for every slot type, as stock SH2 shipped it. A press that arrives
         // while a cast instance is live dies here and paints the red flash in the else-branch --
         // press, lockout, visible refusal, identical across spells, shouts, arts, powers and
-        // potions. The `queueable` exemption f465947 added is gone; the mid-swing art deferral it
-        // was meant to serve never passed through here, because an MCO swing holds no cast
-        // instance of ours (see CastingController::try_start_art's graph_refused path).
+        // potions. The `queueable` exemption f465947 added is gone.
+        //
+        // The mid-swing art deferral survives because an MCO swing on its own holds no cast
+        // instance of ours: the press passes here, and try_start_art defers it when the graph
+        // refuses SH2_ArtStart (verified live 2026-08-25 -- deferred to ShoutMCO mid-swing,
+        // released 240ms later, art fired). That is the ordinary case, not a universal rule.
+        // A swing can overlap an SH2 instance -- a potion still inside its GCD, a cast or channel
+        // cut for the attack but not yet retired -- and such a press is now refused rather than
+        // deferred. That is the lockout the owner asked for, not an oversight: `current_cast` is
+        // the whole gate, and no slot type buys an exemption from it.
         if (allowed_to_instantcast(skill.formID) && casts::CastingController::can_start_new_cast()) {
             if (skill.type == slot_type::weapon_art) {
                 bool success = casts::CastingController::try_start_art(skill.art_id, i, bind);
