@@ -189,9 +189,14 @@ enum class HotbarCastPress {
 	return HotbarCastPress::refuse;
 }
 
+// Ticket 44: the graph-side commitment point is ANY hand's SpellFire, not the left one.
+// Keying this to MLh alone left an MRh clip unable to open the combo window, mark the clip
+// committed, or advance the cast index — every right cast re-entered clip 1 (observed live
+// 2026-08-26). The arming mask in arm_spellfire still decides which hand may DELIVER; this
+// predicate only says "the clip reached its throw frame".
 [[nodiscard]] constexpr bool is_msco_combo_window_open_event(std::string_view tag) noexcept
 {
-	return tag == "MLh_SpellFire_Event";
+	return tag == "MLh_SpellFire_Event" || tag == "MRh_SpellFire_Event";
 }
 
 [[nodiscard]] constexpr bool is_msco_combo_window_close_event(std::string_view tag) noexcept

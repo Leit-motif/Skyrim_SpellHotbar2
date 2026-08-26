@@ -204,8 +204,10 @@ void left_spellfire_opens_the_combo_window()
 {
 	expect(is_msco_combo_window_open_event("MLh_SpellFire_Event"),
 		"the borrowed left-hand SpellFire opens the combo window");
-	expect(!is_msco_combo_window_open_event("MRh_SpellFire_Event"),
-		"right-hand SpellFire does not open the combo window");
+	// Ticket 44: any hand's SpellFire is the graph-side commitment point. Keying the
+	// window to MLh alone kept every right-hand clip on cast index 1 (observed live).
+	expect(is_msco_combo_window_open_event("MRh_SpellFire_Event"),
+		"right-hand SpellFire opens the combo window too");
 	expect(!is_msco_combo_window_open_event("MSCO_WinOpen"),
 		"WinOpen does not open the cast combo window");
 	expect(!is_msco_combo_window_open_event("MCO_WinOpen"),
