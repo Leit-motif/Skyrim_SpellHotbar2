@@ -247,6 +247,42 @@ namespace SpellHotbar::casts::CastingController {
 		clear_spellfire();
 	}
 
+	// TICKET 42. A cast retired on its own lockout leaves its clip playing, and the animation
+	// globals -- animation type, art selector, casting source -- are what OAR picked that clip
+	// with. Clearing them under a live clip would be a change of the selection mid-play, so the
+	// reset is deferred to the frame the graph is finally quiet on. Idempotent, and a new cast
+	// rewrites all of them from its own start path regardless.
+	bool animation_vars_reset_pending{ false };
+
+	void poll_pending_animation_var_reset()
+	{
+		if (!animation_vars_reset_pending || current_cast || MscoCastDriver::is_active()) {
+			return;
+		}
+		animation_vars_reset_pending = false;
+		GameData::reset_animation_vars();
+	}
+
+	/**
+	* Retire a delivered, cuttable cast without leaving the shtb state: the clip carries on as
+	* follow-through and the next press enters the next clip from inside the live state, the same
+	* seam a ticket-14 chain press uses. `MscoCastDriver::finish` is deliberately NOT called --
+	* sending SH2_CastExit here would cut the very presentation this ticket is trying to keep. The
+	* clip's own end raises that exit, and the state watchdog covers a graph that never does.
+	*/
+	void retire_cuttable_cast()
+	{
+		if (auto* spell_cast = dynamic_cast<CastingInstance*>(current_cast.get())) {
+			spell_cast->on_reset_keep_graph();
+		} else {
+			current_cast->on_reset();
+		}
+		current_cast.reset();
+		clear_spellfire();
+		animation_vars_reset_pending = true;
+		poll_pending_animation_var_reset();
+	}
+
 	void drop_live_cast()
 	{
 		// Dropped for a game load: the save being read owns selectedPower, so a hold from the
@@ -254,6 +290,8 @@ namespace SpellHotbar::casts::CastingController {
 		discard_deferred_power_restore();
 		current_cast.reset();
 		clear_spellfire();
+		// The globals belong to the session being left behind; the load resets them itself.
+		animation_vars_reset_pending = false;
 		ArtDriver::reset_session();
 		MscoCastDriver::reset_session();
 		CastIntent::cancel();
@@ -301,7 +339,9 @@ namespace SpellHotbar::casts::CastingController {
 		m_cast_timer(casttime),
 		m_total_casttime(casttime),
 		m_gcd(1.5f),
-		m_casted(false)
+		m_press_elapsed(0.0f),
+		m_casted(false),
+		m_lockout_outran_spellfire(false)
 	{
 	}
 
@@ -369,7 +409,10 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool BaseCastingInstance::is_gcd_expired() const
 	{
-		return m_cast_timer <= -m_gcd;
+		// TICKET 42: the lockout is measured from the press, not from cast completion. The old
+		// `m_cast_timer <= -m_gcd` made occupancy casttime + gcd, so raising `m_gcd` alone moved
+		// nothing that the player feels.
+		return m_press_elapsed >= m_gcd;
 	}
 
 	bool CastingInstance::should_play_release_anim()
@@ -379,6 +422,10 @@ namespace SpellHotbar::casts::CastingController {
 
 	bool BaseCastingInstance::advance_time(float delta)
 	{
+		// The press clock. Kept separate from the cast timer, which still counts the authored
+		// cast down and past zero exactly as it always did -- delivery, the release anim, and the
+		// first-update edge all read it and none of them are on the lockout's business.
+		m_press_elapsed += delta;
 		if (m_cast_timer >= -m_gcd) {
 			m_cast_timer -= delta;
 		}
@@ -394,14 +441,17 @@ namespace SpellHotbar::casts::CastingController {
 
 	float BaseCastingInstance::get_current_gcd_progress() const
 	{
-		float f = (m_cast_timer + m_gcd) / (m_total_casttime + m_gcd);
-
-		return std::clamp(1.0f - f, 0.0f, 1.0f);
+		// Same shape as before -- 0 at the press, 1 at expiry -- over the press-anchored lockout,
+		// so the HUD sweep draws the real 1.5s rather than casttime + gcd (ticket 42).
+		if (m_gcd <= 0.0f) {
+			return 0.0f;
+		}
+		return std::clamp(m_press_elapsed / m_gcd, 0.0f, 1.0f);
 	}
 
 	float BaseCastingInstance::get_current_gcd_duration() const
 	{
-		return m_total_casttime + m_gcd;
+		return m_gcd;
 	}
 
 	const std::string_view CastingInstance::get_end_anim() const
@@ -621,12 +671,17 @@ namespace SpellHotbar::casts::CastingController {
 
 	CastingInstanceSpell::CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
-		m_gcd = 0.0f;
+		// TICKET 42: an action costs one number. 1.5s from the press, with SpellFire as the floor
+		// under it; the clip's remaining length is presentation. Was 0.0f, and was ignored anyway
+		// -- the old FNF branch held the instance until the clip ended.
+		m_gcd = 1.5f;
 	}
 
 	CastingInstanceRitual::CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
 		m_release_anim_time = 0.25f;
+		// Unchanged as a number, but it now means 1.5s from the press rather than 1.5s after the
+		// ritual's cast time (ticket 42).
 		m_gcd = 1.5f;
 	}
 
@@ -833,6 +888,11 @@ namespace SpellHotbar::casts::CastingController {
 		return 0.0f;
 	}
 
+	float CastingInstanceSpellConcentration::get_current_gcd_duration() const
+	{
+		return m_release_anim_time + m_total_casttime;
+	}
+
 	void update_cast(float delta)
 	{
 		// One bool graph read per unpaused frame on the player: the shout's own liveness, which
@@ -861,17 +921,30 @@ namespace SpellHotbar::casts::CastingController {
 				}
 			}
 			else {
-				// FNF Driver Casts live until the clip ends (ticket 18): no leftover 1.0s/1.5s
-				// tail after CastExit. Potions, shouts, and powers still use their own GCD.
+				current_cast->advance_time(delta);
 				if (current_cast->has_cuttable_cast_state()) {
-					if (!MscoCastDriver::is_active()) {
-						GameData::reset_animation_vars();
-						reset_cast();
-					} else {
-						current_cast->advance_time(delta);
+					// TICKET 42. Was: hold until `!MscoCastDriver::is_active()`, i.e. until the
+					// clip ended, which made the animation the lockout (2.05s for Firebolt, of
+					// which 1.46s was a dead button). Now the press-anchored GCD is the clock and
+					// the clip finishes as follow-through, with SpellFire as the floor beneath.
+					const bool gcd_done = current_cast->is_gcd_expired();
+					const bool committed = is_cast_committed();
+					if (gcd_done && !committed) {
+						current_cast->note_lockout_waiting_for_spellfire();
+					}
+					const auto retire = classify_fnf_retirement(
+						gcd_done, committed, current_cast->lockout_outran_spellfire());
+					if (retire != FnfRetire::hold) {
+						logger::debug(
+							// The elapsed figure is the instance's own clock, which starts when the
+							// cast state goes live -- a frame or two after the press itself.
+							"SH2 cast: lockout over at {:.2f}s on the cast clock, released by {}; clip {} playing",
+							current_cast->get_lockout_elapsed(),
+							retire == FnfRetire::spellfire_floor ? "spellfire-floor" : "gcd-expired",
+							MscoCastDriver::is_active() ? "still" : "no longer");
+						retire_cuttable_cast();
 					}
 				} else {
-					current_cast->advance_time(delta);
 					if (current_cast->is_gcd_expired()) {
 						GameData::reset_animation_vars();
 						reset_cast();
@@ -879,6 +952,7 @@ namespace SpellHotbar::casts::CastingController {
 				}
 			}
 		}
+		poll_pending_animation_var_reset();
 	}
 
 	// Why a start attempt produced no live cast. `graph_refused` is the one failure ShoutMCO can
@@ -1522,7 +1596,9 @@ namespace SpellHotbar::casts::CastingController {
 	CastingInstanceWeaponArt::CastingInstanceWeaponArt(uint32_t art_id, float gcd)
 		: BaseCastingInstance(nullptr, 0.0f), m_art_id(art_id)
 	{
-		m_gcd = gcd > 0.0f ? gcd : 1.0f;
+		// Ticket 42: an art with no usable number falls back to the action class, matching the
+		// catalogue defaults rather than the old 1.0.
+		m_gcd = gcd > 0.0f ? gcd : 1.5f;
 	}
 
 	bool CastingInstanceWeaponArt::update(RE::PlayerCharacter* pc, float delta)
