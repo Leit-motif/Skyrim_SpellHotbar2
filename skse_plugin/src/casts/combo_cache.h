@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -153,19 +154,27 @@ private:
 };
 
 // SH2's own cast combo. Independent of MCO_nextattack: advances on a cast, wraps at the
-// clip-set length, and is not reset by an attack.
+// clip-set length, and is not reset by an attack. Atomic because the graph-side commitment
+// point advances it on the animation thread while the start path reads it on the game loop
+// (Codex review 2026-08-26, finding 3: the plain int was a C++ data race).
 class CastComboIndex {
 public:
 	static constexpr int kLength = 4;
 
-	[[nodiscard]] int current() const { return index_; }
+	[[nodiscard]] int current() const { return index_.load(std::memory_order_relaxed); }
 
-	void advance() { index_ = index_ % kLength + 1; }
+	void advance()
+	{
+		int expected = index_.load(std::memory_order_relaxed);
+		while (!index_.compare_exchange_weak(expected, expected % kLength + 1,
+			std::memory_order_relaxed)) {
+		}
+	}
 
-	void reset() { index_ = 1; }
+	void reset() { index_.store(1, std::memory_order_relaxed); }
 
 private:
-	int index_ = 1;
+	std::atomic<int> index_{ 1 };
 };
 
 // Public hotbar path: a second press during a committed Driver Cast's SpellFire-to-WinClose

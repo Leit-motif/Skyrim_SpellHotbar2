@@ -333,7 +333,8 @@ namespace SpellHotbar::casts::CastingController {
 	void notify_spellfire(SpellFireHand hand, std::uint32_t generation);
 
 	/**
-	* Forget any commitment. Called when a cast starts and when one ends.
+	* Disarm the latch: forget any commitment AND the armed hands. Called at cast teardown;
+	* arm_spellfire rebuilds the word at the next start. The generation is preserved.
 	*/
 	void clear_spellfire();
 

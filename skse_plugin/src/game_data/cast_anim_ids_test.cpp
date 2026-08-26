@@ -116,6 +116,17 @@ void dual_one_handed_takes_the_variant_slot_at_any_cast_time()
 		"a two-handed spell picks by speed even when flagged dual");
 }
 
+void animation2_is_honored_for_dual_only_when_it_names_a_dual_id()
+{
+	using SpellHotbar::GameData::is_dual_family_id;
+	expect(is_dual_family_id(10016) && is_dual_family_id(10017) &&
+			is_dual_family_id(11003) && is_dual_family_id(11004),
+		"the four structural dual ids qualify");
+	expect(!is_dual_family_id(10001), "upstream's first-person id does not");
+	expect(!is_dual_family_id(1) && !is_dual_family_id(2) && !is_dual_family_id(-1),
+		"plain family ids and unset do not");
+}
+
 }  // namespace
 
 int main()
@@ -130,6 +141,7 @@ int main()
 	concentration_families_never_share_a_primary_id();
 	fire_and_forget_ids_are_unchanged();
 	dual_one_handed_takes_the_variant_slot_at_any_cast_time();
+	animation2_is_honored_for_dual_only_when_it_names_a_dual_id();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";

@@ -206,7 +206,13 @@ namespace SpellHotbar::casts::CastingController {
 	// raises spellfire with no cast instance live at all, and that must not leave the next hotbar
 	// cast committed before it has begun.
 	void clear_spellfire() {
-		spellfire_state.fetch_and(~spellfire_seen_bit, std::memory_order_relaxed);
+		// Mask AND latch. Every caller is a teardown site (the instance is reset on the same
+		// lines), and arm_spellfire rebuilds the whole word at the next cast start — leaving
+		// the mask armed here let post-cast VANILLA SpellFire events keep setting the latch
+		// (the "graph raised a ..." stream with no cast live, ticket 51 / Codex finding 4).
+		// The generation survives, so an in-flight event's stale snapshot still compares.
+		spellfire_state.fetch_and(~(spellfire_mask_bits | spellfire_seen_bit),
+			std::memory_order_relaxed);
 	}
 
 	bool is_cast_committed() {
@@ -1132,7 +1138,9 @@ namespace SpellHotbar::casts::CastingController {
 				// the family instead so a configured row cannot break the channel's dual pose.
 				int anim;
 				if (cast_info.m_dual_cast) {
-					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
+					anim = GameData::is_dual_family_id(cast_info.m_animation2)
+						? cast_info.m_animation2
+						: GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
 				}
 				else {
 					anim = cast_info.m_animation;
@@ -1205,7 +1213,9 @@ namespace SpellHotbar::casts::CastingController {
 				// 2026-08-26). Dual ids are structural per family (10016/10017); ask the family.
 				int anim;
 				if (dual_1h) {
-					anim = GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
+					anim = GameData::is_dual_family_id(cast_info.m_animation2)
+						? cast_info.m_animation2
+						: GameData::chose_default_anim_for_spell(cast_info.m_spell, -1, true);
 				}
 				else {
 					anim = use_variant ? cast_info.m_animation2 : cast_info.m_animation;

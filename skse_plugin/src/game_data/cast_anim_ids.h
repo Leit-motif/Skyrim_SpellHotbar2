@@ -60,6 +60,16 @@ inline constexpr CastAnimFamily kRitualConc{ 11001U, 11001U };
 // single-hand ward loop rather than borrowing another family's clip.
 inline constexpr CastAnimFamily kWardConc{ 1003U, 1003U };
 
+// Is this id one of the four structural dual ids? A spell row's Animation2 is honored for a
+// dual cast ONLY when it names one of these — the column doubles as upstream's variant /
+// first-person anim id (Firebolt carries 10001), and those must not reach a dual cell
+// (Codex review 2026-08-26, finding 6: keep the intentional override, drop the broken ones).
+[[nodiscard]] constexpr bool is_dual_family_id(int id) noexcept
+{
+	return id == kAimed.variant || id == kSelf.variant ||
+		   id == kAimedConc.variant || id == kSelfConc.variant;
+}
+
 [[nodiscard]] constexpr CastAnimFamily concentration_family(bool two_handed, bool self, bool ward) noexcept
 {
 	if (two_handed) {

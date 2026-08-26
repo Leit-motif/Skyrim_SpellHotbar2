@@ -73,9 +73,18 @@ namespace SpellHotbar::events {
 				// keep -- arrived on every swing and was dropped on the floor here, which read for
 				// a whole ticket as "these packs emit no SGVI". ArtDriver keeps its two-argument
 				// signature: it matches on event names only and has no payload to read.
+				// Re-read the arming word immediately before the graph-side commitment can
+				// mutate combo state: an arming that landed since the entry snapshot belongs
+				// to a later cast, and this event must not open ITS window or advance ITS
+				// index (Codex review 2026-08-26, finding 2 — the commitment point ran on the
+				// snapshot alone, ahead of the generation-aware notify, with no rollback).
+				const std::uint8_t commit_mask =
+					casts::CastingController::spellfire_arming().generation == a_arming.generation
+						? a_arming.mask
+						: 0U;
 				casts::MscoCastDriver::observe_graph_event(
 					eventHolder->As<RE::Actor>(), a_event->tag, a_event->payload,
-					a_spellfire_hand, a_arming.mask);
+					a_spellfire_hand, commit_mask);
 				casts::ArtDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_spellfire_hand != casts::SpellFireHand::none) {
@@ -113,7 +122,12 @@ namespace SpellHotbar::events {
 				? casts::isolate_caster_before_vanilla_spellfire(
 					  casts::MscoCastDriver::is_active(), event_hand, arming.mask)
 				: casts::SpellFireHand::none;
-		if (isolate != casts::SpellFireHand::none) {
+		// Same freshness rule as the commitment gate: interrupt and swallow only if no
+		// re-arm landed since the snapshot — a stale event must not silence the NEXT
+		// cast's caster (Codex finding 2's isolation half). Falls through to the normal
+		// chain when stale, exactly as if the hand had not been armed.
+		if (isolate != casts::SpellFireHand::none &&
+			casts::CastingController::spellfire_arming().generation == arming.generation) {
 			const bool is_left = isolate == casts::SpellFireHand::left;
 			const auto source = is_left ? RE::MagicSystem::CastingSource::kLeftHand
 										: RE::MagicSystem::CastingSource::kRightHand;
