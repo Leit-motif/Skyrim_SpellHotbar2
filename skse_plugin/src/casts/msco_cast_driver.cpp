@@ -313,7 +313,7 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		channel_started_ms.store(
 			shape == CastShape::channel ? now_ms() : 0.0, std::memory_order_relaxed);
 		trace_budget.store(0, std::memory_order_relaxed);
-		interrupt_left_caster_if_spell(pc);
+		interrupt_equipped_casters_if_spell(pc);
 		load_charge_curve();
 		write_clip_speed(pc, charge_time);
 		return send_entry(pc, shape);
@@ -618,20 +618,31 @@ namespace SpellHotbar::casts::MscoCastDriver {
 		ClipTranslationDriver::reset();
 	}
 
-	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc)
+	void interrupt_equipped_casters_if_spell(RE::PlayerCharacter* pc)
 	{
+		// Ticket 44 (Codex review finding 1): both hands, not just the left. The job is
+		// that no vanilla charge survives into a driver action — a right-hand charge left
+		// running kept `pc->IsCasting` true and silently refused every later press until a
+		// sheathe/draw cycle (observed live 2026-08-26). Idle casters are a no-op.
 		if (!pc) {
 			return;
 		}
-		auto* left = pc->GetEquippedObject(true);
-		const bool left_holds_spell =
-			left && (left->Is(RE::FormType::Spell) || left->Is(RE::FormType::Scroll));
-		if (!isolate_left_hand_caster_for_driver_cast(left_holds_spell)) {
-			return;
-		}
-		if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
-			caster->InterruptCast(true);
-		}
-		logger::debug("SH2: isolated left-hand caster (spell in left hand)");
+		const auto interrupt_hand = [pc](bool left_hand) {
+			auto* held = pc->GetEquippedObject(left_hand);
+			const bool holds_spell =
+				held && (held->Is(RE::FormType::Spell) || held->Is(RE::FormType::Scroll));
+			if (!isolate_caster_for_driver_cast(holds_spell)) {
+				return;
+			}
+			const auto source = left_hand ? RE::MagicSystem::CastingSource::kLeftHand
+										  : RE::MagicSystem::CastingSource::kRightHand;
+			if (auto* caster = pc->GetMagicCaster(source)) {
+				caster->InterruptCast(true);
+			}
+			logger::debug("SH2: isolated {}-hand caster (spell in {} hand)",
+				left_hand ? "left" : "right", left_hand ? "left" : "right");
+		};
+		interrupt_hand(true);
+		interrupt_hand(false);
 	}
 }

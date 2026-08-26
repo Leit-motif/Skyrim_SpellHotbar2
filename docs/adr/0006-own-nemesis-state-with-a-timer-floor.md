@@ -19,9 +19,12 @@ decision; both change what the decision names, and a reader who trusts the origi
 arrives at the wrong event and the wrong graph.
 
 - *The annotation is `MLh_SpellFire_Event` at 0.483s, not `MRh_` at 0.283s.* `MSCO_left1.hkx`
-  raises the LEFT-hand event whatever hand the cast chose, so the driver arms the left bit only
+  raises the LEFT-hand event whatever hand the cast chose, so the driver armed the left bit only
   (`casting_controller.cpp`, `arm_spellfire`). Measured at +0.46–0.50s on every observed cast,
-  across two sessions.
+  across two sessions. **Superseded in part by ADR-0018 (2026-08-26):** per-hand clip variants
+  carry the event of the hand they were authored for, arming follows the resolved hand (dual
+  arms both), and `MRh_SpellFire_Event` is registered in both hosting graphs. The commitment
+  principle — the clip's own annotation, timer as floor — is unchanged.
 - *The patch is no longer magicbehavior-scoped.* Ticket 08 distributed the state into
   `1hm_behavior` as well, which is what makes a cast from a drawn weapon possible at all; a clip
   annotation resolves against its HOSTING graph's event table, so every graph the state is

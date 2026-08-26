@@ -583,14 +583,35 @@ struct MscoChargeCurve {
 	return handled_spell_slot && left_hand_holds_spell;
 }
 
-// A Driver Cast or Ability interrupts the left-hand MagicCaster when that
-// hand holds a spell, so an in-progress MSCO left charge cannot stay
-// IsCasting after the shtb clip takes over (sheathe was the only reset).
-// Idle casters are a no-op; clip SpellFire is isolated separately.
-[[nodiscard]] constexpr bool isolate_left_hand_caster_for_driver_cast(
-	bool left_hand_holds_spell) noexcept
+// A Driver Cast or Ability interrupts a hand's MagicCaster when that hand
+// holds a spell, so an in-progress vanilla charge cannot stay IsCasting after
+// the shtb clip takes over (sheathe was the only reset). Applied to each hand
+// independently (ticket 44). Idle casters are a no-op; clip SpellFire is
+// isolated separately.
+[[nodiscard]] constexpr bool isolate_caster_for_driver_cast(
+	bool hand_holds_spell) noexcept
 {
-	return left_hand_holds_spell;
+	return hand_holds_spell;
+}
+
+// The SpellFire arming mask for a resolved cast hand, as bits (1 = left,
+// 2 = right). Dual arms both because either authored event is that cast's own;
+// an unresolved value falls back to left — the borrowed clip's own annotation —
+// rather than arming nothing and losing the commitment point. Pure so the
+// contract is unit-testable (Codex review finding 5). `hand` uses hand_mode's
+// values: 1 left, 2 right, 3 dual.
+[[nodiscard]] constexpr uint8_t spellfire_arm_mask(int hand) noexcept
+{
+	switch (hand) {
+	case 1:
+		return 1U;
+	case 2:
+		return 2U;
+	case 3:
+		return 3U;
+	default:
+		return 1U;
+	}
 }
 
 // Which hand's MagicCaster a graph SpellFire event belongs to. `none` is both "this

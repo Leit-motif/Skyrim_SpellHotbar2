@@ -64,6 +64,29 @@ fill these cells (its staff sets are already the Dragon Age animations); no dono
 - Characterize the stuck-`IsCasting` refusal (spike observation 1) and add a log line to
   `allowed_to_cast`'s silent branch.
 
+## Deferred Codex review findings (2026-08-26, gpt-5.6-sol review of ticket 44's range)
+
+Three findings interact with this pack's design and were deliberately deferred here:
+
+1. **Arm-aware event swallowing (review finding 2).** The hook currently swallows ANY
+   SpellFire hand while the driver is active, armed or not. That is the correct interim
+   behavior — until this pack ships, a right cast plays a stock MLh clip, and arm-aware
+   swallowing would let vanilla complete an equipped left spell on it. Once every hand's
+   cell plays its own hand's clip, revisit: isolate only armed hands, so an unrelated
+   vanilla cast released mid-Driver-Cast is no longer eaten.
+2. **Unarmed events commit graph-side combo state (finding 3).** Either SpellFire tag opens
+   the combo window / sets `clip_committed` / advances the index while the driver is active.
+   With per-hand clips, gate the graph-side commitment on the armed hands at the same time
+   as (1) — during the spike this looseness was load-bearing (stock clips 2–4 raised MLh on
+   a right cast), so it cannot be tightened before the pack lands.
+3. **No cast-generation on the SpellFire latch (finding 4, runtime-unverified).** A dual
+   clip's second event could in principle cross a chain cut and satisfy the NEXT cast's
+   freshly armed mask. Narrow window; a per-cast generation counter on
+   `spellfire_mask`/`spellfire_seen` closes it. Do it while touching the arming path.
+4. **Duplicate tag decoding (finding 8).** The hook decodes SpellFire tags into
+   `SpellFireHand` and separately into `notify_spellfire`'s bool. Unify on `SpellFireHand`
+   through `notify_spellfire` when reworking the arming path.
+
 ## Out of scope
 
 Staff cells and cross-hand staff (ticket 47), the dual >1.51s family leak (ticket 48),

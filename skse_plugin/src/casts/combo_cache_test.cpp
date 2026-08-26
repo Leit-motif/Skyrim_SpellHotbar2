@@ -19,7 +19,8 @@ using SpellHotbar::casts::classify_hotbar_cast_press;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
 using SpellHotbar::casts::isolate_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::SpellFireHand;
-using SpellHotbar::casts::isolate_left_hand_caster_for_driver_cast;
+using SpellHotbar::casts::isolate_caster_for_driver_cast;
+using SpellHotbar::casts::spellfire_arm_mask;
 using SpellHotbar::casts::keep_commitment_until_cut;
 using SpellHotbar::casts::MscoChargeCurve;
 using SpellHotbar::casts::charge_time_to_anim_speed;
@@ -200,7 +201,7 @@ void live_cast_without_commitment_is_refused()
 		"a window bit without commitment cannot chain");
 }
 
-void left_spellfire_opens_the_combo_window()
+void spellfire_of_either_hand_opens_the_combo_window()
 {
 	expect(is_msco_combo_window_open_event("MLh_SpellFire_Event"),
 		"the borrowed left-hand SpellFire opens the combo window");
@@ -306,10 +307,21 @@ void handled_hotbar_press_is_captured_when_the_left_hand_holds_a_spell()
 
 void driver_cast_isolates_the_left_caster_when_that_hand_holds_a_spell()
 {
-	expect(isolate_left_hand_caster_for_driver_cast(true),
-		"an in-progress left charge is cut when a Driver Cast begins");
-	expect(!isolate_left_hand_caster_for_driver_cast(false),
-		"an empty or weapon left hand has no equipped spell to isolate");
+	expect(isolate_caster_for_driver_cast(true),
+		"an in-progress charge is cut when a Driver Cast begins");
+	expect(!isolate_caster_for_driver_cast(false),
+		"an empty or weapon hand has no equipped spell to isolate");
+}
+
+// Ticket 44 (Codex review finding 5): the arming mask itself is a pure contract.
+// hand_mode values: 1 left, 2 right, 3 dual; bits: 1 left, 2 right.
+void arm_mask_follows_the_resolved_hand()
+{
+	expect(spellfire_arm_mask(1) == 1U, "a left cast arms only the left SpellFire");
+	expect(spellfire_arm_mask(2) == 2U, "a right cast arms only the right SpellFire");
+	expect(spellfire_arm_mask(3) == 3U, "a dual cast arms both hands' events");
+	expect(spellfire_arm_mask(0) == 1U, "an unresolved auto falls back to the left annotation");
+	expect(spellfire_arm_mask(4) == 1U, "voice cannot arm nothing; it falls back to left");
 }
 
 void driver_cast_isolates_before_vanilla_sees_left_spellfire()
@@ -1008,7 +1020,8 @@ int main()
 	committed_follow_up_press_chains();
 	committed_press_after_winclose_is_refused();
 	live_cast_without_commitment_is_refused();
-	left_spellfire_opens_the_combo_window();
+	spellfire_of_either_hand_opens_the_combo_window();
+	arm_mask_follows_the_resolved_hand();
 	winclose_tags_close_the_combo_window();
 	shipped_exponential_curve_is_1_at_base_time();
 	charge_mechanic_off_is_always_one();

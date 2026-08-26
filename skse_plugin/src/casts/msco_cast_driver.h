@@ -10,8 +10,10 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * result — false means no active listener (no hosting drawn idle: sheathed, or
 	 * mid-swing in AttackState) and the caller tears the cast down.
 	 *
-	 * Every clip in the set raises a LEFT-hand SpellFire (OAR Base-default variants:
-	 * 0.48s / 0.30s / 0.35s / 0.92s), so the driver still arms the left bit only.
+	 * The BOUND clips raise a LEFT-hand SpellFire (OAR Base-default variants:
+	 * 0.48s / 0.30s / 0.35s / 0.92s), but OAR selects per-hand replacements over
+	 * these paths and arming follows the RESOLVED hand (ADR-0018, ticket 44) —
+	 * `arm_spellfire` masks left, right, or both for dual.
 	 *
 	 * `charge_time` is written to `MSCO_attackspeed` before the notify so the clip
 	 * plays at MSCO's charge-scaled pace (ticket 18). Rooting during the state is not
@@ -123,5 +125,5 @@ namespace SpellHotbar::casts::MscoCastDriver {
 	 * begin, Ability begin, and yielding our shtb clip all use this so a cancelled
 	 * MSCO left charge cannot stick IsCasting until sheathe.
 	 */
-	void interrupt_left_caster_if_spell(RE::PlayerCharacter* pc);
+	void interrupt_equipped_casters_if_spell(RE::PlayerCharacter* pc);
 }

@@ -148,24 +148,12 @@ namespace SpellHotbar::casts::CastingController {
 		// The mask is what keeps an UNRELATED equipped-hand cast from committing this one, so a
 		// hand that is not this cast's own must stay unarmed. `used_hand` is always resolved by
 		// `set_weapon_dependent_casting_source` before this call, so auto/voice cannot reach
-		// here; if one ever does, fall back to left (the borrowed clip's own annotation) and say
-		// so rather than arming nothing and losing the commitment point.
-		uint8_t mask = fire_left;
-		switch (used_hand) {
-		case hand_mode::left_hand:
-			mask = fire_left;
-			break;
-		case hand_mode::right_hand:
-			mask = fire_right;
-			break;
-		case hand_mode::dual_hand:
-			mask = fire_left | fire_right;
-			break;
-		default:
+		// here; if one ever does, `spellfire_arm_mask` falls back to left (the borrowed clip's
+		// own annotation) rather than arming nothing and losing the commitment point.
+		const uint8_t mask = spellfire_arm_mask(static_cast<int>(used_hand));
+		if (mask == fire_left && used_hand != hand_mode::left_hand) {
 			logger::debug("SH2 cast: arm_spellfire got an unresolved hand ({}), arming left",
 				static_cast<int>(used_hand));
-			mask = fire_left;
-			break;
 		}
 		spellfire_mask.store(mask, std::memory_order_relaxed);
 		spellfire_seen.store(false, std::memory_order_relaxed);
@@ -260,10 +248,11 @@ namespace SpellHotbar::casts::CastingController {
 	/**
 	* Deliver the armed payload now, from wherever `reason` says. Safe to call with nothing armed.
 	*
-	* RISK 2 (ticket 43): the event path isolates the left-hand caster immediately before vanilla
-	* SpellFire (`animationeventhook.cpp` ProcessEvent_PC) so an equipped left-hand spell cannot
-	* fire alongside ours. A delivery that does NOT come through that path -- the cut, the clip-end
-	* fallback -- has to run the same preparation itself, or the payload leaves the wrong caster.
+	* RISK 2 (ticket 43, per-hand since ticket 44): the event path isolates the caster the
+	* SpellFire event names immediately before vanilla sees it (`animationeventhook.cpp`
+	* ProcessEvent_PC) so an equipped spell cannot fire alongside ours. A delivery that does NOT
+	* come through that path -- the cut, the clip-end fallback -- has to run the same preparation
+	* itself, or the payload leaves the wrong caster; it silences both equipped hands.
 	*
 	* RISK 1 is `deliver_payload`'s own `m_spell_started` latch: one delivery per instance, whichever
 	* path reaches it first. The instance is dropped here regardless, so no second path can even try.
@@ -274,7 +263,7 @@ namespace SpellHotbar::casts::CastingController {
 			return;
 		}
 		if (auto* pc = RE::PlayerCharacter::GetSingleton()) {
-			MscoCastDriver::interrupt_left_caster_if_spell(pc);
+			MscoCastDriver::interrupt_equipped_casters_if_spell(pc);
 			logger::debug("SH2 cast: armed payload delivered at {} ({:.2f}s on the cast clock)", reason,
 				armed_cast->get_lockout_elapsed());
 			armed_cast->deliver_payload(pc);
@@ -296,7 +285,7 @@ namespace SpellHotbar::casts::CastingController {
 		if (MscoCastDriver::is_active()) {
 			MscoCastDriver::cancel(pc);
 		}
-		MscoCastDriver::interrupt_left_caster_if_spell(pc);
+		MscoCastDriver::interrupt_equipped_casters_if_spell(pc);
 		if (current_cast) {
 			current_cast->on_reset();
 			current_cast.reset();
