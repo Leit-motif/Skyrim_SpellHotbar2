@@ -196,6 +196,14 @@ same `MOD_CODE ~shtb~` block, following the existing pattern exactly:
 One added line, CRLF preserved, `numelements` untouched (Nemesis recomputes it for the injected
 block, as it already does for the eight `SH2_*` names).
 
+**Coordinator correction (first Nemesis run failed, ERROR 1003 on `1hm_behavior.xml`):** event
+registration is TWO parallel arrays, not one. `#0085.txt` holds the event NAMES;
+`#0087.txt` holds `eventInfos`, one `<hkobject><hkparam name="flags">0</hkparam></hkobject>`
+per event, and the shtb MOD_CODE block there carried exactly nine entries for the nine
+hand-added names. Adding the tenth name without the tenth info entry desynced the arrays and
+Nemesis failed the graph's HKX output. Fixed by appending the tenth flags-0 object to
+`#0087.txt`'s shtb block (commit `8c8bb4a`). Register future events in BOTH files.
+
 > ### WARNING — this needs **Update Engine** before **Launch**
 >
 > The change edits a base `#NNNN.txt` under `Nemesis_Engine\mod\shtb`, which invalidates the
