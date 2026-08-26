@@ -31,18 +31,6 @@ namespace SpellHotbar::casts::CastingController {
 			return m_press_elapsed;
 		}
 
-		/**
-		* Record that the press-anchored lockout ran out while the graph had not yet reached its
-		* commitment point, so whatever releases this instance later is the SpellFire floor rather
-		* than the clock. Only the retirement log line reads it.
-		*/
-		inline void note_lockout_waiting_for_spellfire() {
-			m_lockout_outran_spellfire = true;
-		}
-		inline bool lockout_outran_spellfire() const {
-			return m_lockout_outran_spellfire;
-		}
-
 		virtual const std::string_view get_start_anim() const;
 
 		virtual bool update(RE::PlayerCharacter* pc, float delta) = 0;
@@ -94,7 +82,6 @@ namespace SpellHotbar::casts::CastingController {
 		// Seconds since construction, i.e. since the press. The press-anchored clock.
 		float m_press_elapsed;
 		bool m_casted;
-		bool m_lockout_outran_spellfire;
 	};
 
 	//Abstract base for Spell casts

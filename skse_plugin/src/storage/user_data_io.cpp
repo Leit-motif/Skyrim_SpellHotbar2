@@ -129,6 +129,7 @@ namespace SpellHotbar::Storage::IO {
         Bars::set_use_keybind_icons(get_int_or_default(d, "settings.use_key_icons", 0) != 0);
 
         GameData::potion_gcd = get_float_or_default(d, "settings.potion_gcd", 1.0f);
+        GameData::spell_gcd = std::clamp(get_float_or_default(d, "settings.spell_gcd", 1.5f), 0.1f, 10.0f);
         bool individual_shout_cds = get_int_or_default(d, "settings.individual_shout_cooldowns", 0) != 0;
         if (individual_shout_cds != GameData::individual_shout_cooldowns) {
             GameData::toggle_individual_shout_cooldowns;
@@ -309,6 +310,7 @@ namespace SpellHotbar::Storage::IO {
         add_int(d, "settings.use_key_icons", Bars::get_use_keybind_icons() ? 1 : 0);
 
         add_float(d, "settings.potion_gcd", GameData::potion_gcd);
+        add_float(d, "settings.spell_gcd", GameData::spell_gcd);
         add_int(d, "settings.individual_shout_cooldowns", GameData::individual_shout_cooldowns ? 1 : 0);
 
         add_float(d, "settings.oblivion_bar.slot_scale", Bars::oblivion_slot_scale);

@@ -191,6 +191,7 @@ namespace SpellHotbar::GameData {
     extern std::unordered_map<RE::ActorValue, ImU32> potion_color_mapping;
 
     extern float potion_gcd;
+    extern float spell_gcd;
     extern float block_timer;
 
     extern Bars::OblivionBar oblivion_bar;

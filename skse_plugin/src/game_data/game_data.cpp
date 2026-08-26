@@ -138,6 +138,9 @@ namespace SpellHotbar::GameData {
     std::unordered_map<RE::FormID, RE::FormID> spell_cd_magiceffect_tracking;
 
     float potion_gcd { 1.0f };
+    // Ticket 43: the whole lockout a fire-and-forget spell or ritual owns, measured from the press.
+    // One number for the action class, tunable in the MCM; no animation gates the button.
+    float spell_gcd { 1.5f };
     float block_timer { 0.0f };
     Bars::OblivionBar oblivion_bar;
 

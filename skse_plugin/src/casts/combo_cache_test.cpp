@@ -6,8 +6,9 @@
 using SpellHotbar::casts::CastComboIndex;
 using SpellHotbar::casts::CastShape;
 using SpellHotbar::casts::CastDelivery;
-using SpellHotbar::casts::FnfRetire;
-using SpellHotbar::casts::classify_fnf_retirement;
+using SpellHotbar::casts::ArmedDelivery;
+using SpellHotbar::casts::classify_armed_delivery;
+using SpellHotbar::casts::retired_cast_stays_armed;
 using SpellHotbar::casts::HotbarCastPress;
 using SpellHotbar::casts::McoCombo;
 using SpellHotbar::casts::RollingMcoCombo;
@@ -351,33 +352,36 @@ void losing_the_state_before_the_floor_cancels()
 		"losing the cast state before the floor and before SpellFire cancels");
 }
 
-void a_delivered_cast_is_held_for_its_whole_lockout()
+void an_undelivered_cuttable_cast_is_armed_when_it_retires()
 {
-	expect(classify_fnf_retirement(false, true, false) == FnfRetire::hold,
-		"a committed cast still inside its 1.5s lockout keeps the button");
+	expect(retired_cast_stays_armed(true, false),
+		"retiring at GCD expiry before SpellFire must not eat the cast -- it stays armed");
+	expect(!retired_cast_stays_armed(true, true),
+		"a cast that already delivered has nothing left to arm");
+	expect(!retired_cast_stays_armed(false, false),
+		"only a cuttable cast is retired with its clip still running");
 }
 
-void the_lockout_releases_the_cast_while_the_clip_plays_on()
+void an_armed_payload_waits_for_its_own_spellfire()
 {
-	expect(classify_fnf_retirement(true, true, false) == FnfRetire::gcd_expired,
-		"Firebolt retires at 1.5s from the press, 0.55s before its clip ends");
+	expect(classify_armed_delivery(false, false, true) == ArmedDelivery::hold,
+		"the clip is still playing and has not raised its event yet: nothing to do");
+	expect(classify_armed_delivery(false, true, true) == ArmedDelivery::on_spellfire,
+		"the normal unpressed case -- clip 4's SpellFire at ~1.78s delivers a cast retired at 1.5s");
 }
 
-void spellfire_is_the_floor_under_the_lockout()
+void an_armed_payload_falls_back_to_the_clip_end()
 {
-	expect(classify_fnf_retirement(true, false, false) == FnfRetire::hold,
-		"an expired lockout must not release a cast the graph has not committed -- our payload IS "
-		"the animation event");
-	expect(classify_fnf_retirement(true, true, true) == FnfRetire::spellfire_floor,
-		"a slow cast whose SpellFire lands after the lockout is released by the floor, not the clock");
+	expect(classify_armed_delivery(false, false, false) == ArmedDelivery::on_clip_end,
+		"a clip that ended having raised no SpellFire still delivers -- ticket 18's fallback");
 }
 
-void a_cast_before_its_commitment_point_is_never_retired()
+void an_armed_payload_delivers_exactly_once()
 {
-	expect(classify_fnf_retirement(false, false, false) == FnfRetire::hold,
-		"neither condition met: nothing to release");
-	expect(classify_fnf_retirement(false, false, true) == FnfRetire::hold,
-		"the sticky floor note never releases an instance on its own");
+	expect(classify_armed_delivery(true, true, true) == ArmedDelivery::hold,
+		"the cut already delivered this payload; its SpellFire must not deliver it again");
+	expect(classify_armed_delivery(true, false, false) == ArmedDelivery::hold,
+		"nor may the clip-end fallback deliver a payload the cut already sent");
 }
 
 void already_delivered_does_not_fire_again()
@@ -1037,10 +1041,10 @@ int main()
 	an_interrupted_swing_hands_its_successor_on();
 	a_reset_valued_payload_is_never_recorded_or_learned();
 	an_unlearned_pre_advance_keeps_todays_behaviour();
-	a_delivered_cast_is_held_for_its_whole_lockout();
-	the_lockout_releases_the_cast_while_the_clip_plays_on();
-	spellfire_is_the_floor_under_the_lockout();
-	a_cast_before_its_commitment_point_is_never_retired();
+	an_undelivered_cuttable_cast_is_armed_when_it_retires();
+	an_armed_payload_waits_for_its_own_spellfire();
+	an_armed_payload_falls_back_to_the_clip_end();
+	an_armed_payload_delivers_exactly_once();
 
 	if (g_failures != 0) {
 		std::cerr << g_failures << " failure(s)\n";
