@@ -90,21 +90,35 @@ namespace SpellHotbar::events {
 
 	RE::BSEventNotifyControl Animation_event_hook::ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
 	{
-		// A Driver Cast's borrowed clip raises left SpellFire. Vanilla processes
-		// that event before this observer, which completes an equipped left-hand
-		// spell. Isolate first, then skip vanilla for this one event so MSCO and
-		// the engine do not also fire; SH2 still delivers via CastSpellImmediate.
-		const bool isolate = a_event && a_event->holder && a_event->holder->IsPlayerRef() &&
-			casts::isolate_left_hand_caster_before_vanilla_spellfire(
-				casts::MscoCastDriver::is_active(),
-				a_event->tag == "MLh_SpellFire_Event"sv);
-		if (isolate) {
+		// A Driver Cast's clip raises SpellFire for the hand it was authored for. Vanilla
+		// processes that event before this observer, which completes an equipped spell in
+		// THAT hand. Isolate first, then skip vanilla for this one event so MSCO and the
+		// engine do not also fire; SH2 still delivers via CastSpellImmediate.
+		//
+		// Ticket 44 spike: per-hand. The event names the hand, and the matching caster is
+		// the one to interrupt — a right-hand clip left the right caster free to complete
+		// an equipped right-hand spell alongside SH2's payload.
+		const casts::SpellFireHand event_hand =
+			a_event ? (a_event->tag == "MLh_SpellFire_Event"sv  ? casts::SpellFireHand::left
+					   : a_event->tag == "MRh_SpellFire_Event"sv ? casts::SpellFireHand::right
+																 : casts::SpellFireHand::none)
+					: casts::SpellFireHand::none;
+		const casts::SpellFireHand isolate =
+			(a_event && a_event->holder && a_event->holder->IsPlayerRef())
+				? casts::isolate_caster_before_vanilla_spellfire(
+					  casts::MscoCastDriver::is_active(), event_hand)
+				: casts::SpellFireHand::none;
+		if (isolate != casts::SpellFireHand::none) {
+			const bool is_left = isolate == casts::SpellFireHand::left;
+			const auto source = is_left ? RE::MagicSystem::CastingSource::kLeftHand
+										: RE::MagicSystem::CastingSource::kRightHand;
 			if (auto* pc = const_cast<RE::TESObjectREFR*>(a_event->holder)->As<RE::PlayerCharacter>()) {
-				if (auto* caster = pc->GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand)) {
+				if (auto* caster = pc->GetMagicCaster(source)) {
 					caster->InterruptCast(true);
 				}
 			}
-			logger::debug("SH2 cast: isolated left-hand caster before vanilla SpellFire");
+			logger::debug("SH2 cast: isolated {}-hand caster before vanilla SpellFire",
+				is_left ? "left" : "right");
 			ProcessEvent(a_event, a_eventSource);
 			return RE::BSEventNotifyControl::kContinue;
 		}

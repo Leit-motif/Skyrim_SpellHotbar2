@@ -137,13 +137,36 @@ namespace SpellHotbar::casts::CastingController {
 	// Arm the commitment point for one cast: forget stale fires and accept only the hand(s)
 	// this cast throws with. Called right before the state entry is sent.
 	void arm_spellfire(hand_mode used_hand) {
-		// Minimal slice: the single SH2 state plays MSCO_left1, whose annotation is the
-		// LEFT-hand SpellFire regardless of the hand this cast chose (runtime-verified
-		// 2026-08-11: MLh_SpellFire_Event at +0.46s, every run), so only the left bit
-		// arms — a right event can only come from an unrelated equipped cast and must
-		// not commit this one. Per-hand masking returns with the per-hand clip matrix.
-		(void)used_hand;
+		// Ticket 44 spike: the per-hand clip matrix arrives, so the mask follows the RESOLVED
+		// hand instead of the borrowed clip's left-only annotation. Left arms left, right arms
+		// right, and a dual cast arms both because either authored event is that cast's own.
+		//
+		// Arming both for dual does NOT deliver twice: `notify_spellfire` only raises the
+		// `spellfire_seen` latch, and ticket 43's delivery path reads that latch once per cast.
+		// Two armed events on one dual cast set the same flag twice and deliver once.
+		//
+		// The mask is what keeps an UNRELATED equipped-hand cast from committing this one, so a
+		// hand that is not this cast's own must stay unarmed. `used_hand` is always resolved by
+		// `set_weapon_dependent_casting_source` before this call, so auto/voice cannot reach
+		// here; if one ever does, fall back to left (the borrowed clip's own annotation) and say
+		// so rather than arming nothing and losing the commitment point.
 		uint8_t mask = fire_left;
+		switch (used_hand) {
+		case hand_mode::left_hand:
+			mask = fire_left;
+			break;
+		case hand_mode::right_hand:
+			mask = fire_right;
+			break;
+		case hand_mode::dual_hand:
+			mask = fire_left | fire_right;
+			break;
+		default:
+			logger::debug("SH2 cast: arm_spellfire got an unresolved hand ({}), arming left",
+				static_cast<int>(used_hand));
+			mask = fire_left;
+			break;
+		}
 		spellfire_mask.store(mask, std::memory_order_relaxed);
 		spellfire_seen.store(false, std::memory_order_relaxed);
 	}

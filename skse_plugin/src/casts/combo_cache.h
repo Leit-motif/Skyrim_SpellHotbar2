@@ -588,14 +588,30 @@ struct MscoChargeCurve {
 	return left_hand_holds_spell;
 }
 
-// InterruptCast at begin() is too early: the left caster is idle, and the
-// borrowed clip's SpellFire is ~0.5s later. Vanilla also processes that
-// event before this plugin's observer. Isolate immediately before vanilla
-// sees left SpellFire while a Driver Cast is live.
-[[nodiscard]] constexpr bool isolate_left_hand_caster_before_vanilla_spellfire(
-	bool driver_cast_active, bool is_left_spellfire) noexcept
+// Which hand's MagicCaster a graph SpellFire event belongs to. `none` is both "this
+// event is not a SpellFire" and "nothing to isolate", so one return type answers the
+// question and names the caster in the same value.
+enum class SpellFireHand {
+	none,
+	left,
+	right,
+};
+
+// InterruptCast at begin() is too early: the caster is idle, and the borrowed clip's
+// SpellFire is ~0.5s later. Vanilla also processes that event before this plugin's
+// observer. Isolate immediately before vanilla sees SpellFire while a Driver Cast is
+// live.
+//
+// Ticket 44 spike: generalized from left-only. A right-hand clip raises
+// MRh_SpellFire_Event, which vanilla would otherwise use to complete an equipped
+// RIGHT-hand spell alongside SH2's own immediate payload. Isolation follows the event's
+// own hand: a dual cast raises both events and each isolates its own caster, which is
+// exactly right — both equipped hands must be silenced, and the two events still deliver
+// once through the SpellFire latch.
+[[nodiscard]] constexpr SpellFireHand isolate_caster_before_vanilla_spellfire(
+	bool driver_cast_active, SpellFireHand event_hand) noexcept
 {
-	return driver_cast_active && is_left_spellfire;
+	return driver_cast_active ? event_hand : SpellFireHand::none;
 }
 
 // The left control is block when that hand holds a weapon or shield. A

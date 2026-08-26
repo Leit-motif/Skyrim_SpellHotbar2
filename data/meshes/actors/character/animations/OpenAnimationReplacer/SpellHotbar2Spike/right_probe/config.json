@@ -1,0 +1,27 @@
+{
+    "name": "SH2 Spike - Right Probe (CastingSource)",
+    "description": "Replaces Animations\\MSCO_left1.hkx with the MRh_SpellFire_Event copy while SpellHotbar_CastingSource (SpellHotbar.esp 0x835) reads RIGHT (1). Conditioned on that ONE global and nothing else, so a hit or a miss names exactly one variable. If the OAR Animation Log picks this submod during a right-assigned hotbar cast, OAR can see the casting-source global while the shtb state holds the graph.",
+    "priority": 2000002002,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}
