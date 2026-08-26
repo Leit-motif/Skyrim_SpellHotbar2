@@ -27,6 +27,24 @@ combo/intent paths), or it is **refused with the red flash**. A silently swallow
 bug wherever it happens. The combo window for weapon arts and the ShoutMCO deferred intent are
 accepted presses, not refusals — they stay as they are.
 
+## History: stock SH2 already had this design — ticket 10 carved the hole
+
+Pre-fork `process_input` (see `git show 01d68f1:skse_plugin/src/input/modes.cpp`) gated **every**
+slot type behind one universal check — `allowed_to_instantcast(...) &&
+can_start_new_cast()` — and its else-branch painted the red flash. Press, lockout, feedback: the
+exact model this ticket asks for, already shipped in stock.
+
+Commit `f465947` (ticket 10, the Cast Intent queue) added the `queueable` exemption so a press
+during our own Driver Cast could defer instead of dying. That was the right goal, but the
+exemption removed the GCD refusal for spells and shouts wholesale, and it unmasked a latent
+stock gap: the `try_cast_power` failure branch never had a highlight call, which didn't matter
+while the outer gate caught spam first.
+
+**So this is a restoration, not a design.** The stock gate is the reference implementation.
+Re-narrow the exemption to the one case ticket 10 actually needed — a press that the intent or
+combo machinery will genuinely accept — and let every other press fall through to the stock
+refusal path.
+
 ## What the code already has, and where it leaks
 
 The GCD machinery is fully built and even rendered — it just never refuses the types that matter:
