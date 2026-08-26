@@ -8,7 +8,7 @@ stock SH2 already shipped: **press → lockout → visible refusal**. This ticke
 **Blocked by:** nothing. Read tickets 36/37 (the latch as an input sink, and its caps) before
 touching the queue paths — this ticket must not reopen what they closed.
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Owner decision 2026-08-25
 
@@ -96,9 +96,13 @@ All cells are live-runtime, on the deployed DLL, driven via `castSlot` where pos
       via the ShoutMCO deferral (regression cell for the feature the revert must not touch).
       The overlap case — a swing during a potion GCD or a cut cast — refuses by design; see the
       scope correction above.
-- [ ] Powers and potions behave as before (regression cell).
+- [-] Powers and potions behave as before (regression cell). Not testable: no slot of type
+      `power`, `lesser_power`, or `potion` is bound on any bar in this save. Waived — the diff
+      cannot reach them (see the run notes).
 - [x] No new input path reopens ticket 36/37's latch caps.
-- [ ] One owner hands-on pass for feel: press, lockout, red — identical across all slot types.
+- [x] One owner hands-on pass for feel: press, lockout, red — identical across all slot types.
+      Run 2026-08-25. Verdict: mechanism correct, duration wrong — "it did feel quite stiff."
+      The uniform press/lockout/red model is kept; the lockout's *length* is ticket 42.
 
 ## Acceptance run 2026-08-25 (agent, live)
 
@@ -158,3 +162,23 @@ one was this ticket overclaiming.
    guard skips it. Its real remaining caller is Vampire Lord mode. Corrected.
 4. `can_accept_hotbar_cast()` has zero callers and still advertises the removed chain admission.
    Pruning was out of scope, so it is marked instead, with a do-not-rewire note.
+
+## Closed 2026-08-25
+
+Done. The gate is stock again and every refused press reports, across all slot types.
+
+Two cells were closed as waived rather than passed, and neither is a reason to hold the ticket:
+
+- **Powers and potions** — nothing of those types is bound in the save, so there was nothing to
+  press. They were never in the `queueable` set, so the same predicate gated them before and
+  after this change; powers additionally share the exact branch the shout cell exercised live.
+- **The 3→4 combo step** — blocked on owner content, not on code. Clips 3 and 4 are missing
+  `MLh_SpellFire_Event`, which resets the index before it reaches 4. Re-measure under ticket 42,
+  which needs those annotations anyway.
+
+The red flash's *colour* remains unproven by any agent-reachable capture path on this instance
+(no capture provider registered; the native fallback does not composite SH2's ImGui overlay).
+The owner's hands-on pass covered it. See [[sh2-imgui-hotbar-is-uncapturable]].
+
+**Follow-up:** ticket 42 — the lockout duration. Ticket 41 made the gate uniform; 42 makes its
+length a number someone chose.
