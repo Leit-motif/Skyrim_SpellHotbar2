@@ -195,10 +195,17 @@ The current work's exact test, fully headless:
 
 ## Open instrument work
 
-- **OAR-API clip-name probe** — the single highest-value build; turns clip identity (path,
-  variant, submod, mod) into one read. API surface verified against the header — see the
-  oracle-ladder section; remaining work is the clip-generator supply (push hook preferred) and
-  a live smoke test.
+- **OAR-API clip-name probe — BUILT 2026-08-26, awaiting live smoke test.** The `cliplog` tool
+  now ships in devbench-input 0.2.0 (repo main `b0938cf`, deployed to both MO2 copies of
+  `DevBenchInput.dll`). It hooks `hkbClipGenerator::Activate` (vfunc 0x4, installed at
+  kDataLoaded so OAR's replacement runs first), records every activation into a 512-entry ring —
+  clip name plus OAR's resolved path/project/variant/submod/mod — and exposes
+  `cliplog action=start|stop|status|read|clear` with `since`/`filter`/`limit` on read. Recording
+  is OFF by default; entries cover all actors (narrow with `filter`). Smoke test on next launch:
+  `status` (expect the hook installed), `start`, one cast, `read filter=SpellHotbar` — populated
+  `submod`/`path` fields promote it to rung 1 of the ladder and make submod naming headless. A
+  clean build proved compilation only; the vendored API came from OAR's `main` branch (no 3.2.0
+  tag exists upstream), so a null API or empty strings at runtime means a V1 mismatch to report.
 - **Ticket 50 real-input harness** — upstream injection so input-hook changes stop being
   owner-only.
 - **Pose-trajectory calibration** — one spike to learn whether `record` distinguishes known
