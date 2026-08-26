@@ -2,9 +2,12 @@
 
 **Type:** task (packaging), blocked on an external answer.
 
-**Status:** blocked -- waiting on the Ashes of War author's permission, requested 2026-08-25.
+**Status:** deferred 2026-08-26 by owner ruling -- the author has not responded and the owner is
+operating as if permission will not come: *"i want to ship. that would mean we defer this effort to
+a future enhancement."* Ship without the stamped clips in the package; the pack stays pointer-style
+and generated per machine (the ticket's "No" branch below). Re-open only if the author replies yes.
 
-**Blocked by:** that answer. Nothing technical.
+**Blocked by:** nothing -- deferral is the resolution until an answer arrives.
 
 Ticket 16 built the stamped clips and they are live on this machine, which needed no permission
 because copying locally is not redistribution. Shipping them does. The author's stated modification
