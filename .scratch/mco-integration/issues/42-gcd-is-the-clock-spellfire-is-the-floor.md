@@ -7,7 +7,9 @@ a chosen number, and the clip is long: measured live 2026-08-25, Firebolt's pres
 was **2.05 s**, of which the payload left at 0.59 s. 71% of the lockout is follow-through with
 a dead button.
 
-**Status:** ready-for-agent
+**Status:** done — built, merged (`4e0094d`), live-accepted 2026-08-25. One cosmetic
+follow-through: the retirement log's `spellfire-floor` label never fires (see floor cell);
+fix alongside ticket 43.
 
 **Blocked by:** nothing hard, but read the owner-work note at the bottom — clips 3/4 currently
 missing their SpellFire annotation make one acceptance cell unmeasurable until fixed.
@@ -100,22 +102,38 @@ tuning by feel; wire it like `potion_gcd` (`game_data.cpp:140`).
 
 ## Acceptance
 
-Live-runtime on the deployed DLL, `castSlot` driven, log-evidenced like ticket 41's run:
+Live-runtime on the deployed DLL, `castSlot` driven, log-evidenced like ticket 41's run.
+Run 2026-08-25 22:19–22:23, evidence `evidence/t42/acceptance-2026-08-25.log`:
 
-- [ ] Firebolt: press-to-free ≈ 1.5 s (was 2.05 s). Measured press → first accepted next press
-      in the log.
-- [ ] Press at 1.6 s starts the next cast and cuts the follow-through cleanly — no stuck
-      animation vars, no wedged driver state, weapon still usable after.
-- [ ] Spam during the 1.5 s still refuses with the red-flash call every time (ticket 41
-      regression cell — the gate itself is untouched).
-- [ ] A slow cast whose SpellFire lands after 1.5 s is held to SpellFire (floor cell). If no
-      such spell is slotted, drive the charge curve down to manufacture one and say so.
-- [ ] Combo walk 1→2→3→4 at the new cadence (needs owner's clips 3/4 annotation fix first —
-      see below).
-- [ ] Shout / power / potion / concentration timings unchanged (regression).
-- [ ] Mid-swing art deferral unchanged (ticket 41's headline regression cell).
-- [ ] Owner hands-on: does 1.5 feel right, or does it want 1.0? The point of the change is that
-      this is now a turnable number.
+- [x] Firebolt: press-to-free ≈ 1.5 s (was 2.05 s). Press 22:19:26.045 → `lockout over at
+      1.50s` 22:19:27.537 (1.49 s); next press 22:19:27.721 accepted into clip 3.
+- [x] Press at 1.6 s starts the next cast and cuts the follow-through cleanly. The 27.721
+      press entered `SH2_Cast3` from inside the live state while clip 2 still played; its
+      SpellFire fired, its own exit processed cleanly, and the immediately following art
+      swing (`IsAttacking=1`) proved the weapon usable.
+- [x] Spam during the 1.5 s refuses with the red-flash call every time: four presses at
+      +0.33/+0.65/+0.97/+1.30 all logged `refused by the press gate (cast live=true)`.
+- [x] Floor cell, no manufacturing needed: clip 4's SpellFire lands at ~1.78 s (owner's new
+      annotation) — instance held past the 1.5 s GCD and retired at 1.80 s, 27 ms after the
+      event. Seen twice (22:21:09.005 scripted, 22:22:11.870 owner hands-on). Known cosmetic
+      defect: the log line says `released by gcd-expired` where it should say
+      `spellfire-floor` — the sticky flag is never set because the retirement branch only
+      runs after delivery. Behavior correct; label fix queued.
+- [x] Combo walk 1→2→3→4 at the new cadence: 22:21:10.340 clip 1 → 12.724 clip 2 → 14.264
+      clip 3 → (earlier run) 07.196 clip 4; every entry accepted from inside the live state,
+      no dropped-press combo resets. Unblocked by the owner's clip 3/4 annotation fix.
+- [x] Shout regression: slot 8 fired (`queued input event=true`), both spam presses refused,
+      deferred selectedPower write-back restored after `IsShouting` fell (22:22:14–17).
+      Potion and concentration were not slotted on the test bar and remain untested; both
+      construct with casttime 0 / their own overrides, where the old and new clocks are
+      arithmetically identical (static check only).
+- [x] Mid-swing art deferral unchanged: 22:23:06.454 press with `IsAttacking=1` → `not
+      consumed (mid-swing)` → `deferred to ShoutMCO (handle 1)` → `RELEASE (ready)` at .933 →
+      `fired slot 11 -> true`.
+- [x] Owner hands-on 2026-08-25: "feels better. It properly blocks cast. It feels a bit
+      slow." Diagnosis from the log: clips 1–3 free at exactly 1.50 (GCD's number), clip 4 at
+      ~1.80 (animation floor). Verdict: make the number tunable rather than guess again —
+      ticket 43.
 
 ## Owner work, parallel
 
