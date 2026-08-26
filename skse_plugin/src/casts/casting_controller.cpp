@@ -125,14 +125,29 @@ namespace SpellHotbar::casts::CastingController {
 	// File-scope and atomic rather than a member, because the animation-event hook runs on the
 	// game's animation thread while casts update on the game loop. The hook sets a flag; it never
 	// touches an instance the loop may be destroying underneath it.
-	std::atomic<bool> spellfire_seen{ false };
+	//
+	// The armed hands, the latch, and the cast they belong to share ONE word, because the three
+	// have to move together. Bits 0-1 are the armed mask (bit 0 = left, bit 1 = right); a vanilla
+	// cast of an equipped spell raises the same events, so an event from a hand this cast is not
+	// using must not commit it. Bit 2 is the latch. The high 32 bits are a per-cast generation
+	// (ticket 46, Codex review finding 4): a clip that raises a second SpellFire after a chain cut
+	// would otherwise satisfy the NEXT cast's freshly armed mask, so the hook commits with a
+	// compare-exchange against the generation it read for that event, and an arming that landed in
+	// between drops the stale event instead.
+	constexpr uint64_t spellfire_mask_bits{ 0x3ULL };
+	constexpr uint64_t spellfire_seen_bit{ 0x4ULL };
+	constexpr int spellfire_generation_shift{ 32 };
+	std::atomic<uint64_t> spellfire_state{ 0 };
 
-	// Which hand's SpellFire event may commit the current cast (bit 0 = left, bit 1 = right).
-	// A vanilla cast of an equipped spell raises the same events, so an event from a hand this
-	// cast is not using must not commit it.
-	constexpr uint8_t fire_left{ 1 };
-	constexpr uint8_t fire_right{ 2 };
-	std::atomic<uint8_t> spellfire_mask{ 0 };
+	[[nodiscard]] constexpr uint8_t spellfire_state_mask(uint64_t state) noexcept
+	{
+		return static_cast<uint8_t>(state & spellfire_mask_bits);
+	}
+
+	[[nodiscard]] constexpr uint32_t spellfire_state_generation(uint64_t state) noexcept
+	{
+		return static_cast<uint32_t>(state >> spellfire_generation_shift);
+	}
 
 	// Arm the commitment point for one cast: forget stale fires and accept only the hand(s)
 	// this cast throws with. Called right before the state entry is sent.
@@ -151,19 +166,38 @@ namespace SpellHotbar::casts::CastingController {
 		// here; if one ever does, `spellfire_arm_mask` falls back to left (the borrowed clip's
 		// own annotation) rather than arming nothing and losing the commitment point.
 		const uint8_t mask = spellfire_arm_mask(static_cast<int>(used_hand));
-		if (mask == fire_left && used_hand != hand_mode::left_hand) {
+		if (mask == spellfire_hand_bit(SpellFireHand::left) && used_hand != hand_mode::left_hand) {
 			logger::debug("SH2 cast: arm_spellfire got an unresolved hand ({}), arming left",
 				static_cast<int>(used_hand));
 		}
-		spellfire_mask.store(mask, std::memory_order_relaxed);
-		spellfire_seen.store(false, std::memory_order_relaxed);
+		// The generation moves on every arming, so an event the hook read under the previous
+		// cast's arming can no longer commit this one. It is only ever compared for equality;
+		// wrapping after 2^32 casts is harmless.
+		const uint32_t generation =
+			spellfire_state_generation(spellfire_state.load(std::memory_order_relaxed)) + 1U;
+		spellfire_state.store(
+			(static_cast<uint64_t>(generation) << spellfire_generation_shift) | mask,
+			std::memory_order_relaxed);
 	}
 
-	void notify_spellfire(bool left_hand) {
-		const uint8_t bit = left_hand ? fire_left : fire_right;
-		if (spellfire_mask.load(std::memory_order_relaxed) & bit) {
-			logger::debug("SH2 cast: graph raised a {} SpellFire event", left_hand ? "left" : "right");
-			spellfire_seen.store(true, std::memory_order_relaxed);
+	SpellFireArming spellfire_arming() {
+		const uint64_t state = spellfire_state.load(std::memory_order_relaxed);
+		return { spellfire_state_mask(state), spellfire_state_generation(state) };
+	}
+
+	void notify_spellfire(SpellFireHand hand, uint32_t generation) {
+		uint64_t state = spellfire_state.load(std::memory_order_relaxed);
+		// A dual cast raises both authored events and each one takes this path; setting an
+		// already-set latch twice still delivers once (ticket 43), and both are logged because
+		// the pair is what proves a dual clip's contract live.
+		while (spellfire_state_generation(state) == generation &&
+			   spellfire_hand_is_armed(hand, spellfire_state_mask(state))) {
+			if (spellfire_state.compare_exchange_weak(state, state | spellfire_seen_bit,
+					std::memory_order_relaxed)) {
+				logger::debug("SH2 cast: graph raised a {} SpellFire event",
+					hand == SpellFireHand::left ? "left" : "right");
+				return;
+			}
 		}
 	}
 
@@ -171,11 +205,11 @@ namespace SpellHotbar::casts::CastingController {
 	// raises spellfire with no cast instance live at all, and that must not leave the next hotbar
 	// cast committed before it has begun.
 	void clear_spellfire() {
-		spellfire_seen.store(false, std::memory_order_relaxed);
+		spellfire_state.fetch_and(~spellfire_seen_bit, std::memory_order_relaxed);
 	}
 
 	bool is_cast_committed() {
-		return spellfire_seen.load(std::memory_order_relaxed);
+		return (spellfire_state.load(std::memory_order_relaxed) & spellfire_seen_bit) != 0ULL;
 	}
 
 	bool is_committed_cast_holding_graph() {

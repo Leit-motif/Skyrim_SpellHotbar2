@@ -917,7 +917,18 @@ namespace SpellHotbar::Input {
             //Check if player currently is casting, also check staffs
             bool isCasting = pc->IsCasting(nullptr);
 
-            return !(isCasting || (!allow_sprint && as->IsSprinting()) || as->IsSwimming() || inJumpState); //|| bowDrawn);
+            const bool sprinting = !allow_sprint && as->IsSprinting();
+            const bool swimming = as->IsSwimming();
+            if (isCasting || sprinting || swimming || inJumpState) { //|| bowDrawn);
+                // Ticket 46, spike observation 1: this branch used to refuse every press in
+                // silence, and a MagicCaster left charging by an interrupted cast reads as
+                // IsCasting for as long as it stays stuck -- twenty minutes of live time spent
+                // on a refusal that names itself in one line.
+                logger::debug("SH2 cast: refused, casting={} sprinting={} swimming={} jumping={}",
+                    isCasting, sprinting, swimming, inJumpState);
+                return false;
+            }
+            return true;
         }
         else return false;
     }
