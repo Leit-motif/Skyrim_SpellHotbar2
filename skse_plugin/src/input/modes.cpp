@@ -44,20 +44,20 @@ namespace SpellHotbar::Input {
 
 	void InputModeCast::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
 	{
-        const bool queueable = skill.type == slot_type::spell || skill.type == slot_type::shout ||
-                               skill.type == slot_type::weapon_art;
-        if (!queueable && !casts::CastingController::can_start_new_cast()) {
-            logger::info("SH2: slot {} refused, live cast instance still held (type={})", i,
-                static_cast<int>(skill.type));
-            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
-            return;
-        }
-        if (queueable && casts::CastingController::is_live_concentration()) {
-            logger::info("SH2: slot {} refused, concentration is not the press queue", i);
-            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
-            return;
-        }
-        if (allowed_to_instantcast(skill.formID)) {
+        // Ticket 41: one gate for every slot type, as stock SH2 shipped it. A press that arrives
+        // while a cast instance is live dies here and paints the red flash in the else-branch --
+        // press, lockout, visible refusal, identical across spells, shouts, arts, powers and
+        // potions. The `queueable` exemption f465947 added is gone.
+        //
+        // The mid-swing art deferral survives because an MCO swing on its own holds no cast
+        // instance of ours: the press passes here, and try_start_art defers it when the graph
+        // refuses SH2_ArtStart (verified live 2026-08-25 -- deferred to ShoutMCO mid-swing,
+        // released 240ms later, art fired). That is the ordinary case, not a universal rule.
+        // A swing can overlap an SH2 instance -- a potion still inside its GCD, a cast or channel
+        // cut for the attack but not yet retired -- and such a press is now refused rather than
+        // deferred. That is the lockout the owner asked for, not an oversight: `current_cast` is
+        // the whole gate, and no slot type buys an exemption from it.
+        if (allowed_to_instantcast(skill.formID) && casts::CastingController::can_start_new_cast()) {
             if (skill.type == slot_type::weapon_art) {
                 bool success = casts::CastingController::try_start_art(skill.art_id, i, bind);
                 SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, !success);
@@ -90,6 +90,12 @@ namespace SpellHotbar::Input {
                                     addEvent = RE::ButtonEvent::Create(shoutKeyDev, "Shout", shoutKey, 1.0f, 0.0f); //default shout key
                                 }
                             }
+                            else {
+                                // Ticket 41: stock never painted this branch -- the outer gate
+                                // caught spam first, so the gap was invisible. A voice-recovery
+                                // or shout-cooldown refusal now reports like every other refusal.
+                                SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+                            }
                         }
                     }
                     else {
@@ -108,6 +114,8 @@ namespace SpellHotbar::Input {
         }
         else {
             //error highlight
+            logger::debug("SH2: slot {} refused by the press gate (type={}, cast live={})", i,
+                static_cast<int>(skill.type), !casts::CastingController::can_start_new_cast());
             SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
         }
     }

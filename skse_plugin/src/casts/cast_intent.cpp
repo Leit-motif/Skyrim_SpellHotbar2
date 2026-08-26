@@ -217,6 +217,10 @@ namespace SpellHotbar::casts::CastIntent {
 			else {
 				logger::debug("SH2 cast intent: ABANDON for handle {} ({}), payload on slot {} dropped",
 					a_handle, cause_name(a_cause), p.slot);
+				// Ticket 41: a dropped payload is a refused press. The player pressed the slot and
+				// nothing ever came of it, so it reports like every other refusal rather than
+				// vanishing into the log.
+				RenderManager::highlight_skill_slot(static_cast<int>(p.slot), 0.5f, true);
 			}
 		}
 	}

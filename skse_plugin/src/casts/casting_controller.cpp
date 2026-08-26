@@ -172,6 +172,11 @@ namespace SpellHotbar::casts::CastingController {
 			   MscoCastDriver::is_active();
 	}
 
+	// Ticket 41: no callers. It reports the pre-revert admission rule -- a press inside the
+	// SpellFire-to-WinClose window is a combo step rather than a refusal -- which the stock gate
+	// in InputModeCast::process_input now shadows for every hotbar press. Kept because pruning
+	// was out of the ticket's scope; do NOT wire it back into an input path without reopening
+	// ticket 41's decision, and read `classify_hotbar_cast_press`'s comment in the same light.
 	bool can_accept_hotbar_cast() {
 		return classify_hotbar_cast_press(current_cast != nullptr, is_committed_cast_holding_graph(),
 				   MscoCastDriver::combo_window_open()) != HotbarCastPress::refuse;
@@ -1022,6 +1027,19 @@ namespace SpellHotbar::casts::CastingController {
 		return false;
 	}
 
+	/**
+	 * Ticket 41: from the ORDINARY hotbar bar (InputModeCast), this is only ever reached with no
+	 * cast instance live -- that mode's stock gate refuses the press otherwise. So the
+	 * latch-closed offer below and `classify_hotbar_cast_press`'s chain arm no longer answer an
+	 * ordinary hotbar press. They are not dead. Two callers still reach them with a live
+	 * instance possible:
+	 *
+	 *   - InputModeVampireLord::process_input, which sends potions straight here with no
+	 *     can_start_new_cast() check of its own. Stock SH2 did not gate that mode either, so
+	 *     ticket 41 left it alone.
+	 *   - CastIntent::fire_payload, for a deferred SPELL or potion payload. Note it dispatches
+	 *     weapon arts to try_start_art instead, so an art release never passes through here.
+	 */
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand)
 	{
 		if (our_latch_is_closed()) {
@@ -1174,6 +1192,11 @@ namespace SpellHotbar::casts::CastingController {
 			pc->GetGraphVariableBool("IsShouting"sv, is_shouting);
 		}
 		const bool is_shout = form && form->GetFormType() == RE::FormType::Shout;
+		// Ticket 41: no longer reachable from an ORDINARY hotbar press -- InputModeCast's stock
+		// gate refuses anything arriving while our latch is closed. Nor from the release path:
+		// fire_payload runs under `attempting_release`, so is_firing() is true and this arm's own
+		// guard skips it. The caller that does still reach it is InputModeVampireLord, which
+		// calls try_cast_power with no gate of its own (stock did not gate that mode either).
 		if (is_shout && !CastIntent::is_firing() && (our_latch_is_closed() || is_shouting)) {
 			return CastIntent::offer(slot, keybind);
 		}
