@@ -4,8 +4,12 @@
 green headless matrix: "We will have to work on a testing harness that allows you to send real
 inputs, whether that means you will need to take foreground mode or what."
 
-**Status:** ready-for-agent (design first). Blocked-by: nothing, but ticket 49's diagnosis
-should inform the design (it defines the class of bug the harness must be able to catch).
+**Status:** deferred 2026-08-26 by owner ruling — "if it won't let me ship, it's out of
+scope." Not v1. The incident that motivated it resolved as a reWASD false alarm (ticket 49),
+which lowers the urgency honestly. **The standing rule below survives the deferral** — it
+costs nothing and covers the gap until this is picked up: changes touching the input hook
+carry an owner-hands acceptance cell, never injected-input evidence alone. Triage again when
+an input-hook change is actually on the table or when re-raised.
 
 ## The gap this closes
 
