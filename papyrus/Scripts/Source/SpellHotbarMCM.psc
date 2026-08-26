@@ -173,6 +173,7 @@ Event OnPageReset(string page)
 
 		AddHeaderOption("$Gameplay")
 		AddHeaderOption("")
+		AddSliderOptionST("SpellGCD", "$Spell GCD", SpellHotbar.getSpellGCD(), "{2}")
 		AddSliderOptionST("PotionGCD", "$Potion GCD", SpellHotbar.getPotionGCD(), "{2}")
 		AddToggleOptionST("IndividualShoutCooldowns", "$Individual Shout Cooldowns", SpellHotbar.isIndividualShoutCooldowns())
 
@@ -1057,6 +1058,24 @@ State BarShowOptionsWW
 	EndEvent
 	Event OnDefaultST()
 		SetMenuOptionValueST(bar_show_options_transformed[SpellHotbar.setHudBarShowModeWerewolf(1)])
+	EndEvent
+EndState
+
+State SpellGCD
+    Event OnSliderOpenST()
+        SetSliderDialogStartValue(SpellHotbar.getSpellGCD())
+        SetSliderDialogDefaultValue(1.5)
+        SetSliderDialogRange(0.1, 10.0)
+        SetSliderDialogInterval(0.05)
+    EndEvent
+    Event OnSliderAcceptST(float a_value)
+        SetSliderOptionValueST(SpellHotbar.setSpellGCD(a_value), "{2}");
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("$SpellGCD_INFO");
+    EndEvent
+	Event OnDefaultST()
+		SetSliderOptionValueST(SpellHotbar.setSpellGCD(1.5), "{2}")
 	EndEvent
 EndState
 

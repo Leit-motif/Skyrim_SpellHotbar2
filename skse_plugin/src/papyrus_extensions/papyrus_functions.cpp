@@ -364,6 +364,16 @@ float get_potion_gcd(RE::StaticFunctionTag*)
     return SpellHotbar::GameData::potion_gcd;
 }
 
+float set_spell_gcd(RE::StaticFunctionTag*, float value)
+{
+    return SpellHotbar::GameData::spell_gcd = std::clamp(value, 0.1f, 10.0f);
+}
+
+float get_spell_gcd(RE::StaticFunctionTag*)
+{
+    return SpellHotbar::GameData::spell_gcd;
+}
+
 float get_oblivion_slot_scale(RE::StaticFunctionTag*)
 {
     return SpellHotbar::Bars::oblivion_slot_scale;
@@ -695,6 +705,8 @@ bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) 
     vm->RegisterFunction("setBarAnchorPoint", "SpellHotbar", set_bar_anchor_point);
     vm->RegisterFunction("getPotionGCD", "SpellHotbar", get_potion_gcd);
     vm->RegisterFunction("setPotionGCD", "SpellHotbar", set_potion_gcd);
+    vm->RegisterFunction("getSpellGCD", "SpellHotbar", get_spell_gcd);
+    vm->RegisterFunction("setSpellGCD", "SpellHotbar", set_spell_gcd);
     vm->RegisterFunction("setOblivionSlotScale", "SpellHotbar", set_oblivion_slot_scale);
     vm->RegisterFunction("getOblivionSlotScale", "SpellHotbar", get_oblivion_slot_scale);
     vm->RegisterFunction("setOblivionOffsetX", "SpellHotbar", set_oblivion_offset_x);

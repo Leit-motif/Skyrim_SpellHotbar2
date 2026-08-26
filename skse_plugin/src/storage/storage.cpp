@@ -149,6 +149,9 @@ namespace SpellHotbar::Storage {
 
             //V5: since SpellHotbar2 0.0.13
             a_intfc->WriteRecordData(&GameData::individual_shout_cooldowns, sizeof(bool));
+
+            //V7: ticket 43, the tunable spell GCD
+            a_intfc->WriteRecordData(&GameData::spell_gcd, sizeof(float));
             //Version end
 
             //write keybinds, make saves compatible when new binds are added
@@ -516,6 +519,20 @@ namespace SpellHotbar::Storage {
                         if (read_individual_shout_cooldowns != GameData::individual_shout_cooldowns) {
                             GameData::toggle_individual_shout_cooldowns();
                         }
+                    }
+                }
+
+                if (version >= 7U) {  // ticket 43: the tunable spell GCD
+                    float read_spell_gcd{ 1.5f };
+                    if (!a_intfc->ReadRecordData(&read_spell_gcd, sizeof(float))) {
+                        logger::error("Failed to read spell gcd!");
+                        break;
+                    }
+                    else {
+                        GameData::spell_gcd = std::clamp(read_spell_gcd, 0.1f, 10.0f);
+#ifdef DEBUG_LOG_SERIALIZATION
+                        logger::info("Loaded GameData::spell_gcd: {}", GameData::spell_gcd);
+#endif
                     }
                 }
 

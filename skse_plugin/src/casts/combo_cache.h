@@ -632,36 +632,49 @@ enum class CastDelivery {
 	return timer_expired ? CastDelivery::deliver : CastDelivery::cancel;
 }
 
-// TICKET 42: the GCD is the clock, SpellFire is the floor.
+// TICKET 43: the GCD is the WHOLE lockout. No animation gates the button.
 //
-// A cuttable cast that has already delivered used to be held until the clip ended
-// (`MscoCastDriver::is_active()`), which made the lockout the animation's length -- 2.05s for
-// Firebolt, 71% of it follow-through with a dead button. It now retires on its own
-// press-anchored lockout and leaves the clip playing as presentation; the next press enters the
-// next clip from inside the live state, exactly as a ticket-14 chain press does.
+// Ticket 42 retired a cuttable cast on `gcd_expired && spellfire_seen` -- the annotation was a
+// floor under the clock, which made the cadence vary per clip (measured: clips 1-3 free at 1.50s,
+// clip 4 at 1.80s) and coupled the feel to whichever animation set happened to be installed. The
+// owner's verdict was one number for the action class, so the floor is gone and retirement is
+// `gcd_expired` alone -- there is nothing left to classify, and `classify_fnf_retirement` and its
+// `FnfRetire` enum went with it.
 //
-// SpellFire remains a floor under that clock. Unlike WoW's model, this mod's payload IS the
-// animation event: an instance released before the graph reached its commitment point would drop
-// the cast. So the lockout may only end once both are true.
+// The one thing the floor protected -- our payload IS the animation event, so retiring early must
+// never eat a cast -- moved out of the lockout and into delivery. A cast retired before its
+// SpellFire stays ARMED, and the rules below say when the armed payload leaves.
+
+// Should the instance being retired be kept alive to deliver later?
 //
-// `waited_for_spellfire` is the sticky record of the lockout having run out first, and only
-// distinguishes which condition released the instance for the log.
+// Only a cuttable cast can be retired with its clip still running, and only an undelivered one has
+// anything left to deliver. Everything else is torn down at retirement as it always was.
+[[nodiscard]] constexpr bool retired_cast_stays_armed(bool cuttable, bool already_delivered) noexcept
+{
+	return cuttable && !already_delivered;
+}
+
+// When an armed payload leaves the hand. Whichever comes first wins; the CUT is not here because
+// it is not a poll -- the next press calls the delivery directly before starting its own cast.
 //
-// A clip with no SpellFire at all never reaches this rule: it delivers through the clip-end
-// fallback in `CastingInstance::update` and is reset from there, i.e. today's behaviour exactly.
-enum class FnfRetire {
+// `already_delivered` is the latch: one delivery per instance, whichever path reaches it first
+// (the same bit `CastingInstance::deliver_payload` returns early on).
+enum class ArmedDelivery {
 	hold,
-	gcd_expired,
-	spellfire_floor,
+	on_spellfire,  // the normal case: no press, the clip plays on and raises its own event
+	on_clip_end,   // ticket 18's fallback: the clip ended having raised no SpellFire at all
 };
 
-[[nodiscard]] constexpr FnfRetire classify_fnf_retirement(
-	bool gcd_expired, bool spellfire_seen, bool waited_for_spellfire) noexcept
+[[nodiscard]] constexpr ArmedDelivery classify_armed_delivery(
+	bool already_delivered, bool spellfire_seen, bool clip_active) noexcept
 {
-	if (!gcd_expired || !spellfire_seen) {
-		return FnfRetire::hold;
+	if (already_delivered) {
+		return ArmedDelivery::hold;
 	}
-	return waited_for_spellfire ? FnfRetire::spellfire_floor : FnfRetire::gcd_expired;
+	if (spellfire_seen) {
+		return ArmedDelivery::on_spellfire;
+	}
+	return clip_active ? ArmedDelivery::hold : ArmedDelivery::on_clip_end;
 }
 
 // Ability latch: WinOpen if the bound clip carries it, else HitFrame, else SH2_ArtExit.

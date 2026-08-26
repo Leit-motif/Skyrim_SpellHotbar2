@@ -52,6 +52,8 @@ int function getBarAnchorPoint() native global
 int function setBarAnchorPoint(int index) native global
 float function getPotionGCD() native global
 float function setPotionGCD(float value) native global
+float function getSpellGCD() native global
+float function setSpellGCD(float value) native global
 float function getOblivionSlotScale() global native
 float function setOblivionSlotScale(float scale) global native
 float function getOblivionOffsetX(bool rescale) global native

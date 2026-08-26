@@ -215,8 +215,49 @@ namespace SpellHotbar::casts::CastingController {
 		return CastIntent::should_retain_now();
 	}
 
+	/**
+	* TICKET 43. A cast retired at GCD expiry that had not yet delivered. The lockout is over and
+	* the button is free, but the payload is still owed: our payload IS the animation event, so
+	* releasing the button must never eat the cast. The instance is kept alive here, un-torn-down,
+	* until whichever of its three exits comes first (`classify_armed_delivery`, plus the cut).
+	*
+	* At most one exists: it is only ever created when `current_cast` is dropped, and every path
+	* that starts a new action flushes it first.
+	*/
+	std::unique_ptr<CastingInstance> armed_cast;
+
+	/**
+	* Deliver the armed payload now, from wherever `reason` says. Safe to call with nothing armed.
+	*
+	* RISK 2 (ticket 43): the event path isolates the left-hand caster immediately before vanilla
+	* SpellFire (`animationeventhook.cpp` ProcessEvent_PC) so an equipped left-hand spell cannot
+	* fire alongside ours. A delivery that does NOT come through that path -- the cut, the clip-end
+	* fallback -- has to run the same preparation itself, or the payload leaves the wrong caster.
+	*
+	* RISK 1 is `deliver_payload`'s own `m_spell_started` latch: one delivery per instance, whichever
+	* path reaches it first. The instance is dropped here regardless, so no second path can even try.
+	*/
+	void deliver_armed_payload(std::string_view reason)
+	{
+		if (!armed_cast) {
+			return;
+		}
+		if (auto* pc = RE::PlayerCharacter::GetSingleton()) {
+			MscoCastDriver::interrupt_left_caster_if_spell(pc);
+			logger::debug("SH2 cast: armed payload delivered at {} ({:.2f}s on the cast clock)", reason,
+				armed_cast->get_lockout_elapsed());
+			armed_cast->deliver_payload(pc);
+		}
+		armed_cast->on_reset_keep_graph();
+		armed_cast.reset();
+		clear_spellfire();
+	}
+
 	void yield_shtb_for_non_chain_start()
 	{
+		// The cut, as the ticket names it. Anything about to take the graph away from a clip that
+		// still owes a payload pays it out first.
+		deliver_armed_payload("the cut"sv);
 		auto pc = RE::PlayerCharacter::GetSingleton();
 		if (ArtDriver::is_active()) {
 			ArtDriver::cancel(pc);
@@ -256,7 +297,9 @@ namespace SpellHotbar::casts::CastingController {
 
 	void poll_pending_animation_var_reset()
 	{
-		if (!animation_vars_reset_pending || current_cast || MscoCastDriver::is_active()) {
+		// An armed cast counts as a live cast here: the globals are what its still-playing clip was
+		// selected with, and its payload has not left yet.
+		if (!animation_vars_reset_pending || current_cast || armed_cast || MscoCastDriver::is_active()) {
 			return;
 		}
 		animation_vars_reset_pending = false;
@@ -264,21 +307,32 @@ namespace SpellHotbar::casts::CastingController {
 	}
 
 	/**
-	* Retire a delivered, cuttable cast without leaving the shtb state: the clip carries on as
-	* follow-through and the next press enters the next clip from inside the live state, the same
-	* seam a ticket-14 chain press uses. `MscoCastDriver::finish` is deliberately NOT called --
-	* sending SH2_CastExit here would cut the very presentation this ticket is trying to keep. The
-	* clip's own end raises that exit, and the state watchdog covers a graph that never does.
+	* Retire a cuttable cast without leaving the shtb state: the clip carries on as follow-through
+	* and the next press enters the next clip from inside the live state, the same seam a ticket-14
+	* chain press uses. `MscoCastDriver::finish` is deliberately NOT called -- sending SH2_CastExit
+	* here would cut the very presentation this ticket is trying to keep. The clip's own end raises
+	* that exit, and the state watchdog covers a graph that never does.
+	*
+	* TICKET 43: retirement no longer waits for delivery, so an instance that still owes its payload
+	* is moved to `armed_cast` intact rather than torn down. Its teardown runs at delivery instead.
+	* The SpellFire arming is deliberately left standing for it -- the clip that is still playing is
+	* the armed cast's own, and its event is the normal way that payload leaves.
 	*/
 	void retire_cuttable_cast()
 	{
-		if (auto* spell_cast = dynamic_cast<CastingInstance*>(current_cast.get())) {
-			spell_cast->on_reset_keep_graph();
+		auto* spell_cast = dynamic_cast<CastingInstance*>(current_cast.get());
+		if (retired_cast_stays_armed(spell_cast != nullptr, current_cast->casted())) {
+			armed_cast.reset(spell_cast);
+			static_cast<void>(current_cast.release());
 		} else {
-			current_cast->on_reset();
+			if (spell_cast) {
+				spell_cast->on_reset_keep_graph();
+			} else {
+				current_cast->on_reset();
+			}
+			current_cast.reset();
+			clear_spellfire();
 		}
-		current_cast.reset();
-		clear_spellfire();
 		animation_vars_reset_pending = true;
 		poll_pending_animation_var_reset();
 	}
@@ -289,6 +343,9 @@ namespace SpellHotbar::casts::CastingController {
 		// session being left behind is forgotten rather than written over it.
 		discard_deferred_power_restore();
 		current_cast.reset();
+		// RISK 3 (ticket 43): an armed payload belongs to the session being left behind. Discarded,
+		// never delivered into the save being read.
+		armed_cast.reset();
 		clear_spellfire();
 		// The globals belong to the session being left behind; the load resets them itself.
 		animation_vars_reset_pending = false;
@@ -340,8 +397,7 @@ namespace SpellHotbar::casts::CastingController {
 		m_total_casttime(casttime),
 		m_gcd(1.5f),
 		m_press_elapsed(0.0f),
-		m_casted(false),
-		m_lockout_outran_spellfire(false)
+		m_casted(false)
 	{
 	}
 
@@ -576,7 +632,9 @@ namespace SpellHotbar::casts::CastingController {
 			return;
 		}
 		if (!is_cast_committed()) {
-			logger::warn("SH2 cast: no SpellFire event; delivering after the clip ended past the authored cast time");
+			// Ticket 43 added a second way to arrive here without the event: the cut. Either way
+			// the payload is owed and leaves now rather than being eaten.
+			logger::warn("SH2 cast: no SpellFire event; delivering the payload anyway");
 		}
 		m_spell_started = true;
 		stop_charge_sound();
@@ -671,18 +729,18 @@ namespace SpellHotbar::casts::CastingController {
 
 	CastingInstanceSpell::CastingInstanceSpell(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
-		// TICKET 42: an action costs one number. 1.5s from the press, with SpellFire as the floor
-		// under it; the clip's remaining length is presentation. Was 0.0f, and was ignored anyway
-		// -- the old FNF branch held the instance until the clip ended.
-		m_gcd = 1.5f;
+		// TICKET 43: an action costs one number, and that number is the whole lockout -- the clip's
+		// remaining length is presentation and nothing about it gates the button. Read at
+		// construction so the MCM slider takes effect on the very next press, with no rebuild.
+		m_gcd = GameData::spell_gcd;
 	}
 
 	CastingInstanceRitual::CastingInstanceRitual(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc) : CastingInstance(spell, casttime, manacost, used_hand, casteffect, spell_proc)
 	{
 		m_release_anim_time = 0.25f;
-		// Unchanged as a number, but it now means 1.5s from the press rather than 1.5s after the
-		// ritual's cast time (ticket 42).
-		m_gcd = 1.5f;
+		// Same action-class number as a fire-and-forget spell, measured from the press (ticket 42),
+		// and tunable with it (ticket 43).
+		m_gcd = GameData::spell_gcd;
 	}
 
 	CastingInstanceSpellConcentration::CastingInstanceSpellConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot)
@@ -910,46 +968,61 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		CastIntent::poll_local_release();
 		if (current_cast) {
+			bool cleared{ false };
 			if (!current_cast->casted()) {
 				auto pc = RE::PlayerCharacter::GetSingleton();
 				if (pc) {
 
 					if (current_cast->update(pc, delta)) {
 						reset_cast();
+						cleared = true;
 					}
 
 				}
 			}
 			else {
 				current_cast->advance_time(delta);
+			}
+			if (!cleared) {
 				if (current_cast->has_cuttable_cast_state()) {
-					// TICKET 42. Was: hold until `!MscoCastDriver::is_active()`, i.e. until the
-					// clip ended, which made the animation the lockout (2.05s for Firebolt, of
-					// which 1.46s was a dead button). Now the press-anchored GCD is the clock and
-					// the clip finishes as follow-through, with SpellFire as the floor beneath.
-					const bool gcd_done = current_cast->is_gcd_expired();
-					const bool committed = is_cast_committed();
-					if (gcd_done && !committed) {
-						current_cast->note_lockout_waiting_for_spellfire();
-					}
-					const auto retire = classify_fnf_retirement(
-						gcd_done, committed, current_cast->lockout_outran_spellfire());
-					if (retire != FnfRetire::hold) {
+					// TICKET 43. The GCD is the WHOLE lockout: no animation gates the button, so
+					// this is the press-anchored clock and nothing else. Ticket 42's `&&
+					// is_cast_committed()` floor is gone -- a cast retired before its SpellFire
+					// keeps its payload owed as `armed_cast` rather than losing it, which is what
+					// the floor was really protecting. Delivery is now a separate clock entirely.
+					//
+					// Note this branch is reached whether or not the instance has delivered; under
+					// ticket 42 only a delivered one could ever get here.
+					if (current_cast->is_gcd_expired()) {
 						logger::debug(
 							// The elapsed figure is the instance's own clock, which starts when the
 							// cast state goes live -- a frame or two after the press itself.
-							"SH2 cast: lockout over at {:.2f}s on the cast clock, released by {}; clip {} playing",
+							"SH2 cast: lockout over at {:.2f}s on the cast clock (payload {}); clip {} playing",
 							current_cast->get_lockout_elapsed(),
-							retire == FnfRetire::spellfire_floor ? "spellfire-floor" : "gcd-expired",
+							current_cast->casted() ? "already delivered" : "still owed, staying armed",
 							MscoCastDriver::is_active() ? "still" : "no longer");
 						retire_cuttable_cast();
 					}
-				} else {
-					if (current_cast->is_gcd_expired()) {
-						GameData::reset_animation_vars();
-						reset_cast();
-					}
+				} else if (current_cast->casted() && current_cast->is_gcd_expired()) {
+					GameData::reset_animation_vars();
+					reset_cast();
 				}
+			}
+		}
+		if (armed_cast) {
+			// TICKET 43: the two polled exits of an owed payload. The third, the cut, is not polled
+			// -- the press that cuts the clip delivers directly, before it starts its own cast.
+			switch (classify_armed_delivery(
+				armed_cast->casted(), is_cast_committed(), MscoCastDriver::is_active())) {
+			case ArmedDelivery::on_spellfire:
+				deliver_armed_payload("its own SpellFire"sv);
+				break;
+			case ArmedDelivery::on_clip_end:
+				deliver_armed_payload("clip end, no SpellFire"sv);
+				break;
+			case ArmedDelivery::hold:
+			default:
+				break;
 			}
 		}
 		poll_pending_animation_var_reset();
@@ -1126,6 +1199,11 @@ namespace SpellHotbar::casts::CastingController {
 			current_cast != nullptr, is_committed_cast_holding_graph(),
 			MscoCastDriver::combo_window_open());
 		if (press != HotbarCastPress::refuse) {
+			// Ticket 43: THE CUT. This press is about to enter a new clip; a previous cast that
+			// retired on its GCD without having delivered pays out here, at the instant of the cut,
+			// before anything re-arms SpellFire or starts a new instance. A REFUSED press never
+			// reaches this -- it cuts nothing, so the owed payload keeps waiting for its own event.
+			deliver_armed_payload("the cut"sv);
 			// Ticket 14: a chain press still needs the commitment bit when start_cast
 			// runs the cut. Idle starts still drop leftover shout spellfire here.
 			if (!keep_commitment_until_cut(press)) {
@@ -1245,6 +1323,8 @@ namespace SpellHotbar::casts::CastingController {
 			auto pc = RE::PlayerCharacter::GetSingleton();
 			if (pc) {
 				if (GameData::count_item_in_inv(alch_item->GetFormID()) > 0) {
+					// Ticket 43: a potion press ends the lockout-free window too.
+					deliver_armed_payload("the cut (potion)"sv);
 					current_cast = std::make_unique<CastingInstancePotionUse>(alch_item);
 					return true;
 				}
@@ -1278,6 +1358,8 @@ namespace SpellHotbar::casts::CastingController {
 			yield_if_our_latch_is_open();
 		}
 		if (can_start_new_cast()) {
+			// Ticket 43: a shout or power press cuts a cast clip too.
+			deliver_armed_payload("the cut (power/shout)"sv);
 			clear_spellfire();
 			// A power or shout press is a newer input too, so it supersedes a waiting intent. A
 			// real shout also reaches ShoutMCO's own hook and would displace it there, but a
@@ -1680,6 +1762,8 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		yield_if_our_latch_is_open();
 
+		// Ticket 43: an art swing takes the graph away from any cast clip still owing a payload.
+		deliver_armed_payload("the cut (weapon art)"sv);
 		CastIntent::cancel();
 		GameData::set_art_selector(art->selector);
 		current_cast = std::make_unique<CastingInstanceWeaponArt>(art_id, art->gcd);

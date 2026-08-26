@@ -11,7 +11,9 @@ namespace SpellHotbar::Storage {
     * 5 - SpellHotbar2, alpha 0.0.13
     * 6 - Ability slots (kind byte + art_id payload)
     */
-    constexpr uint32_t save_format = 6U;
+    // V7: ticket 43 appends GameData::spell_gcd to the HOTB record. Older saves stop at V6 and
+    // keep the 1.5s default.
+    constexpr uint32_t save_format = 7U;
 
     extern std::array<RE::FormID, 12> hotbar_main;
 
