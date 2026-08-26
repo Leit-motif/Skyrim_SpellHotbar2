@@ -1,0 +1,27 @@
+{
+    "name": "SH2 Cast - Dual (self)",
+    "description": "The same MSCO_dual1-4 art as SH2 Cast - Dual, for a fire-and-forget SELF cast resolved to DUAL. SpellHotbar_SpellAnimationType (0x815) == 10017 is cast_anim_ids.h kSelf.variant; no casting-source condition, per the dual convention. The clips are byte-distinct copies rather than shared bytes (ADR-0017).",
+    "priority": 2000001104,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 10017.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

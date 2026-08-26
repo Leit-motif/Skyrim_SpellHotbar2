@@ -1,0 +1,41 @@
+{
+    "name": "SH2 Cast - Right (aimed)",
+    "description": "MSCO_right1-4 on the neutral MSCO_left1-4 path names, for a fire-and-forget AIMED cast the fork resolved to the RIGHT hand. SpellHotbar_SpellAnimationType (0x815) == 1 is cast_anim_ids.h kAimed.primary; SpellHotbar_CastingSource (0x835) == 1 is RE::MagicSystem::CastingSource::kRightHand. Each clip carries MSCO's own MRh_SpellFire_Event, which is the armed hand's commitment point for this cell.",
+    "priority": 2000001101,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

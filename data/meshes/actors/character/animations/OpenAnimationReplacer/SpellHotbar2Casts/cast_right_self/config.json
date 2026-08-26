@@ -1,0 +1,41 @@
+{
+    "name": "SH2 Cast - Right (self)",
+    "description": "The same MSCO_right1-4 art as SH2 Cast - Right, for a fire-and-forget SELF cast resolved to the RIGHT hand. SpellHotbar_SpellAnimationType (0x815) == 2 is cast_anim_ids.h kSelf.primary; SpellHotbar_CastingSource (0x835) == 1 is the right hand. The clips are byte-distinct copies rather than shared bytes, because OAR's duplicate filter collapses two submods that reference identical bytes (ADR-0017).",
+    "priority": 2000001102,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 2.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}
