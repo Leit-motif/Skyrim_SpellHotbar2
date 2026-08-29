@@ -61,7 +61,12 @@ Noted here so a later requirement can pick them up without rediscovering them.
       `evidence/t58/01-npc-warlock-displacement-poll.csv` — interior cast-span speed 2.6 u/s
       mean (max 24) vs 102 u/s mean (max 483) between casts, three separate frozen spans on
       both hands. Note the telemetry alone would have been the ticket-33 false positive; the
-      owner's eyes are the closing evidence, the CSV is corroboration.
+      owner's eyes are the closing evidence, the CSV is corroboration. The generalizable
+      lesson (ticket 33 running in reverse — there telemetry said green and the feel said
+      broken; here the first glance said broken and the second spawn plus the CSV said green):
+      **one actor's behavior is one sample, whichever direction it points** — a single owner
+      glance included. Resolve a disagreement by producing another sample, not by arguing from
+      the numbers; the CSV earned its place by surviving the disagreement.
 - [ ] Rotation tracking still works during the cast — owner question pending.
 - [x] Every end path exits the state cleanly — a full combat's worth of repeated casts with no
       wedge; player held-channel enter/3.2s-hold/release clean in SpellHotbar2.log

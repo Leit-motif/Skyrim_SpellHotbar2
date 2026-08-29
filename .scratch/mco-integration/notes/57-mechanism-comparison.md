@@ -71,6 +71,16 @@ locomotion meet — `MagicCastingLocomotionState` (`#0926`), `MagicCast_Standing
 machines instead. Casting no longer routes through a state that blends locomotion, so there is
 nothing left to translate the actor. The commitment is structural.
 
+**The collapse that made ticket 58's build small (found during the build, recorded here so the
+next reader doesn't re-derive it from 199 nodes):** all four of Magelock's per-state replacement
+machines route their NPC branch to ONE identical node — a `hkbModifierGenerator` wrapping the
+`bAllowRotation` modifier (`#altmag$51/$52`) around `#altmag$86`, which is a copy of vanilla
+`#0088 LeftHandMagicCast_MSG` whose only delta is a staff-flavor rework (`#altmag$87` at
+selector indices 0 and 8). Everything else in the 199-node set is the player branch, the split
+machinery, or clip retiming. Drop the split and the staff rework and the whole structural root
+is: one binding set, one modifier, four thin wrappers over vanilla `#0088` — the 14-file `shcr`
+patch.
+
 **How it separates player from NPC** — ticket 53 listed this as an open engineering question,
 and the graph answers it. Each splice point lands on a two-state machine such as
 `#altmag$174 BNPCBehavior`, whose **`startStateId` is bound to graph variable index 4**. State 0
