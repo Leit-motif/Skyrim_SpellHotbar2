@@ -129,7 +129,39 @@ The "future endeavor" of the second amendment is now. What changes, and what doe
   its own clock. The DLL applies and dispels the ability on the channel's own start/teardown
   edges; the number lives in the record.
 
-## Amended 2026-08-29: on a LAYERED state, the player's movement INPUT block is the DLL's
+## Amended 2026-08-29 (later the same day): the root can be the GENERATOR, and the DLL block is gone
+
+Ticket 58 shipped commitment as the Nemesis patch `shcr` and it is owner-confirmed live, player
+and NPC. The mechanism is not the one either the decision or the amendment below assumed, so both
+need adjusting.
+
+**What `shcr` does.** Where casting meets locomotion, it replaces the `generator` param outright:
+`MagicCastingLocomotionState` (`#0926`), `MagicCast_Standing` (`#0930`), and the two turn states
+(`#0965`, `#0998`) each get a thin `hkbModifierGenerator` over vanilla `LeftHandMagicCast_MSG`
+(`#0088`), wrapped in a `BSIsActiveModifier` binding one new variable, `bAllowRotation`, so the
+actor can still track its target. Five new nodes, three declaration nodes, 14 files, zero
+contested nodes. The shape is Enemy Magelock's, minus its player/NPC split and its staff rework.
+
+**No flag is planted, and none is needed.** The cast stops routing through a locomotion-blending
+state, so there is nothing left to translate the actor. Ticket 54 measured `bAnimationDriven`
+never rising on the cast the owner certifies as the correct root — the flag was never the thing
+doing the work on this path. So the decision's rule holds in substance and widens in form: **the
+root is authored in the behavior graph, on the state that owns the action.** On a full-body state
+that is an animation-driven flag; where an action's state routes through locomotion, it is the
+generator that gets replaced. Neither is the DLL's.
+
+**The layered-state carve-out below is withdrawn, and its code is deleted.** With the generator
+replaced there is no live locomotion layer left to fight, so the player's input block has nothing
+to fix. It was also inert as shipped: its gate required `bAnimationDriven`, which the same
+measurement says never rises here, so it never fired once. Removed from `input/input.cpp`, along
+with the predicates in `casts/combo_cache.h` and their tests. The forbidden third thing is
+forbidden again with no exception: **no DLL-side root, and no DLL-side movement block either.**
+
+The failed alternative is worth keeping named. `shcc` — ticket 33's flag plant on the six vanilla
+concentration states, three attempts — is retired and deleted. Layered states root nobody via
+flags; that is the whole lesson.
+
+## ~~Amended 2026-08-29: on a LAYERED state, the player's movement INPUT block is the DLL's~~ (withdrawn, see above)
 
 Owner-approved after the moving-entry defect on ticket 33's `shcc` patch: already walking, press
 Flames from the left hand, and "the character stutters and keeps moving then eventually stops
