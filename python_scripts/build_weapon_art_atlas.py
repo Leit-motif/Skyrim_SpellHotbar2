@@ -96,6 +96,8 @@ def load_manifest() -> tuple[list[IconEntry], dict[int, str]]:
                     f"{icon_path} must be {ICON_SIZE}x{ICON_SIZE} RGB or RGBA; "
                     f"got {image.size[0]}x{image.size[1]} {image.mode}"
                 )
+            if image.mode == "RGBA" and image.getchannel("A").getextrema()[0] != 255:
+                raise ValueError(f"{icon_path} contains translucent pixels; Weapon Art icons must be opaque")
         entries.append(IconEntry(art_id, row["DisplayName"].strip(), key, icon_path))
 
     entries.sort(key=lambda entry: entry.art_id)
