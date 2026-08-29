@@ -2,7 +2,9 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** claimed — **UN-PARKED by owner ruling, 2026-08-28.** Two decisions taken the same
+**Status:** built, awaiting deploy + live acceptance — all desk work landed 2026-08-28; see
+"Built 2026-08-28" below for what is staged and the exact deployment steps. **UN-PARKED by
+owner ruling, 2026-08-28.** Two decisions taken the same
 day: the blend goes **route B** (keep ticket 28's shipped held state, author the locomotion
 blend inside it — route A is dead: it would un-ship an accepted feature, re-open ADR-0006, and
 collide with ShoutMCO's root), and the **uniform half-speed rule is revived** (ticket 33 flips
@@ -188,6 +190,41 @@ SpeedMult −50, houseCARL-authored, mod folder `houseCARL - SpellHotbar_ConcSlo
 enabled) and the DLL edges (`apply_conc_slow`/`remove_conc_slow` at channel start / end_channel /
 on_reset / save load, rituals gated out via `applies_conc_slow()`), commit `ae6d174`, build
 43/43, 7/7 test binaries.
+
+## Built 2026-08-28 — everything desk-side is done; deploy and live cells remain
+
+Skyrim/DevBench were owned by another session all day, so the build stops at the repo boundary.
+
+**The blend (Nemesis, merged `1a30a7f`).** Per graph: `hkbBoneWeightArray` +
+`hkbVariableBindingSet` (`spBoneWeight` ← character property `UpperBody`, literal index 2 in
+`1hm_behavior` / 1 in `magicbehavior`) + `BSBoneSwitchGeneratorBoneData` (child = the existing
+`SH2_Channel_Clip`) + `BSBoneSwitchGenerator` `SH2_Channel_UpperBody_BoneSwitchGen`
+(default = vanilla `#4184 1HM_Standing_Locomotion_Behavior` / `#1007
+DefaultMagicCastingBehavior`); `SH2_Channel_MG`'s generator repointed at it. The channel's
+`bAnimationDriven` binding is dropped from `#shtb$33`/`#shtb$28` (invert flags re-paired so
+`bHeadTrackSpine` stays inverted). Static checks: XML parse, zero dangling refs, vanilla ids and
+charProp indices re-verified against `temp_behaviors` by name.
+
+**The slow** (`ae6d174` + the houseCARL plugin): see the spike-result section above.
+
+**Deployment steps, in order, when the game side is free:**
+
+1. Enable mod folder `houseCARL - SpellHotbar_ConcSlow` in MO2 and sort
+   `SpellHotbar_ConcSlow.esp` (the DLL loads form 0x801 from it by name; absence = logged,
+   slow off).
+2. Deploy the rebuilt `SpellHotbar2.dll` (build of `ae6d174` or later) through the
+   skyrim-agent lifecycle.
+3. Deploy the `shtb` Nemesis patch files, then Nemesis **Update Engine + Launch** (the file
+   set changed — `run-nemesis.ps1 -Tick shtb -Apply -UpdateEngine`).
+4. Relaunch once; sweep the acceptance cells below (cliplog for clip identity, displacement
+   ratio for the 50%, `GetActorValue("SpeedMult")` per end path, driver-cast/art/ritual
+   regression cells).
+
+**Open live-only questions from the spike (§4d/§6):** `ChildrenA`-vs-default orientation reads
+right on a real skeleton; the double `UpperBody` masking in `magicbehavior` (fallback: default
+generator `#0922 MagicCastLocomotion_Behavior` + a rebuilt two-state wrapper); the waist seam of
+the coarser `UpperBody` mask vs vanilla's hand-authored 0.5/0.5 spine blend; sneak and
+1st person; blend feel at moveStart/moveStop (owner cell).
 
 ## Acceptance
 
