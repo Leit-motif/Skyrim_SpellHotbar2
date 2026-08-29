@@ -64,6 +64,10 @@ struct SlottedSkill
 
     bool serialize_skill(uint8_t index, SKSE::SerializationInterface* serializer, const std::string& name) const;
     void update_skill_assignment(RE::FormID p_formID);
+
+    /* True if update_skill_assignment can classify this form into a usable slot type.
+       Runs the classifier itself, so the accepted set cannot drift from it. */
+    static bool is_bindable_form(RE::FormID p_formID);
     void update_art_assignment(uint32_t p_art_id);
 };
 

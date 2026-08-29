@@ -1084,6 +1084,19 @@ namespace SpellHotbar
         }
     }
 
+    bool SlottedSkill::is_bindable_form(RE::FormID p_formID)
+    {
+        if (p_formID == 0U) {
+            return false;
+        }
+        // Ask the classifier itself instead of restating its accepted form types here.
+        // Anything it drops into slot_type::unknown has no arm in InputModeCast::process_input
+        // and would seat a slot that renders but can never fire.
+        SlottedSkill probe{};
+        probe.update_skill_assignment(p_formID);
+        return probe.type != slot_type::unknown && probe.type != slot_type::empty;
+    }
+
     void SlottedSkill::update_art_assignment(uint32_t p_art_id)
     {
         clear();

@@ -1010,6 +1010,15 @@ namespace SpellHotbar::Input {
     {
         if (form != nullptr)
         {
+            if (!SpellHotbar::SlottedSkill::is_bindable_form(form->GetFormID())) {
+                // Non-castable form (weapon, armor, ingredient, book, ...): refuse at the bind
+                // seam so storage, the save and the renderer never see an unusable slot.
+                logger::debug("Refused to bind form {:08X}: form type {} is not castable",
+                              form->GetFormID(), static_cast<uint32_t>(form->GetFormType()));
+                RE::PlaySound(sound_UIMenuCancel);
+                return false;
+            }
+
             SpellHotbar::Storage::menu_slot_type slot_type{ Storage::menu_slot_type::magic_menu };
             if (GameData::isVampireLord()) {
                 slot_type = Storage::menu_slot_type::vampire_lord;
