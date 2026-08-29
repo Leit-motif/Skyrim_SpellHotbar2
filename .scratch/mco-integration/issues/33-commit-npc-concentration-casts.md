@@ -234,6 +234,49 @@ Open cells after session 1: NPC rotation-tracking mid-channel (headless plan: di
 player mid-channel, read the mage's heading), NPC fire-and-forget (confirm MSCO's DLL coverage),
 stagger/death end paths, FOMOD install/uninstall in MO2 (static half done), owner-eyes feel pass.
 
+## Runtime sweep, session 2 + the moving-entry defect — 2026-08-29 morning
+
+Session 2 (fresh relaunch, CS-Test): the necromancer never channeled this fight (repositioned,
+then held ground; root false throughout), so the rotation-tracking and NPC fire-and-forget cells
+stay open. Clip ring flooded unfiltered (9,255 dropped) — filter from the start next time, per
+the playbook's own note. Game closed via qqq, nothing saved either session.
+
+**Owner-reported defect (2026-08-29): moving entry stutters.** Verbatim: already in motion, press
+Flames from the left hand → "the character stutters and keeps moving then eventually stops after
+a while." From standstill → roots correctly and cleanly. This is the ticket-32 rejection
+signature (entry momentum carried, steering dead) and thuum 66's shout-slide class, now on the
+rooted state's entry edge.
+
+**Mechanism (static diagnosis, reference compared):** the owner-accepted hotbar channel root —
+`SH2_Channel_State` (`1hm_behavior/#shtb$32`) — is a FULL-BODY state playing its own clip
+(`1HM_Shout_Inhale.HKX`); entering it exits locomotion, so legs stop and `bAnimationDriven`
+roots the controller with nothing left to fight. The vanilla concentration states are LAYERED
+over live locomotion (that is why vanilla walks while channeling). shcc's plant roots the
+controller, but held movement input keeps feeding the still-active locomotion layer: blend
+fight → stutter → momentum decay → late stop. Standstill has no fight; NPC AI stops issuing
+movement intent when it casts (session 1 showed a clean <1-sample freeze), so NPCs are immune.
+Behavior-only rooting is structurally insufficient for the PLAYER on a layered state — no graph
+primitive gates the player controller's input while the locomotion layer runs.
+
+**Fix options, ranked:**
+
+1. **Narrow DLL input capture (recommended)** — while a concentration cast is active on an
+   equipped hand (cast-event gated, or `bAnimationDriven` + caster-state gated), SH2's DLL
+   swallows movement input. This is ticket 39's "we just wanted to block input," scoped to the
+   channel; it revives the ticket-35 capture with a tight gate. Needs an ADR-0015 amendment: the
+   root stays behavior-owned; the player-side INPUT BLOCK on layered states is DLL-owned because
+   the behavior graph cannot express it. NPC side stays behavior-only (proven green).
+2. **moveStop on state enter / moveStart on exit** (enterNotifyEvents on the six states) — the
+   vanilla-native way to idle the locomotion layer. Risk: player input may edge-retrigger
+   moveStart while keys are held (same stutter, different flavor), and exit recovery must be
+   airtight. Worth one instrumented trial only if 1 is rejected.
+3. Accept the stutter, ship, park alongside thuum 66. Not recommended — the owner already
+   rejected exactly this feel once.
+
+Confirming the mechanism live needs owner hands (moving entry is injection-proof); a
+frame-cadence probe of `bAnimationDriven` + player velocity during one moving-entry cast would
+turn the hypothesis into evidence before any DLL work.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
