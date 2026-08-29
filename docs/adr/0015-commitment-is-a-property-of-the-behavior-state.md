@@ -129,6 +129,45 @@ The "future endeavor" of the second amendment is now. What changes, and what doe
   its own clock. The DLL applies and dispels the ability on the channel's own start/teardown
   edges; the number lives in the record.
 
+## Amended 2026-08-29: on a LAYERED state, the player's movement INPUT block is the DLL's
+
+Owner-approved after the moving-entry defect on ticket 33's `shcc` patch: already walking, press
+Flames from the left hand, and "the character stutters and keeps moving then eventually stops
+after a while." From standstill the same cast roots cleanly.
+
+The decision above is unchanged — **the root is still authored on the state, as
+`bAnimationDriven`, and nowhere else.** What this amendment adds is a distinction the original
+decision did not have to make, because until now every state this fork rooted was full-body:
+
+- **A FULL-BODY state needs nothing else.** `SH2_Channel_State` plays its own clip; entering it
+  exits locomotion, so the legs are already stopped when the plant roots the controller and held
+  movement keys have nothing left to feed. That is why the retired DLL capture (ticket 35,
+  `c73b4f1`) was duplication and stays retired.
+- **A LAYERED state does.** The six vanilla concentration states `shcc` patches are layered over
+  live locomotion — that is exactly why vanilla walks while channeling. The plant roots the
+  controller while held keys keep driving the still-running locomotion layer, and the two fight:
+  entry momentum carries, steering is dead, the stop arrives late. **No behavior-graph primitive
+  gates the player controller's input while the locomotion layer runs**, so the graph cannot
+  express this and the block is the DLL's, narrowly.
+
+The narrow block, gated on the live engine state rather than on SH2's own bookkeeping: swallow
+the player's four movement controls while an equipped-hand `MagicCaster` is mid-cast with a
+`kConcentration` spell **and** the player's graph reports `bAnimationDriven`. Both halves are
+load-bearing — the cast alone would leave a patchless user's vanilla walk-casting broken, and
+`bAnimationDriven` alone would catch every MCO attack.
+
+Three things this does not do, and each is the earlier decision holding:
+
+- It does not root. It releases the keys; the plant on the state does the rooting, and a DLL-side
+  root that fought a graph-side one would still be the defect this ADR named.
+- It does not touch NPCs. The behavior-only root is proven green on a real enemy mage: NPC AI
+  stops issuing movement intent when it casts, so there is no input to swallow and no player
+  controller in the loop.
+- It is not the forbidden third thing. Nothing toggles controls wholesale or writes an actor
+  value on the DLL's own clock. Attack, cast and menu controls are untouched, only presses are
+  swallowed (an up event always travels), and every unreadable read — null caster, null spell,
+  unreadable graph — fails open to vanilla movement.
+
 ## The cost we are accepting
 
 A modifier on a shared state catches every actor in it, which is the mechanism above working as
