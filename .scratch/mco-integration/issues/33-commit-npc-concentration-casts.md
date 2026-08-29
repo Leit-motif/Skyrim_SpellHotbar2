@@ -103,6 +103,52 @@ The spike above still runs first and unchanged: if MSCO's binding set already co
 concentration states and something else defeats it, this becomes a different ticket and no patch
 is written.
 
+## Built 2026-08-28 — the `shcc` Nemesis mod (authoring + static validation only)
+
+New Nemesis mod code `shcc` ("Spell Hotbar 2 - Rooted Concentration Casts") at
+`nemesis/Nemesis_Engine/mod/shcc/`, five new nodes and six vanilla-node patches, all in
+`magicbehavior`. The plant is SH2's own proven pair copied verbatim in semantics from
+`#shtb$13`/`$14`: a `BSIsActiveModifier` behind an `hkbVariableBindingSet` binding
+`bAnimationDriven`, `bAllowRotation`, `HKSMoveON` (all uninverted, so all true while the state
+is active — the caster stops translating but still pivots) and `bHeadTrackSpine` inverted.
+
+The insertion point is **not** uniform across the six states, because the graph is not:
+
+| state | node patched | how |
+|---|---|---|
+| MRh_AimedConcentration | `#0184` | vanilla `hkbModifierList` — append `#shcc$1` (conflict-free) |
+| MLh_AimedConcentration | `#0489` | vanilla `hkbModifierList` — append `#shcc$1` (conflict-free) |
+| MRh_SelfConcentration | `#0131` | `modifier` `#0106` → `#shcc$2` (list wrapping `#0106` + `#shcc$1`) |
+| MLh_SelfConcentration | `#0440` | `modifier` `#0106` → `#shcc$2` (same shared list) |
+| DualMagic_SelfConcentration | `#0317` | `generator` `#0318` → `#shcc$3` (new modifier generator) |
+| DualMagic_AimedConcentration | `#0337` | `generator` `#0338` → `#shcc$4` (new modifier generator) |
+
+The two Aimed states reach a real vanilla `hkbModifierList`, so those two are array appends.
+The two Self states reach a single-pointer `modifier` on a vanilla `hkbModifierGenerator`, and
+the two Dual states have no modifier generator at all — both are wrap-and-replace, the same
+shape `sbeef` (`#sbeef$7`/`$21`/`$25`/`$48`) and `pscd` (`#pscd$7`/`$10`/`$13`) already use on
+these exact params in the live stack.
+
+`bAnimationDriven`, `bAllowRotation` and `HKSMoveON` are not vanilla `magicbehavior` variables
+(the vanilla table holds 81 entries and none of the three); they exist at runtime today only
+because Hot Key Skill declares them. `shcc` declares its own in `#0077`/`#0078`/`#0079` so the
+patch stands alone. Duplicate `NEW` declarations across mod codes are tolerated — confirmed by
+reading the merged `temp_behaviors/magicbehavior.txt`, where `bAllowRotation` is declared five
+times under `hotkey`, `msco`, `tkds`, `tkuc` and `tudm`. `bHeadTrackSpine` is vanilla (index
+65) and is not redeclared.
+
+FOMOD: a new "Combat Behavior" `SelectAny` group in the Install Options step, one option
+"Rooted Concentration Casts (MSCO)", `defaultType` Optional and Recommended only when
+`MSCO.esp` is Active — the spell packs' own `fileDependency` shape. Unselected it installs
+nothing; the payload is staged from this repository's `nemesis/` into
+`2100 Optional - Rooted Concentration Casts/`.
+
+Both the generator and the validator are committed under `.scratch/shcc-build/` so the patch
+can be rebuilt and re-checked rather than re-read by hand.
+
+**No runtime evidence.** Nemesis has not been regenerated and the game has not been launched;
+every acceptance box below is still open.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —

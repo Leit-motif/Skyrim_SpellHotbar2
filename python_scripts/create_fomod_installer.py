@@ -76,6 +76,10 @@ required_folder = "0000 Required - Main Mod"
 battlemage_mod_folder = "2000 Optional - Battle Mage Perks"
 battlemage_mod_folder_csf3 = "2001 Optional - Battle Mage Perks CSF3"
 battlemage_mod_folder_csf2 = "2002 Optional - Battle Mage Perks CSF2"
+# Ticket 33: the `shcc` Nemesis patch that roots the six vanilla magicbehavior
+# concentration states for every actor. Optional, and gated on MSCO.esp.
+rooted_concentration_mod_folder = "2100 Optional - Rooted Concentration Casts"
+rooted_concentration_plugin = "MSCO.esp"
 
 
 def _get_spell_pack_config(name: str, folder: str, pluginfile: str | None = None,
@@ -180,6 +184,34 @@ def _get_battle_mage_perk_config_csf2(folder: str, folder2: str) -> str:
                         </plugin>"""
 
 
+def _get_rooted_concentration_config(folder: str, pluginfile: str) -> str:
+    """Optional Nemesis patch (mod code `shcc`) that commits concentration/channeled casts.
+
+    Unchecked by default; pre-checked ("Recommended") only when MSCO.esp is active, the same
+    fileDependency shape the spell packs use. Selecting nothing installs nothing.
+    """
+    return f"""
+                        <plugin name="Rooted Concentration Casts (MSCO)">
+                            <description>Nemesis patch: an actor casting a concentration/channeled spell stops translating for the length of the channel, while still turning to track its target. Applies to the player and to NPCs alike, because the patch sits on the shared vanilla casting states. Requires running Nemesis after install. Recommended when MSCO (Magic Casting Behavior Overhaul) is installed, which leaves the concentration states unrooted.</description>
+                            <files>
+                                <folder source="{folder}" destination="" priority="0"/>
+                            </files>
+                            <typeDescriptor>
+                                <dependencyType>
+                                    <defaultType name="Optional"/>
+                                    <patterns>
+                                    <pattern>
+                                    <dependencies operator="And">
+                                    <fileDependency file="{pluginfile}" state="Active"/>
+                                    </dependencies>
+                                    <type name="Recommended"/>
+                                    </pattern>
+                                    </patterns>
+                                </dependencyType>
+                            </typeDescriptor>
+                        </plugin>"""
+
+
 def _get_profile_config(name: str, json_name: str, desc: str, image: str | None = None) -> str:
     return f"""
                          <plugin name="{name}">
@@ -210,6 +242,12 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                     <plugins order="Explicit">
                         {_get_battle_mage_perk_config(battlemage_mod_folder, battlemage_mod_folder_csf3)}
                         {_get_battle_mage_perk_config_csf2(battlemage_mod_folder, battlemage_mod_folder_csf2)}
+                    </plugins>
+                </group>
+                <group name="Combat Behavior" type="SelectAny">
+                    <plugins order="Explicit">
+                        {_get_rooted_concentration_config(rooted_concentration_mod_folder,
+                                                          rooted_concentration_plugin)}
                     </plugins>
                 </group>
                 <group name="Perk Overhaul" type="SelectExactlyOne">
@@ -494,6 +532,17 @@ battlemage_perk_files = [
      (dev_mod_root_battlemage_csf2, battlemage_mod_folder_csf2)),
 ]
 
+# Ticket 33 -- the `shcc` Nemesis patch. Unlike the other optional payloads this one is
+# authored in this repository rather than in a dev mod root, so it is staged from
+# `nemesis/`, whose layout (Nemesis_Engine/mod/<code>/...) is already the install layout.
+nemesis_source_root = project_root / "nemesis"
+rooted_concentration_files = [
+    (nemesis_source_root / "Nemesis_Engine/mod/shcc/**/*.ini",
+     (nemesis_source_root, rooted_concentration_mod_folder)),
+    (nemesis_source_root / "Nemesis_Engine/mod/shcc/**/*.txt",
+     (nemesis_source_root, rooted_concentration_mod_folder)),
+]
+
 if __name__ == "__main__":
     ONLY_XML_FILES = False
     ONLY_PRINT_FILES = False
@@ -599,6 +648,7 @@ if __name__ == "__main__":
             release_files += get_spell_pack_list(s[0], i, s[1])
 
         release_files += battlemage_perk_files
+        release_files += rooted_concentration_files
 
         release_files += get_perk_overhaul_list("ordinator", 1, "Ordinator - Perks of Skyrim")
         release_files += get_perk_overhaul_list("sperg", 2, "SPERG-SSE")
