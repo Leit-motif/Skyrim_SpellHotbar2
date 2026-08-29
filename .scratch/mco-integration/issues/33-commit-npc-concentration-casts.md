@@ -277,6 +277,18 @@ Confirming the mechanism live needs owner hands (moving entry is injection-proof
 frame-cadence probe of `bAnimationDriven` + player velocity during one moving-entry cast would
 turn the hypothesis into evidence before any DLL work.
 
+## Owner rulings 2026-08-29 morning
+
+1. **NPC cell needs owner eyes to close**: "i will need to see the npc myself to sign off, just
+   because i need to make sure there is no perceivable stutter. this needs to feel natural."
+   Telemetry green stands, but the displacement acceptance box stays open until the owner watches
+   a live enemy mage channel.
+2. **Hotbar reference confirmed**: "we already signed off on the hotbar. it works perfectly (for
+   the reason you stated)" — full-body state, no layer fight. Diagnosis validated.
+3. **DLL input capture approved** for the moving-entry stutter. In build: narrow gate
+   (equipped-hand concentration cast active AND bAnimationDriven true → swallow movement input),
+   ADR-0015 amendment alongside.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
