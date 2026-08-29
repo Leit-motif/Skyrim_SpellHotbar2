@@ -23,6 +23,7 @@ using SpellHotbar::casts::spellfire_hand_bit;
 using SpellHotbar::casts::spellfire_hand_for_tag;
 using SpellHotbar::casts::spellfire_hand_is_armed;
 using SpellHotbar::casts::isolate_caster_for_driver_cast;
+using SpellHotbar::casts::spellfire_event_commits_the_cast;
 using SpellHotbar::casts::spellfire_arm_mask;
 using SpellHotbar::casts::keep_commitment_until_cut;
 using SpellHotbar::casts::MscoChargeCurve;
@@ -396,6 +397,47 @@ void driver_cast_leaves_an_unarmed_hands_spellfire_to_vanilla()
 	expect(isolate_caster_before_vanilla_spellfire(true, SpellFireHand::left, 0U) ==
 			SpellFireHand::none,
 		"nothing armed isolates nothing, even while the driver holds the graph");
+}
+
+// TICKET 61. Acceptance owed the same driver-active term isolation has carried since ticket 46.
+// The mask stays armed for a cast's whole GCD tail and through a retired cast's armed window, so
+// a VANILLA release in an armed hand -- a staff's own attack, an equipped spell -- was accepted
+// and written to the log as `graph raised a ... SpellFire event` with no isolation line beside
+// it. Nothing was mis-delivered, but the commitment evidence every finding is read from was
+// polluted with events no driver cast raised (ticket 51's 2026-08-26 16:50 stream).
+void a_vanilla_spellfire_after_the_clip_commits_nothing()
+{
+	constexpr std::uint8_t right_armed = 2U;
+	expect(spellfire_event_commits_the_cast(true, SpellFireHand::right, right_armed),
+		"our own clip's event, in a hand this cast armed, IS the commitment point");
+	expect(!spellfire_event_commits_the_cast(false, SpellFireHand::right, right_armed),
+		"a staff's own release after the shtb clip is gone belongs to vanilla, however long the "
+		"mask stays armed behind it");
+	expect(!spellfire_event_commits_the_cast(true, SpellFireHand::left, right_armed),
+		"an unarmed hand's event commits nothing, driver live or not");
+	expect(!spellfire_event_commits_the_cast(true, SpellFireHand::none, right_armed),
+		"a tag that names no hand commits nothing");
+}
+
+// The two halves of the commitment point are one rule. They disagreed for three tickets and the
+// disagreement was invisible in the log except as a `graph raised` line with no isolation line
+// under it, so the agreement is asserted rather than assumed.
+void acceptance_and_isolation_answer_the_same_question()
+{
+	constexpr SpellFireHand hands[] = { SpellFireHand::none, SpellFireHand::left,
+		SpellFireHand::right };
+	constexpr std::uint8_t masks[] = { 0U, 1U, 2U, 3U };
+	for (const auto hand : hands) {
+		for (const auto mask : masks) {
+			for (const auto active : { false, true }) {
+				const bool isolates =
+					isolate_caster_before_vanilla_spellfire(active, hand, mask) !=
+					SpellFireHand::none;
+				expect(isolates == spellfire_event_commits_the_cast(active, hand, mask),
+					"isolation and acceptance must never disagree about whose event this is");
+			}
+		}
+	}
 }
 
 void clip_4_does_not_deliver_during_its_windup()
@@ -1090,6 +1132,8 @@ int main()
 	driver_cast_isolates_before_vanilla_sees_left_spellfire();
 	driver_cast_isolates_the_hand_the_spellfire_event_names();
 	driver_cast_leaves_an_unarmed_hands_spellfire_to_vanilla();
+	a_vanilla_spellfire_after_the_clip_commits_nothing();
+	acceptance_and_isolation_answer_the_same_question();
 	clip_4_does_not_deliver_during_its_windup();
 	clip_4_delivers_when_spellfire_arrives_past_the_floor();
 	clips_1_to_3_still_deliver_near_the_start();

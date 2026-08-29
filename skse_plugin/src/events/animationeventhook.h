@@ -22,12 +22,14 @@ namespace SpellHotbar::events {
 		}
 
 	private:
-		// The SpellFire hand and the arming snapshot are decoded once by ProcessEvent_PC and
-		// handed down, so isolation and commitment answer from the same read (ticket 46).
+		// The SpellFire hand, the arming snapshot, and whether a driver cast holds the graph
+		// are read once by ProcessEvent_PC and handed down, so isolation and commitment answer
+		// from the same read (ticket 46, extended to the driver term by ticket 61).
 		static void ProcessEvent(RE::BSAnimationGraphEvent* a_event,
 			RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource,
 			casts::SpellFireHand a_spellfire_hand,
-			casts::CastingController::SpellFireArming a_arming);
+			casts::CastingController::SpellFireArming a_arming,
+			bool a_driver_cast_active);
 
 		static RE::BSEventNotifyControl ProcessEvent_PC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource);
 		//static RE::BSEventNotifyControl ProcessEvent_NPC(RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_sink, RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource);

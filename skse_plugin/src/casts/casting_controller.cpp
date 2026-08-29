@@ -186,13 +186,19 @@ namespace SpellHotbar::casts::CastingController {
 		return { spellfire_state_mask(state), spellfire_state_generation(state) };
 	}
 
-	void notify_spellfire(SpellFireHand hand, uint32_t generation) {
+	void notify_spellfire(SpellFireHand hand, uint32_t generation, bool driver_cast_active) {
 		uint64_t state = spellfire_state.load(std::memory_order_relaxed);
 		// A dual cast raises both authored events and each one takes this path; setting an
 		// already-set latch twice still delivers once (ticket 43), and both are logged because
 		// the pair is what proves a dual clip's contract live.
+		//
+		// Ticket 61: `spellfire_event_commits_the_cast` rather than the mask alone. The mask says
+		// which hands the last cast threw with and stays armed past that cast's own clip, so
+		// vanilla releases in an armed hand were accepted here and logged as driver-cast events.
+		// The driver term is the same one isolation has always used, read from the same snapshot.
 		while (spellfire_state_generation(state) == generation &&
-			   spellfire_hand_is_armed(hand, spellfire_state_mask(state))) {
+			   spellfire_event_commits_the_cast(
+				   driver_cast_active, hand, spellfire_state_mask(state))) {
 			if (spellfire_state.compare_exchange_weak(state, state | spellfire_seen_bit,
 					std::memory_order_relaxed)) {
 				logger::debug("SH2 cast: graph raised a {} SpellFire event",

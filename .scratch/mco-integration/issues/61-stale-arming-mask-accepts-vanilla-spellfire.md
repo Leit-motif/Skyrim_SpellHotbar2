@@ -3,8 +3,8 @@
 **Type:** defect (DLL), low severity. Promoted out of ticket 51's secondary finding when that
 ticket closed (2026-08-29).
 
-**Status:** ready-for-agent. Small and self-contained; no live session needed to fix, one to
-confirm the log goes quiet.
+**Status:** built, unit-green, live confirmation open. Small and self-contained; no live session
+needed to fix, one to confirm the log goes quiet.
 
 ## The defect
 
@@ -40,3 +40,64 @@ Clear the arming mask at cast retire, alongside `clear_spellfire()`. One site, a
 - A hotbar cast still commits exactly once at its clip's own SpellFire frame, both hands and
   dual — ticket 46's rows stay green.
 - The unit-level arming tests still pass (`combo_cache_test`).
+
+
+## Comments
+
+### 2026-08-29 — built; the fix is not the one the ticket names
+
+The proposed fix was already shipped and is not where the defect lives. `clear_spellfire()` has
+cleared the mask as well as the latch since `450a843` (2026-08-26, "disarm at teardown"), and
+every teardown site calls it. Applying the ticket as written would have been a no-op.
+
+What the log actually recorded is an asymmetry between the two halves of the commitment point.
+Both ask the same question — is this SpellFire event a driver cast's own? — and both read the
+arming mask, but only ISOLATION also required a live driver:
+
+- `isolate_caster_before_vanilla_spellfire(driver_cast_active, hand, mask)` — two terms, since
+  ticket 46.
+- `is_msco_combo_window_open_event(hand, mask) && is_active()` — two terms.
+- `notify_spellfire(hand, generation)` — the mask alone.
+
+That is exactly the log signature in the evidence: a `graph raised a … SpellFire event` line
+with NO isolation line beside it. Isolation said no and acceptance said yes, on the same event.
+
+The mask legitimately outlives the clip that armed it, so clearing it earlier is not available as
+a fix. It stays armed through a delivered cast's whole GCD tail, and deliberately through a
+retired cast's armed window (ticket 43), where the still-playing clip's own SpellFire is how that
+payload leaves. "This hand is armed" can therefore never mean "a live cast armed it" on the mask
+alone — the driver term is what carries that, and acceptance was missing it.
+
+**The fix.** One predicate, `spellfire_event_commits_the_cast(driver_cast_active, event_hand,
+armed_mask)` on `combo_cache.h`, and both halves expressed through it so they cannot drift apart
+again. `notify_spellfire` takes the driver snapshot as an argument, read once in
+`ProcessEvent_PC` beside the arming — the same "one snapshot per event" rule ticket 46 set for
+the mask, now covering the driver term too.
+
+### Second evidence bullet: not this defect
+
+The 2026-08-29 14:57:03-08 lines are bare `SH2 graph event: MRh_SpellFire_Event` traces, and
+those come from `should_trace_graph_events()`, which keeps a small post-cast trace budget on
+purpose. No `graph raised` line, no isolation line — that window was already behaving correctly,
+and this change does not touch it. The live 2026-08-26 16:50 stream in the first bullet is the
+defect.
+
+### Adjacent, not fixed
+
+`start_cast` and `start_ritual_cast` arm SpellFire before `MscoCastDriver::begin()`, and the
+CHAINING failure branch returns `start_result::failed` — which `resolve_start` does not clear,
+unlike `graph_refused`. The mask is left armed for a cast that never started. With the driver
+term in place this commits nothing and isolates nothing, so it is now inert rather than a defect;
+recorded here so the next touch of the arming path can tidy it deliberately.
+
+## Acceptance status
+
+- [x] The unit-level arming tests still pass — `combo_cache_test` green, plus two new cases:
+      `a_vanilla_spellfire_after_the_clip_commits_nothing` and
+      `acceptance_and_isolation_answer_the_same_question` (the second cross-checks isolation and
+      acceptance over every hand/mask/driver combination, so the drift cannot return silently).
+      All seven test binaries pass; `SpellHotbar2.dll` links clean.
+- [ ] A vanilla staff or spell release AFTER a hotbar cast logs no `graph raised a … SpellFire
+      event` line and no isolation line. **Needs a live session** — not deployed or run.
+- [ ] A hotbar cast still commits exactly once at its clip's own SpellFire frame, both hands and
+      dual (ticket 46's rows stay green). **Needs a live session.**

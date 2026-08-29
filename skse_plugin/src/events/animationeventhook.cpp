@@ -35,7 +35,8 @@ namespace SpellHotbar::events {
 	void Animation_event_hook::ProcessEvent(RE::BSAnimationGraphEvent* a_event,
 		RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource,
 		casts::SpellFireHand a_spellfire_hand,
-		casts::CastingController::SpellFireArming a_arming)
+		casts::CastingController::SpellFireArming a_arming,
+		bool a_driver_cast_active)
 	{
 		{
 			if (!a_event || !a_event->holder) {
@@ -88,7 +89,11 @@ namespace SpellHotbar::events {
 				casts::ArtDriver::observe_graph_event(eventHolder->As<RE::Actor>(), a_event->tag);
 
 				if (a_spellfire_hand != casts::SpellFireHand::none) {
-					casts::CastingController::notify_spellfire(a_spellfire_hand, a_arming.generation);
+					// Ticket 61: the driver snapshot travels with the arming. Without it the mask
+					// alone accepted a vanilla release in an armed hand — a staff's own attack
+					// after a hotbar cast — and wrote it into the commitment log as ours.
+					casts::CastingController::notify_spellfire(
+						a_spellfire_hand, a_arming.generation, a_driver_cast_active);
 				}
 			}
 
@@ -117,10 +122,16 @@ namespace SpellHotbar::events {
 			? casts::spellfire_hand_for_tag(a_event->tag.c_str() ? a_event->tag.c_str() : "")
 			: casts::SpellFireHand::none;
 		const auto arming = casts::CastingController::spellfire_arming();
+		// Ticket 61: read ONCE, like the arming beside it. Isolation and acceptance are the same
+		// question — is this event a driver cast's own? — and they answered it from two reads of
+		// two different terms, which is how acceptance ended up saying yes where isolation said
+		// no. Our own state_active only moves inside `observe_graph_event`, further down this
+		// call, so the snapshot holds for the whole event.
+		const bool driver_cast_active = casts::MscoCastDriver::is_active();
 		const casts::SpellFireHand isolate =
 			(a_event && a_event->holder && a_event->holder->IsPlayerRef())
 				? casts::isolate_caster_before_vanilla_spellfire(
-					  casts::MscoCastDriver::is_active(), event_hand, arming.mask)
+					  driver_cast_active, event_hand, arming.mask)
 				: casts::SpellFireHand::none;
 		// Same freshness rule as the commitment gate: interrupt and swallow only if no
 		// re-arm landed since the snapshot — a stale event must not silence the NEXT
@@ -138,7 +149,7 @@ namespace SpellHotbar::events {
 			}
 			logger::debug("SH2 cast: isolated {}-hand caster before vanilla SpellFire",
 				is_left ? "left" : "right");
-			ProcessEvent(a_event, a_eventSource, event_hand, arming);
+			ProcessEvent(a_event, a_eventSource, event_hand, arming, driver_cast_active);
 			return RE::BSEventNotifyControl::kContinue;
 		}
 
@@ -146,7 +157,7 @@ namespace SpellHotbar::events {
 		// our observer reads it, so another mod's cleanup cannot land after our
 		// state bookkeeping.
 		const auto result = _ProcessEvent_PC(a_sink, a_event, a_eventSource);
-		ProcessEvent(a_event, a_eventSource, event_hand, arming);
+		ProcessEvent(a_event, a_eventSource, event_hand, arming, driver_cast_active);
 		return result;
 	}
 

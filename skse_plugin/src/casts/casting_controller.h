@@ -329,8 +329,12 @@ namespace SpellHotbar::casts::CastingController {
 	* `generation` is the one `spellfire_arming()` returned for this event. An arming that
 	* landed since then belongs to a later cast, and this event is dropped rather than
 	* committing a cast whose own clip has not reached its throw frame.
+	*
+	* `driver_cast_active` is the hook's own snapshot, the same one isolation answered from
+	* (ticket 61). The mask outlives the clip that armed it, so without this term a vanilla
+	* release in an armed hand was accepted as a driver cast's own event.
 	*/
-	void notify_spellfire(SpellFireHand hand, std::uint32_t generation);
+	void notify_spellfire(SpellFireHand hand, std::uint32_t generation, bool driver_cast_active);
 
 	/**
 	* Disarm the latch: forget any commitment AND the armed hands. Called at cast teardown;

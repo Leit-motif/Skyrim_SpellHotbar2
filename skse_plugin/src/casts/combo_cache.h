@@ -672,6 +672,28 @@ struct MscoChargeCurve {
 	}
 }
 
+// TICKET 61. Whose event is this? One rule, asked by both halves of the commitment point.
+//
+// Two terms, and the second alone is not enough. The arming mask says which hands the LAST cast
+// throws with, and it stays armed well past that cast's own clip: through the whole GCD tail
+// after delivery, and deliberately through a retired cast's armed window (ticket 43), where the
+// still-playing clip's own SpellFire is the normal way its payload leaves. So "this hand is
+// armed" answers "a cast armed it at some point", not "a live cast armed it".
+//
+// The missing term is the driver: only our own clip carries the annotation, so no driver cast
+// means no event of ours. Isolation has carried it since ticket 46; acceptance in
+// `notify_spellfire` did not, and that asymmetry is the defect. A vanilla release in an armed
+// hand after the shtb clip was gone -- a staff's own attack, an equipped spell -- set the seen
+// latch and logged `graph raised a ... SpellFire event` with no isolation line beside it
+// (ticket 51, 2026-08-26 16:50:33 and the 16:51:57-16:52:07 stream). Nothing was mis-delivered,
+// because the latch is cleared at cast start; what was damaged was the commitment evidence
+// every finding in this integration is read from.
+[[nodiscard]] constexpr bool spellfire_event_commits_the_cast(
+	bool driver_cast_active, SpellFireHand event_hand, std::uint8_t armed_mask) noexcept
+{
+	return driver_cast_active && spellfire_hand_is_armed(event_hand, armed_mask);
+}
+
 // InterruptCast at begin() is too early: the caster is idle, and the borrowed clip's
 // SpellFire is ~0.5s later. Vanilla also processes that event before this plugin's
 // observer. Isolate immediately before vanilla sees SpellFire while a Driver Cast is
@@ -689,10 +711,13 @@ struct MscoChargeCurve {
 // left-annotated clip — arm-aware swallowing would have let vanilla finish an equipped left
 // spell on a right cast — but with the per-hand pack live it ate an unrelated vanilla cast
 // released mid-Driver-Cast. `armed_mask` is `spellfire_arm_mask`'s encoding.
+//
+// TICKET 61: expressed through `spellfire_event_commits_the_cast` rather than repeating its two
+// terms, because isolation and acceptance are one question asked twice and had drifted apart.
 [[nodiscard]] constexpr SpellFireHand isolate_caster_before_vanilla_spellfire(
 	bool driver_cast_active, SpellFireHand event_hand, std::uint8_t armed_mask) noexcept
 {
-	return (driver_cast_active && spellfire_hand_is_armed(event_hand, armed_mask))
+	return spellfire_event_commits_the_cast(driver_cast_active, event_hand, armed_mask)
 		? event_hand
 		: SpellFireHand::none;
 }
