@@ -6,15 +6,12 @@ staff state → plain hand set). Upstream welds the staff condition to the casti
 the cross-hand case (spell left, staff right) falls through to plain-left; ours makes it a
 real cell.
 
-**Status:** ready-for-agent (after ticket 46) — scope 1's aimed cells landed with ticket 60
+**Status:** closed 2026-08-29 — scope 1 landed with ticket 60; scope 2 landed with ticket 60;
+the two leftovers are answered by ADR-0018's amendment, not open work
 
 Ticket 60 shipped `cast_left_staff` (2000001111) and `cast_right_staff` (2000001112) on MSCO's
 own `Base - Left Staff` / `Base - Right Staff` art, conditioned on `IsEquippedType 8` with the
-physical-hand boolean. What remains here: the cross-hand cells (spell in one hand, staff in the
-other), hazard 2's live check, and the CROSS-HAND cells (a spell in one hand, a
-staff in the other), which still ride the plain hand set.
-
-Two of this ticket's questions are now answered and are NOT open work:
+physical-hand boolean. Everything this ticket asked for is now answered:
 
 - **Self plus staff** is settled: plain self art, matching MSCO, which has no staff-self art at
   all (its `Self` submods outrank its `Staff` submods). Ticket 60 built self-staff cells on
@@ -22,6 +19,19 @@ Two of this ticket's questions are now answered and are NOT open work:
 - **Scope 2, left-staff detection**, shipped with ticket 60: `EquippedType::STAFF_LEFT`
   classifies a left-held staff wherever the right hand establishes no stance of its own, maps
   to the magic bar, and resolves Auto to `kLeftHand` explicitly.
+- **The cross-hand cells** (spell in one hand, staff in the other) need no cell. MSCO plays
+  plain art there — its `Left Staff` keys on a staff in the LEFT hand and replaces the left
+  clip set, so casting from the hand that holds the spell gets the plain set — and SH2 does
+  the same thing today. ADR-0018's amendment ("agree with MSCO, do not out-specify it") is
+  exactly the rule that settles this, and it settles it in favor of the current behavior.
+  Building the cell would recreate the divergence the self-staff cells were deleted for.
+- **Hazard 2** (does MSCO's 6800/6801 swap our clips behind our back?) is answered: every SH2
+  cell outranks them at 2000001101+, and ticket 60's live pass included staff casts in both
+  hands with the owner confirming the art.
+
+This ticket's framing premise — "ours makes the cross-hand case a real cell" — is the thing
+that got dropped. Reopen only if a live session shows the plain set reading wrong with a staff
+in the off hand.
 
 **Blocked by:** ticket 46 (the pack this extends).
 

@@ -145,3 +145,20 @@ AlchemyItem; refuse the rest with the existing failure sound — before the ID r
 **Status:** deferred.
 
 The bind guard is now filed separately as ticket 52 and does not wait on this one.
+
+
+### 2026-08-29 — closed, superseded by ticket 52; residue promoted to ticket 61
+
+The precondition for every symptom in this ticket is a staff sitting in a slot as
+`slot_type::unknown`. Ticket 52's bind guard (shipped, owner-accepted 2026-08-28) refuses a
+non-castable form at bind time, so that binding can no longer be created — which also means the
+LMB-interrupt hypothesis (`MscoCastDriver::cancel` reached from the attack-key arm while a
+leaked instance satisfies `is_cuttable_follow_through()`) can no longer be TRIGGERED through
+this path, and cannot be confirmed by reproducing the owner's episode. Closing rather than
+carrying an unreachable investigation. The hypothesis stays written down here: if a leaked cast
+instance is ever observed again, this comment is the first thing to read.
+
+The secondary finding is real and independently reachable, so it moves to its own ticket rather
+than dying here: `notify_spellfire` accepts vanilla SpellFire events whenever the last cast's
+mask is still armed. Confirmed again 2026-08-29 — a right-hand staff's own releases logged bare
+`MRh_SpellFire_Event` traces at 14:57:03-08 with no driver cast active. See ticket 61.
