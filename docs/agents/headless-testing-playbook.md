@@ -171,14 +171,17 @@ plugin-set change; quarantine such saves.
 `bAnimationDriven` planted on a state roots cleanly only when the state is FULL-BODY (entering
 it exits locomotion — `SH2_Channel_State`, the shtb cast states, MSCO's cast states). On a
 LAYERED state (the six vanilla concentration states — vanilla walks while channeling), the
-plant roots the controller while held movement keys keep feeding the still-live locomotion
-layer, and the player's moving entry stutters and slides. No graph primitive gates the player
-controller's input while a layer runs, so the player-side fix is the DLL's narrow movement
-capture (input.cpp, gate = equipped-hand kConcentration cast active AND bAnimationDriven true;
-ADR-0015 third amendment). NPCs never need it — casting AI stops issuing movement intent on its
-own (measured: <0.1 unit within one 350 ms sample of channel start). Corollary for testing: a
-standstill root proving green says nothing about the moving entry, and the moving entry is
-owner-hands by construction.
+plant roots the controller while any live movement intent keeps feeding the still-running
+locomotion layer, and the fight shows as stutter/slide (player) or erratic jitter (NPC).
+CORRECTED same day: **NPCs are NOT immune** — an NPC that wants to move mid-channel translates
+200+ units/400 ms with bAnimationDriven true; the earlier "clean freeze" was the AI choosing to
+stand (a false positive worth remembering: an AI's own stillness masquerades as a working
+root). The DLL event-capture fix failed too — movement is poll/state-side (MovementHandler's
+vector sets at key-down, clears only on key-up), the exact mirror of why injected movement
+events move nobody. Current mechanism under trial: the conditioned SpeedMult −100 record
+(ADR-0015's preserved design; ticket 33's PIVOT section). Corollaries for testing: a standstill
+root proving green says nothing about the moving entry; an NPC displacement freeze proves
+nothing unless the AI demonstrably WANTED to move (force combat pursuit first).
 
 ## Hard headless-impossible cells
 
