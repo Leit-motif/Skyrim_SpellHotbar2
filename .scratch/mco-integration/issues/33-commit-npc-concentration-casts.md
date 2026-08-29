@@ -277,6 +277,36 @@ Confirming the mechanism live needs owner hands (moving entry is injection-proof
 frame-cadence probe of `bAnimationDriven` + player velocity during one moving-entry cast would
 turn the hypothesis into evidence before any DLL work.
 
+## Built 2026-08-29 — fix option 1, the narrow DLL movement capture (no runtime evidence)
+
+Option 1 above, owner-approved and scoped as ADR-0015's 2026-08-29 amendment records it. Three
+files in `skse_plugin/`:
+
+- `src/casts/combo_cache.h` — the pure half of the gate:
+  `magic_caster_state_is_actively_casting`, `hand_holds_active_concentration_cast`,
+  `concentration_cast_swallows_movement`, plus plain-int mirrors of
+  `RE::MagicCaster::State::kCharging`/`kCasting` so the predicate is testable without
+  CommonLibSSE.
+- `src/input/input.cpp` — the engine half and the capture, at the same seam `c73b4f1` emptied
+  (the `processAndFilter` button branch, after the frame-blocking block, before the cast
+  chain-out). `equipped_hand_concentration_cast_active` reads both hand `MagicCaster`s;
+  `concentration_root_is_swallowing_movement` adds `GetGraphVariableBool("bAnimationDriven")`;
+  `is_movement_control` matches Forward / Back / Strafe Left / Strafe Right only. Non-up events
+  only; keyboard, gamepad and mouse, as the retired capture did. Two `static_assert`s tie the
+  int mirrors to the real enum.
+- `src/casts/combo_cache_test.cpp` — three new cases covering both halves of the gate and the
+  two must-pass cases (MCO attack, patchless user). The engine reads are runtime-only and are
+  not mocked.
+
+Deliberately NOT revived: the `blocks_movement` virtual chain, `is_movement_blocking_cast`, and
+the `combo_cache` shtb-state helpers. The old capture keyed on SH2's own cast bookkeeping; this
+one keys on the live engine state, so it also covers vanilla equipped-hand casts SH2 never
+drives.
+
+Build green (7/7 test binaries pass, `SpellHotbar2.dll` links) from a fresh configure in the
+agent worktree. **Not deployed, game not launched — the moving-entry cell is owner-hands work
+and stays open.**
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —

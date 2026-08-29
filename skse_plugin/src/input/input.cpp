@@ -329,6 +329,88 @@ namespace SpellHotbar::Input {
                 left_hand_holds_spell(pc),
                 left_key != RE::ControlMap::kInvalid && key_code == left_key);
         }
+
+        // The plain-int mirrors combo_cache.h keeps of RE::MagicCaster::State, checked here
+        // so an upstream renumbering is a build break rather than a gate that silently stops
+        // matching.
+        static_assert(casts::k_magic_caster_state_charging ==
+                          static_cast<int>(RE::MagicCaster::State::kCharging),
+            "MagicCaster::State::kCharging moved; update combo_cache.h");
+        static_assert(casts::k_magic_caster_state_casting ==
+                          static_cast<int>(RE::MagicCaster::State::kCasting),
+            "MagicCaster::State::kCasting moved; update combo_cache.h");
+
+        // Is one of the player's equipped-hand casters mid-cast with a concentration spell?
+        // Reads the live engine state, not SH2's cast bookkeeping, so a vanilla equipped-hand
+        // channel SH2 never drove counts the same as a hotbar one. Fails open: a null caster
+        // or a null spell contributes nothing.
+        bool equipped_hand_concentration_cast_active(RE::PlayerCharacter* pc)
+        {
+            if (!pc) {
+                return false;
+            }
+            constexpr RE::MagicSystem::CastingSource hands[]{
+                RE::MagicSystem::CastingSource::kLeftHand,
+                RE::MagicSystem::CastingSource::kRightHand,
+            };
+            for (const auto source : hands) {
+                auto* caster = pc->GetMagicCaster(source);
+                if (!caster || !caster->currentSpell) {
+                    continue;
+                }
+                const bool state_active = casts::magic_caster_state_is_actively_casting(
+                    static_cast<int>(caster->state.get()));
+                const bool concentration = caster->currentSpell->GetCastingType() ==
+                                           RE::MagicSystem::CastingType::kConcentration;
+                if (casts::hand_holds_active_concentration_cast(state_active, concentration)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Ticket 33's moving-entry capture. See combo_cache.h for the gate's two halves and
+        // why each exists; in one line, the concentration cast says the root is ours and
+        // bAnimationDriven says the root is actually planted. A false from
+        // GetGraphVariableBool leaves the flag false, so an unreadable graph fails open.
+        bool concentration_root_is_swallowing_movement(RE::PlayerCharacter* pc)
+        {
+            if (!pc) {
+                return false;
+            }
+            bool animation_driven = false;
+            pc->GetGraphVariableBool("bAnimationDriven"sv, animation_driven);
+            return casts::concentration_cast_swallows_movement(
+                equipped_hand_concentration_cast_active(pc), animation_driven);
+        }
+
+        // The four movement controls the retired ticket-19 capture swallowed, and no more.
+        // Run and Sprint are deliberately absent: they modulate a translation that is already
+        // gone once Forward/Back/Strafe are held back, and Sprint is also a state the game
+        // clears on its own edges. Attack, cast and menu controls are never touched.
+        bool is_movement_control(uint32_t key_code, RE::INPUT_DEVICE key_device)
+        {
+            auto* control_map = RE::ControlMap::GetSingleton();
+            auto* user_events = RE::UserEvents::GetSingleton();
+            if (!control_map || !user_events) {
+                return false;
+            }
+            const RE::BSFixedString* const controls[]{
+                &user_events->forward,
+                &user_events->back,
+                &user_events->strafeLeft,
+                &user_events->strafeRight,
+            };
+            for (const auto* control : controls) {
+                const uint32_t mapped = control_map->GetMappedKey(*control, key_device);
+                // An unbound control answers kInvalid; matching it would swallow a key that
+                // is not the control at all.
+                if (mapped != RE::ControlMap::kInvalid && key_code == mapped) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     void processAndFilter(RE::InputEvent** a_event)
@@ -461,6 +543,39 @@ namespace SpellHotbar::Input {
                                 }
                             }
                         }
+                    }
+
+                    // Ticket 33: swallow movement while a rooted concentration cast is live.
+                    //
+                    // The gate is BOTH halves, and neither is redundant:
+                    //   1. an equipped-hand MagicCaster is mid-cast with a kConcentration
+                    //      spell -- without this, an MCO attack (which also sets
+                    //      bAnimationDriven) would lose its movement input and change feel;
+                    //   2. the player's graph reports bAnimationDriven -- without this, a user
+                    //      who did not install the optional `shcc` patch would lose vanilla
+                    //      walk-casting, which is theirs to keep.
+                    //
+                    // Only the four movement controls, and only presses: an up event must
+                    // always travel so the game can clear a key held across the gate's edge.
+                    // Every unreadable input (null caster, null spell, unreadable graph) fails
+                    // open and movement passes -- see concentration_root_is_swallowing_movement.
+                    //
+                    // This is not the retired ticket-19 capture. That one keyed on SH2's own
+                    // cast bookkeeping over FULL-BODY shtb states, where the graph's plant was
+                    // already the whole root (ADR-0015, c73b4f1). `shcc` roots the VANILLA
+                    // concentration states, which are LAYERED over live locomotion: held keys
+                    // keep feeding the locomotion layer while the plant roots the controller,
+                    // and the fight is the owner's moving-entry stutter. No graph primitive
+                    // gates the player controller's input while that layer runs, so this block
+                    // is DLL-owned by ADR-0015's 2026-08-29 amendment. NPCs stay behavior-only.
+                    if (!captureEvent && in_ingame_state() &&
+                        (key_device == RE::INPUT_DEVICE::kKeyboard ||
+                         key_device == RE::INPUT_DEVICE::kGamepad ||
+                         key_device == RE::INPUT_DEVICE::kMouse) &&
+                        !bEvent->IsUp() && is_movement_control(key_code, key_device) &&
+                        concentration_root_is_swallowing_movement(pc))
+                    {
+                        captureEvent = true;
                     }
 
                     // Chain a committed cast into an MCO attack. The shtb cast state has no
