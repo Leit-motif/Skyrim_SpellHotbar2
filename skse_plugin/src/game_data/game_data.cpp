@@ -790,6 +790,17 @@ namespace SpellHotbar::GameData {
         return std::make_tuple(icon_main, icon_mod);
     }
 
+    // A left-held staff is invisible to the right-hand walk below, so it used to classify as
+    // FIST -- the default bar, and Auto resolving left only because FIST happens to (ticket 60).
+    inline bool left_hand_holds_staff(RE::TESForm* left_hand)
+    {
+        if (left_hand == nullptr || left_hand->GetFormType() != RE::FormType::Weapon) {
+            return false;
+        }
+        RE::TESObjectWEAP* weapon_left = left_hand->As<RE::TESObjectWEAP>();
+        return weapon_left != nullptr && weapon_left->GetWeaponType() == RE::WEAPON_TYPE::kStaff;
+    }
+
     EquippedType getPlayerEquipmentType()
     { 
         auto pc = RE::PlayerCharacter::GetSingleton();
@@ -798,7 +809,7 @@ namespace SpellHotbar::GameData {
 
         if (right_hand == nullptr)
         {
-            return EquippedType::FIST;
+            return left_hand_holds_staff(left_hand) ? EquippedType::STAFF_LEFT : EquippedType::FIST;
         }
         else if (right_hand->GetFormType() == RE::FormType::Weapon)
         {
@@ -807,7 +818,8 @@ namespace SpellHotbar::GameData {
             switch (type)
             { 
             case RE::WEAPON_TYPE::kHandToHandMelee:
-                    return EquippedType::FIST;
+                    return left_hand_holds_staff(left_hand) ? EquippedType::STAFF_LEFT
+                                                            : EquippedType::FIST;
             case RE::WEAPON_TYPE::kTwoHandAxe:
             case RE::WEAPON_TYPE::kTwoHandSword:
                     return EquippedType::TWOHAND;
@@ -848,7 +860,7 @@ namespace SpellHotbar::GameData {
         {
             return EquippedType::SPELL;
         }
-        return EquippedType::FIST;
+        return left_hand_holds_staff(left_hand) ? EquippedType::STAFF_LEFT : EquippedType::FIST;
     }
 
     bool isVampireLord()
@@ -1825,6 +1837,10 @@ namespace SpellHotbar::GameData {
          case EquippedType::TWOHAND:
          case EquippedType::CROSSBOW:
          case EquippedType::SPELL:
+             hand = RE::MagicSystem::CastingSource::kLeftHand;
+             break;
+         case EquippedType::STAFF_LEFT:
+             // The staff hand, stated rather than inherited from FIST.
              hand = RE::MagicSystem::CastingSource::kLeftHand;
              break;
          case EquippedType::BOW:

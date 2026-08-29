@@ -180,6 +180,7 @@ namespace SpellHotbar::Bars {
                         break;
                     case GameData::EquippedType::SPELL:
                     case GameData::EquippedType::STAFF_SHIELD:
+                    case GameData::EquippedType::STAFF_LEFT:
                         ret = MAGIC_BAR;
                         break;
                     case GameData::EquippedType::BOW:
