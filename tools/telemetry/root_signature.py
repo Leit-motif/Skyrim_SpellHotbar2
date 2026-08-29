@@ -260,6 +260,17 @@ def summarize(args):
 
     pts = pose_samples(pose)
     if pts:
+        # A starved sampler stops delivering and the trajectory simply ends early. Left
+        # unflagged that reads as "the player never moved" -- a root that was never tested.
+        covered = (pose.get("meta") or {}).get("recordedMs")
+        window = doc["seconds"] * 1000.0
+        if covered and covered < window * 0.8:
+            lines.append(
+                "**POSE TRUNCATED: the sampler covered %.1f s of a %.0f s window.** "
+                "Treat everything below as unreliable and re-run with --mode pose."
+                % (covered / 1000.0, doc["seconds"])
+            )
+            lines.append("")
         gaps = [b["tMs"] - a["tMs"] for a, b in zip(pts, pts[1:])]
         lines.append(
             "## Pose: %d samples, median cadence %.0f ms (requested %s ms)"
