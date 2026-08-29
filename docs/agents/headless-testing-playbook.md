@@ -166,6 +166,20 @@ ability's PLUGIN was disabled, keeps the AV delta as an orphaned modifier (obser
 SpeedMult with no effect in the list). Never judge residue from a save that crossed a
 plugin-set change; quarantine such saves.
 
+## Rooting: full-body vs layered states (ticket 33's lesson, 2026-08-29)
+
+`bAnimationDriven` planted on a state roots cleanly only when the state is FULL-BODY (entering
+it exits locomotion — `SH2_Channel_State`, the shtb cast states, MSCO's cast states). On a
+LAYERED state (the six vanilla concentration states — vanilla walks while channeling), the
+plant roots the controller while held movement keys keep feeding the still-live locomotion
+layer, and the player's moving entry stutters and slides. No graph primitive gates the player
+controller's input while a layer runs, so the player-side fix is the DLL's narrow movement
+capture (input.cpp, gate = equipped-hand kConcentration cast active AND bAnimationDriven true;
+ADR-0015 third amendment). NPCs never need it — casting AI stops issuing movement intent on its
+own (measured: <0.1 unit within one 350 ms sample of channel start). Corollary for testing: a
+standstill root proving green says nothing about the moving entry, and the moving entry is
+owner-hands by construction.
+
 ## Hard headless-impossible cells
 
 | Cell | Why | Route |
