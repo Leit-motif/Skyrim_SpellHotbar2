@@ -109,10 +109,10 @@ quartet added at the same frames — so the two self cells differ only in which 
 | `cast_left_self` | 2000001106 | 2 | left | — |
 | `cast_left_staff` | 2000001111 | 1 | left | left |
 | `cast_right_staff` | 2000001112 | 1 | right | right |
-| `cast_left_staff_self` | 2000001121 | 2 | left | left |
-| `cast_right_staff_self` | 2000001122 | 2 | right | right |
 
-Every fire-and-forget cell is owned. Nothing falls through to an MSCO submod, so no MSCO
+Eight cells. The two self-staff cells were built and then removed the same day (see
+Comments); a self cast with a staff in hand rides the plain self cell, which is what MSCO does.
+Every other fire-and-forget cell is owned. Nothing falls through to an MSCO submod, so no MSCO
 condition on equipped state can decide a hotbar cast's art again.
 
 ## Consequences
@@ -166,3 +166,20 @@ of Frost Novas and Staff of Shock Novas, Bruma's Rod of Potency and Sceptre of F
 Entombment, Arcanum's Ensis Benedictus, all self + fire-and-forget; Bruma's Wooden Staff of
 Awesome Conflagration is self + concentration. Vanilla ships no self-target staff enchantment
 at all.
+
+### 2026-08-29 — self-staff cells removed for consistency with MSCO
+
+Owner ruling, after seeing it in play: "I find consistency more important." `cast_left_staff_self`
+and `cast_right_staff_self` are deleted from the pack and from the deployed mod. A self cast with
+a staff in hand now falls to `cast_left_self` / `cast_right_self` — MSCO's plain self art, which
+is exactly what MSCO plays when the staff casts its own self enchantment. The two presentations
+match again.
+
+The four aimed cells STAY. They are the consistent case, not an exception to this ruling: MSCO's
+`Left Staff` / `Right Staff` submods do play staff art for an aimed staff cast, so
+`cast_left_staff` / `cast_right_staff` agree with MSCO rather than diverging from it. Removing
+them would recreate the mismatch this ruling is closing, in the other direction.
+
+Recovery if this is ever reversed: both folders are intact at `9448cdc` (clips, configs, stamps),
+and the sources are MSCO's `Base - Left Staff\MSCO_left5.hkx` and
+`Base - Right Staff\MSCO_right5.hkx` at priorities 2000001121 / 2000001122.
