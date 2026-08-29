@@ -88,6 +88,14 @@ namespace SpellHotbar::Input {
 		{
 			return m_isDown;
 		}
+		/**
+		 * Test seam (ticket 32): force the held state so a channel can be sustained
+		 * headlessly. Real input events keep writing m_isDown as usual afterwards.
+		 */
+		inline void set_synthetic_down(bool held)
+		{
+			m_isDown = held;
+		}
 		void unbind();
 
 		inline bool isValidBound() const {

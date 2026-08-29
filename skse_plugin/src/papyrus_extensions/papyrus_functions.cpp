@@ -50,6 +50,24 @@ void cast_slot(RE::StaticFunctionTag*, int slot_index)
     });
 }
 
+/* Test seam (ticket 32): hold or release a slot's keybind state, so a concentration
+ * channel can be sustained headlessly. castSlot presses; the channel then reads
+ * m_keybind.isDown(), which only the physical input hook writes -- injected InputEvents
+ * never reach it (movement and this hook are both poll-side). Set held BEFORE castSlot
+ * so the first update's keydown check passes; set false to release the channel. */
+void set_slot_key_held(RE::StaticFunctionTag*, int slot_index, bool held)
+{
+    SKSE::GetTaskInterface()->AddTask([slot_index, held]() {
+        using namespace SpellHotbar;
+        if (slot_index < 0 || slot_index >= static_cast<int>(Input::key_spells.size())) {
+            logger::warn("setSlotKeyHeld({}, {}): slot index out of range", slot_index, held);
+            return;
+        }
+        Input::key_spells[static_cast<size_t>(slot_index)].set_synthetic_down(held);
+        logger::info("setSlotKeyHeld({}, {}): applied", slot_index, held);
+    });
+}
+
 void slot_art(RE::StaticFunctionTag*, int slot_index, int art_id)
 {
     SKSE::GetTaskInterface()->AddTask([slot_index, art_id]() {
@@ -684,6 +702,7 @@ bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) 
     vm->RegisterFunction("castSlot", "SpellHotbar", cast_slot);
     vm->RegisterFunction("slotArt", "SpellHotbar", slot_art);
     vm->RegisterFunction("setSlotHand", "SpellHotbar", set_slot_hand);
+    vm->RegisterFunction("setSlotKeyHeld", "SpellHotbar", set_slot_key_held);
     vm->RegisterFunction("getArtSelector", "SpellHotbar", get_art_selector);
     vm->RegisterFunction("getNumberOfSlots", "SpellHotbar", get_number_of_slots);
     vm->RegisterFunction("setNumberOfSlots", "SpellHotbar", set_number_of_slots);

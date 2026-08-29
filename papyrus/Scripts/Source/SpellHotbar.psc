@@ -7,6 +7,9 @@ function slotArt(int slot_index, int art_id) global native
 ; Deliberately raw: unlike the menu's rotate it does not validate dual capability or slot
 ; type, so tests can exercise the resolver's downgrade and fallback paths on purpose.
 function setSlotHand(int slot_index, int hand) global native
+; Test seam (ticket 32): force a slot keybind's held state so a concentration channel can be
+; sustained headlessly. Set true BEFORE castSlot; set false to release the channel.
+function setSlotKeyHeld(int slot_index, bool held) global native
 int function getArtSelector() global native
 int function getNumberOfSlots() global native
 int function setNumberOfSlots(int num) global native
