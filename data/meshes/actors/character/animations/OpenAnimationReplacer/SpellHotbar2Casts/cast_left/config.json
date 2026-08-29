@@ -1,0 +1,41 @@
+{
+    "name": "SH2 Cast - Left (aimed)",
+    "description": "MSCO's Base - default left set on its own MSCO_left1-4 path names, for a fire-and-forget AIMED cast resolved to the LEFT hand. SpellHotbar_SpellAnimationType (0x815) == 1 is cast_anim_ids.h kAimed.primary; SpellHotbar_CastingSource (0x835) == 0 is RE::MagicSystem::CastingSource::kLeftHand. Ticket 46 left this cell to fall through to the bound clips, but MSCO's own Self Left (6901) is conditioned on the LEFT hand's equipped delivery type, so an equipped self spell stole the aimed cast's art. The fork owns the cell instead. Clips keep MSCO's MLh_SpellFire_Event and the fork's zeroed root motion on clip 4.",
+    "priority": 2000001105,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 0.0
+            }
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

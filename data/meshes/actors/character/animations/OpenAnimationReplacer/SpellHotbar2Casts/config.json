@@ -1,7 +1,7 @@
 {
     "name": "Spell Hotbar 2 Casts",
     "author": "Spell Hotbar 2",
-    "description": "Per-hand fire-and-forget cast presentation for the Driver Cast states (ADR-0018, ticket 46). The four shtb states stay neutral on the Animations\\MSCO_left1-4.hkx path names; these submods select the right-hand and dual-hand clip sets by comparing the two SpellHotbar.esp globals OAR can read while the state is live. Every replacement file therefore keeps the base path's file name and the submod FOLDER is the identity.",
+    "description": "Per-hand fire-and-forget cast presentation for the Driver Cast states (ADR-0018, ticket 46). The four shtb states stay neutral on the Animations\\MSCO_left1-4.hkx path names; these submods select the left-hand, right-hand and dual-hand clip sets by comparing the two SpellHotbar.esp globals OAR can read while the state is live. The left column is owned rather than left to fall through: MSCO's own Self Left submod is conditioned on the equipped left-hand spell's delivery type and would otherwise decide it. Every replacement file therefore keeps the base path's file name and the submod FOLDER is the identity.",
     "conditionPresets": [
         {
             "name": "IsPlayer",
