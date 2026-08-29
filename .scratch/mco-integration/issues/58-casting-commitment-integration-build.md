@@ -5,8 +5,8 @@
 **Status:** RESOLVED 2026-08-29 (patch `shcr`, commits `3af9755`..`670258a`). All acceptance
 cells closed: player + NPC rooting and rotation tracking owner-confirmed live, retire list
 done, ADR-0015 amended. The owner overruled the FOMOD option — `shcr` ships unconditionally.
-The only open work is shipping itself: ticket 59 (release packaging ships no Nemesis tree at
-all, `shtb` included).
+The only open work is shipping itself: ticket 59 (our fork has no release path yet; owner
+ruled the mod ships as an OVERWRITE over base SH2).
 **Blocked by:** None. 54 closed partial, 55/56/57 closed — read
 `notes/57-mechanism-comparison.md` before touching anything here.
 
