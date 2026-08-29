@@ -118,3 +118,32 @@ into the MO2 mod folder FAILED — `SkyrimSE.exe` (pid 71576) and MO2 were live 
 hold the deployed DLL. The fresh binary sits at `skse_plugin/build/release/SpellHotbar2.dll`
 (2026-08-28 20:34); the deployed copy is still 2026-08-26. Re-run `build-release.bat` with the
 game closed to deploy, then run acceptance 1-4.
+
+### 2026-08-28 — live session: the press cells are owner-hands, proven not assumed
+
+Launched the guarded DLL (deployed 21:13, game up 21:19, owner's latest save, `playerLoaded`
+frame 11648) and tried to drive acceptance 1 headlessly. It cannot be driven. The proof is a
+contrast inside one session, not the playbook's general warning:
+
+- Injection is alive: `input {key:15, userEvent:"Tween Menu"}` opened TweenMenu, confirmed via
+  `menu action=list`.
+- The bar is alive and slot 0 is bound: `SpellHotbar.castSlot(0)` ran a full cast — graph events,
+  `SH2_CastExit`, `SH2_ArtSelector=0`, the usual trace.
+- The same slot-0 bind key (`GetKeyBind(0)` = scan 75, Numpad 4) injected as a tap produced
+  **zero SpellHotbar2 log lines** — both with InventoryMenu open (the bind path) and in-game
+  (the press path). Not a refusal, not a press-gate line. Nothing.
+
+So `Input::processAndFilter`, which is the only caller of `Input::slot_spell`, never sees an
+injected event: DevBench's events reach MenuControls/PlayerControls but bypass SH2's hooked
+dispatch site (`RELOCATION_ID(67315, 68617)`). This is the playbook's "physical input path /
+input-hook changes -> owner hands" row, now with a positive control on both sides. Ticket 50's
+harness is what would close it.
+
+**Oracles ready for the owner's pass** (no pixels needed):
+- `SpellHotbar.saveBarsToFile(path)` dumps the live bars to JSON — that answers "slot unchanged"
+  and "the accepted types still seat". Pre-press snapshot taken this session.
+- The guard's own `logger::debug` line in SpellHotbar2.log names the refused FormID and form
+  type. A successful bind logs nothing (`Storage::slotSpell_internal` is silent), so the JSON is
+  the oracle for cell 3, and the log is the oracle for cells 1 and 2.
+
+Game left running for the owner's presses.

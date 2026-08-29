@@ -147,6 +147,7 @@ capture-then-inspect. Also offers `replay` — untested here.
 | Visual/FX identity, colour, submod naming on screen | No capture composites the overlay; frames banned | Owner eyes |
 | Binding Menu contents per bar | Mouse-only UI, no cursor injection | Owner eyes |
 | Physical input path / input-hook changes | Injection enters downstream | Owner hands (until ticket 50 harness) |
+| Any SH2 keybind press (hotbar slot press, menu bind) | SH2's dispatch hook never sees injected events — proven 2026-08-28 by contrast: TweenMenu injection worked and `castSlot(0)` cast, while the slot-0 bind key injected as a tap logged nothing in either menu or gameplay | Owner hands; use `castSlot`/`slotArt` for anything downstream of the press |
 | "Bound key still held" gates | Injected state may not reach the mod's handler | Establish per-mod, then owner |
 | Dual-cast on CS-Test | Level-3 fixture has no dual-cast perks; scripted dual silently downgrades to left (now logged) | Owner's character, or in-memory perk grant |
 
