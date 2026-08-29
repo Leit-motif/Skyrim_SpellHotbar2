@@ -160,6 +160,35 @@ same edges that already tear the channel down (`casting_controller.h`, `CastingI
   every actor and does not breach the consistency ruling. A future movement-designed ritual set
   (floating/hover) is [ticket 34](34-ship-movement-ritual-animations.md), parked.
 
+## Spike result 2026-08-28 — layered blend confirmed; two ticket premises corrected
+
+Full evidence: [spike-vanilla-shout-blend.md](../evidence/t32/spike-vanilla-shout-blend.md).
+The verdict: vanilla walks while shout-charging (and while casting) via a **bone-weighted
+layer** — the same static inhale pose on the upper body, an ordinary locomotion sub-graph
+underneath. The new-assets wall this ticket was tabled against does not exist for that route.
+The minimal build is three new nodes plus one repointed generator per graph
+(`BSBoneSwitchGenerator` with `spBoneWeight` bound to the character property `UpperBody`,
+default generator = the graph's existing standing/locomotion machine, Nemesis `#4184` in
+`1hm_behavior` / `#1007` in `magicbehavior`), plus dropping the `bAnimationDriven` binding from
+the channel's own binding sets (`#shtb$33` / `#shtb$28`) — the modifier, not the clip, is what
+plants the feet.
+
+Two corrections to this ticket's own text, so nobody re-inherits them:
+
+1. **"The clips for moving while channeling already exist" is false.** Vanilla's
+   `mt_/1hm_/sneak1hm_shout_inhale.hkx` are stance variants (1.03 s, zero annotations,
+   `extractedMotion` null — no movement in any of them), and the SH2 submod's five files are
+   **byte-identical** copies of one 3.17 s standing pose. Playing `mt_shout_inhale` would have
+   changed nothing.
+2. Route A's real value was never the clips — it was the `ShoutStandingLocomotionBehavior`
+   machinery, which route B transplants without touching the shout graph or ADR-0006.
+
+Progress the same day: the slow half is built — `SpellHotbar_ConcSlow.esp` (MGEF + ability,
+SpeedMult −50, houseCARL-authored, mod folder `houseCARL - SpellHotbar_ConcSlow`, not yet
+enabled) and the DLL edges (`apply_conc_slow`/`remove_conc_slow` at channel start / end_channel /
+on_reset / save load, rituals gated out via `applies_conc_slow()`), commit `ae6d174`, build
+43/43, 7/7 test binaries.
+
 ## Acceptance
 
 - [ ] A single-hand concentration channel translates the player while held, with the moving
