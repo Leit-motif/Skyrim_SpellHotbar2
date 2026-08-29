@@ -8,9 +8,9 @@
 			<hkparam name="bIsActive1">false</hkparam>
 			<hkparam name="bInvertActive1">false</hkparam>
 			<hkparam name="bIsActive2">false</hkparam>
-			<hkparam name="bInvertActive2">false</hkparam>
+			<hkparam name="bInvertActive2">true</hkparam>
 			<hkparam name="bIsActive3">false</hkparam>
-			<hkparam name="bInvertActive3">true</hkparam>
+			<hkparam name="bInvertActive3">false</hkparam>
 			<hkparam name="bIsActive4">false</hkparam>
 			<hkparam name="bInvertActive4">false</hkparam>
 		</hkobject>
