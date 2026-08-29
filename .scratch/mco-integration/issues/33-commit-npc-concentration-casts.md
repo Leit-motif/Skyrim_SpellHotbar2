@@ -2,12 +2,19 @@
 
 **Type:** spike, then feature (Nemesis patch + FOMOD option)
 
-**Status:** claimed, **back in the root-everyone shape** — the 2026-08-28 morning
-re-flip to the conditioned-record shape lasted one day: the owner played ticket 32's built
-half-speed channel that evening and rejected it ("as long as npc's are rooted too, that will
-have to suffice. i think that's preferable actually"). Ticket 32 is closed wontfix; the rule is
-the 2026-08-24 final one, now stated as a preference: **concentration roots, for every actor.**
-Build "The build, restated for the final rule" below, spike first, unchanged.
+**Status:** CLOSED 2026-08-29, superseded by ticket 58 — closed in the sweep that day, not on
+the day the work landed. Every mechanism this ticket carried is retired and verified gone from
+the tree: `nemesis/Nemesis_Engine/mod/` holds only `shcr` and `shtb` (no `shcc`), `.scratch/`
+has no `shcc-build`, `grep` for `blocks_movement` / `is_movement_blocking_cast` /
+`blocksMovement` across `skse_plugin/` returns nothing, and `SpellHotbar_RootedConcentration`
+appears in neither the repo, the Nolvus Awakening `mods/` directory, nor any profile's
+`modlist.txt`. The ask itself was delivered by ticket 58's `shcr` patch and owner-confirmed
+live ("player rooting works", NPC cell likewise). Two of this ticket's acceptance cells did
+not survive contact: the FOMOD option was overruled by the owner (`shcr` ships
+unconditionally, ticket 58 / ticket 59), and the SpeedMult ESP route was rejected outright.
+**Do not build anything in the "The build, restated" section below** — it describes a
+mechanism that failed three times and has been deleted. It is kept as the record of why the
+flag-plant shape does not work on layered states.
 
 **Blocked by:** None.
 

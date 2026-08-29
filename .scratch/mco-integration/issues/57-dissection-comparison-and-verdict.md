@@ -14,7 +14,7 @@ build.
 
 **Type:** research + spec (decision-complete handoff; second-model review; no authoring)
 
-**Status:** ready-for-agent. **Blocked by:** 55, 56. Part of the ticket 53 umbrella.
+**Status (superseded — see the CLOSED line at the top):** ~~ready-for-agent. **Blocked by:** 55, 56. Part of the ticket 53 umbrella.~~
 
 ## Deliverables
 

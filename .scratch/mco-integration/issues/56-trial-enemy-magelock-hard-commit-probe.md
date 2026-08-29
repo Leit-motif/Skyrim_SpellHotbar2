@@ -11,7 +11,7 @@ break and a framework already installed.
 
 **Type:** trial install + contention read + owner feel test (adopt/adapt decided later, in 57)
 
-**Status:** ready-for-agent. **Blocked by:** 54. Part of the ticket 53 umbrella.
+**Status (superseded — see the CLOSED line at the top):** ~~ready-for-agent. **Blocked by:** 54. Part of the ticket 53 umbrella.~~
 
 ## Why
 

@@ -4,7 +4,8 @@ Filed from ticket 14's owner acceptance pass (2026-08-25). Ticket 14 tinted the 
 and deliberately left the slot strip unchanged. The owner's pass showed that the strip needs the
 same treatment, plus one defect of its own.
 
-**Blocked by:** 14 (agent half done; owner cells in progress)
+**Blocked by:** nothing. Ticket 14 closed DONE, owner-accepted 2026-08-25 — this ticket has
+been unblocked since then and the line above said otherwise until the 2026-08-29 sweep.
 
 **Status:** ready-for-agent
 

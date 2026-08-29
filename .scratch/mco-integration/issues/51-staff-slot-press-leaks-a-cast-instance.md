@@ -4,8 +4,11 @@
 "when I tried to assign a staff to spell hotbar 2, all of a sudden the button did not work,
 and then the staff itself stopped working, even trying to use it manually."
 
-**Status:** needs-triage — evidence window captured; needs the owner's answers below, then a
-source read of the staff slot path.
+**Status:** CLOSED 2026-08-29, superseded by ticket 52 (commit `06405e7`). Ticket 52's bind
+guard makes a staff-in-a-slot binding impossible to create, so every symptom here is
+unreachable; the residual finding moved to ticket 61, which is itself now closed. The full
+reasoning is under "2026-08-29 — closed" at the bottom. This header said `needs-triage` for
+four days after the close; corrected in the 2026-08-29 sweep.
 
 ## Evidence (SpellHotbar2.log, session of 2026-08-26 16:32, still on disk at filing time)
 
@@ -120,8 +123,9 @@ and refuse it visibly rather than seating an inert `unknown`. The LMB interrupt 
 investigation that needs a live session. Splitting them lets the first ship without waiting on
 the second.
 
-**Status:** needs-triage -> the bind defect is diagnosed and ready to spec; the LMB interrupt
-needs one instrumented live session with the owner at the keyboard.
+**Status at the time (historical, superseded by the close at the bottom):** needs-triage -> the
+bind defect is diagnosed and ready to spec; the LMB interrupt needs one instrumented live
+session with the owner at the keyboard.
 
 ### 2026-08-26 — deferred
 

@@ -16,7 +16,7 @@ future mechanism ever needs a `SpeedMult` change to take on a moving actor).
 
 **Type:** trial install + owner feel test (throwaway; the mod does NOT ship)
 
-**Status:** ready-for-agent. **Blocked by:** 54 (oracle first). Part of the ticket 53 umbrella.
+**Status (superseded — see the CLOSED line at the top):** ~~ready-for-agent. **Blocked by:** 54 (oracle first). Part of the ticket 53 umbrella.~~
 
 ## Why
 
