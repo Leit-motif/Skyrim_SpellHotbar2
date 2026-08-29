@@ -1,5 +1,14 @@
 # 56 — Trial-install Enemy Magelock: does the hard commit work and feel right here?
 
+**Status: CLOSED superseded 2026-08-29.** Trial-installing a third-party behavior patch is not
+the path -- SH2 owns its own mechanism, and a dependency that contests `msco`/`pscd`/`sbeef`/
+`shtb` is not something this mod ships. The mechanism was read from the reference's source
+instead (`notes/57-mechanism-comparison.md`).
+
+**Its one surviving half is the contention read**, which moves into ticket 58 as a build step:
+the nodes to check are named in the comparison note, and `sbeef` is now both a thing not to
+break and a framework already installed.
+
 **Type:** trial install + contention read + owner feel test (adopt/adapt decided later, in 57)
 
 **Status:** ready-for-agent. **Blocked by:** 54. Part of the ticket 53 umbrella.

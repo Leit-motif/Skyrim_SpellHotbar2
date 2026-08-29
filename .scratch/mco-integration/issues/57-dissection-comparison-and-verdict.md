@@ -1,5 +1,17 @@
 # 57 — Dissect both references, write the comparison, get the owner's verdict, spec the build
 
+**Status: CLOSED 2026-08-29, delivered as `notes/57-mechanism-comparison.md`** (merged to main).
+Both references read at mechanism level from their own sources; ticket 53's description of each
+was wrong and is corrected there.
+
+**The owner's verdict, same day: build Magelock's structural approach.** CARIM's direction is
+rejected outright (see 55). The fork this ticket existed to resolve is closed, and with the
+graded-slow half gone there is nothing left to compose -- the standing rule applies unchanged:
+everything roots, every actor, movement out of scope.
+
+No second-model review of a fork spec is needed, because there is no fork. Ticket 58 carries the
+build.
+
 **Type:** research + spec (decision-complete handoff; second-model review; no authoring)
 
 **Status:** ready-for-agent. **Blocked by:** 55, 56. Part of the ticket 53 umbrella.
