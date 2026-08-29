@@ -8,8 +8,9 @@ gets blocked.
 **Blocked by:** nothing. Ticket 38's rooting change is the thing being corrected, so read it and
 `docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md` first.
 
-**Status:** ready-for-agent — triaged 2026-08-29 against the source and against ticket 54's
-measurement. The suspect is named; start there rather than re-opening the diagnosis wide.
+**Status:** claimed — 2026-08-29, implementation session. Triaged the same day against the
+source and against ticket 54's measurement; the suspect is named; start there rather than
+re-opening the diagnosis wide.
 
 ## Triage 2026-08-29: the discriminator this ticket asked for already exists
 
