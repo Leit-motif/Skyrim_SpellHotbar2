@@ -175,6 +175,65 @@ so no Nemesis run and no relaunch were attempted. Remaining, in order, once the 
    cells: interrupt/stagger/death, root lifts, AI resumes.
 4. FOMOD install/uninstall check on the generated installer.
 
+## Nemesis regeneration 2026-08-28 23:28–23:32 — clean, verified in the compiled binary
+
+`run-nemesis.ps1 -Tick shcc -Apply -UpdateEngine`: Engine update 124 s, generation 116 s,
+1058 animations, no shcc-related warnings (`Mod Checked 25: shcc`). Verified against the
+**compiled** `magicbehavior.hkx` (hkxc → XML), not just the merged text, because the merged text
+stacks all contenders for a single-value param and only one compiles:
+
+- All six states reach the root. Aimed lists composed (`{vanilla, pscd-twist, sbeef, shcc}`);
+  Self states' generator → `SHCC_SelfConcentration_ML {#0106-equiv, root}`; both Dual states'
+  generator → the SHCC wrapper → root + inner SM.
+- **Contention resolved last-checked-wins, and shcc displaced two mods where the param is
+  single-valued:** `sbeef` (State Behavior Framework 2.0) lost its
+  `hkbEvaluateExpressionModifier`s on MRh/MLh Self and both Dual states; `pscd` (Proper Spell
+  Cast Direction) lost its `hkbTwistModifier` arm-aim on **Dual Aimed only** (single-hand aimed
+  keeps it — pscd sits in the lists we appended to). Precedent: pre-shcc, pscd was already
+  displacing sbeef on Dual Aimed in this load order, with no observed fallout. If SBF-conditioned
+  behavior misbehaves during concentration casts, this displacement is the first suspect — it is
+  a property of Nemesis single-value merging, not fixable from shcc's side (a patch cannot
+  reference another mod's `$` nodes without hard-depending on it).
+
+## Runtime sweep, session 1 — 2026-08-28 ~23:45–00:00, save CS-Test (auto-loaded latest), profile Nolvus Awakening
+
+Player cells (equipped-hand, vanilla cast path via injected attack holds — event-side, per playbook):
+
+- **Left aimed (Flames, `MLh_AimedConcentration`): GREEN.** `bAnimationDriven` false at drawn
+  idle → true 1.5 s into the channel (with `bAllowRotation` true — our binding's signature) →
+  false 2 s after release.
+- **Left self (Healing, `MLh_SelfConcentration` — the contested `#shcc$2` wrapper path): GREEN.**
+  Root true during a genuinely draining channel (magicka −13/s); released to false within 1.5 s
+  of the button-up reaching the graph. One release event was lost in injection (channel ran ~9 s
+  past the first `up`; root held exactly as a physically-held button would; explicit second `up`
+  released it) — input-injection raciness, not a patch fault.
+- **Right aimed: NOT REACHED, pre-existing MSCO initiation bug, not a shcc fault.** The injected
+  right press with Flames in both hands produced zero player clips and no magicka drain; MSCO.log
+  shows the documented dead-caster signature (`BeginCastLeft` → `[GetEquippedSpell] No spells` →
+  `InterruptedCast` — MSCO's `AttackBlockHandler::ProcessButton` hook owns that button). The
+  MRh states carry the identical verified modifier in the compiled binary (`#0184` list holds
+  `#0737`); the magic-casting-behavioral-overhaul workspace owns the initiation bug.
+
+NPC cell (**the headline**) — real placed Master Necromancer `0x000D7790`, Fort Snowhawk
+interior (`coc FortSnowhawk01`, tgm, `player.moveto`; it already knew Flames — AddSpell returned
+false, nothing granted; nothing saved):
+
+- **GREEN.** 30-sample loop (350 ms cadence) of `bAnimationDriven` + X/Y on the mage across three
+  separate Flames channels: false stretches moved ~40 units/sample (closing/strafing); true
+  stretches (samples 16–19, 28–29) froze — < 0.1 unit over ~1.4 s of channel. Every channel ended
+  true→false with movement resuming at full rate within one sample. No AI wedge across the whole
+  window. Displacement, not footfalls, per thuum 66.
+- Skeletons in the cell are out of scope by construction — they run their own graph, not
+  `magicbehavior`.
+
+Owner interjected "this isn't working" mid-loop (session stopped for usage); the telemetry above
+says the root planted and lifted cleanly, so if that was a visual observation it is unexplained
+and needs the owner to describe what they saw.
+
+Open cells after session 1: NPC rotation-tracking mid-channel (headless plan: displace the
+player mid-channel, read the mage's heading), NPC fire-and-forget (confirm MSCO's DLL coverage),
+stagger/death end paths, FOMOD install/uninstall in MO2 (static half done), owner-eyes feel pass.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
