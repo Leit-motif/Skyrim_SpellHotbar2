@@ -246,18 +246,32 @@ implementations point at it, not something the graph proves. If the legs are sti
 after this change, the flag was not the cause and the next suspect is the clip content
 itself — and that is decided by the frame comparison, not by more graph reading.
 
+**The successor is already filed: `40-stepping-fire-and-forget-cast-animations.md`.** It
+records that the MSCO clips `MSCO_left1`–`4` carry `animmotion` root translation but **no
+stepping in their leg tracks**, which would mean there is no leg animation here for anything
+to have suppressed — and it is parked on new animation assets, which is not agent work.
+Ticket 40 dissolves only if 39 proves suppression. So the frame comparison decides which of
+the two tickets is real: legs stepping after this change closes 39 and confirms 40 was
+mis-scoped; legs still frozen after it closes the suppression hypothesis and hands the
+problem to 40's asset wall.
+
 ### Verification done here
 
-- `python python_scripts/validate_shtb_commitment.py` — **118 checks, 0 failures.** New
+- `python python_scripts/validate_shtb_commitment.py` — **169 checks, 0 failures.** New
   lever, modelled on `.scratch/shcr-build/validate_shcr.py`. It walks each cast state by
   name through `generator` → `_MG` → `modifier` → `variableBindingSet` (so a renumbering
   cannot fool it), asserts no `bAnimationDriven` on any of the eight chains and that the
-  binds, slots, `numelements`, and invert flags are exactly as decided; content-hashes the
-  Channel and Art binding sets and modifiers against `main` and re-checks the states still
-  point at them; asserts every `$variableID[...]$` shtb references is either shtb-declared
-  or listed with the mod code that provides it; and asserts `0_master` still declares only
-  the four `MCO_*` variables plus `SH2_ArtSelector` and carries no binding set. Negative-
-  tested: restoring one pre-change file makes it fail with 2 named failures and exit 1.
+  binds, slots, `numelements`, invert flags, and modifier name are exactly as decided;
+  content-hashes the Channel and Art chains end to end against the branch point `5b29e96`
+  — state, `_MG`, modifier, binding set **and clip** — plus the binding set the four cast
+  clips share, and re-walks the wiring so a frozen node nothing points at any more still
+  fails; asserts every `$variableID[...]$` shtb references is either shtb-declared or
+  listed with the mod code that provides it; and asserts `0_master` still declares only
+  the four `MCO_*` variables plus `SH2_ArtSelector` and carries no binding set.
+- Negative-tested five ways, each expected to fail and each restored: a name-only revert
+  of one modifier (1 named failure), an edit to `SH2_Art_Clip` (1), rewiring
+  `SH2_Channel_MG` to another modifier (3), re-planting `bAnimationDriven` on a cast clip
+  binding set (4), and restoring one pre-change cast binding set (2). Exit 1 in all five.
 - `.scratch/mco-integration/notes/39-contention-table.md` — **zero contested nodes.** All
   sixteen files are `#shtb$NN` nodes shtb defines itself; no vanilla `#NNNN` base file is
   touched, so nothing meets Nemesis's last-checked-wins resolution. 56 mod codes indexed.
