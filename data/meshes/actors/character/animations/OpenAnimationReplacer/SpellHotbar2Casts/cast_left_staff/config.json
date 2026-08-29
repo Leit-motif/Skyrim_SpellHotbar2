@@ -1,0 +1,49 @@
+{
+    "name": "SH2 Cast - Left Staff (aimed)",
+    "description": "MSCO's Base - Left Staff art on the neutral MSCO_left1-4 path names, for a fire-and-forget AIMED cast resolved to the LEFT hand while a staff is held in that hand. IsEquippedType 8 is kStaff and the hand boolean is the PHYSICAL hand, exactly MSCO's own vocabulary at its 6800 submod. Sits above cast_left so the staff art wins whenever the staff is there; MSCO's own precedence puts Self (6901) above Staff (6800), so the self cells deliberately stay self art. The clips keep MSCO's MLh_SpellFire_Event (0.400000 / 0.333333 / 0.400000 / 0.366667) and carry no root motion.",
+    "priority": 2000001111,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 0.0
+            }
+        },
+        {
+            "condition": "IsEquippedType",
+            "requiredVersion": "1.0.0.0",
+            "Type": {
+                "value": 8.0
+            },
+            "Left hand": true
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

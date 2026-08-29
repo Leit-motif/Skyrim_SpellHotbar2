@@ -51,12 +51,30 @@ four clips are already distinct), per-file `SH2C_cast_left_self_N` for the self 
 MSCO's self-left set repeats one clip across slots 1, 3 and 4. All eight shipped files hash
 distinct, and `hkxc verify` reproduces each.
 
-## Consequences
+## Staff cells (owner ruling 2026-08-29)
 
-- **Left staff art is now overridden**, the same way ticket 46's cells already override
-  `Right Staff`. A left-held staff cast plays the plain left set until ticket 47 assigns the
-  staff cells. This is a deliberate trade — a wrong self animation on every aimed cast is
-  worse than a missing staff variant — and it makes ticket 47's job uniform across hands.
+The first cut of this fix let `cast_left` override MSCO's `Base - Left Staff`, deferring staff
+art to ticket 47. Owner overruled: a staff cast must play MSCO's staff animations. Two more
+cells, so no cell in the matrix is decided by fall-through:
+
+| submod | priority | conditions | clips |
+| --- | --- | --- | --- |
+| `cast_left_staff` | 2000001111 | `0x815 == 1` AND `0x835 == 0` AND `IsEquippedType 8` left | `Base - Left Staff` `MSCO_left1..4` |
+| `cast_right_staff` | 2000001112 | `0x815 == 1` AND `0x835 == 1` AND `IsEquippedType 8` right | `Base - Right Staff` `MSCO_right1..4` |
+
+The hand boolean is the PHYSICAL hand, MSCO's own vocabulary at its 6800/6801 submods. Left
+staff clips carry `MLh_SpellFire_Event`, right staff clips `MRh_SpellFire_Event`, at
+0.400000 / 0.333333 / 0.400000 / 0.366667 in both sets; neither set has root motion.
+
+`cast_right_staff` fixes a gap ticket 46 shipped rather than one this ticket introduced:
+MSCO's `Right Staff` sits on the `MSCO_right*` paths, which the Driver Cast states never ask
+for, so a right-staff hotbar cast has played the plain right set since ticket 46 landed.
+
+**Self plus staff stays self art.** MSCO's own precedence puts `Self Right`/`Self Left`
+(6900/6901) above `Right Staff`/`Left Staff` (6800/6801), and MSCO ships no self-staff set, so
+the staff cells gate on the aimed family only. Overrule this by adding `0x815 == 2` twins.
+
+## Consequences
 - `cast_left_self`'s clips carry MSCO's `MLh_Equipped_Event` at 0.5, which the right-self set
   does not. Watch for a left-hand magic pop during the acceptance pass.
 - Ticket 46's "left keeps the bound clips" line is superseded; the pack's own `config.json`
@@ -68,3 +86,5 @@ distinct, and `hkxc verify` reproduces each.
   plays the aimed art. Animation Log names `SH2 Cast - Left (aimed)`.
 - A self hotbar cast on the left hand names `SH2 Cast - Left (self)`.
 - Right and dual rows stay green; the four ticket-46 submods still win their cells.
+- A staff in the casting hand plays MSCO's staff art, both hands, aimed family. Animation Log
+  names `SH2 Cast - Left Staff (aimed)` / `SH2 Cast - Right Staff (aimed)`.

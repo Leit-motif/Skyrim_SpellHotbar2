@@ -1,0 +1,49 @@
+{
+    "name": "SH2 Cast - Right Staff (aimed)",
+    "description": "MSCO's Base - Right Staff art (its MSCO_right1-4 staff set) on the neutral MSCO_left1-4 path names, for a fire-and-forget AIMED cast resolved to the RIGHT hand while a staff is held in that hand. MSCO's own Right Staff submod sits on the MSCO_right* paths, which the Driver Cast states never ask for, so before this cell a right-staff hotbar cast played the plain right set. Each clip carries MSCO's MRh_SpellFire_Event (0.400000 / 0.333333 / 0.400000 / 0.366667), the armed hand's commitment point for this cell.",
+    "priority": 2000001112,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "IsEquippedType",
+            "requiredVersion": "1.0.0.0",
+            "Type": {
+                "value": 8.0
+            },
+            "Left hand": false
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}

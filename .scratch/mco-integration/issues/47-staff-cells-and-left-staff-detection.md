@@ -6,7 +6,14 @@ staff state → plain hand set). Upstream welds the staff condition to the casti
 the cross-hand case (spell left, staff right) falls through to plain-left; ours makes it a
 real cell.
 
-**Status:** ready-for-agent (after ticket 46)
+**Status:** ready-for-agent (after ticket 46) — scope 1's aimed cells landed with ticket 60
+
+Ticket 60 shipped `cast_left_staff` (2000001111) and `cast_right_staff` (2000001112) on MSCO's
+own `Base - Left Staff` / `Base - Right Staff` art, conditioned on `IsEquippedType 8` with the
+physical-hand boolean. What remains here: the cross-hand cells (spell in one hand, staff in the
+other), the self-plus-staff question (ticket 60 followed MSCO's own precedence and kept self
+art), hazard 2's live check, and all of scope 2 — `getPlayerEquipmentType()` still reads only
+the right hand for `kStaff`, so a left-held staff classifies as `FIST`.
 
 **Blocked by:** ticket 46 (the pack this extends).
 
