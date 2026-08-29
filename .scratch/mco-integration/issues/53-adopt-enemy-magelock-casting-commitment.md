@@ -1,11 +1,65 @@
-# 53 — Adopt Enemy Magelock's casting commitment (the state-machinery approach)
+# 53 — Casting commitment: compare Enemy Magelock vs CARIM, then build (umbrella spec)
 
-**Type:** research + trial-install, then integration build (Nemesis patch + FOMOD)
+**Type:** spec umbrella — the work is cut as tickets 54–58; build nothing from this file alone.
 
-**Status:** ready-for-agent — spec approved shape, prototype-first, owner-supplied reference.
+**Status:** spec — updated 2026-08-29 after the owner supplied a SECOND reference (CARIM) and
+asked for compare-and-contrast before any build. A fresh session starts at ticket 54.
 
 **Blocked by:** None. Supersedes ticket 33's mechanism (33 stays open only for its record of
 what failed and its acceptance list, which this ticket inherits).
+
+## The two references, and the design fork they define
+
+**Enemy Magelock** (Nexus 49378, BOTuser999 2021) — HARD COMMIT via owned state machinery.
+First-pass read below. Matches the owner's MCO-consistency ruling and the 2026-08-28 "rooted is
+preferable" ruling.
+
+**Casting Aiming Reloading Impede Movement — CARIM** (Nexus 63459, Ashen, v1.31 2026-04-25;
+archive `C:\Users\Rando\Downloads\Casting Aiming Reloading Impede Movement-63459-1-31-1777153574\`,
+plain folder, sources shipped) — GRADED IMPEDIMENT via edge-driven AV scripting. The owner:
+"this was actually closer to what i had envisioned for concentration spells, slowed speed."
+Mechanism, from its own .psc sources (all three read 2026-08-29):
+
+1. A SPID-distributed detection ability (`_DISTR.ini`, PapyrusUtil/MCM+json config, light ESP)
+   registers for cast animation events — `BeginCastLeft/Right`, `CastStop`, `MRh/MLh_SpellFire`,
+   `InterruptCast`, `weaponSheathe`, plus bow/crossbow events — and CASTS a SpeedMult debuff
+   spell on cast-begin, DISPELS it on every end path. Concentration is explicitly handled: on
+   SpellFire with `GetCastingType()==2` it waits out `IsCastingRight/Left` and dispels at the
+   channel's true end. FF (type 1) dispels at fire. **No conditions on the effect — no
+   condition-clock latency, no latch.** (Our record trial's "permanently slowed" failure was
+   the condition path; this is the cure.)
+2. `CARIM_SpeedmultAdjustScript` on the debuff effect: `ModActorValue("CarryWeight", +0.01)` on
+   start, `−0.01` on finish — the engine-refresh kick that makes a SpeedMult change apply
+   mid-motion (its comment: 1st-person fix; 3rd person uses the arrest below).
+3. `ArrestMovement()`: `EnableAI(false)` → `Utility.Wait(0.1–0.25)` → `EnableAI(true)` (player
+   additionally toggled via `Game.SetPlayerAIDriven(GetPlayerControls())`) — kills entry
+   momentum. The author's comments narrate our exact struggle ("not even DisablePlayerControls
+   works until the animation completes"; "Inertia is only problematic in 3rd person"; known TDM
+   camera-issue caveat on the AIDriven toggle).
+4. Player + NPCs both, configurable percentage, per-category toggles (cast/aim/reload globals).
+
+**Post-mortem correction to ticket 33's record trial (2026-08-29):** the owner's "slowed to a
+crawl but still moving" at magnitude 100 was NOT a SpeedMult floor — CS-Test's buffed base was
+117, so a flat −100 left 17. The AV mechanism was never disproven; our trial had three
+implementation defects (flat magnitude vs buffed base; no refresh kick; condition-clock
+apply/latch) and CARIM demonstrably solves all three. Do not carry "records can't root" as a
+lesson — the honest lesson is "records need edge-driven scripting, not conditions."
+
+**The fork to resolve (ticket 57, owner ruling):** hard commit (Magelock shape) vs graded slow
+(CARIM shape) vs compose (per-cast-type: root concentration, slow the rest). The owner has
+ruled BOTH directions at different times — 2026-08-28 "rooted is preferable" live; 2026-08-29
+"slowed was closer to what i had envisioned." Both get trialed in the owner's hands (tickets
+55, 56) before the ruling is asked for.
+
+**Implementation constraint (owner, 2026-08-29): NO PAPYRUS in the shipped mechanism** —
+"prefer an skse and behavior approach." CARIM as-shipped is therefore trial-only; if its feel
+wins, its mechanism ports to SH2's DLL in C++: the cast-edge events are already sunk
+(`skse_plugin/src/animationeventhook.cpp` sees `BeginCastLeft` etc. today), the apply/dispel of
+a record-owned debuff on cast edges is the exact shape ADR-0015's preserved design sanctioned,
+and the CarryWeight refresh kick + EnableAI momentum blip are one-line native calls. Open
+engineering question for 57: whether SH2's event sink sees NPC graph events or is player-only —
+MSCO's AnimEventFramework (sources in `magic-casting-behavioral-overhaul/ref/src/`) is the
+NPC-capable reference. Magelock's shape (behavior states) satisfies the constraint natively.
 
 ## The ruling that shaped this ticket
 
@@ -50,7 +104,23 @@ extracted for study at the session scratchpad `enemy-magelock/` (re-extract from
   conflicts last-checked-wins (measured on ticket 33) — the integration risk is real and is most
   of this ticket's work.
 
-## Phases — evidence before authoring, kill criteria at each gate
+## Ticket breakdown (2026-08-29) — a fresh session starts at 54 and works the frontier
+
+- **54** — calibration captures (owner hands, game up): telemetry signatures of the two
+  owner-certified-correct roots. The oracle for everything after.
+- **55** — trial-install CARIM unmodified (CHEAP: SPID + scripts, no Nemesis regen) — owner
+  feels slowed casting, we instrument it against 54's signatures.
+- **56** — trial-install Enemy Magelock unmodified (needs Update Engine + relaunch; read the
+  merged output for msco/pscd/sbeef/shtb contention BEFORE launching) — owner feels the hard
+  commit.
+- **57** — dissection + comparison verdict: mechanism maps for both, the contention table, and
+  the owner's adopt/adapt/compose ruling. Second-model review of the resulting integration spec.
+- **58** — integration build per 57's verdict (placeholder; spec'd by 57, not before).
+
+Ticket 33's cleanup list (trial ESP removal, DLL capture removal decision, ADR-0015 fourth
+amendment) rides along with 55/56's restart cycles.
+
+## The original phase plan (superseded by the tickets above; kept for the guards and context)
 
 **Phase 0 — calibration captures (minutes, needs owner hands, game up).** Owner performs two
 known-good moving-entry roots — an MSCO fire-and-forget equipped cast and a hotbar channel —
