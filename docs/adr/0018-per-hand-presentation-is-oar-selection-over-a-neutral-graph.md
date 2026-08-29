@@ -83,3 +83,31 @@ animations, so no donor adaptation pipeline is needed.
   clips without one need the event stamped (the Art Pack's in-DLL stamping is the
   precedent). A missing annotation degrades to ticket 43's clip-end fallback rather than
   breaking cadence — the contract's designed failure mode.
+
+## Amendment, 2026-08-29 (ticket 60)
+
+Three rulings from a live session, all of them corrections to what this ADR and ticket 46
+assumed.
+
+**Every cell is owned; there is no fall-through cell.** Ticket 46 ruled that "left keeps the
+bound clips (no submod needed)", reading the base path as neutral ground. It is not neutral:
+MSCO's `Self Left` (6901) and `Left Staff` (6800) both sit on it, conditioned on what the
+player has EQUIPPED, so an equipped self-delivery spell silently redirected every aimed hotbar
+cast the fork resolved to the left hand. The fix is not a better fall-through but the absence
+of one — eight cells now cover the fire-and-forget matrix, and a cell nobody owns is a cell
+MSCO decides. The consequence above ("either outprioritize them per cell or deliberately
+compose with them") is settled in favor of outprioritizing, everywhere.
+
+**Where MSCO has no art for a cell, present what MSCO presents.** Two self-staff cells were
+built on MSCO's staff clip 5 and then deleted the same day: MSCO plays plain SELF art for a
+self-delivery staff, because its `Self` submods (6900/6901) outrank its `Staff` submods
+(6800/6801) and no staff-self art exists. Being more specific than the reference mod made a
+hotbar self cast and a staff's own self cast look different with the same staff in hand. The
+aimed staff cells stay for exactly the same reason: there MSCO *does* play staff art, so
+matching it means keeping them. The rule is agreement with MSCO, not maximal specificity.
+
+**A left-held staff is a stance.** `getPlayerEquipmentType()` inspected only the right hand for
+`kStaff`, so a left staff classified as `FIST` — the default bar, and Auto reaching the left
+hand only because `FIST` happens to. `EquippedType::STAFF_LEFT` states it: the magic bar, and
+`kLeftHand` because the cast comes from the hand holding the staff. Weapon arts stay dead on it
+as on `STAFF_SHIELD`.

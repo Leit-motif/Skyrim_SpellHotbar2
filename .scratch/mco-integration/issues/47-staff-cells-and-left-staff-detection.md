@@ -11,9 +11,17 @@ real cell.
 Ticket 60 shipped `cast_left_staff` (2000001111) and `cast_right_staff` (2000001112) on MSCO's
 own `Base - Left Staff` / `Base - Right Staff` art, conditioned on `IsEquippedType 8` with the
 physical-hand boolean. What remains here: the cross-hand cells (spell in one hand, staff in the
-other), the self-plus-staff question (ticket 60 followed MSCO's own precedence and kept self
-art), hazard 2's live check, and all of scope 2 — `getPlayerEquipmentType()` still reads only
-the right hand for `kStaff`, so a left-held staff classifies as `FIST`.
+other), hazard 2's live check, and the CROSS-HAND cells (a spell in one hand, a
+staff in the other), which still ride the plain hand set.
+
+Two of this ticket's questions are now answered and are NOT open work:
+
+- **Self plus staff** is settled: plain self art, matching MSCO, which has no staff-self art at
+  all (its `Self` submods outrank its `Staff` submods). Ticket 60 built self-staff cells on
+  MSCO's staff clip 5, the owner saw the mismatch in play, and they were deleted the same day.
+- **Scope 2, left-staff detection**, shipped with ticket 60: `EquippedType::STAFF_LEFT`
+  classifies a left-held staff wherever the right hand establishes no stance of its own, maps
+  to the magic bar, and resolves Auto to `kLeftHand` explicitly.
 
 **Blocked by:** ticket 46 (the pack this extends).
 

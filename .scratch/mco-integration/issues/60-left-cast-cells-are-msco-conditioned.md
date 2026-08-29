@@ -1,6 +1,7 @@
 # 60 — The left cast column is decided by MSCO, not by the fork
 
-**Status:** accepted — owner-confirmed live 2026-08-29 ("the animations play correctly")
+**Status:** closed — owner-confirmed live 2026-08-29 ("the animations play correctly"); rulings
+promoted to ADR-0018's amendment, ticket 47 narrowed to what is genuinely left
 
 Ticket 46 shipped the right and dual cells and ruled that "left keeps the bound clips (no
 submod needed)". That premise is false. The left path is not bound to one clip set — MSCO's
