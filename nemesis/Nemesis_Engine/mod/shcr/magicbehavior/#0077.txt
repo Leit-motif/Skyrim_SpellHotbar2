@@ -181,10 +181,8 @@
 				<hkcstring>BowAimOffsetHeading</hkcstring>
 				<hkcstring>BowAimOffsetPitch</hkcstring>
 				<hkcstring>bVoiceReady</hkcstring>
-<!-- MOD_CODE ~shcc~ OPEN -->
-				<hkcstring>bAnimationDriven</hkcstring>
+<!-- MOD_CODE ~shcr~ OPEN -->
 				<hkcstring>bAllowRotation</hkcstring>
-				<hkcstring>HKSMoveON</hkcstring>
 <!-- CLOSE -->
 			</hkparam>
 			<hkparam name="characterPropertyNames" numelements="7">

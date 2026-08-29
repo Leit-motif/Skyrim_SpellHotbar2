@@ -1,19 +1,23 @@
-"""Generate the `shcc` Nemesis patch (ticket 33 -- rooted concentration casts).
+"""Generate the `shcr` Nemesis patch (ticket 58 -- casting commitment).
 
-Ticket 33 roots the six vanilla `magicbehavior` concentration states for every actor
-by planting SH2's proven `BSIsActiveModifier` + `hkbVariableBindingSet` pair on each.
+Ticket 58 replaces the generators behind the four vanilla `magicbehavior` casting-locomotion
+state nodes so that casting stops routing through locomotion-blending generators. This is
+Enemy Magelock's structural approach, applied globally (no player/NPC split): each of the four
+states is re-pointed at a new `hkbModifierGenerator` that wraps the vanilla standing-cast
+manual-selector generator `#0088` and applies a single `BSIsActiveModifier` bound to
+`bAllowRotation`, so the caster can still pivot while committed.
 
-This script is the lever: it derives the PRISTINE vanilla text of every node it patches
-from the copies other Nemesis mods in the local stack ship (each of which is vanilla text
-plus that mod's own MOD_CODE blocks), cross-verifies those derivations against each other
-where two donors carry the same node, and then emits the `shcc` patch files with only
-`shcc`'s own MOD_CODE blocks added.
+This script is the lever: it derives the PRISTINE vanilla text of every node it patches from
+the copies other Nemesis mods ship (each of which is vanilla text plus that mod's own MOD_CODE
+blocks), cross-verifies those derivations against each other where more than one donor carries
+the same node, and then emits the `shcr` patch files with only `shcr`'s own MOD_CODE blocks.
 
-Donors are read READ-ONLY from the MO2 mods directory. Nothing outside the repo is written.
+Donors are read READ-ONLY from the MO2 mods directory and the local Enemy Magelock download.
+Nothing outside the repo is written.
 
-Run:  python .scratch/shcc-build/build_shcc.py [--check]
+Run:  python .scratch/shcr-build/build_shcr.py [--check]
 
-  --check  regenerate into a temp dir and diff against the committed tree (no writes)
+  --check  rebuild in memory and diff against the committed tree (no writes)
 """
 
 from __future__ import annotations
@@ -25,14 +29,17 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-OUT = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shcc"
+OUT = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shcr"
 
 MODS = Path(r"C:\Nolvus\Instances\Nolvus Awakening\MODS\mods")
-DONOR_SBEEF = MODS / "State Behavior Framework" / "Nemesis_Engine" / "mod" / "sbeef" / "magicbehavior"
 DONOR_MSCO = MODS / "MSCO Magic Casting Behavior Overhaul" / "Nemesis_engine" / "mod" / "msco" / "magicbehavior"
 DONOR_HOTKEY = MODS / "Hot Key Skill" / "Nemesis_Engine" / "mod" / "hotkey" / "magicbehavior"
+DONOR_ALTMAG = Path(
+    r"C:\Users\Rando\Downloads\Enemy Magelock-49378-1-0-0-1619990342"
+    r"\Enemy Magelock - NPC Magic Casting Commitment\Nemesis_engine\mod\altmag\magicbehavior"
+)
 
-CODE = "shcc"
+CODE = "shcr"
 OPEN = f"<!-- MOD_CODE ~{CODE}~ OPEN -->"
 ORIGINAL = "<!-- ORIGINAL -->"
 CLOSE = "<!-- CLOSE -->"
@@ -128,13 +135,22 @@ def append_into_array(lines: list[str], param: str, additions: list[str]) -> lis
     return out
 
 
-def replace_param(lines: list[str], param: str, new_value: str) -> list[str]:
-    """Wrap the single-valued `param` line in an OPEN/ORIGINAL/CLOSE replacement."""
+def replace_param(lines: list[str], param: str, new_value: str, expect: str) -> list[str]:
+    """Wrap the single-valued `param` line in an OPEN/ORIGINAL/CLOSE replacement.
+
+    `expect` is the vanilla value the pristine text must already carry; a mismatch means the
+    donor derivation drifted or the node is not the one the ticket names, so fail loudly.
+    """
     target = f'{T}<hkparam name="{param}">'
     out, hits = [], 0
     for line in lines:
         if line.startswith(target):
             hits += 1
+            have = line[len(target):].split("</hkparam>")[0]
+            if have != expect:
+                raise SystemExit(
+                    f"pristine {param!r} is {have!r}, expected vanilla {expect!r}"
+                )
             out.extend([OPEN, f'{T}<hkparam name="{param}">{new_value}</hkparam>', ORIGINAL, line, CLOSE])
         else:
             out.append(line)
@@ -166,12 +182,29 @@ def zero_variable_value() -> list[str]:
 
 
 # --------------------------------------------------------------------------------------
-# the shcc payload
+# the shcr payload
 # --------------------------------------------------------------------------------------
 
-# Variables the plant binds that are NOT in vanilla magicbehavior's 81-entry table.
-# `bHeadTrackSpine` IS vanilla (index 65) and must not be redeclared.
-NEW_VARIABLES = ["bAnimationDriven", "bAllowRotation", "HKSMoveON"]
+# The one variable the plant binds that vanilla magicbehavior's 81-entry table lacks.
+NEW_VARIABLES = ["bAllowRotation"]
+
+# The vanilla standing-cast generator every replacement modifier generator wraps.
+CAST_GENERATOR = "#0088"
+
+# The four vanilla casting-locomotion states, by file: (new node, vanilla generator, name).
+STATE_PATCHES = {
+    "#0926.txt": (f"#{CODE}$2", "#0923", "MagicCastingLocomotionState"),
+    "#0930.txt": (f"#{CODE}$3", "#0088", "MagicCast_Standing"),
+    "#0965.txt": (f"#{CODE}$4", "#0961", "MagicCast_TurnLeft_State"),
+    "#0998.txt": (f"#{CODE}$5", "#0996", "MagicCast_TurnRight_State"),
+}
+
+MG_NAMES = {
+    f"{CODE}$2": "SHCR_MagicCastingLocomotion_MG",
+    f"{CODE}$3": "SHCR_MagicCast_Standing_MG",
+    f"{CODE}$4": "SHCR_MagicCast_TurnLeft_MG",
+    f"{CODE}$5": "SHCR_MagicCast_TurnRight_MG",
+}
 
 
 def binding(member: str, var: str) -> list[str]:
@@ -186,74 +219,47 @@ def binding(member: str, var: str) -> list[str]:
 
 
 def new_nodes() -> dict[str, list[str]]:
-    """The five nodes shcc contributes. Node text mirrors SH2's own proven plant
-    (`nemesis/Nemesis_Engine/mod/shtb/magicbehavior/#shtb$13.txt` / `$14.txt`)."""
+    """The six nodes shcr contributes.
+
+    `$0`/`$1` mirror Enemy Magelock's `#altmag$52`/`#altmag$51` pair -- a rotation-lock
+    release and nothing else. `$2`..`$5` are the four replacement generators.
+    """
     nodes: dict[str, list[str]] = {}
 
-    # $0 -- binding set. Invert semantics copied verbatim from #shtb$14:
-    #   bAnimationDriven = true  (root: translation comes from the clip, not the controller)
-    #   bAllowRotation   = true  (the caster still pivots to track its target)
-    #   HKSMoveON        = true
-    #   bHeadTrackSpine  = false (bInvertActive3=true)
-    nodes["shcc$0"] = [
-        '\t\t<hkobject name="#shcc$0" class="hkbVariableBindingSet" signature="0x338ad4ff">',
-        f'{T}<hkparam name="bindings" numelements="4">',
-        *binding("bIsActive0", "bAnimationDriven"),
-        *binding("bIsActive1", "bAllowRotation"),
-        *binding("bIsActive2", "HKSMoveON"),
-        *binding("bIsActive3", "bHeadTrackSpine"),
+    nodes[f"{CODE}$0"] = [
+        f'\t\t<hkobject name="#{CODE}$0" class="hkbVariableBindingSet" signature="0x338ad4ff">',
+        f'{T}<hkparam name="bindings" numelements="1">',
+        *binding("bIsActive0", "bAllowRotation"),
         f"{T}</hkparam>",
         f'{T}<hkparam name="indexOfBindingToEnable">-1</hkparam>',
         "\t\t</hkobject>",
     ]
 
-    # $1 -- the modifier itself, shared by all six states.
-    nodes["shcc$1"] = [
-        '\t\t<hkobject name="#shcc$1" class="BSIsActiveModifier" signature="0xb0fde45a">',
-        f'{T}<hkparam name="variableBindingSet">#shcc$0</hkparam>',
+    nodes[f"{CODE}$1"] = [
+        f'\t\t<hkobject name="#{CODE}$1" class="BSIsActiveModifier" signature="0xb0fde45a">',
+        f'{T}<hkparam name="variableBindingSet">#{CODE}$0</hkparam>',
         f'{T}<hkparam name="userData">2</hkparam>',
-        f'{T}<hkparam name="name">SHCC_ConcentrationRoot_IsActiveModifier</hkparam>',
+        f'{T}<hkparam name="name">SHCR_AllowRotation_IsActiveModifier</hkparam>',
         f'{T}<hkparam name="enable">true</hkparam>',
-        f'{T}<hkparam name="bIsActive0">false</hkparam>',
-        f'{T}<hkparam name="bInvertActive0">false</hkparam>',
-        f'{T}<hkparam name="bIsActive1">false</hkparam>',
-        f'{T}<hkparam name="bInvertActive1">false</hkparam>',
-        f'{T}<hkparam name="bIsActive2">false</hkparam>',
-        f'{T}<hkparam name="bInvertActive2">false</hkparam>',
-        f'{T}<hkparam name="bIsActive3">false</hkparam>',
-        f'{T}<hkparam name="bInvertActive3">true</hkparam>',
-        f'{T}<hkparam name="bIsActive4">false</hkparam>',
-        f'{T}<hkparam name="bInvertActive4">false</hkparam>',
+        *[
+            ln
+            for i in range(5)
+            for ln in (
+                f'{T}<hkparam name="bIsActive{i}">false</hkparam>',
+                f'{T}<hkparam name="bInvertActive{i}">false</hkparam>',
+            )
+        ],
         "\t\t</hkobject>",
     ]
 
-    # $2 -- modifier list wrapping vanilla #0106, for the two Self-concentration
-    # modifier generators (#0131, #0440) whose `modifier` is a single pointer, not a list.
-    nodes["shcc$2"] = [
-        '\t\t<hkobject name="#shcc$2" class="hkbModifierList" signature="0xa4180ca1">',
-        f'{T}<hkparam name="variableBindingSet">null</hkparam>',
-        f'{T}<hkparam name="userData">1</hkparam>',
-        f'{T}<hkparam name="name">SHCC_SelfConcentration_ML</hkparam>',
-        f'{T}<hkparam name="enable">true</hkparam>',
-        f'{T}<hkparam name="modifiers" numelements="2">',
-        f"{T4}#0106",
-        f"{T4}#shcc$1",
-        f"{T}</hkparam>",
-        "\t\t</hkobject>",
-    ]
-
-    # $3/$4 -- the two DualMagic concentration states have no vanilla modifier generator
-    # at all; their `generator` points straight at the inner state machine. Wrap it, the
-    # same way sbeef (#sbeef$21/$25) and pscd (#pscd$10) already do.
-    for name, gen, sm in (("shcc$3", "SHCC_DualMagic_SelfConcentration_MG", "#0318"),
-                          ("shcc$4", "SHCC_DualMagic_AimedConcentration_MG", "#0338")):
+    for name, label in MG_NAMES.items():
         nodes[name] = [
             f'\t\t<hkobject name="#{name}" class="hkbModifierGenerator" signature="0x1f81fae6">',
             f'{T}<hkparam name="variableBindingSet">null</hkparam>',
             f'{T}<hkparam name="userData">1</hkparam>',
-            f'{T}<hkparam name="name">{gen}</hkparam>',
-            f'{T}<hkparam name="modifier">#shcc$1</hkparam>',
-            f'{T}<hkparam name="generator">{sm}</hkparam>',
+            f'{T}<hkparam name="name">{label}</hkparam>',
+            f'{T}<hkparam name="modifier">#{CODE}$1</hkparam>',
+            f'{T}<hkparam name="generator">{CAST_GENERATOR}</hkparam>',
             "\t\t</hkobject>",
         ]
 
@@ -261,54 +267,45 @@ def new_nodes() -> dict[str, list[str]]:
 
 
 def vanilla_patches() -> dict[str, list[str]]:
-    """The six vanilla-node patch files, plus the three variable-table declarations."""
+    """The four vanilla-node patch files, plus the three variable-table declarations."""
     files: dict[str, list[str]] = {}
 
     # --- variable declarations ---------------------------------------------------------
-    # `bAnimationDriven` / `bAllowRotation` / `HKSMoveON` exist at runtime today only
-    # because Hot Key Skill declares them. shcc declares its own so the patch stands alone;
-    # duplicate NEW declarations across mods are tolerated (verified in the merged
-    # temp_behaviors output, where `bAllowRotation` appears under five different codes).
+    # `bAllowRotation` is not vanilla; shcr declares its own so the patch stands alone.
+    # Duplicate NEW declarations across mods are tolerated by Nemesis (verified in the
+    # merged temp_behaviors output, where `bAllowRotation` appears under several codes).
     n = len(NEW_VARIABLES)
     files["#0077.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0077.txt", DONOR_HOTKEY / "#0077.txt"),
+        pristine(DONOR_MSCO / "#0077.txt", DONOR_HOTKEY / "#0077.txt", DONOR_ALTMAG / "#0077.txt"),
         "variableNames",
         [f"{T4}<hkcstring>{v}</hkcstring>" for v in NEW_VARIABLES],
     )
     files["#0078.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0078.txt", DONOR_HOTKEY / "#0078.txt"),
+        pristine(DONOR_MSCO / "#0078.txt", DONOR_HOTKEY / "#0078.txt", DONOR_ALTMAG / "#0078.txt"),
         "wordVariableValues",
         [ln for _ in range(n) for ln in zero_variable_value()],
     )
     files["#0079.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0079.txt", DONOR_HOTKEY / "#0079.txt"),
+        pristine(DONOR_MSCO / "#0079.txt", DONOR_HOTKEY / "#0079.txt", DONOR_ALTMAG / "#0079.txt"),
         "variableInfos",
         [ln for _ in range(n) for ln in bool_variable_info()],
     )
 
-    # --- the six target states ---------------------------------------------------------
-    # MRh_AimedConcentration (#0145) and MLh_AimedConcentration (#0453) reach a REAL
-    # vanilla hkbModifierList, so the plant is a conflict-free array append.
-    files["#0184.txt"] = append_into_array(
-        pristine(DONOR_SBEEF / "#0184.txt"), "modifiers", [f"{T4}#shcc$1"])
-    files["#0489.txt"] = append_into_array(
-        pristine(DONOR_SBEEF / "#0489.txt"), "modifiers", [f"{T4}#shcc$1"])
-
-    # MRh_SelfConcentration (#0130) / MLh_SelfConcentration (#0439) reach a single-pointer
-    # `modifier` on a vanilla hkbModifierGenerator; wrap vanilla #0106 in a list.
-    files["#0131.txt"] = replace_param(pristine(DONOR_SBEEF / "#0131.txt"), "modifier", "#shcc$2")
-    files["#0440.txt"] = replace_param(pristine(DONOR_SBEEF / "#0440.txt"), "modifier", "#shcc$2")
-
-    # DualMagic_SelfConcentration (#0317) / DualMagic_AimedConcentration (#0337) have no
-    # modifier generator at all; insert one.
-    files["#0317.txt"] = replace_param(pristine(DONOR_SBEEF / "#0317.txt"), "generator", "#shcc$3")
-    files["#0337.txt"] = replace_param(pristine(DONOR_SBEEF / "#0337.txt"), "generator", "#shcc$4")
+    # --- the four casting-locomotion states --------------------------------------------
+    # Only ALTMAG carries these four; the ticket-57 contention table confirms no installed
+    # mod patches them, so a single-donor derivation is the whole available evidence.
+    for fname, (node, vanilla_gen, state_name) in STATE_PATCHES.items():
+        lines = pristine(DONOR_ALTMAG / fname)
+        joined = "\n".join(lines)
+        if f'<hkparam name="name">{state_name}</hkparam>' not in joined:
+            raise SystemExit(f"{fname}: pristine text is not state {state_name!r}")
+        files[fname] = replace_param(lines, "generator", node, vanilla_gen)
 
     return files
 
 
 INFO_INI = [
-    "name=Spell Hotbar 2 - Rooted Concentration Casts",
+    "name=Spell Hotbar 2 - Casting Commitment",
     "author=Amrit Chana",
     "site=null",
     "auto=null",
