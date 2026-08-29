@@ -1,0 +1,608 @@
+[2026-08-29 15:43:45.747] [log] [trace] [plugin.cpp:24] SpellHotbar2 logger setup!
+[2026-08-29 15:43:45.747] [log] [info] [animationeventhook.h:15] Installing animation event hook...
+[2026-08-29 15:43:45.747] [log] [info] [animationeventhook.h:21] ...animation event hook installed
+[2026-08-29 15:43:45.747] [log] [info] [clip_translation_driver.cpp:158] SH2 motion: clip translation hooks installed
+[2026-08-29 15:43:45.747] [log] [info] [gameloop_hook.h:12] Hooking Main Loop...
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 0B / 14B (00.00%)
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 14B / 14B (100.00%)
+[2026-08-29 15:43:45.747] [log] [info] [gameloop_hook.h:19] ...done
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 0B / 28B (00.00%)
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 14B / 28B (50.00%)
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 28B / 28B (100.00%)
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 0B / 16B (00.00%)
+[2026-08-29 15:43:45.747] [log] [debug] [Trampoline.cpp:225] Default Trampoline => 14B / 16B (87.50%)
+[2026-08-29 15:43:45.747] [log] [info] [plugin.cpp:74] SpellHotbar2 Papyrus DLL functions registered!
+[2026-08-29 15:43:45.747] [log] [info] [plugin.cpp:80] SpellHotbar2 serialization registered!
+[2026-08-29 15:43:50.650] [log] [info] [cast_intent.cpp:240] SpellHotbar2 ShoutMCO cast-intent API: active
+[2026-08-29 15:43:50.651] [log] [info] [art_pack_gen.cpp:189] SH2 art pack: 'SpellHotbar2Arts' is already populated; generating nothing
+[2026-08-29 15:47:54.005] [log] [info] [render_manager.cpp:916] RenderManager: Initializing...
+[2026-08-29 15:47:54.005] [log] [info] [render_manager.cpp:928] Getting swapchain...
+[2026-08-29 15:47:54.005] [log] [info] [render_manager.cpp:940] Getting swapchain desc...
+[2026-08-29 15:47:54.005] [log] [info] [render_manager.cpp:950] Initializing ImGui...
+[2026-08-29 15:47:54.006] [log] [info] [render_manager.cpp:967] ...ImGui Initialized
+[2026-08-29 15:47:54.006] [log] [trace] [render_manager.cpp:976] Loading fonts...
+[2026-08-29 15:47:54.006] [log] [info] [render_manager.cpp:671] Loading Fonts with sizes 32, 48
+[2026-08-29 15:47:54.028] [log] [info] [render_manager.cpp:987] RenderManager: Initialized
+[2026-08-29 15:55:18.527] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\default_icons.dds
+[2026-08-29 15:55:18.543] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\extra_icons.dds
+[2026-08-29 15:55:18.559] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_abyss.dds
+[2026-08-29 15:55:18.575] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_ancient_blood_magic_2.dds
+[2026-08-29 15:55:18.584] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_apocalypse.dds
+[2026-08-29 15:55:18.615] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_arclight.dds
+[2026-08-29 15:55:18.628] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_astral_magic_2.dds
+[2026-08-29 15:55:18.640] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_constellation_magic.dds
+[2026-08-29 15:55:18.649] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_cooldown.dds
+[2026-08-29 15:55:18.659] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_dark_hierophant_magic.dds
+[2026-08-29 15:55:18.669] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_desecration.dds
+[2026-08-29 15:55:18.682] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_elemental_destruction_magic_redux.dds
+[2026-08-29 15:55:18.696] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_holy_templar_magic.dds
+[2026-08-29 15:55:18.705] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_mysticism.dds
+[2026-08-29 15:55:18.739] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_obscure_magic.dds
+[2026-08-29 15:55:18.750] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_ordinator.dds
+[2026-08-29 15:55:18.763] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_path_of_sorcery.dds
+[2026-08-29 15:55:18.772] [log] [warning] [texture_csv_loader.cpp:185] Skipping spell icon 0x09412C PathOfSorcery.esp, because form is null
+[2026-08-29 15:55:18.773] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_sacrosanct.dds
+[2026-08-29 15:55:18.787] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_sonic_magic.dds
+[2026-08-29 15:55:18.802] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_spellproc_overlay.dds
+[2026-08-29 15:55:18.812] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_sperg.dds
+[2026-08-29 15:55:18.822] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_storm_calling_magic2.dds
+[2026-08-29 15:55:18.832] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_thunderchild.dds
+[2026-08-29 15:55:18.844] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_triumvirate.dds
+[2026-08-29 15:55:18.861] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_vanilla.dds
+[2026-08-29 15:55:18.876] [log] [warning] [texture_csv_loader.cpp:191] Skipping Plugin 'Odin - Skyrim Magic Overhaul.esp', not loaded.
+[2026-08-29 15:55:18.878] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_vanilla_poisons.dds
+[2026-08-29 15:55:18.893] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_vanilla_potions.dds
+[2026-08-29 15:55:18.906] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_vanilla_powers.dds
+[2026-08-29 15:55:18.920] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_vulcano.dds
+[2026-08-29 15:55:18.934] [log] [info] [texture_csv_loader.cpp:227] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_weapon_arts.png
+[2026-08-29 15:55:18.958] [log] [info] [texture_csv_loader.cpp:223] Loading icons: .\data\SKSE\Plugins\SpellHotbar\images\icons_witcher_signs.dds
+[2026-08-29 15:55:18.968] [log] [info] [csv_loader.h:18] Loading spell casteffects: .\data\SKSE\Plugins\SpellHotbar\effectdata\vanilla_cast_effects.csv
+[2026-08-29 15:55:18.977] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_abyss.csv
+[2026-08-29 15:55:18.986] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_ancient_blood_magic_2.csv
+[2026-08-29 15:55:18.990] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_apocalypse.csv
+[2026-08-29 15:55:19.013] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_arclight.csv
+[2026-08-29 15:55:19.020] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_astral_magic_2.csv
+[2026-08-29 15:55:19.025] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_constellation_magic.csv
+[2026-08-29 15:55:19.029] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_dark_hierophant_magic.csv
+[2026-08-29 15:55:19.034] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_desecration.csv
+[2026-08-29 15:55:19.041] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_elemental_destruction_magic_redux.csv
+[2026-08-29 15:55:19.049] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_holy_templar_magic.csv
+[2026-08-29 15:55:19.054] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_mysticism.csv
+[2026-08-29 15:55:19.080] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_obscure_magic.csv
+[2026-08-29 15:55:19.085] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_ordinator.csv
+[2026-08-29 15:55:19.094] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_path_of_sorcery.csv
+[2026-08-29 15:55:19.098] [log] [warning] [spell_data_csv_loader.cpp:145] Skipping spell data 0x09412C PathOfSorcery.esp, because form is null
+[2026-08-29 15:55:19.099] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_sacrosanct.csv
+[2026-08-29 15:55:19.105] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_sonic_magic.csv
+[2026-08-29 15:55:19.110] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_sperg.csv
+[2026-08-29 15:55:19.115] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_storm_calling_magic2.csv
+[2026-08-29 15:55:19.120] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_thunderchild.csv
+[2026-08-29 15:55:19.127] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_triumvirate.csv
+[2026-08-29 15:55:19.137] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_vanilla.csv
+[2026-08-29 15:55:19.142] [log] [warning] [spell_data_csv_loader.cpp:151] Skipping Plugin 'Odin - Skyrim Magic Overhaul.esp', not loaded.
+[2026-08-29 15:55:19.144] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_vanilla_poisons.csv
+[2026-08-29 15:55:19.149] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_vanilla_potions.csv
+[2026-08-29 15:55:19.155] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_vanilla_powers.csv
+[2026-08-29 15:55:19.160] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_vulcano.csv
+[2026-08-29 15:55:19.168] [log] [info] [spell_data_csv_loader.cpp:202] Loading spelldata: .\data\SKSE\Plugins\SpellHotbar\spelldata\spells_witcher_signs.csv
+[2026-08-29 15:55:19.173] [log] [info] [spell_data_csv_loader.cpp:214] Loading dual cast perk data...
+[2026-08-29 15:55:19.177] [log] [info] [csv_loader.h:18] Loading animation data: .\data\SKSE\Plugins\SpellHotbar\animationdata\skyrim_anims.csv
+[2026-08-29 15:55:19.182] [log] [info] [csv_loader.h:18] Loading animation data: .\data\SKSE\Plugins\SpellHotbar\animationdata\thuum_anims.csv
+[2026-08-29 15:55:19.188] [log] [info] [csv_loader.h:18] Loading artdata: .\data\SKSE\Plugins\SpellHotbar\artdata\arts.csv
+[2026-08-29 15:55:19.192] [log] [warning] [art_data_csv_loader.cpp:64] Could not parse '.\data\SKSE\Plugins\SpellHotbar\artdata\arts.csv', skipping
+[2026-08-29 15:55:19.192] [log] [info] [csv_loader.h:18] Loading artdata: .\data\SKSE\Plugins\SpellHotbar\artdata\arts_ashes.csv
+[2026-08-29 15:55:19.197] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 2 'Aimed Blow' selector=2 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 3 'Akatosh Charge' selector=3 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 4 'Blood Flurry' selector=4 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 5 'Blood Seeker' selector=5 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 6 'Blood Spiller' selector=6 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 7 'Champion's End' selector=7 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 8 'Crane Style' selector=8 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 9 'Crushing Blow' selector=9 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 10 'Cyclone Spin' selector=10 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 11 'Dash Slam' selector=11 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 12 'Disengage' selector=12 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 13 'Divided Strike' selector=13 class=Dual
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 14 'Divine Smite' selector=14 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 15 'Double Slash' selector=15 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 16 'Dragon Strike' selector=16 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 17 'Dual Flurry' selector=17 class=Dual
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 18 'Earth Shatter' selector=18 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 19 'Eldritch Beam' selector=19 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 20 'Elegant Slash' selector=20 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 21 'Enrage (F)' selector=21 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 22 'Enrage (M)' selector=22 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 23 'Flurry Strike' selector=23 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 24 'Focused Cross' selector=24 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 25 'Focused Strike' selector=25 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 26 'Furious Charge' selector=26 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 27 'Furrow Strike' selector=27 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 28 'Head Chopper' selector=28 class=Dual
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 29 'Head Tap' selector=29 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 30 'Heart Lunge' selector=30 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 31 'Heart Strike' selector=31 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 32 'Heavy Swing' selector=32 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 33 'High Kick' selector=33 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 34 'Holding Thorns' selector=34 class=Dual
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 35 'Iai Slash' selector=35 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 36 'Killing Blow' selector=36 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 37 'Leap Slam' selector=37 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 38 'Long Claw' selector=38 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 39 'Magnetic Throw' selector=39 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 40 'Night Flurry' selector=40 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 41 'Orbital Cleave' selector=41 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 42 'Piercing Leap' selector=42 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 43 'Pirate's Slash' selector=43 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 44 'Point Charge' selector=44 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 45 'Reaper' selector=45 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 46 'Ripping Hour' selector=46 class=Dual
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 47 'Sacrifice Stab' selector=47 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 48 'Shadow Reave' selector=48 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 49 'Shadow Slash' selector=49 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 50 'Shoulder Slam' selector=50 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 51 'Simple Bash' selector=51 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 52 'Soul Cleaver' selector=52 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 53 'Soulless Swing' selector=53 class=1H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 54 'Subtle Stab' selector=54 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 55 'Tornado Leap' selector=55 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 56 'Umbral Torment' selector=56 class=2H
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 57 'Wicked Throw' selector=57 class=Generic
+[2026-08-29 15:55:19.198] [log] [info] [art_data_csv_loader.cpp:68] Loaded ability 58 'Wind Slice' selector=58 class=Dual
+[2026-08-29 15:55:19.201] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1001 'Custom Ability 1' selector=1001 clip=true
+[2026-08-29 15:55:19.202] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1010 'Custom Ability 10' selector=1010 clip=true
+[2026-08-29 15:55:19.207] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1011 'Custom Ability 11' selector=1011 clip=true
+[2026-08-29 15:55:19.208] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1012 'Custom Ability 12' selector=1012 clip=true
+[2026-08-29 15:55:19.209] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1002 'Custom Ability 2' selector=1002 clip=true
+[2026-08-29 15:55:19.210] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1003 'Custom Ability 3' selector=1003 clip=true
+[2026-08-29 15:55:19.211] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1004 'Custom Ability 4' selector=1004 clip=true
+[2026-08-29 15:55:19.212] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1005 'Custom Ability 5' selector=1005 clip=true
+[2026-08-29 15:55:19.213] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1006 'Custom Ability 6' selector=1006 clip=true
+[2026-08-29 15:55:19.214] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1007 'Custom Ability 7' selector=1007 clip=true
+[2026-08-29 15:55:19.215] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1008 'Custom Ability 8' selector=1008 clip=true
+[2026-08-29 15:55:19.216] [log] [info] [art_data_csv_loader.cpp:106] Loaded custom art 1009 'Custom Ability 9' selector=1009 clip=true
+[2026-08-29 15:55:19.225] [log] [info] [game_data.cpp:2607] Loading Icon edits from C:\Users\Rando\Documents\My Games/Skyrim Special Edition/SpellHotbar/icon_edits\art_icons.json
+[2026-08-29 15:55:19.230] [log] [info] [game_data.cpp:1509] Persisting ability icon assignments to C:\Users\Rando\Documents\My Games/Skyrim Special Edition/SpellHotbar/icon_edits\art_icons.json
+[2026-08-29 15:55:19.232] [log] [info] [csv_loader.h:18] Loading animation data: .\data\SKSE\Plugins\SpellHotbar\animationdata\skyrim_anims.csv
+[2026-08-29 15:55:19.233] [log] [info] [csv_loader.h:18] Loading animation data: .\data\SKSE\Plugins\SpellHotbar\animationdata\thuum_anims.csv
+[2026-08-29 15:55:19.233] [log] [info] [game_data.cpp:486] Loading Sacrosanct compatibility...
+[2026-08-29 15:55:19.234] [log] [info] [game_data.cpp:497] Loading Growl compatibility...
+[2026-08-29 15:55:19.234] [log] [info] [game_data.cpp:504] Loading Ordinator compatibility...
+[2026-08-29 15:55:19.234] [log] [info] [game_data.cpp:525] Loading Path of Sorcery compatibility...
+[2026-08-29 15:55:19.238] [log] [info] [msco_cast_driver.cpp:244] SH2 cast: MSCO charge curve mechanic=true exp=true base=0.15 short=0 long=1.99 min=0.6 max=1.25 p=0.17
+[2026-08-29 15:55:19.238] [log] [info] [plugin.cpp:43] SpellHotbar2 GameData loaded!
+[2026-08-29 15:55:23.522] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=false read=false back=-1
+[2026-08-29 15:55:23.522] [log] [info] [casting_controller.cpp:422] SH2: dropped live cast for game load
+[2026-08-29 15:56:00.356] [log] [trace] [storage.cpp:236] Loading from SKSE save...
+[2026-08-29 15:56:00.356] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:56:00.356] [log] [info] [casting_controller.cpp:422] SH2: dropped live cast for game load
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 35 on bar 4d41494e slot 2
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1011 on bar 4d41494e slot 5
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1011 on bar 4d41494e slot 11
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1003 on bar 31485350 slot 1
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1006 on bar 31485350 slot 5
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1007 on bar 31485350 slot 6
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1008 on bar 31485350 slot 7
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1009 on bar 31485350 slot 8
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1010 on bar 31485350 slot 9
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1011 on bar 31485350 slot 10
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1012 on bar 31485350 slot 11
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 1003 on bar 31485350 slot 1
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 12 on bar 31485350 slot 3
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 35 on bar 31485350 slot 4
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 31 on bar 31485350 slot 5
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 33 on bar 31485350 slot 6
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 54 on bar 31485350 slot 7
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 13 on bar 31484457 slot 1
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 17 on bar 31484457 slot 2
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 46 on bar 31484457 slot 4
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 34 on bar 31484457 slot 5
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 28 on bar 31484457 slot 7
+[2026-08-29 15:56:00.357] [log] [info] [storage.cpp:53] WART: restored art 39 on bar 31484457 slot 11
+[2026-08-29 15:56:00.357] [log] [trace] [storage.cpp:567] Reading 'GDAT' data from save...
+[2026-08-29 15:57:14.404] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1001
+[2026-08-29 15:57:14.404] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 15:57:14.404] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:14.405] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 15:57:14.405] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 15:57:14.405] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 15:57:14.410] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:14.410] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:14.410] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:14.413] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 15:57:14.413] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:14.413] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:14.415] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:14.415] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:14.415] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:14.415] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 15:57:14.415] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:17.705] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=11004
+[2026-08-29 15:57:17.705] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 15:57:17.705] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:17.706] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 15:57:17.706] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 15:57:17.706] [log] [info] [papyrus_functions.cpp:49] castSlot(1): processed (skill type=3, queued input event=false)
+[2026-08-29 15:57:17.708] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:17.708] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:17.708] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:17.711] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:17.711] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 15:57:17.711] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:20.926] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=35 wrote=true read=true back=35
+[2026-08-29 15:57:20.928] [log] [debug] [art_driver.cpp:59] SH2 art: latch 2 (winopen=false hitframe=false)
+[2026-08-29 15:57:20.928] [log] [info] [clip_translation_driver.cpp:125] SH2 motion: bound SH2_Art_Clip (11 animmotion keys)
+[2026-08-29 15:57:20.928] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:20.928] [log] [debug] [art_driver.cpp:51] SH2 art: notified SH2_ArtStart -> true
+[2026-08-29 15:57:20.928] [log] [info] [papyrus_functions.cpp:49] castSlot(2): processed (skill type=8, queued input event=false)
+[2026-08-29 15:57:20.940] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:22.339] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 15:57:23.692] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_ArtExit
+[2026-08-29 15:57:23.692] [log] [debug] [art_driver.cpp:69] SH2 art: latch open (SH2_ArtExit)
+[2026-08-29 15:57:23.692] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:23.692] [log] [debug] [art_driver.cpp:34] SH2 art: state exiting (SH2_ArtExit)
+[2026-08-29 15:57:23.692] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:23.692] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:23.692] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:23.692] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:23.692] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:23.710] [log] [debug] [art_driver.cpp:24] SH2 art: notified SH2_ArtExit -> false
+[2026-08-29 15:57:23.710] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:23.710] [log] [debug] [art_driver.cpp:34] SH2 art: state exiting (SH2_ArtExit)
+[2026-08-29 15:57:24.695] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1003
+[2026-08-29 15:57:24.695] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 15:57:24.695] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:24.696] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 15:57:24.696] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 15:57:24.696] [log] [info] [papyrus_functions.cpp:49] castSlot(3): processed (skill type=3, queued input event=false)
+[2026-08-29 15:57:24.706] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:24.706] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:24.706] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:24.708] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:24.708] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 15:57:24.708] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:36.559] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1002
+[2026-08-29 15:57:36.559] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 15:57:36.559] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:36.560] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 15:57:36.560] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 15:57:36.560] [log] [info] [papyrus_functions.cpp:49] castSlot(4): processed (skill type=3, queued input event=false)
+[2026-08-29 15:57:36.569] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:36.569] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:36.569] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:57:36.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 15:57:36.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:36.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:36.571] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:36.571] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:36.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:36.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 15:57:36.572] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:39.785] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=1011 wrote=true read=true back=1011
+[2026-08-29 15:57:39.785] [log] [debug] [art_driver.cpp:59] SH2 art: latch 0 (winopen=true hitframe=true)
+[2026-08-29 15:57:39.785] [log] [info] [clip_translation_driver.cpp:125] SH2 motion: bound SH2_Art_Clip (50 animmotion keys)
+[2026-08-29 15:57:39.785] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:57:39.785] [log] [debug] [art_driver.cpp:51] SH2 art: notified SH2_ArtStart -> true
+[2026-08-29 15:57:39.785] [log] [info] [papyrus_functions.cpp:49] castSlot(5): processed (skill type=8, queued input event=false)
+[2026-08-29 15:57:39.795] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:39.796] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=2 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:40.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_WinOpen
+[2026-08-29 15:57:40.571] [log] [debug] [art_driver.cpp:69] SH2 art: latch open (MCO_WinOpen)
+[2026-08-29 15:57:40.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_PowerWinOpen
+[2026-08-29 15:57:40.571] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 15:57:41.338] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_PowerWinClose
+[2026-08-29 15:57:41.422] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_ArtExit
+[2026-08-29 15:57:41.422] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:41.422] [log] [debug] [art_driver.cpp:34] SH2 art: state exiting (SH2_ArtExit)
+[2026-08-29 15:57:41.422] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:57:41.422] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:41.422] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:57:41.422] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:57:41.423] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:57:41.438] [log] [debug] [art_driver.cpp:24] SH2 art: notified SH2_ArtExit -> false
+[2026-08-29 15:57:41.438] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:57:41.438] [log] [debug] [art_driver.cpp:34] SH2 art: state exiting (SH2_ArtExit)
+[2026-08-29 15:57:43.019] [log] [info] [papyrus_functions.cpp:49] castSlot(6): processed (skill type=6, queued input event=true)
+[2026-08-29 15:57:44.519] [log] [debug] [casting_controller.cpp:59] SH2 power: restored selectedPower 0007097C -> 0002F7BA (applied=true, immediate)
+[2026-08-29 15:57:46.240] [log] [info] [papyrus_functions.cpp:49] castSlot(7): processed (skill type=6, queued input event=true)
+[2026-08-29 15:57:47.743] [log] [debug] [casting_controller.cpp:59] SH2 power: restored selectedPower 00070981 -> 0002F7BA (applied=true, immediate)
+[2026-08-29 15:57:49.445] [log] [info] [papyrus_functions.cpp:49] castSlot(8): processed (skill type=6, queued input event=true)
+[2026-08-29 15:57:50.942] [log] [debug] [casting_controller.cpp:59] SH2 power: restored selectedPower 0002F7BA -> 0002F7BA (applied=true, immediate)
+[2026-08-29 15:57:59.969] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:57:59.969] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ShoutStart
+[2026-08-29 15:58:00.167] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: Voice_SpellFire_Event
+[2026-08-29 15:58:00.390] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: Voice_SpellFire_Event
+[2026-08-29 15:58:00.892] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:58:00.892] [log] [debug] [casting_controller.cpp:91] SH2 power: holding selectedPower 0007097C until IsShouting falls (restores 0002F7BA)
+[2026-08-29 15:58:01.849] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ShoutStop
+[2026-08-29 15:58:01.849] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: attackStop
+[2026-08-29 15:58:01.849] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:58:01.849] [log] [debug] [msco_cast_driver.cpp:450] SH2 cast: advance MCO_nextpowerattack=1 (no open swing (ready/AttackState reset) -> ignored)
+[2026-08-29 15:58:01.849] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStart
+[2026-08-29 15:58:01.849] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:58:02.070] [log] [debug] [casting_controller.cpp:59] SH2 power: restored selectedPower 0007097C -> 0002F7BA (applied=true, IsShouting fell)
+[2026-08-29 15:58:52.258] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_ReadyStop
+[2026-08-29 15:59:20.121] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 15:59:20.246] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1001
+[2026-08-29 15:59:20.246] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 15:59:20.246] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 15:59:20.247] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 15:59:20.247] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 15:59:20.247] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 15:59:20.257] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 15:59:20.257] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 15:59:20.257] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> false
+[2026-08-29 15:59:20.259] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 15:59:20.259] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 15:59:20.259] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 15:59:24.969] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 15:59:25.218] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 15:59:25.925] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 15:59:25.925] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 15:59:25.925] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 15:59:25.925] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 15:59:25.945] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:00:00.514] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:00:00.638] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1001
+[2026-08-29 16:00:00.638] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:00:00.638] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:00:00.639] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 16:00:00.639] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 16:00:00.639] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:00:00.649] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 16:00:00.649] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:00:00.649] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> false
+[2026-08-29 16:00:00.651] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:00:00.651] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 16:00:00.651] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:00:03.406] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:00:03.656] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:00:04.361] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:00:04.361] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:00:04.361] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:00:04.361] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:00:04.403] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:00:54.135] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:00:54.261] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1001
+[2026-08-29 16:00:54.261] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:00:54.261] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:00:54.262] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 16:00:54.262] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 16:00:54.262] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:00:54.270] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 16:00:54.270] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:00:54.270] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> false
+[2026-08-29 16:00:54.272] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:00:54.272] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 16:00:54.272] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:00:56.447] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1002
+[2026-08-29 16:00:56.448] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:00:56.448] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:00:56.449] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 16:00:56.449] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 16:00:56.449] [log] [info] [papyrus_functions.cpp:49] castSlot(4): processed (skill type=3, queued input event=false)
+[2026-08-29 16:00:56.450] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 16:00:56.450] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:00:56.450] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> false
+[2026-08-29 16:00:56.453] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:00:56.453] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 16:00:56.453] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:00:58.162] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:00:58.392] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:00:59.097] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:00:59.097] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:00:59.097] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:00:59.097] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:00:59.139] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:01:01.507] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1002
+[2026-08-29 16:01:01.507] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:01:01.507] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:01:01.508] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.91682345 charge=0.25 wrote=true
+[2026-08-29 16:01:01.508] [log] [debug] [msco_cast_driver.cpp:193] SH2 cast: notified SH2_CastChannel (held channel) -> true
+[2026-08-29 16:01:01.508] [log] [info] [papyrus_functions.cpp:49] castSlot(4): processed (skill type=3, queued input event=false)
+[2026-08-29 16:01:01.516] [log] [debug] [msco_cast_driver.cpp:151] SH2 cast: combo restore armed next=1 power=1
+[2026-08-29 16:01:01.516] [log] [debug] [msco_cast_driver.cpp:144] SH2 cast: restored MCO_nextattack=1 MCO_nextpowerattack=1
+[2026-08-29 16:01:01.516] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> true
+[2026-08-29 16:01:01.516] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:01:01.516] [log] [debug] [msco_cast_driver.cpp:175] SH2 cast: notified SH2_CastExit -> false
+[2026-08-29 16:01:01.518] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:01:01.518] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastEnter
+[2026-08-29 16:01:01.518] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_MagicReady
+[2026-08-29 16:01:01.518] [log] [debug] [msco_cast_driver.cpp:144] SH2 cast: restored MCO_nextattack=1 MCO_nextpowerattack=1
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:26.619] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:01:54.838] [log] [error] [hotbar.cpp:1157] Could not save 0, form not found
+[2026-08-29 16:02:00.684] [log] [info] [hotbars.cpp:407] Loading Bars from C:/Users/Rando/Documents/My Games/Skyrim Special Edition/SpellHotbar/bars/t46.json
+[2026-08-29 16:02:06.871] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 1
+[2026-08-29 16:02:06.997] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1
+[2026-08-29 16:02:06.997] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:02:06.997] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:06.998] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:02:06.998] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_CastRight (clip 1) -> true
+[2026-08-29 16:02:06.998] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:02:07.008] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:02:07.011] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:02:07.510] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 0.52s on the cast clock (payload still owed, staying armed); clip still playing
+[2026-08-29 16:02:07.592] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated left-hand caster before vanilla SpellFire
+[2026-08-29 16:02:07.592] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MLh_SpellFire_Event
+[2026-08-29 16:02:07.592] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MLh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:02:07.592] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a left SpellFire event
+[2026-08-29 16:02:07.611] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:07.611] [log] [debug] [casting_controller.cpp:314] SH2 cast: armed payload delivered at its own SpellFire (0.52s on the cast clock)
+[2026-08-29 16:02:07.844] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:02:08.989] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:02:08.989] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:02:09.009] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:02:12.177] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:02:12.303] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1
+[2026-08-29 16:02:12.303] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:02:12.303] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:12.304] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:02:12.304] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_Cast2 (clip 2) -> true
+[2026-08-29 16:02:12.304] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:02:12.312] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:02:12.315] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:02:12.714] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated right-hand caster before vanilla SpellFire
+[2026-08-29 16:02:12.714] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:02:12.714] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MRh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:02:12.714] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a right SpellFire event
+[2026-08-29 16:02:12.795] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 0.50s on the cast clock (payload already delivered); clip still playing
+[2026-08-29 16:02:12.924] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:02:13.744] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:02:13.744] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:02:13.744] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:02:13.850] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:02:13.850] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:02:13.868] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:02:17.471] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 3
+[2026-08-29 16:02:17.597] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=10016
+[2026-08-29 16:02:17.597] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:02:17.597] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:17.598] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:02:17.598] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_Cast3 (clip 3) -> true
+[2026-08-29 16:02:17.598] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:02:17.607] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:02:17.610] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:02:18.107] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 0.52s on the cast clock (payload still owed, staying armed); clip still playing
+[2026-08-29 16:02:18.383] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated left-hand caster before vanilla SpellFire
+[2026-08-29 16:02:18.383] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MLh_SpellFire_Event
+[2026-08-29 16:02:18.383] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MLh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:02:18.383] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a left SpellFire event
+[2026-08-29 16:02:18.401] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:18.401] [log] [debug] [casting_controller.cpp:314] SH2 cast: armed payload delivered at its own SpellFire (0.52s on the cast clock)
+[2026-08-29 16:02:18.827] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:02:19.580] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:02:19.581] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:02:19.621] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:02:19.802] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:02:19.802] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:02:19.820] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:02:45.162] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:02:45.285] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1
+[2026-08-29 16:02:45.286] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:02:45.286] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:02:45.286] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:02:45.287] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_Cast4 (clip 4) -> true
+[2026-08-29 16:02:45.287] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:02:45.296] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:02:45.300] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:02:45.743] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated right-hand caster before vanilla SpellFire
+[2026-08-29 16:02:45.743] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:02:45.743] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MRh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:02:45.743] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a right SpellFire event
+[2026-08-29 16:02:46.152] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:02:46.770] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:02:46.770] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:02:47.140] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:02:47.281] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:02:47.281] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:02:49.855] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:02:49.855] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:02:53.316] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 8.02s on the cast clock (payload already delivered); clip no longer playing
+[2026-08-29 16:02:53.316] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:04:28.405] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:04:28.503] [log] [warning] [papyrus_functions.cpp:33] castSlot(0): not in ingame state
+[2026-08-29 16:04:32.628] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:04:32.628] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:04:36.877] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:04:36.877] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:04:41.559] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:04:41.682] [log] [debug] [input.cpp:927] SH2 cast: refused, casting=true sprinting=false swimming=false jumping=false
+[2026-08-29 16:04:41.682] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:04:49.111] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:04:49.111] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:05:19.824] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:05:19.945] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1
+[2026-08-29 16:05:19.945] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:05:19.945] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:05:19.946] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:05:19.946] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_CastRight (clip 1) -> true
+[2026-08-29 16:05:19.946] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:05:19.959] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:05:19.962] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:05:20.452] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated right-hand caster before vanilla SpellFire
+[2026-08-29 16:05:20.452] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:05:20.452] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MRh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:05:20.452] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a right SpellFire event
+[2026-08-29 16:05:20.695] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:05:21.368] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:05:21.368] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:05:24.591] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:05:24.591] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:05:27.991] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 8.02s on the cast clock (payload already delivered); clip no longer playing
+[2026-08-29 16:05:27.991] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
+[2026-08-29 16:05:38.142] [log] [info] [papyrus_functions.cpp:111] setSlotHand: bar slot 0 hand set to 2
+[2026-08-29 16:05:38.288] [log] [debug] [game_data.cpp:1895] SH2 cast: SpellHotbar_SpellAnimationType=1
+[2026-08-29 16:05:38.288] [log] [debug] [msco_cast_driver.cpp:307] SH2 cast: combo sample next=1 power=1 attacking=0 recorded=false swing=closed playing=0 | next: not sampled | power: not sampled
+[2026-08-29 16:05:38.288] [log] [debug] [msco_cast_driver.cpp:643] SH2: isolated left-hand caster (spell in left hand)
+[2026-08-29 16:05:38.289] [log] [debug] [msco_cast_driver.cpp:202] SH2 cast: MSCO_attackspeed=0.81491184 charge=0.5 wrote=true
+[2026-08-29 16:05:38.289] [log] [debug] [msco_cast_driver.cpp:191] SH2 cast: notified SH2_Cast2 (clip 2) -> true
+[2026-08-29 16:05:38.289] [log] [info] [papyrus_functions.cpp:49] castSlot(0): processed (skill type=3, queued input event=false)
+[2026-08-29 16:05:38.298] [log] [debug] [casting_controller.cpp:724] SH2 cast: casting state active became true (0.5s on the cast timer)
+[2026-08-29 16:05:38.301] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SBF_CastStopDual
+[2026-08-29 16:05:38.698] [log] [debug] [animationeventhook.cpp:150] SH2 cast: isolated right-hand caster before vanilla SpellFire
+[2026-08-29 16:05:38.698] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MRh_SpellFire_Event
+[2026-08-29 16:05:38.698] [log] [debug] [msco_cast_driver.cpp:495] SH2 cast: commitment point (MRh_SpellFire_Event), shape=fnf, window=true
+[2026-08-29 16:05:38.698] [log] [debug] [casting_controller.cpp:204] SH2 cast: graph raised a right SpellFire event
+[2026-08-29 16:05:38.910] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinOpen
+[2026-08-29 16:05:39.728] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MCO_Recovery
+[2026-08-29 16:05:39.728] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: MSCO_WinClose
+[2026-08-29 16:05:39.728] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:05:39.831] [log] [trace] [animationeventhook.cpp:65] SH2 graph event: SH2_CastExit
+[2026-08-29 16:05:39.831] [log] [debug] [msco_cast_driver.cpp:517] SH2 cast: state exiting (clip end or cancel)
+[2026-08-29 16:05:42.959] [log] [debug] [msco_cast_driver.cpp:479] SH2 cast: sampled MCO next=1 power=1 at MSCO_WinClose
+[2026-08-29 16:05:42.959] [log] [debug] [msco_cast_driver.cpp:501] SH2 cast: combo window closed (MSCO_WinClose)
+[2026-08-29 16:05:46.352] [log] [debug] [casting_controller.cpp:1064] SH2 cast: lockout over at 8.02s on the cast clock (payload already delivered); clip no longer playing
+[2026-08-29 16:05:46.352] [log] [debug] [game_data.cpp:1602] SH2 art: SH2_ArtSelector=0 wrote=true read=true back=0
