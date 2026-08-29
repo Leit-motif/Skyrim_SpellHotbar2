@@ -101,6 +101,25 @@ conditioned `SpeedMult` record) was the right design for a rule that no longer e
 recorded above so the future endeavor does not rediscover it, and nothing builds it now. The
 per-actor exemption stays dead either way — that part of the first amendment survives.
 
+## Amended 2026-08-28: movement is back in scope for concentration
+
+The owner un-parked [ticket 32](../../.scratch/mco-integration/issues/32-move-at-half-speed-during-a-concentration-channel.md).
+The "future endeavor" of the second amendment is now. What changes, and what does not:
+
+- **The concentration channel trades the binary root for the graded slow.** The channel state's
+  `bAnimationDriven` plant comes off, a locomotion blend goes into the held state (legs from the
+  ordinary locomotion clips, layered under the inhale pose — route B, inside the fork's own
+  state), and the conditioned `SpeedMult` record the first amendment designed finally gets
+  built: one ability, −50 points while concentration-casting, every actor.
+- **Every other cast type keeps its root unchanged** — fire-and-forget, art clips, and ritual
+  concentration (the owner's 2026-08-24 ruling that rituals plant stands).
+- **The per-action, every-actor rule is unchanged and is why ticket 33 flips back** to
+  distributing the shared record instead of authoring a root patch on the vanilla concentration
+  states.
+- The forbidden third thing stays forbidden: no DLL toggling controls or writing actor values on
+  its own clock. The DLL applies and dispels the ability on the channel's own start/teardown
+  edges; the number lives in the record.
+
 ## The cost we are accepting
 
 A modifier on a shared state catches every actor in it, which is the mechanism above working as

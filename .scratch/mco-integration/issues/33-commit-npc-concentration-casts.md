@@ -2,12 +2,17 @@
 
 **Type:** spike, then feature (Nemesis patch + FOMOD option)
 
-**Status:** ready-for-agent — the shape is settled by
-[ADR-0015](../../../docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md) and both
-its 2026-08-24 amendments. The final rule is the simple one: **concentration roots, for every
-actor.** Movement and the half-speed slow are tabled with tickets 32 and 34.
+**Status:** ready-for-agent, **re-flipped 2026-08-28 to the conditioned-record shape (version 2
+in the history below).** The owner un-parked ticket 32 and revived the uniform half-speed rule,
+so the root-everyone build ("The build, restated for the final rule") is dead again — do not
+author a root patch on the concentration states. This ticket's job is now: distribute the
+shared conditioned `SpeedMult` ability record that ticket 32 builds (−50 while
+concentration-casting) so NPCs read the same number the player does. The spike below (MSCO's
+binding set, which states an NPC channel runs through, MSCO's OAR NPC submods) still runs
+unchanged — it decides the fire-and-forget NPC cells and whether any state is left unrooted
+that should not be. See ADR-0015's 2026-08-28 amendment.
 
-**Blocked by:** None. Ticket 32 is tabled, which dissolved this ticket's only design conflict.
+**Blocked by:** ticket 32 (the record is authored there; this ticket distributes it).
 
 ## What the owner asked for
 

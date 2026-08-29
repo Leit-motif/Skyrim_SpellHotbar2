@@ -2,10 +2,26 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** parked — **TABLED by owner ruling, 2026-08-24, hours after being upgraded to a
-requirement.** On learning the path here requires new animation assets: "movement is out of
-scope. As long as both players and NPCs are rooted during concentration casts, I think we're
-good to proceed, and we can table the movement and blend work for a future endeavor."
+**Status:** claimed — **UN-PARKED by owner ruling, 2026-08-28.** Two decisions taken the same
+day: the blend goes **route B** (keep ticket 28's shipped held state, author the locomotion
+blend inside it — route A is dead: it would un-ship an accepted feature, re-open ADR-0006, and
+collide with ShoutMCO's root), and the **uniform half-speed rule is revived** (ticket 33 flips
+back to the conditioned-`SpeedMult`-record shape; its root-everyone build is not written). The
+owner's working model of the blend: the inhale pose layered over the live locomotion set per
+stance — legs come from the ordinary walk/run clips, nothing new authored. Plan at
+`C:\Users\Rando\.claude\plans\stateless-weaving-papert.md`.
+
+**Stale-section warning:** the "Where the root actually comes from today" section below predates
+ticket 35 (`c73b4f1`), which deleted the WASD capture and the whole `blocks_movement()` chain.
+Rooting is graph-only now: the `bAnimationDriven` modifier pairs on the channel state
+(`#shtb$34/$35` in `1hm_behavior`, `#shtb$29/$30` in `magicbehavior`).
+
+Original parking record, kept for history:
+
+> parked — **TABLED by owner ruling, 2026-08-24, hours after being upgraded to a
+> requirement.** On learning the path here requires new animation assets: "movement is out of
+> scope. As long as both players and NPCs are rooted during concentration casts, I think we're
+> good to proceed, and we can table the movement and blend work for a future endeavor."
 
 Concentration therefore ROOTS for every actor — [ticket
 33](33-commit-npc-concentration-casts.md) carries that, and the player's channel is already
