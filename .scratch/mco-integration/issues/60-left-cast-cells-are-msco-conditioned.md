@@ -1,6 +1,6 @@
 # 60 — The left cast column is decided by MSCO, not by the fork
 
-**Status:** built, awaiting owner acceptance
+**Status:** accepted — owner-confirmed live 2026-08-29 ("the animations play correctly")
 
 Ticket 46 shipped the right and dual cells and ruled that "left keeps the bound clips (no
 submod needed)". That premise is false. The left path is not bound to one clip set — MSCO's
@@ -130,3 +130,39 @@ condition on equipped state can decide a hotbar cast's art again.
 - A staff in the casting hand plays MSCO's staff art, both hands, aimed and self. Animation Log
   names `SH2 Cast - {Left,Right} Staff ({aimed,self})`.
 - The two self cells look identical apart from the hand — no equip-event pop on the left.
+
+
+## Comments
+
+### 2026-08-29 — owner acceptance, and one inconsistency left open
+
+Owner confirmed the cells play correctly in live play on the CS-Test save, with the DLL built
+this session (`6305a72`) and all ten OAR cells deployed to `Dev - Spell Hotbar 2`.
+
+Not witnessed frame-by-frame, so not claimed: no per-cell screenshot exists, and the left-staff
+MAGIC_BAR mapping was never isolated (the owner's bars inherit, so the magic bar and the main
+bar hold the same spells in the reachable slots — comparing what a slot casts cannot tell the
+two apart). Both stay open as owner-eyeball cells, not as failures.
+
+**Open inconsistency, deliberately parked.** While testing, the owner found that MSCO plays its
+plain SELF art for a self-delivery staff — it has no staff-cast animation for that case, because
+`Self Left`/`Self Right` (6900/6901) outrank `Left Staff`/`Right Staff` (6800/6801) in MSCO's own
+priorities. Our `cast_left_staff_self` / `cast_right_staff_self` cells therefore present staff
+clip 5 where MSCO itself would present plain self art, so a hotbar self cast and a staff's own
+self cast look different with the same staff in hand.
+
+This is the ruling that was made and then overruled earlier the same day, now with live evidence
+behind it. The owner stopped here rather than chase it ("too exhausted to chase it for
+consistency"), so nothing is being changed. Two ways out whenever it comes back up:
+
+1. Delete the two self-staff cells; the plain self cells then win and match MSCO exactly.
+2. Keep them and accept that SH2 is deliberately more specific than MSCO here.
+
+Reversing it is one commit either way — the cells are self-contained folders and the plain self
+cells already carry the fallback art.
+
+Self-cast staves for any future test (added to the owner's save 2026-08-29): Apocalypse's Staff
+of Frost Novas and Staff of Shock Novas, Bruma's Rod of Potency and Sceptre of Frosty
+Entombment, Arcanum's Ensis Benedictus, all self + fire-and-forget; Bruma's Wooden Staff of
+Awesome Conflagration is self + concentration. Vanilla ships no self-target staff enchantment
+at all.
