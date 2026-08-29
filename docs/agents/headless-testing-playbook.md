@@ -256,6 +256,43 @@ The current work's exact test, fully headless:
 5. Record verdicts per cell; name the save, profile, and log lines. Leave visual identity as an
    explicitly-open owner cell — never report it green.
 
+## Building a window where a stale flag is still set (ticket 61, 2026-08-29)
+
+A whole class of cells asks "does the DLL correctly IGNORE X?", and the trap is that a green log
+usually means the state you meant to test had already been cleaned up. Ticket 61's cell -- a
+vanilla staff release must not be accepted as a driver cast's SpellFire -- burned two runs on
+exactly that before the construction worked.
+
+- **The owner plays at a 0.5 s GCD, so a cast's own state is gone almost immediately.** The
+  arming mask is cleared at teardown, so a staff fired even a second later is rejected by the
+  cleared mask, not by the term under test. Widen the window with `setSpellGCD(8.0)` and restore
+  it after; the instance then runs its lockout for eight seconds while its clip ends after one.
+- **A concentration channel does NOT retire on the spell GCD.** `setSpellGCD` moved nothing: a
+  probe press 2.2 s after a channel started a NEW cast, proving the instance had already gone.
+  Use a FIRE-AND-FORGET cast when the cell needs a live instance outliving its clip.
+- **Prove the instance was still live at the moment under test**, or the cell proves nothing.
+  The `lockout over at N.NNs` line lands at retirement, so a test event timestamped before it had
+  a live instance behind it. `castSlot` does NOT print the `press gate` refusal (that line is
+  `InputModeCast::process_input`, and the native bypasses it) -- a second `castSlot` that
+  succeeds is itself the evidence the first instance was gone, and it re-arms the mask, so never
+  use one as a mid-test probe.
+- **The graph-event trace cannot be relied on for the vanilla event.**
+  `should_trace_graph_events()` refills its budget only on a CUT, so a clip-end exit leaves it at
+  zero and the vanilla release is invisible in the trace. Prove the action happened from ordinary
+  driver logging instead -- a staff swing writes its own `sampled MCO ... at MSCO_WinClose`, and
+  that clip's SpellFire precedes its WinClose by a measurable, stable spacing (0.95 s for
+  `MAG_DestructionStaffFirebolt`).
+- **Write the pairing check rather than reading the log.**
+  `tools/telemetry/spellfire_pairing.py` pairs each accepted SpellFire event against its
+  isolation line and exits non-zero on an orphan. It also showed the PRE-fix log had zero
+  orphans, which is the reminder worth keeping: a log that does not reproduce a defect is not
+  evidence the defect is absent. Drive the provocation deliberately.
+
+Fixture gaps are cheap to close in memory and die with the process: `player.addspell`,
+`player.addperk 000153CF` (Destruction dual casting, which the CS-Test fixture lacks -- grant it
+or dual silently downgrades), `player.additem`/`equipitem` for a staff. Save the owner's live bar
+with `saveBarsToFile(<full path>)` before `loadBarsFromFile` swaps it, and reload it afterwards.
+
 ## Open instrument work
 
 - **OAR-API clip-name probe — SMOKE-TESTED LIVE 2026-08-28, PASSED.** The `cliplog` tool ships
