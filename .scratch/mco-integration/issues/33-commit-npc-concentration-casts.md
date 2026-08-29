@@ -319,6 +319,26 @@ Build green (7/7 test binaries pass, `SpellHotbar2.dll` links) from a fresh conf
 agent worktree. **Not deployed, game not launched — the moving-entry cell is owner-hands work
 and stays open.**
 
+## Deployed + regression-swept 2026-08-29 07:23–07:35 — game left running for the owner
+
+Capture landed on main (`98350c9`, merge of the reviewed worktree build; ADR-0015 third
+amendment and playbook lesson alongside, `c160e21`). `SpellHotbar2.dll` rebuilt from main and
+deployed to `Dev - Spell Hotbar 2` (07:23:37); relaunched, CS-Test auto-loaded. Regression
+sweep, all green:
+
+- Standstill equipped-hand channel (Flames left): root true mid-channel, false 2 s after
+  release — the capture does not disturb the root path.
+- Hotbar `castSlot(0)`: full clean lifecycle in SpellHotbar2.log (left SpellFire, armed payload
+  at 0.50 s, MSCO_WinOpen/Close, SH2_CastExit) — the input-hook change does not disturb the
+  driver-cast path.
+- No new startup errors; only the pre-existing CSV-loader warnings.
+
+**Handed to the owner with the game running.** The two feel cells only they can judge: (1) the
+moving-entry equipped-hand channel — with the capture, held WASD should go quiet the moment the
+channel starts, no stutter, no slide; (2) watch a real enemy mage channel — "no perceivable
+stutter, needs to feel natural." Also still open: NPC fire-and-forget confirmation, NPC
+rotation-tracking mid-channel, FOMOD install/uninstall in MO2.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
