@@ -2,7 +2,7 @@
 
 **Type:** spike, then feature (Nemesis patch + FOMOD option)
 
-**Status:** ready-for-agent, **back in the root-everyone shape** — the 2026-08-28 morning
+**Status:** claimed, **back in the root-everyone shape** — the 2026-08-28 morning
 re-flip to the conditioned-record shape lasted one day: the owner played ticket 32's built
 half-speed channel that evening and rejected it ("as long as npc's are rooted too, that will
 have to suffice. i think that's preferable actually"). Ticket 32 is closed wontfix; the rule is
