@@ -149,6 +149,32 @@ can be rebuilt and re-checked rather than re-read by hand.
 **No runtime evidence.** Nemesis has not been regenerated and the game has not been launched;
 every acceptance box below is still open.
 
+## Landed + deployed 2026-08-28 late evening — runtime sweep queued behind a live game
+
+Merged to `main` (`f79937d`, coordinator-reviewed: plant verified byte-equivalent to
+`#shtb$13`/`$14`, variable declarations checked in all three tables, validators re-run clean,
+FOMOD XML re-generated and parsed). The `shcc` folder (15 files) is copied into
+`Dev - Spell Hotbar 2\Nemesis_Engine\mod\shcc` — inert: unticked in Nemesis, invisible to the
+running session's snapshotted VFS.
+
+Skyrim was LIVE at deploy time (started 22:58, likely the owner after the ticket 32 rejection),
+so no Nemesis run and no relaunch were attempted. Remaining, in order, once the game is free:
+
+1. `run-nemesis.ps1 -Tick shcc -Apply -UpdateEngine` (new file set ⇒ Update Engine; script in
+   `thuum-fully-animated-shouts-mco/tools/`). Game closed, MO2 up, single instance.
+2. Post-regen, before launch: read the merged `temp_behaviors/magicbehavior.txt` and confirm the
+   dual-state generator chain — `#0317`/`#0337` are single-value params that `pscd`, `sbeef`,
+   and now `shcc` all wrap, the one contended edit in this patch. Verify all three mods'
+   modifiers remain reachable, not just the last writer's.
+3. Relaunch, then the acceptance sweep. Cheap oracle first:
+   `GetAnimationVariableBool("bAnimationDriven")` on the casting actor (rooted ⇒ true), then NPC
+   displacement via position reads across a real enemy mage's channel (NPC movement is AI-driven,
+   so headless displacement measurement is valid — the injected-WASD ban is player-only). Player
+   equipped-hand cell: equip Flames via `EquipItemEx`, drive the channel with an injected
+   `Left Attack/Block` hold (vanilla cast path, event-side — not the SH2 keybind hook). End-path
+   cells: interrupt/stagger/death, root lifts, AI resumes.
+4. FOMOD install/uninstall check on the generated installer.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
