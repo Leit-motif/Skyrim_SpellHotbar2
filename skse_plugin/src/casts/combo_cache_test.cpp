@@ -16,10 +16,7 @@ using SpellHotbar::casts::RollingMcoCombo;
 using SpellHotbar::casts::capture_hotbar_press_to_prevent_dual_fire;
 using SpellHotbar::casts::classify_cast_delivery;
 using SpellHotbar::casts::classify_hotbar_cast_press;
-using SpellHotbar::casts::concentration_cast_swallows_movement;
 using SpellHotbar::casts::cut_committed_cast_for_left_hand_press;
-using SpellHotbar::casts::hand_holds_active_concentration_cast;
-using SpellHotbar::casts::magic_caster_state_is_actively_casting;
 using SpellHotbar::casts::isolate_caster_before_vanilla_spellfire;
 using SpellHotbar::casts::SpellFireHand;
 using SpellHotbar::casts::spellfire_hand_bit;
@@ -500,46 +497,6 @@ void left_hand_press_cuts_a_committed_hotbar_cast()
 		"left attack with a weapon or shield is block, not an MSCO hand cast");
 	expect(!cut_committed_cast_for_left_hand_press(true, true, false),
 		"an unrelated key does not cut");
-}
-
-// Ticket 33. The gate for the moving-entry movement capture, both halves of it. This is
-// the pure half; the engine reads it stands on (caster state, casting type, and the graph's
-// bAnimationDriven) are runtime-only and are not faked here.
-void a_caster_is_active_only_while_charging_or_casting()
-{
-	expect(magic_caster_state_is_actively_casting(
-			SpellHotbar::casts::k_magic_caster_state_charging),
-		"a charging caster is mid-cast");
-	expect(magic_caster_state_is_actively_casting(
-			SpellHotbar::casts::k_magic_caster_state_casting),
-		"a concentration channel reports kCasting for its whole length");
-	expect(!magic_caster_state_is_actively_casting(0), "kNone is idle");
-	expect(!magic_caster_state_is_actively_casting(3), "kReady is a drawn spell, not a cast");
-	expect(!magic_caster_state_is_actively_casting(8), "an interrupt is not a live cast");
-}
-
-void a_hand_counts_only_when_a_concentration_spell_is_actually_being_cast()
-{
-	expect(hand_holds_active_concentration_cast(true, true),
-		"a channeling hand with a concentration spell is the case the root covers");
-	expect(!hand_holds_active_concentration_cast(true, false),
-		"a fire-and-forget charge is not a channel");
-	expect(!hand_holds_active_concentration_cast(false, true),
-		"a concentration spell merely equipped is not being cast");
-	expect(!hand_holds_active_concentration_cast(false, false),
-		"an idle hand contributes nothing");
-}
-
-void movement_is_swallowed_only_when_a_rooted_concentration_cast_is_live()
-{
-	expect(concentration_cast_swallows_movement(true, true),
-		"a concentration cast on a graph that reports bAnimationDriven is the rooted channel");
-	expect(!concentration_cast_swallows_movement(false, true),
-		"an MCO attack sets bAnimationDriven with no concentration cast; movement passes");
-	expect(!concentration_cast_swallows_movement(true, false),
-		"without the optional shcc patch a channel is unrooted; walk-casting stays vanilla");
-	expect(!concentration_cast_swallows_movement(false, false),
-		"ordinary play is never captured");
 }
 
 void ability_latch_prefers_winopen_then_hitframe_then_artexit()
@@ -1140,9 +1097,6 @@ int main()
 	losing_the_state_before_the_floor_cancels();
 	already_delivered_does_not_fire_again();
 	left_hand_press_cuts_a_committed_hotbar_cast();
-	a_caster_is_active_only_while_charging_or_casting();
-	a_hand_counts_only_when_a_concentration_spell_is_actually_being_cast();
-	movement_is_swallowed_only_when_a_rooted_concentration_cast_is_live();
 	ability_latch_prefers_winopen_then_hitframe_then_artexit();
 	ability_latch_events_match_the_classified_kind();
 	a_press_behind_our_shtb_is_retained_until_the_latch_opens();
