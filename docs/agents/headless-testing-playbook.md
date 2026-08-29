@@ -195,17 +195,49 @@ The current work's exact test, fully headless:
 
 ## Open instrument work
 
-- **OAR-API clip-name probe — BUILT 2026-08-26, awaiting live smoke test.** The `cliplog` tool
-  now ships in devbench-input 0.2.0 (repo main `b0938cf`, deployed to both MO2 copies of
+- **OAR-API clip-name probe — SMOKE-TESTED LIVE 2026-08-28, PASSED.** The `cliplog` tool ships
+  in devbench-input 0.2.0 (repo main `b0938cf`, deployed to both MO2 copies of
   `DevBenchInput.dll`). It hooks `hkbClipGenerator::Activate` (vfunc 0x4, installed at
   kDataLoaded so OAR's replacement runs first), records every activation into a 512-entry ring —
   clip name plus OAR's resolved path/project/variant/submod/mod — and exposes
   `cliplog action=start|stop|status|read|clear` with `since`/`filter`/`limit` on read. Recording
-  is OFF by default; entries cover all actors (narrow with `filter`). Smoke test on next launch:
-  `status` (expect the hook installed), `start`, one cast, `read filter=SpellHotbar` — populated
-  `submod`/`path` fields promote it to rung 1 of the ladder and make submod naming headless. A
-  clean build proved compilation only; the vendored API came from OAR's `main` branch (no 3.2.0
-  tag exists upstream), so a null API or empty strings at runtime means a V1 mismatch to report.
+  is OFF by default.
+
+  The vendored-API worry is closed: OAR's `main`-branch API resolves at runtime and the
+  replacement fields populate. Verbatim from the 2026-08-28 session (frame ~110120, owner's live
+  save), one entry carrying full provenance including the `_variants_` pick:
+
+  ```
+  clip:    Animations\male\MT_WalkForward.hkx
+  mod:     EVG CLAMBER - Slope Animations
+  submod:  Upwards Walk
+  project: DefaultFemale
+  path:    data\meshes\actors\character\animations\OpenAnimationReplacer\CLAMBER\Upwards Walk\female\_variants_mt_walkforward
+  variant: fWUP1.hkx
+  ```
+
+  That promotes the probe to rung 1 of the ladder and makes submod naming headless, as designed.
+  Four operating notes the smoke test bought, each of which cost a wrong reading first:
+
+  1. **`oarApi` is acquired lazily at `start`, so `status` on a stopped probe reports
+     `oarApi:false`.** The very first reading of the session looked like "OAR is missing"; the
+     same session returned `true` the instant recording began. Only trust that field while
+     `recording:true`.
+  2. **Empty replacement fields mean the clip was NOT replaced, not that the probe failed.**
+     Vanilla clips (`RunForward.hkx`, the creature `*_Wolf.hkx` set) come back blank in the same
+     read as the populated entries above. Do not diagnose from a blank-field entry alone.
+  3. **The missing per-actor filter costs more than it sounds.** One nearby companion creature
+     produced roughly 25 of 30 entries in a 2-second window, and a 512-entry ring drains fast at
+     that rate. Always pass `filter`; budget for `dropped` on anything longer than a few seconds.
+  4. **Nothing records while a blocking menu is up, and Papyrus casts refuse there.**
+     `SpellHotbar.castSlot` logs `castSlot(0): not in ingame state` and returns without casting.
+     An empty ring is ambiguous between "no animation played" and "the owner is in a menu" —
+     check `waitUntil:"noBlockingMenu"` or the SH2 log before concluding the hook is broken.
+
+  Still unproven: capturing SH2's OWN cast clips. `castSlot(0)` on a moving player was processed
+  (`skill type=3`) but the graph refused the state — `notified SH2_Cast3 (clip 3) -> false` — so
+  only locomotion reached the ring. Driving a cast into the ring needs the player in a state the
+  behavior graph will accept, which is the next thing to establish when a session allows it.
 - **Ticket 50 real-input harness** — upstream injection so input-hook changes stop being
   owner-only.
 - **Pose-trajectory calibration** — one spike to learn whether `record` distinguishes known
