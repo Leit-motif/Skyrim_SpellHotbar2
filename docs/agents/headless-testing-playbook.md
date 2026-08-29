@@ -234,10 +234,36 @@ The current work's exact test, fully headless:
      An empty ring is ambiguous between "no animation played" and "the owner is in a menu" —
      check `waitUntil:"noBlockingMenu"` or the SH2 log before concluding the hook is broken.
 
-  Still unproven: capturing SH2's OWN cast clips. `castSlot(0)` on a moving player was processed
-  (`skill type=3`) but the graph refused the state — `notified SH2_Cast3 (clip 3) -> false` — so
-  only locomotion reached the ring. Driving a cast into the ring needs the player in a state the
-  behavior graph will accept, which is the next thing to establish when a session allows it.
+  **SH2's own cast clips are captured too — proven the same session.** With the weapon DRAWN,
+  `castSlot(0)` put the driver clip in the ring with its submod named:
+
+  ```
+  clip:    Animations\MSCO_left3.hkx
+  mod:     Spell Hotbar 2 Casts
+  submod:  SH2 Cast - Dual (aimed)
+  project: DefaultFemale
+  path:    data\meshes\actors\character\animations\OpenAnimationReplacer\SpellHotbar2Casts\cast_dual\MSCO_left3.hkx
+  ```
+
+  5. **`castSlot` needs the weapon DRAWN. A sheathed player gets
+     `notified SH2_Cast3 (clip 3) -> false` and no clip at all.** This cost two runs before
+     `Actor.IsWeaponDrawn` on `0x14` returned `false` and named it. The shtb cast states live in
+     the drawn combat graphs, so sheathed there is no state to enter and the notify is refused
+     rather than errored — `castSlot` still logs `processed`, which reads like success. Drive
+     `Actor.DrawWeapon` on `0x14`, wait ~2s, confirm with `IsWeaponDrawn`, then cast. Standing
+     still is NOT the requirement; drawn is.
+  6. **SCAR floods the ring on a drawn 1H stance.** `SCAR_1hmReadyDummy.hkx` activated 24 times
+     in ~600ms of a drawn idle, all with blank replacement fields. It is the single biggest
+     consumer of ring space in a combat-ready state — filter it out explicitly on any read that
+     has to span more than a second or two.
+
+  One observation the capture raises, for whoever next touches the per-hand matrix: the winning
+  submod was `SH2 Cast - Dual (aimed)` out of the pack's `cast_dual` folder, on a cast the DLL
+  had just logged as `isolated left-hand caster (spell in left hand)` — Ice Spike in the left
+  hand, Noble Rapier in the right, no dual cast. The clip itself (`MSCO_left3`) is a left-hand
+  clip, so this may be nothing more than how the pack groups its aimed variants. Recorded rather
+  than judged; it is exactly the question this probe exists to make answerable, and tickets 44,
+  46 and 48 are the context for deciding whether it is correct.
 - **Ticket 50 real-input harness** — upstream injection so input-hook changes stop being
   owner-only.
 - **Pose-trajectory calibration** — one spike to learn whether `record` distinguishes known
