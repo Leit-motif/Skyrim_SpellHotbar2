@@ -218,6 +218,13 @@ namespace SpellHotbar::casts::CastingController {
 		 */
 		void end_channel(RE::PlayerCharacter* pc);
 	protected:
+		/**
+		 * Ticket 32: does this channel carry the half-speed slow while streaming? Rituals
+		 * override to false -- they stay fully rooted by their behavior state (owner ruling
+		 * 2026-08-24), so a slow there is dead weight on top of a plant.
+		 */
+		virtual bool applies_conc_slow() const { return true; }
+
 		const Input::KeyBind& m_keybind;
 		int m_slot;
 	};
@@ -227,6 +234,8 @@ namespace SpellHotbar::casts::CastingController {
 	public:
 		CastingInstanceSpellRitualConcentration(RE::SpellItem* spell, float casttime, float manacost, hand_mode used_hand, uint16_t casteffect, bool spell_proc, const Input::KeyBind& keybind, int slot, float pre_release_anim_time);
 		virtual ~CastingInstanceSpellRitualConcentration() = default;
+	protected:
+		virtual bool applies_conc_slow() const override { return false; }
 	};
 
 	class CastingInstancePower : public BaseCastingInstance {

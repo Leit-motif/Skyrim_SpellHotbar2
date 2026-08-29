@@ -139,6 +139,11 @@ namespace SpellHotbar::GameData {
     extern RE::TESGlobal* global_vampire_lord_equip_mode;
     extern RE::TESGlobal* global_casting_conc_spell;
 
+    // Ticket 32: constant-effect SpeedMult -50 ability held for the length of a
+    // concentration channel. Lives in the optional SpellHotbar_ConcSlow.esp; stays null
+    // (and the channel stays unslowed) when that plugin is absent.
+    extern RE::SpellItem* conc_slow_ability;
+
     extern RE::SpellItem* spellhotbar_castfx_spell;
     extern RE::SpellItem* spellhotbar_unbind_slot;
     extern RE::SpellItem* spellhotbar_toggle_dualcast;
@@ -339,6 +344,11 @@ namespace SpellHotbar::GameData {
     hand_mode set_weapon_dependent_casting_source(hand_mode hand, bool dual_cast);
 
     void reset_animation_vars();
+
+    // Ticket 32: hold/release the channel slow ability on the player. Both are idempotent
+    // and no-ops when the optional plugin carrying the ability is not installed.
+    void apply_conc_slow(RE::PlayerCharacter* pc);
+    void remove_conc_slow(RE::PlayerCharacter* pc);
 
     void start_cast_timer();
     void advance_cast_timer(float delta);

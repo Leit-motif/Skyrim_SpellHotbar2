@@ -8,6 +8,7 @@
 #include "../input/modes.h"
 #include "../casts/cast_intent.h"
 #include "../casts/casting_controller.h"
+#include "../game_data/game_data.h"
 
 namespace SpellHotbar::Storage {
 
@@ -608,6 +609,9 @@ namespace SpellHotbar::Storage {
         }
 
         RenderManager::on_game_load();
+        // Ticket 32: a save taken mid-channel carries the slow ability; no channel survives a
+        // load, so any applied slow in the loaded save is residue by definition.
+        GameData::remove_conc_slow(RE::PlayerCharacter::GetSingleton());
     }
 
     bool slotSpell_internal(RE::FormID form, size_t index, uint32_t bar_id)
