@@ -257,13 +257,18 @@ The current work's exact test, fully headless:
      consumer of ring space in a combat-ready state — filter it out explicitly on any read that
      has to span more than a second or two.
 
-  One observation the capture raises, for whoever next touches the per-hand matrix: the winning
-  submod was `SH2 Cast - Dual (aimed)` out of the pack's `cast_dual` folder, on a cast the DLL
-  had just logged as `isolated left-hand caster (spell in left hand)` — Ice Spike in the left
-  hand, Noble Rapier in the right, no dual cast. The clip itself (`MSCO_left3`) is a left-hand
-  clip, so this may be nothing more than how the pack groups its aimed variants. Recorded rather
-  than judged; it is exactly the question this probe exists to make answerable, and tickets 44,
-  46 and 48 are the context for deciding whether it is correct.
+  One thing the capture raised and then settled, recorded so nobody re-investigates it: the
+  winning submod was `SH2 Cast - Dual (aimed)` on a cast the DLL logged as `isolated left-hand
+  caster (spell in left hand)`. That is correct behaviour, not a mis-selection. The pack has
+  `cast_right`, `cast_right_self`, `cast_dual`, `cast_dual_self` and **no `cast_left`**; both
+  folders ship identical `MSCO_left1-4.hkx` clips. The right submods gate on animtype `0x815`
+  == 1/2 AND casting source `0x835` == 1, while the dual submods gate on `0x815` == 10016/10017
+  with NO source condition — deliberately, because a dual cast leaves `0x835` at the left
+  source, so one submod covers both the left-hand and dual cases. The cast wrote 10016, so
+  `cast_dual` won as designed. Read "Dual (aimed)" as "left-or-dual (aimed)"; the folder name is
+  the only misleading part. Owner confirmed the same session that dual casting behaves as
+  expected.
+
 - **Ticket 50 real-input harness** — upstream injection so input-hook changes stop being
   owner-only.
 - **Pose-trajectory calibration** — one spike to learn whether `record` distinguishes known
