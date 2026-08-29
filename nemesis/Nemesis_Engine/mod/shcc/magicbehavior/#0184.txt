@@ -1,0 +1,13 @@
+		<hkobject name="#0184" class="hkbModifierList" signature="0xa4180ca1">
+			<hkparam name="variableBindingSet">null</hkparam>
+			<hkparam name="userData">1</hkparam>
+			<hkparam name="name">ModifierList</hkparam>
+			<hkparam name="enable">true</hkparam>
+			<hkparam name="modifiers" numelements="2">
+				#0185
+				#0106
+<!-- MOD_CODE ~shcc~ OPEN -->
+				#shcc$1
+<!-- CLOSE -->
+			</hkparam>
+		</hkobject>
