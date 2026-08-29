@@ -4,8 +4,9 @@
 that ticket. 51 is deferred (staves are out of scope); this half is independent of staves and
 worth shipping on its own.
 
-**Status:** built, awaiting live acceptance — guard implemented and the DLL compiles and links
-clean; the acceptance pass below is not run. See the comment at the bottom.
+**Status:** done — owner-accepted live 2026-08-28. Refusals confirmed on weapon, book, misc and
+armor; spell, shout and scroll still bind. Two cells were declined by the owner and are recorded
+as such below, not as passes.
 
 ## The defect
 
@@ -147,3 +148,47 @@ harness is what would close it.
   the oracle for cell 3, and the log is the oracle for cells 1 and 2.
 
 Game left running for the owner's presses.
+
+### 2026-08-28 — owner pass, accepted
+
+The owner drove the presses (agent injection cannot reach the hook — see the comment above);
+I read the log and the bars.
+
+**Refusals, cells 1 and 2 — pass.** Six refusal lines, `input.cpp:1016`, each naming the form
+and its type:
+
+```
+21:35:44  Refused to bind form 0001359D: form type 41 is not castable   (Weapon — the iron sword)
+21:36:20  Refused to bind form FE708D62: form type 41 is not castable   (Weapon, FE-plugin)
+21:36:49  Refused to bind form FE82B850: form type 27 is not castable   (Book)
+21:36:50  Refused to bind form FEDBE8C9: form type 27 is not castable   (Book)
+21:36:53  Refused to bind form C60F3647: form type 32 is not castable   (Misc)
+21:36:55  Refused to bind form EA006AE7: form type 26 is not castable   (Armor)
+```
+
+Decimal against `RE::FormType`: 41 Weapon, 27 Book, 32 Misc, 26 Armor. Misc and Armor were not
+on the script — the owner tried them anyway, and they widen the evidence past the two cells as
+written. Owner confirms the slots did not change.
+
+**Cell 3, accepted types — pass for shout and scroll, by owner report; one witnessed in the
+bars.** Diffing `saveBarsToFile` before and after the pass, exactly one binding is new:
+
+```
+slot 7  <-  0x0007097E  SHOU "Kyne's Peace"
+```
+
+The scroll bind the owner reports is not separable in the JSON — it landed on a slot already
+holding that form, or was rebound before the dump. Owner's eyes are the authority for "it
+seated" and they confirm both shouts and scrolls bind. A plain spell was not called out
+separately; the shout is the seated-and-persisted witness.
+
+**Cell 3, potion — NOT TESTED.** The owner runs Marth's alchemy overhaul and has no ingredients,
+so the AlchemyItem arm went untested live. Its acceptance rests on the classifier: the guard
+admits exactly what `update_skill_assignment` classifies, and `AlchemyItem` is an explicit arm
+there. That is static reasoning, not runtime evidence.
+
+**Cell 4, save/reload persistence — DECLINED by the owner.** Untested. The refused binds never
+touch storage (the guard returns before `Storage::slotSpell`), so there is nothing to persist,
+but that is inference too.
+
+Closing on the owner's acceptance with those two cells named open rather than green.
