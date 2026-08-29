@@ -4,7 +4,10 @@
 
 **Blocked by:** 01 — Establish the reproducible validation fixture.
 
-**Status:** ready-for-agent
+**Status:** dropped 2026-08-03 — the Baseline Adoption effort was superseded by
+`../../mco-integration/spec.md` and this ticket was never run. Do not implement it; no cell
+here may be read as passing. The header still said `ready-for-agent` for 26 days after the
+spec dropped it; corrected in the 2026-08-29 sweep.
 
 - [ ] Exercise representative Direct Cast behavior through bindings received as native gamepad input while the installed input stack remains enabled.
 - [ ] Cover the relevant fire-and-forget, concentration, targeting, camera, hand, and dual-cast cases needed to expose input-path-specific failures.

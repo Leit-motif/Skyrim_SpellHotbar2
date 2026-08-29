@@ -4,7 +4,10 @@
 
 **Blocked by:** 05 — Validate enabled features and integration seams; 06 — Validate the representative playthrough save.
 
-**Status:** ready-for-agent
+**Status:** dropped 2026-08-03 — the Baseline Adoption effort was superseded by
+`../../mco-integration/spec.md` and this ticket was never run. Do not implement it; no cell
+here may be read as passing. The header still said `ready-for-agent` for 26 days after the
+spec dropped it; corrected in the 2026-08-29 sweep.
 
 - [ ] Review the complete acceptance matrix and leave every unexercised or inadequately evidenced cell open rather than implying it passed.
 - [ ] Confirm that runtime evidence is tied to the exact fork commit, binary, Nolvus Awakening instance/profile and load order, Installed Configuration, save fixtures, and input paths.

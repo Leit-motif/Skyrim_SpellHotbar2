@@ -2,11 +2,24 @@
 
 **Type:** spec umbrella — the work is cut as tickets 54–58; build nothing from this file alone.
 
-**Status:** spec — updated 2026-08-29 after the owner supplied a SECOND reference (CARIM) and
-asked for compare-and-contrast before any build. A fresh session starts at ticket 54.
+**Status:** CLOSED 2026-08-29 — every child ticket is closed and the umbrella has nothing
+left to coordinate. 54 closed partial (protocol abandoned mid-run by owner ruling, mechanism
+read delivered); 55 closed wontfix (CARIM's graded shape rejected); 56 closed superseded (no
+third-party behavior patch trial-installed); 57 delivered as `notes/57-mechanism-comparison.md`;
+58 RESOLVED as the `shcr` patch, owner-confirmed live. The design fork this ticket existed to
+resolve is resolved.
 
-**Blocked by:** None. Supersedes ticket 33's mechanism (33 stays open only for its record of
-what failed and its acceptance list, which this ticket inherits).
+The cleanup list below is verified complete, checked against disk rather than assumed:
+the `houseCARL - SpellHotbar_RootedConcentration` trial mod is absent from the repo, from the
+Nolvus Awakening `mods/` directory, and from every profile's `modlist.txt`; the DLL movement
+capture is gone (`fd50078`); and ADR-0015 carries its 2026-08-29 amendment naming the generator
+replacement as the mechanism.
+
+Two inherited acceptance cells did NOT survive and are recorded as changed, not passed: the
+FOMOD option was overruled (`shcr` ships unconditionally), and the SpeedMult record route was
+rejected. Shipping is ticket 59.
+
+**Blocked by:** None. Superseded ticket 33's mechanism; 33 is now closed too.
 
 ## The two references, and the design fork they define
 

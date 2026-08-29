@@ -4,7 +4,10 @@
 
 **Blocked by:** 02 — Validate Direct Cast with physical keyboard; 03 — Validate Direct Cast with native gamepad input; 04 — Validate Direct Cast through representative reWASD mappings.
 
-**Status:** ready-for-agent
+**Status:** dropped 2026-08-03 — the Baseline Adoption effort was superseded by
+`../../mco-integration/spec.md` and this ticket was never run. Do not implement it; no cell
+here may be read as passing. The header still said `ready-for-agent` for 26 days after the
+spec dropped it; corrected in the 2026-08-29 sweep.
 
 - [ ] Derive the smoke-test list from the recorded Installed Configuration and exercise every enabled FOMOD feature without expanding scope to unselected alternatives.
 - [ ] Check hotbar and binding menus, menu input capture, OAR-driven casting animations, movement restrictions, equipment or selected-power restoration, resource costs, cooldowns, and installed combat/UI seams.

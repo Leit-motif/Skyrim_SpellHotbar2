@@ -8,7 +8,37 @@ gets blocked.
 **Blocked by:** nothing. Ticket 38's rooting change is the thing being corrected, so read it and
 `docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md` first.
 
-**Status:** needs-triage
+**Status:** ready-for-agent — triaged 2026-08-29 against the source and against ticket 54's
+measurement. The suspect is named; start there rather than re-opening the diagnosis wide.
+
+## Triage 2026-08-29: the discriminator this ticket asked for already exists
+
+The ticket wanted to know which of two layers freezes the legs, and said a frame comparison was
+the way to find out. Ticket 54 answered half of it by measurement on a different question, and
+the answer points hard at candidate (2), the `bAnimationDriven` state modifier:
+
+- **The root the owner certifies as correct does not use the flag.** Ticket 54 measured
+  `bAnimationDriven` never rising on the MSCO fire-and-forget cast the owner points to as the
+  right feel — recorded in ADR-0015's 2026-08-29 amendment. The reference behavior gets its
+  commitment from generator replacement, not from an animation-driven state.
+- **Our shtb states still bind it, everywhere.** 24 files under
+  `nemesis/Nemesis_Engine/mod/shtb/` bind `bAnimationDriven` (13 in `1hm_behavior`, 10 in
+  `magicbehavior`, 1 in `0_master`), untouched by ticket 58.
+- **Ticket 58's `shcr` did not change this path.** `shcr` replaces the generators behind the
+  vanilla locomotion-adjacent casting nodes and binds `bAllowRotation` only — two binds, no
+  `bAnimationDriven` anywhere in the patch. A hotbar driver cast still runs an animation-driven
+  shtb state, so nothing about the commitment rebuild has already fixed this by accident.
+
+So the shape of the fix is now plausible to state before the frame is captured: apply `shcr`'s
+mechanism to the shtb states — commitment from what the state routes through, not from a flag
+that freezes the actor — and the legs keep MSCO's authored motion while input stays blocked.
+That is a hypothesis, not a finding. **The frame comparison below is still the acceptance
+evidence**, and per the domain rule a visual claim needs a committed screenshot; a log line
+proving a state is active never shows what the legs did.
+
+One caution carried from ticket 58: `shcr` and `shtb` both patch behavior, and Nemesis resolves
+single-value conflicts last-checked-wins. Produce the contention read before authoring, the way
+ticket 58 did.
 
 ## The distinction this ticket exists to hold
 

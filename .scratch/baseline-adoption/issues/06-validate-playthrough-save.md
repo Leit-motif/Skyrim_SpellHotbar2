@@ -4,7 +4,10 @@
 
 **Blocked by:** 02 — Validate Direct Cast with physical keyboard; 03 — Validate Direct Cast with native gamepad input; 04 — Validate Direct Cast through representative reWASD mappings; 05 — Validate enabled features and integration seams.
 
-**Status:** ready-for-agent
+**Status:** dropped 2026-08-03 — the Baseline Adoption effort was superseded by
+`../../mco-integration/spec.md` and this ticket was never run. Do not implement it; no cell
+here may be read as passing. The header still said `ready-for-agent` for 26 days after the
+spec dropped it; corrected in the 2026-08-29 sweep.
 
 - [ ] Load the recorded representative playthrough save through the same active Nolvus Awakening MO2 instance, profile, load order, Installed Configuration, commit, and binary used for controlled validation.
 - [ ] Repeat the material Direct Cast coverage across physical keyboard, native gamepad, and representative reWASD paths.

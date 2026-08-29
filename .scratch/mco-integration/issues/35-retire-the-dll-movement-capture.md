@@ -2,7 +2,14 @@
 
 **Type:** cleanup (DLL), decided by [ADR-0015](../../../docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md)
 
-**Status:** claimed — landed as commit `c73b4f1` (2026-08-24); only the in-game displacement cell remains open.
+**Status:** CLOSED 2026-08-29 — the removal landed twice and the open cell is answered by
+ticket 58. Commit `c73b4f1` (2026-08-24) removed the capture; ticket 33 then re-added a narrow
+one (`98350c9`); ticket 58's retire list deleted it again for good (`fd50078`, merged
+`670258a`). The tree is now clean — no `blocks_movement`, `is_movement_blocking_cast`, or
+`blocksMovement` anywhere under `skse_plugin/`. The in-game displacement cell this ticket held
+open was closed on ticket 58's live pass, where player and NPC rooting were owner-confirmed
+against the `shcr` patch that replaced the DLL layer entirely. ADR-0015's 2026-08-29 amendment
+records the end state: the root is authored in the behavior graph, and the DLL block is gone.
 
 **Blocked by:** None.
 
