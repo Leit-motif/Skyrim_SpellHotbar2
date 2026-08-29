@@ -2,9 +2,32 @@
 
 **Type:** spike, then feature (Nemesis patch + driver)
 
-**Status:** built, awaiting deploy + live acceptance — all desk work landed 2026-08-28; see
-"Built 2026-08-28" below for what is staged and the exact deployment steps. **UN-PARKED by
-owner ruling, 2026-08-28.** Two decisions taken the same
+**Status:** CLOSED wontfix — **built, live-tested, and REJECTED by the owner the same evening
+(2026-08-28); reverted the same night.** The owner's verdict after playing the built
+half-speed channel:
+
+> "whatever this is is wrong. this isn't going to work. as long as npc's are rooted too, that
+> will have to suffice. i think that's preferable actually. moving while attacking at range
+> should be for archery. […] what i asked for is that while casting a concentration spell,
+> input is not blocked. what you have created now is just weird. apparently it just continues
+> the direction i was already moving at? unacceptable."
+
+So the rule returns to the 2026-08-24 final shape — **concentration roots, every actor** — and
+this time as a positive preference, not a cost cut: move-while-attacking-at-range is archery's
+niche. Ticket 33 returns to its root-everyone build. The revert restores the ticket-28 channel
+state exactly (plant included, which also undoes the ritual-root regression the live session
+had just found). What the failed build leaves behind: the `setSlotKeyHeld` test seam (channels
+are now drivable headlessly), the `SpellHotbar_ConcSlow.esp` records (mod disabled, kept on
+disk), and the findings below.
+
+**Why it felt broken, mechanically:** with `bAnimationDriven` off the channel state, the
+character controller keeps its entry momentum through the channel while fresh steering does not
+take hold — the drift the owner describes. Movement *feel* was the one cell headless testing
+could not reach (injected input cannot steer the player — established this session), so it
+survived to the owner's hands. Everything measurable had passed: SpeedMult 107→57→107 on every
+edge, clean save/load residue, correct OAR clip selection through the bone-switch layer.
+
+Earlier that day this ticket had been un-parked as: Two decisions taken the same
 day: the blend goes **route B** (keep ticket 28's shipped held state, author the locomotion
 blend inside it — route A is dead: it would un-ship an accepted feature, re-open ADR-0006, and
 collide with ShoutMCO's root), and the **uniform half-speed rule is revived** (ticket 33 flips

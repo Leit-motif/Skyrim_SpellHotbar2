@@ -101,7 +101,16 @@ conditioned `SpeedMult` record) was the right design for a rule that no longer e
 recorded above so the future endeavor does not rediscover it, and nothing builds it now. The
 per-actor exemption stays dead either way — that part of the first amendment survives.
 
-## Amended 2026-08-28: movement is back in scope for concentration
+## Amendment below WITHDRAWN the same evening — the built half-speed channel was rejected live
+
+The owner played the build and closed the question for good (2026-08-28): "as long as npc's are
+rooted too, that will have to suffice. i think that's preferable actually. moving while
+attacking at range should be for archery." **Concentration roots, every actor — now as a
+positive design choice, not a tabled cost.** Move-while-attacking-at-range belongs to archery.
+The second amendment's rule set stands; ticket 33 builds the root patch; ticket 32 is closed
+wontfix with the full record. The withdrawn amendment is kept below for the history.
+
+## ~~Amended 2026-08-28: movement is back in scope for concentration~~ (withdrawn, see above)
 
 The owner un-parked [ticket 32](../../.scratch/mco-integration/issues/32-move-at-half-speed-during-a-concentration-channel.md).
 The "future endeavor" of the second amendment is now. What changes, and what does not:

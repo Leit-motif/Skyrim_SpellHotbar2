@@ -1,5 +1,0 @@
-		<hkobject name="#shtb$38" class="BSBoneSwitchGeneratorBoneData" signature="0xc1215be6">
-			<hkparam name="variableBindingSet">#shtb$37</hkparam>
-			<hkparam name="pGenerator">#shtb$30</hkparam>
-			<hkparam name="spBoneWeight">#shtb$36</hkparam>
-		</hkobject>

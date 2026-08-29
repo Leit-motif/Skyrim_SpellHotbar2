@@ -836,9 +836,6 @@ namespace SpellHotbar::casts::CastingController {
 		if (pc && m_equip_ability) {
 			pc->RemoveSpell(m_equip_ability);
 		}
-		// Ticket 32: backstop for teardown paths that skip end_channel (an interrupt killing
-		// the instance). Idempotent after a normal release.
-		GameData::remove_conc_slow(pc);
 	}
 
 	bool CastingInstanceSpellConcentration::advance_time(float delta)
@@ -920,9 +917,6 @@ namespace SpellHotbar::casts::CastingController {
 				stop_charge_sound();
 				play_cast_loop_sound();
 				GameData::global_casting_conc_spell->value = 1.0f;
-				if (applies_conc_slow()) {
-					GameData::apply_conc_slow(pc);
-				}
 			}
 			else if (static_cast<int>(timer_old / loop_timer) < static_cast<int>(m_cast_timer / loop_timer)) {
 				//Per-loop callbacks. The animation is not re-sent here: the start clip ends the
@@ -971,7 +965,6 @@ namespace SpellHotbar::casts::CastingController {
 		}
 		//trigger gcd and stop cast
 		set_casted();
-		GameData::remove_conc_slow(pc);
 		stop_cast_loop_sound();
 		stop_charge_sound();
 		RE::MagicSystem::CastingSource src = static_cast<RE::MagicSystem::CastingSource>(std::clamp(static_cast<int>(SpellHotbar::GameData::global_casting_source->value), 0, 3));

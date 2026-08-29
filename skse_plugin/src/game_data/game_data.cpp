@@ -51,7 +51,6 @@ namespace SpellHotbar::GameData {
     RE::TESGlobal* global_vampire_lord_equip_mode = nullptr;
     RE::TESGlobal* global_casting_timer = nullptr;
     RE::TESGlobal* global_casting_conc_spell = nullptr;
-    RE::SpellItem* conc_slow_ability = nullptr;
 
     // The Ability art selector. Not a TESGlobal and deliberately not in any plugin -- see the
     // declaration in game_data.h and ADR-0016. Written on the main thread at Ability start, read
@@ -393,8 +392,6 @@ namespace SpellHotbar::GameData {
 
         load_form_from_game(0x838, "SpellHotbar.esp", &global_casting_timer, "SpellHotbar_Casttimer", RE::FormType::Global);
         load_form_from_game(0x834, "SpellHotbar.esp", &global_casting_conc_spell, "SpellHotbar_isCastingConcSpell", RE::FormType::Global);
-        // Optional plugin: absence is logged once and the channel slow simply stays off.
-        load_form_from_game(0x801, "SpellHotbar_ConcSlow.esp", &conc_slow_ability, "SpellHotbar_ConcSlowAbility", RE::FormType::Spell);
         load_form_from_game(0x83E, "SpellHotbar.esp", &spellhotbar_spellproc_cd, "SpellHotbar_SpellProcCD", RE::FormType::MagicEffect);
         load_form_from_game(0x83F, "SpellHotbar.esp", &spellhotbar_apply_spellproc_cd, "SpellHotbar_ApplySpellProcCD", RE::FormType::Spell);
 
@@ -1939,20 +1936,6 @@ namespace SpellHotbar::GameData {
              global_casting_conc_spell->value = 0.0f;
          }
      }
-     void apply_conc_slow(RE::PlayerCharacter* pc)
-     {
-         if (conc_slow_ability && pc && !pc->HasSpell(conc_slow_ability)) {
-             pc->AddSpell(conc_slow_ability);
-         }
-     }
-
-     void remove_conc_slow(RE::PlayerCharacter* pc)
-     {
-         if (conc_slow_ability && pc) {
-             pc->RemoveSpell(conc_slow_ability);
-         }
-     }
-
      void start_cast_timer()
      {
          if (global_casting_timer) {
