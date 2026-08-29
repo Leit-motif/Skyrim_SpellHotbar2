@@ -1,6 +1,7 @@
 #include "clip_translation_driver.h"
 #include "clip_translation.h"
 #include "art_driver.h"
+#include "msco_cast_driver.h"
 #include "combo_cache.h"
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
@@ -27,12 +28,15 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 		REL::Relocation<decltype(Activate)> _Activate;
 		REL::Relocation<decltype(Deactivate)> _Deactivate;
 
-		// Cast clips (SH2_CastRight_Clip / SH2_Cast2-4_Clip) deliberately do not bind:
-		// their animmotion has no stepping in the leg tracks, so a Driver Cast roots in
-		// place instead of gliding (ticket 38). Arts keep their motion — it IS the art.
+		// Cast clips bind again (ticket 40 revert of ticket 38's filter): with the
+		// bAnimationDriven plant gone from the cast states (ticket 39) the owner wants
+		// MSCO's slight forward traverse back — animmotion consumed, legs authored.
+		// The channel clip stays out: a channel must not translate.
 		[[nodiscard]] bool is_shtb_clip(std::string_view name) noexcept
 		{
-			return name == "SH2_Art_Clip"sv;
+			return name == "SH2_Art_Clip"sv || name == "SH2_CastRight_Clip"sv ||
+			       name == "SH2_Cast2_Clip"sv || name == "SH2_Cast3_Clip"sv ||
+			       name == "SH2_Cast4_Clip"sv;
 		}
 
 		[[nodiscard]] RE::hkaAnimation* bound_animation(RE::hkbClipGenerator* clip)
@@ -163,7 +167,7 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 		if (!pc) {
 			return;
 		}
-		if (!ArtDriver::is_active()) {
+		if (!ArtDriver::is_active() && !MscoCastDriver::is_active()) {
 			return;
 		}
 
