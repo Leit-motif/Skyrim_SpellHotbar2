@@ -96,6 +96,17 @@ def resolve_vfs(path):
     return os.path.join(OVERWRITE, rel.replace("/", os.sep))
 
 
+def announce(text, enabled=True):
+    """Talk to the owner IN GAME. They cannot see this terminal, and a capture window
+    only means something if the run happens inside it."""
+    print("[announce] " + text, flush=True)
+    if enabled:
+        call(
+            "papyrus",
+            {"action": "call", "script": "Debug", "function": "Notification", "args": [text]},
+        )
+
+
 def preflight():
     state = call("inspect", {"kind": "state"})
     if not state.get("playerLoaded"):
@@ -108,6 +119,10 @@ def capture(args):
     state = preflight()
     scene = call("inspect", {"kind": "scene"})
 
+    for n in range(args.lead_in, 0, -1):
+        announce("%s in %d..." % (args.label, n), args.announce)
+        time.sleep(1.0)
+
     call("cliplog", {"action": "clear"})
     clip_start = call("cliplog", {"action": "start"})
     rec_wall = time.time()
@@ -116,8 +131,12 @@ def capture(args):
     samples, clips = [], []
     last_seq = 0
     t0 = time.time()
-    print("CAPTURING %s (%s) for %ss -- perform the run NOW" % (args.label, args.mode, args.seconds), flush=True)
+    announce("GO -- %s (%s), %ds" % (args.label, args.mode, int(args.seconds)), args.announce)
+    halfway = False
     while time.time() - t0 < args.seconds:
+        if not halfway and time.time() - t0 > args.seconds / 2:
+            halfway = True
+            announce("%ds left" % int(args.seconds - (time.time() - t0)), args.announce)
         if args.mode == "full":
             samples.append(tick())
         else:
@@ -126,7 +145,7 @@ def capture(args):
         for entry in page.get("entries") or []:
             clips.append(entry)
             last_seq = max(last_seq, entry.get("seq", last_seq))
-    print("capture window closed", flush=True)
+    announce("STOP -- %s captured" % args.label, args.announce)
 
     rec_stop = call("record", {"action": "stop"})
     call("cliplog", {"action": "stop"})
@@ -328,7 +347,14 @@ def main():
         help="full = variables + pose + clips (pose cadence drops to ~300 ms, the "
         "main-thread polls starve the sampler); pose = pose + clips only, ~65 ms",
     )
-    c.set_defaults(func=capture)
+    c.add_argument("--lead-in", type=int, default=3, help="counted down in game before GO")
+    c.add_argument(
+        "--no-announce",
+        dest="announce",
+        action="store_false",
+        help="do not push Debug.Notification cues to the player",
+    )
+    c.set_defaults(func=capture, announce=True)
 
     s = sub.add_parser("summarize")
     s.add_argument("capture")
