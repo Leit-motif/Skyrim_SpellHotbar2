@@ -157,9 +157,28 @@ Three hard facts from live trials, each of which cost a wrong scenario first:
   PlayerControls' attack handling is event-driven. The boundary is poll-side vs event-side, not
   "the game" vs "mods".
 
-Corollary oracle: `Actor#GetAnimationVariableBool("bAnimationDriven")` on 0x14 reads the root
-plant directly — true during a rooted state, false when a patch removed the plant. Cheapest
-proof there is for commitment mechanics; displacement is only needed when the question is feel.
+Corollary oracle, **and read the correction below before using it**:
+`Actor#GetAnimationVariableBool("bAnimationDriven")` on 0x14 reads a root plant directly — true
+during a state that plants it, false when a patch removed the plant.
+
+**CORRECTED 2026-08-29 (ticket 54): it is not a general commitment oracle, and a green reading
+proves less than it looks like.** It answers "is this state planting the flag", not "is this
+actor rooted". Measured that day: across seven owner-performed MSCO fire-and-forget casts from a
+moving entry — the root the owner certifies as correct — `bAnimationDriven` never rose once,
+while `IsCastingRight` moved cleanly in seven ~2.5 s spans. SH2's own hotbar channel does raise
+it. Enemy Magelock, the reference hard-commit implementation, never touches the flag at all: its
+one `BSIsActiveModifier` binds `bAllowRotation`, and the commitment comes from replacing the
+generators behind `MagicCastingLocomotionState` and `MagicCast_Standing`.
+
+The rule underneath: **a correct root is a state you enter, not a flag you set.** Test a
+commitment mechanism by which state and clip actually run (`cliplog` names both) plus whether
+translation stops; use `bAnimationDriven` only for a mechanism that is specifically supposed to
+plant it, and never as the single cell that promotes a prototype to an owner feel test.
+
+Displacement is the honest measure of a root, and measuring it alongside the graph variables is
+harder than it sounds — `record`'s pose sampler and any main-thread variable poll starve each
+other (ticket 54: 64 ms alone, 8.2 s of a 60 s window under load). Instrument in
+`tools/telemetry/root_signature.py`; its two modes exist for exactly that contention.
 
 One residue trap: a save taken while a mod-added ability is applied, loaded after that
 ability's PLUGIN was disabled, keeps the AV delta as an orphaned modifier (observed: −50
