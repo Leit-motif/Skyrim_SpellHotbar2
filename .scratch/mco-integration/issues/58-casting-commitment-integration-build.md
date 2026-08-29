@@ -2,9 +2,11 @@
 
 **Type:** build (Nemesis behavior — NO Papyrus, NO SPID, no ESP records)
 
-**Status:** BUILT and live-verified 2026-08-29 (patch `shcr`, commit `3af9755`). Player and NPC
-rooting owner-confirmed live; see the build/verification record at the end of this file. Open:
-rotation-tracking owner confirmation, FOMOD option.
+**Status:** RESOLVED 2026-08-29 (patch `shcr`, commits `3af9755`..`670258a`). All acceptance
+cells closed: player + NPC rooting and rotation tracking owner-confirmed live, retire list
+done, ADR-0015 amended. The owner overruled the FOMOD option — `shcr` ships unconditionally.
+The only open work is shipping itself: ticket 59 (release packaging ships no Nemesis tree at
+all, `shtb` included).
 **Blocked by:** None. 54 closed partial, 55/56/57 closed — read
 `notes/57-mechanism-comparison.md` before touching anything here.
 
@@ -67,7 +69,12 @@ Noted here so a later requirement can pick them up without rediscovering them.
       **one actor's behavior is one sample, whichever direction it points** — a single owner
       glance included. Resolve a disagreement by producing another sample, not by arguing from
       the numbers; the CSV earned its place by surviving the disagreement.
-- [ ] Rotation tracking still works during the cast — owner question pending.
+- [x] Rotation tracking still works during the cast — owner-accepted 2026-08-29 (observed the
+      NPC tracking rotationally; satisfied for both player and NPC). The owner's reasoning,
+      recorded because it upgrades the cell: without rotation tracking, concentration spells
+      would be USELESS for NPCs against dodge mods — committed but unable to face a moving
+      target. Rotation tracking is a requirement of the design, not polish, and it is why
+      Magelock's `bAllowRotation` modifier is the right borrow.
 - [x] Every end path exits the state cleanly — a full combat's worth of repeated casts with no
       wedge; player held-channel enter/3.2s-hold/release clean in SpellHotbar2.log
       (`channel held 3209ms`, `SH2_CastExit -> true`).
@@ -75,7 +82,14 @@ Noted here so a later requirement can pick them up without rediscovering them.
       four clear state nodes plus the three declaration nodes, so no displacements at all.
 - [x] No Papyrus, no SPID, no ESP records in the shipped mechanism — the patch is 14 Nemesis
       text files.
-- [ ] FOMOD option, after the mechanism is owner-certified — not before.
+- [x] ~~FOMOD option, after the mechanism is owner-certified~~ — OVERRULED by the owner
+      2026-08-29: **no FOMOD, ever.** "i have a vision for what i want and it is seamlessness
+      and commitment also applies to magic (mco type rules)." `shcr` ships unconditionally as
+      part of the main install, no install-time gate. ADR-0015 amended to match.
+      **Shipping is blocked on ticket 59:** neither release script
+      (`create_fomod_installer.py`, `build_release_package.py`) ships ANY `Nemesis_Engine`
+      tree — `shtb` included, so the gap predates this ticket. Verified 2026-08-29: zero
+      `Nemesis` references in either script.
 
 ## Build and verification record (2026-08-29)
 

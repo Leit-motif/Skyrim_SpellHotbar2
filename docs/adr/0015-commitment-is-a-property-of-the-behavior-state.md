@@ -208,3 +208,14 @@ the player's own equipped-hand concentration casts too, not only NPCs. Where tha
 deliberate player-facing rule — [ticket 32](../../.scratch/mco-integration/issues/32-move-at-half-speed-during-a-concentration-channel.md)
 wants a player channel to move at half speed — the exemption is written as a binding on a
 variable one side sets, not as a second root somewhere else.
+
+## Amended 2026-08-29 (evening): commitment ships unconditionally
+
+Owner ruling, closing ticket 58: **no FOMOD option for the casting-commitment patch — not
+deferred, refused.** "i have a vision for what i want and it is seamlessness and commitment
+also applies to magic (mco type rules)." `shcr` is part of the mod the way the `shtb` cast
+states are: always installed, always on, no install-time gate. Any earlier framing of
+commitment as an optional payload (the retired `shcc` FOMOD group was one) is superseded.
+Rotation tracking during the committed cast is a requirement of this design, not polish — a
+committed caster that cannot face a moving target is useless against dodge mods — and it is
+carried by the `bAllowRotation` modifier on the same nodes.
