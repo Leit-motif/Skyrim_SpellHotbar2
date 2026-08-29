@@ -140,6 +140,32 @@ ticket 41 pattern), hand the pixels to the owner.
 **`record` tool:** `action=start|stop|status|replay`, `intervalMs`, `path`. Pose trajectories,
 capture-then-inspect. Also offers `replay` — untested here.
 
+## Input injection: what it reaches, measured 2026-08-28 (ticket 32 session)
+
+Three hard facts from live trials, each of which cost a wrong scenario first:
+
+- **Injected movement keys do not move the player.** 3 s of held `Forward` (key 17, correct
+  userEvent) at idle produced zero XY displacement. Player locomotion polls device state, which
+  injection never writes. Every displacement/steering/movement-feel cell is therefore
+  **owner-hands by construction** — do not build a matrix around injected WASD.
+- **Injected keys do not reach SH2's own keybind hook either.** A slot's bound key injected as
+  keyboard events produced no cast and no log line. Drive casts through `castSlot`; drive a
+  channel's *hold* through the `setSlotKeyHeld(slot, held)` seam (added this session — set true
+  BEFORE `castSlot`, false to release). The same gap means an injected attack cannot trigger
+  `cut_channel_for_attack` (the cut lives in SH2's hook); the attack-cut edge is owner-hands.
+- **Attacks and menu-level controls DO work injected** (`Right Attack/Block` as mouse hold) —
+  PlayerControls' attack handling is event-driven. The boundary is poll-side vs event-side, not
+  "the game" vs "mods".
+
+Corollary oracle: `Actor#GetAnimationVariableBool("bAnimationDriven")` on 0x14 reads the root
+plant directly — true during a rooted state, false when a patch removed the plant. Cheapest
+proof there is for commitment mechanics; displacement is only needed when the question is feel.
+
+One residue trap: a save taken while a mod-added ability is applied, loaded after that
+ability's PLUGIN was disabled, keeps the AV delta as an orphaned modifier (observed: −50
+SpeedMult with no effect in the list). Never judge residue from a save that crossed a
+plugin-set change; quarantine such saves.
+
 ## Hard headless-impossible cells
 
 | Cell | Why | Route |
