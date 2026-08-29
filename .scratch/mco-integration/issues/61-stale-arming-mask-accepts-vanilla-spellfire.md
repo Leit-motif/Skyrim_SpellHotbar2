@@ -90,6 +90,21 @@ unlike `graph_refused`. The mask is left armed for a cast that never started. Wi
 term in place this commits nothing and isolates nothing, so it is now inert rather than a defect;
 recorded here so the next touch of the arming path can tidy it deliberately.
 
+### Can the new gate eat a legitimate spell?
+
+The one way this fix could hurt: a driver cast's own clip raises its SpellFire while
+`MscoCastDriver::is_active()` reads false, and the payload is silently lost. Traced, both by the
+implementer and independently in review, and the answer is no.
+
+`state_active` is set synchronously in `send_entry` on the game loop, before the clip plays, and
+falls only through `clear_state_flags()` (from `cancel`, `finish`, `end_channel`) or the graph's
+own `SH2_CastExit` — which a clip raises at its end, after its SpellFire. The window the ticket-43
+armed-cast path opens is the one that matters, and `retire_cuttable_cast` deliberately does NOT
+call `cancel`/`finish` there, exactly so the still-playing clip keeps its own exit and SpellFire.
+So `is_active()` stays true across the whole window in which a delayed legitimate SpellFire can
+arrive, and the clip-end fallback (`ArmedDelivery::on_clip_end`) covers the case where none does.
+Every `cancel()` caller is a path that intends to abandon the clip's future events.
+
 ## Acceptance status
 
 - [x] The unit-level arming tests still pass — `combo_cache_test` green, plus two new cases:
