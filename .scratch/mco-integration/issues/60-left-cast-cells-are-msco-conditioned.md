@@ -74,6 +74,47 @@ for, so a right-staff hotbar cast has played the plain right set since ticket 46
 (6900/6901) above `Right Staff`/`Left Staff` (6800/6801), and MSCO ships no self-staff set, so
 the staff cells gate on the aimed family only. Overrule this by adding `0x815 == 2` twins.
 
+## Self-staff cells and hand symmetry (owner rulings 2026-08-29)
+
+Two more rulings closed the remaining fall-through and the last left/right difference:
+
+| submod | priority | conditions | clips |
+| --- | --- | --- | --- |
+| `cast_left_staff_self` | 2000001121 | `0x815 == 2` AND `0x835 == 0` AND `IsEquippedType 8` left | `Base - Left Staff` `MSCO_left5` x4 |
+| `cast_right_staff_self` | 2000001122 | `0x815 == 2` AND `0x835 == 1` AND `IsEquippedType 8` right | `Base - Right Staff` `MSCO_right5` x4 |
+
+The owner named clip 5 of each staff set as the self-delivery staff art, overruling the first
+cut's read of MSCO's priorities (which put Self above Staff and so kept self art for a staff
+cast). Both clip 5s are already mirrors: `MLh`/`MRh_SpellFire_Event` at 0.500000, the same
+window quartet, one `animmotion 0 0 0` at 1.633333. One clip fills four slots, so the stamps
+are per-file.
+
+**`cast_left_self` was rebuilt to mirror `cast_right_self`.** MSCO's two self sets are the same
+choreography annotated by different hands: the left set carried `MLh_Equipped_Event` (0.5 on
+clips 1/3/4, 0.65 on clip 2) and no window events, the right set carried
+`M{L,R}h_WinStart` @0.6 and `M{L,R}h_WinEnd` @1.0 and no equip event. Owner ruling: no reason
+for the hands to differ. The left cells now carry the right set's shape — equip event dropped,
+quartet added at the same frames — so the two self cells differ only in which hand's
+`SpellFire` event they raise and in MSCO's own `MSCO_next*` payload values.
+
+## The full matrix
+
+| cell | priority | animtype | source | staff |
+| --- | --- | --- | --- | --- |
+| `cast_right` | 2000001101 | 1 | right | — |
+| `cast_right_self` | 2000001102 | 2 | right | — |
+| `cast_dual` | 2000001103 | 10016 | — | — |
+| `cast_dual_self` | 2000001104 | 10017 | — | — |
+| `cast_left` | 2000001105 | 1 | left | — |
+| `cast_left_self` | 2000001106 | 2 | left | — |
+| `cast_left_staff` | 2000001111 | 1 | left | left |
+| `cast_right_staff` | 2000001112 | 1 | right | right |
+| `cast_left_staff_self` | 2000001121 | 2 | left | left |
+| `cast_right_staff_self` | 2000001122 | 2 | right | right |
+
+Every fire-and-forget cell is owned. Nothing falls through to an MSCO submod, so no MSCO
+condition on equipped state can decide a hotbar cast's art again.
+
 ## Consequences
 - `cast_left_self`'s clips carry MSCO's `MLh_Equipped_Event` at 0.5, which the right-self set
   does not. Watch for a left-hand magic pop during the acceptance pass.
@@ -86,5 +127,6 @@ the staff cells gate on the aimed family only. Overrule this by adding `0x815 ==
   plays the aimed art. Animation Log names `SH2 Cast - Left (aimed)`.
 - A self hotbar cast on the left hand names `SH2 Cast - Left (self)`.
 - Right and dual rows stay green; the four ticket-46 submods still win their cells.
-- A staff in the casting hand plays MSCO's staff art, both hands, aimed family. Animation Log
-  names `SH2 Cast - Left Staff (aimed)` / `SH2 Cast - Right Staff (aimed)`.
+- A staff in the casting hand plays MSCO's staff art, both hands, aimed and self. Animation Log
+  names `SH2 Cast - {Left,Right} Staff ({aimed,self})`.
+- The two self cells look identical apart from the hand — no equip-event pop on the left.

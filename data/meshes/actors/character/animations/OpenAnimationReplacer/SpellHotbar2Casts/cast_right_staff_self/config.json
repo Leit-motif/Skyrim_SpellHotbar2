@@ -1,0 +1,49 @@
+{
+    "name": "SH2 Cast - Right Staff (self)",
+    "description": "MSCO's Base - Right Staff MSCO_right5.hkx on all four neutral MSCO_left1-4 path names, for a fire-and-forget SELF cast resolved to the RIGHT hand while a staff is held in that hand (owner ruling 2026-08-29). The mirror of cast_left_staff_self: same choreography, MRh_SpellFire_Event at 0.500000, one clip across four per-file-stamped slots.",
+    "priority": 2000001122,
+    "ignoreNoTriggersFlag": true,
+    "conditions": [
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "815"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 2.0
+            }
+        },
+        {
+            "condition": "CompareValues",
+            "requiredVersion": "1.0.0.0",
+            "Value A": {
+                "form": {
+                    "pluginName": "SpellHotbar.esp",
+                    "formID": "835"
+                }
+            },
+            "Comparison": "==",
+            "Value B": {
+                "value": 1.0
+            }
+        },
+        {
+            "condition": "IsEquippedType",
+            "requiredVersion": "1.0.0.0",
+            "Type": {
+                "value": 8.0
+            },
+            "Left hand": false
+        },
+        {
+            "condition": "PRESET",
+            "requiredVersion": "2.2.0.0",
+            "Preset": "IsPlayer"
+        }
+    ]
+}
