@@ -339,6 +339,41 @@ channel starts, no stutter, no slide; (2) watch a real enemy mage channel — "n
 stutter, needs to feel natural." Also still open: NPC fire-and-forget confirmation, NPC
 rotation-tracking mid-channel, FOMOD install/uninstall in MO2.
 
+## PIVOT 2026-08-29 morning — the plant fails on layered states for everyone; SpeedMult record trial staged
+
+Owner feel-tests rejected both halves live: player moving entry stutters/slides (screenshot:
+scorch trail through the whole channel), and the NPC — telemetry caught `bAnimationDriven=true`
+while the mage translated 200+ units/400 ms, moving "like a psychopath." **Session 1's NPC
+freeze was a false positive: the AI had chosen to stand.** Verdict: the `bAnimationDriven`
+plant only works on FULL-BODY states; on the layered vanilla concentration states it fights
+live locomotion (player: held keys; NPC: AI intent) and roots nobody. The DLL event capture
+also failed — movement is poll/state-driven; `MovementHandler`'s vector is set at key-down
+(pre-cast) and only clears on the up we deliberately pass.
+
+Owner approved trying ADR-0015's preserved design at full strength: **the conditioned SpeedMult
+record, −100 while casting.** Owner's stated fallback if this fails too: remove concentration
+rooting from SH2 entirely (reluctantly — "consistency is so important to the user experience").
+
+Trial state, ready to test after the owner's computer restart:
+
+- `SpellHotbar_RootedConcentration.esp` authored (mod `houseCARL - SpellHotbar_RootedConcentration`):
+  MGEF `SH2_RootedConcentration_MGEF` (000800, ValueModifier/SpeedMult, ConstantEffect/Self,
+  Detrimental+Recover+Painless+NoDuration, condition `IsCasting == 1` on Subject) + ability SPEL
+  `SH2_RootedConcentration_Ability` (000801, magnitude 100). **NOT yet enabled in MO2** — owner
+  ticks mod + plugin.
+- `shcc` UNTICKED and Nemesis regenerated (07:49:17, 1058 anims; compiled magicbehavior.hkx has
+  0 SHCC objects). The DLL capture is inert with the flag never set; decide its removal after
+  the trial.
+- Trial script: relaunch, `player.addspell 000801:...` + AddSpell to a real mage (Fort Snowhawk
+  necromancer 0x000D7790 knows Flames), owner feels moving-entry + NPC channel.
+- Known trial caveats: `IsCasting` also roots FF casts (consistent with the everything-roots
+  rule) AND wards/telekinesis (over-scope — narrow later if it bothers); ability conditions
+  re-evaluate on the engine's ~1 s clock, so watch for perceptible root-engage latency; the
+  orphaned-AV residue trap applies — never save with the ability applied then disable the
+  plugin (quarantine any such save).
+- If accepted, the permanent shape: FOMOD ships this ESP (SPID for NPCs, DLL grants the player),
+  the shcc Nemesis patch retires, ADR-0015 gets its fourth amendment.
+
 ## Acceptance
 
 - [ ] An NPC streaming a concentration spell does not translate for the length of the channel —
