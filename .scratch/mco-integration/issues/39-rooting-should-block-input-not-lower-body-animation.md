@@ -8,11 +8,11 @@ gets blocked.
 **Blocked by:** nothing. Ticket 38's rooting change is the thing being corrected, so read it and
 `docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md` first.
 
-**Status:** claimed — 2026-08-29, implementation session. Triaged the same day against the
-source and against ticket 54's measurement; the suspect is named; start there rather than
-re-opening the diagnosis wide. The behavior patch is now BUILT (see `## Build 2026-08-29`),
-static only — nothing deployed, Nemesis not run — and **all three acceptance cells below
-remain open** pending live testing and the frame comparison.
+**Status:** claimed — 2026-08-29, implementation session. Built, deployed, and live-verified
+the same evening (see `## Live verification 2026-08-29`): cells 1 and 2 closed (owner eyes +
+telemetry), cell 3 open pending an owner steering check. The scope also grew by owner ruling
+mid-test: the slight forward traverse MSCO's animmotion authors is WANTED back, which
+dissolves ticket 40 — see the live section.
 
 ## Triage 2026-08-29: the discriminator this ticket asked for already exists
 
@@ -286,6 +286,45 @@ There is no bind there to decide about. The triage's "1 in `0_master` binds
 (lines 1453–1459) declares four `MCO_*` variables and `SH2_ArtSelector` and nothing else,
 and all three shtb `0_master` files are declaration nodes carrying no `hkbVariableBindingSet`
 and no `BSIsActiveModifier`. Left alone; the validator pins it.
+
+## Live verification 2026-08-29 (evening)
+
+Deployed the same day: 16 patch files copied to `Dev - Spell Hotbar 2`, Nemesis Update Engine
+(128 s) + generation (129 s, 1058 animations) clean, 4 `SH2_CastCommitIsActiveModifier` per
+graph byte-verified in the compiled `1hm_behavior.hkx` / `magicbehavior.hkx`.
+
+**Cell 1 (legs animate) — CLOSED, owner eyes.** First live pass, owner verbatim: "legs
+animate, there just isn't any forward motion." The suppression hypothesis was right; the
+`bAnimationDriven` plant was the leg freeze. No frame needed — the owner watched it live,
+the ticket-58 precedent (owner eyes as closing evidence).
+
+**Cell 2 (no glide) — CLOSED AS SUPERSEDED, owner ruling + telemetry.** The same owner
+report re-scoped the cell: MSCO's native cast traverses forward slightly (its animmotion),
+and that traverse is WANTED, not a glide — a glide is translation without leg animation.
+So ticket 40's premise dissolves (its clips-have-no-stepping claim is contradicted by the
+owner's own eyes) and its one-line revert was applied: `ClipTranslationDriver` accepts the
+four `SH2_Cast*_Clip` names again and `apply()` arms during a driver cast
+(`skse_plugin/src/casts/clip_translation_driver.cpp`, commit `88cff9c`). Verified live
+after DLL redeploy: `SH2 motion: bound SH2_CastRight_Clip (4 animmotion keys)`, and XY
+moved ~5.7 units in a front-loaded decaying curve through the cast — the clip-translation
+signature. `bAnimationDriven` polled False three times mid-cast (the plant is gone at
+runtime, not just in the source).
+
+**Channel regression guard — GREEN.** Held channel via `setSlotKeyHeld(1,true)` +
+`castSlot(1)`: entered, held 3158 ms, exited clean; `bAnimationDriven` True during the
+hold (its plant is intact by design); XY frozen to the last digit; no motion binding
+logged (the filter correctly excludes `SH2_Channel_Clip`).
+
+**Art regression guard — GREEN, owner eyes + log.** Owner: "disengage works." Log shows
+`SH2_Art_Clip` binding 11- and 50-key animmotion on two art casts.
+
+**Cell 3 (movement input does not steer) — OPEN, owner hands.** Injected movement keys
+cannot move the player (playbook, measured 2026-08-28), so no agent can prove steering is
+blocked. Owner check: hold W mid-cast, confirm the character does not steer.
+
+Fixture notes: owner's live bars backed up and restored via `saveBarsToFile`/
+`loadBarsFromFile` (probe added Ice Spike at slot 0); no save was written; all seven
+`skse_plugin` test executables pass after the DLL change.
 
 ## Comments
 
