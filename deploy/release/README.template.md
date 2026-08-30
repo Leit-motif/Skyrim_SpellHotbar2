@@ -9,25 +9,35 @@ required and must be installed first.
 
 ## Requirements
 
-Base Spell Hotbar 2 carries its own requirements (SKSE, Address Library, Open Animation
-Replacer, and the rest). Install and verify it before this. On top of those:
+All of these are required. Install them in this order.
 
-- **Spell Hotbar 2 {{base_version}}** — the exact base version this build was compiled from.
-  Read the pin below before using any other version.
-- **Nemesis Unlimited Behavior Engine** — two behavior patches ship here and must be
-  generated. Pandora is untested.
-- **ADXP / MCO** — the moveset system this integrates with. Without it the casting states
-  still work, but the combo integration has nothing to talk to.
-- **Payload Interpreter** — carries the annotation payloads the cast and Ability clips use.
-- **Behavior Data Injector** — a `SpellHotbar2_BDI.json` ships here and needs it.
+1. **Spell Hotbar 2 {{base_version}}** — the base mod. This add-on overwrites it, so it has
+   to be installed and working first. Distributed through GitHub releases, not Nexus:
+   <https://github.com/pWn3d1337/Skyrim_SpellHotbar2>. Read the version pin below before
+   using any other release.
+2. **(SE) Ashes of War Weapon Art Via Additional Attack** — Nexus 100174, by Gild. Take the
+   **FULL SUITE ... OAR** main file. The shipped Ability catalogue points at its clips; the
+   Abilities do not resolve without it. It brings its own requirement chain, which Nexus
+   lists on its page.
+3. **SKSE64** — <https://skse.silverlock.org>. Match your game runtime.
+4. **Address Library for SKSE Plugins** — Nexus 32444.
+5. **Nemesis Unlimited Behavior Engine** — Nexus 60033. Two behavior patches ship here and
+   have to be generated. Pandora is untested.
+6. **Open Animation Replacer** — Nexus 92109. Picks the per-hand cast clips and the Ability
+   animations.
+7. **Payload Interpreter** — Nexus 65089. Carries the annotation payloads the cast and
+   Ability clips fire.
+8. **Behavior Data Injector** — Nexus 78146. A `SpellHotbar2_BDI.json` ships here and needs it.
+9. **ADXP | MCO** — Distar's moveset system, off Nexus (skyrim-guild). Not optional: without
+   it there is no combo to cast out of, which is what this add-on exists to do.
 
 Tested on Skyrim Special Edition 1.5.97.
 
 ## Install
 
-1. Install base Spell Hotbar 2 {{base_version}} and let it finish.
-2. Install this archive **after** it, and let it overwrite. In Mod Organizer 2 that means a
-   lower position in the left pane; in Vortex, choose to load this one after.
+1. Install every requirement above, base Spell Hotbar 2 {{base_version}} first.
+2. Install this archive **after** base Spell Hotbar 2, and let it overwrite. In Mod Organizer
+   2 that means a lower position in the left pane; in Vortex, choose to load this one after.
 3. Run Nemesis. Tick **Spell Hotbar 2 Cast States** and **Spell Hotbar 2 - Casting
    Commitment**, then press **Launch Nemesis Behavior Engine**.
    You do not need **Update Engine** — ticking a patch whose files have not changed is a
@@ -36,9 +46,10 @@ Tested on Skyrim Special Edition 1.5.97.
 
 Nemesis has to be re-run whenever you add or remove a behavior mod, this one included.
 
-## What this replaces
+## What this overwrites
 
-Three files from base Spell Hotbar 2, and nothing else:
+This is an add-on that wins the conflict against its own base mod. It replaces three files
+from Spell Hotbar 2 and nothing else:
 
 - `SKSE/Plugins/SpellHotbar2.dll`
 - `Scripts/SpellHotbar.pex`
@@ -46,7 +57,8 @@ Three files from base Spell Hotbar 2, and nothing else:
 
 Everything else in this archive is new. The base mod's icons, fonts, presets, spell data and
 plugin come from your base install and are untouched — that is checked at build time, so a
-base asset cannot ride along in here.
+base asset cannot ride along in here. Nothing from Ashes of War is redistributed either; the
+catalogue points at the clips your install already has.
 
 ## The version pin, and why it matters
 

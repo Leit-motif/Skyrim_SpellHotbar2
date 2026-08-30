@@ -59,10 +59,12 @@ direct cast. i dont even know what equip and oblivion mode are — and frankly, 
 are upstream's, inherited by our build, untested here. Advertising a mode nobody has driven is how
 a support thread starts. Direct Cast is the product.
 
-**Requirements, tiered** the way the model page tiers them: REQUIRED, OPTIONAL, RECOMMENDED. Base
-Spell Hotbar 2 goes at the top of REQUIRED with its version pinned. Anything Nexus cannot link —
-SKSE, ADXP | MCO — gets named again in the body, because a reader scanning green links will not
-notice the one they cannot click.
+**Requirements are one tier: REQUIRED.** Owner ruling 2026-08-29 — base Spell Hotbar 2 goes
+first with its version pinned, and Ashes of War (Nexus 100174, FULL SUITE OAR file) is required
+too, not recommended. Nothing here is optional, so do not borrow the model page's OPTIONAL and
+RECOMMENDED tiers just because it has them. Anything Nexus cannot link — SKSE, ADXP | MCO — gets
+named again in the body, because a reader scanning green links will not notice the one they
+cannot click.
 
 **Installation.** The overwrite is the part support tickets will come from. Spell it out: install
 base SH2, install this after it, let it win the conflict, run Nemesis (Launch — end users need no
@@ -89,3 +91,5 @@ Say plainly that this is not an official continuation.
 - [ ] Known limits appear above the fold, not at the bottom.
 - [ ] Base SH2 named as required in the summary field, the first paragraph, and the requirements
       list. Three surfaces, because the support burden if it is missed is every install.
+- [ ] Ashes of War (100174) in REQUIRED, and the FULL SUITE OAR file named. A reader who takes
+      a different main file gets an ability catalogue that resolves to nothing.

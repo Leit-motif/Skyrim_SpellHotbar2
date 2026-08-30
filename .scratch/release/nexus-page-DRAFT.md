@@ -96,25 +96,26 @@ The SkyUI MCM, as in the base mod, plus this fork's own in-game editors and bind
 
 ## Requirements
 
-**Required**
+**Required.** All of them, in this order.
 
-- **Spell Hotbar 2** — the base mod, version 0.0.14. Install it first.
-- Address Library for SKSE Plugins
-- Nemesis Unlimited Behavior Engine
-- Payload Interpreter
-- Open Animation Replacer
+- **Spell Hotbar 2**, version 0.0.14 — the base mod. This overwrites it, so install it first.
+  GitHub releases, not Nexus.
+- **(SE) Ashes of War Weapon Art Via Additional Attack** (100174) — take the FULL SUITE OAR
+  main file. The shipped ability catalogue points at its clips.
+- Address Library for SKSE Plugins (32444)
+- Nemesis Unlimited Behavior Engine (60033)
+- Open Animation Replacer (92109)
+- Payload Interpreter (65089)
+- Behavior Data Injector (78146)
 
 Two Nexus cannot link: **SKSE64** (skse.silverlock.org) and **ADXP | MCO** (Distar's
 skyrim-guild / Discord). MCO is not optional — there is no combo to chain into without it.
 
-**Recommended**
-
-- Ashes of War, if you want the shipped ability catalogue to resolve to anything.
-
 ## Installation
 
-1. Install base Spell Hotbar 2.
-2. Install this after it and let it win the conflict.
+1. Install base Spell Hotbar 2, and the rest of the requirements.
+2. Install this after Spell Hotbar 2 and let it win the conflict. It is an add-on that
+   overwrites its base mod.
 3. Run Nemesis, tick the patches, Launch. You do not need Update Engine.
 
 ## Compatibility
