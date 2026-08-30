@@ -1,15 +1,25 @@
 # Nexus page draft — Spell Hotbar 2 NG
 
-> **NOT THE MOD PAGE.** This lives in `.scratch/` because a draft in `docs/` reads as finished and
-> got cited that way twice in the sibling repo. Ticket 08 owns when this becomes a page. Do not
-> cite this file as evidence of anything.
->
-> **First draft, 2026-08-29.** Written before the demo video exists, so every claim here is
-> traceable to an ADR or a measured number rather than to footage. The list at the bottom names
-> what still has to be checked before upload.
+> **NOT THE MOD PAGE.** Lives in `.scratch/` because a draft in `docs/` reads as finished and got
+> cited that way twice in the sibling repo. Ticket 08 owns when this becomes a page.
 >
 > **The name is provisional.** `deploy/release/release.json` says `Spell Hotbar 2 NG` with
-> `identity_frozen: false`. Release ticket 01 owns it.
+> `identity_frozen: false`.
+>
+> **REWRITTEN 2026-08-29 ON THE OWNER'S RULING. The first draft is struck in full.** Owner: *"you
+> keep treating this as coding documentation. this is end user copy. users will perhaps need a brief
+> introduction of what sh2 is and why it's so cool. but then an explanation of what my mod adds to
+> it (features). that's all!"*
+>
+> **The page is two sections: what Spell Hotbar 2 is, then what this adds.** Everything else —
+> requirements, install, credits — is short boilerplate at the bottom, not part of the argument.
+>
+> The first draft failed three ways, all of them the same instinct. It **never said what Spell
+> Hotbar 2 is**, so a reader who does not already own it learned nothing. It put **"Known limits"
+> second**, handing the reader the overwrite coupling and the version pin before it had told them
+> what the mod does. And it explained mechanism instead of play — *"the state routes around
+> locomotion rather than blending with it"*. Anyone restoring prose from git history restores all
+> three.
 
 ---
 
@@ -17,144 +27,115 @@
 
 **Summary field:**
 
-> An overwrite for Spell Hotbar 2 that makes a hotbar press a real MCO action. Requires the base
-> mod. Nemesis only.
+> Hotbar casting that behaves like a real MCO attack: proper animations, combos that survive a
+> cast, and weapon arts you can bind to a slot. Requires Spell Hotbar 2.
 
 ---
 
 ## Description body
 
-An overwrite for Spell Hotbar 2. A slot casts its spell without equipping it and without occupying
-a hand, the cast plays a real MCO clip instead of the shout animation, and the swing afterwards
-picks your combo up where it left off. Twelve slots a bar, and a slot can hold a special attack as
-well as a spell.
+### What Spell Hotbar 2 is
 
-Base Spell Hotbar 2 is required and this installs on top of it. Run Nemesis afterwards.
+Skyrim makes you hold a spell in a hand. That one rule shapes everything about playing a mage — you
+open a menu to change spells, you put your weapon away to cast, and a fight turns into inventory
+management with fireballs in it.
 
-### Known limits, before anything else
+Spell Hotbar 2 gives you a hotbar. Twelve slots, bound to keys, holding spells, shouts, scrolls and
+potions. Press one and it casts. The spell is never equipped and never takes a hand, so your sword
+stays in it. Separate bars swap themselves in as you sneak, draw a weapon or go to magic, so what is
+in front of you matches what you are doing.
 
-This replaces base Spell Hotbar 2's DLL rather than sitting beside it, because 25 of its own source
-files are modified here. Two things follow. **You must install the base mod first** — the icons,
-fonts and presets all come from it, and this archive deliberately does not carry them. And **this
-build is pinned to base version 0.0.14**: if the base mod updates, this overwrite silently reverts
-whatever changed until it is rebuilt against the new source. The base mod has not moved since June
-2025, so the risk is small, but it is real and it is quiet.
+It is the largest change you can make to how casting feels in this game.
 
-Nemesis only. Pandora is not supported.
+### What this adds
 
-### Casting
+Spell Hotbar 2 borrows the shout animation for its casts. That is a reasonable choice and it works,
+but it means every spell you fire looks like a Thu'um, and casting drops you out of MCO the same way
+shouting does.
 
-A hotbar press casts directly. Nothing is equipped, no hand is occupied, and your weapon stays
-where it is — which is the entire reason this fork exists.
+**Real casting animations.** Every hotbar cast plays an MCO animation picked for that kind of spell
+instead of the shout inhale.
 
-The cast plays through this mod's own behaviour states rather than borrowing the vanilla shout
-graph, so the animation is an MCO clip chosen by OAR and not a repurposed inhale.
+**Your combo survives the cast.** Swing, cast, swing — the second swing carries on from where the
+first left off rather than resetting to the first hit. A cast is a step in the chain, not a break
+in it.
 
-### Casting inside a combo
+**Weapon arts on the bar.** A slot can hold a special attack. Bind one the way you would bind a
+spell and it fires from the hotbar, with its own cost and cooldown, instead of living behind a
+separate mod's hotkey and an item you have to be wearing. 57 of Ashes of War's arts are set up out
+of the box, and there are drop-in folders for adding your own clips.
 
-Attacking after a cast continues your combo at the index it was on, rather than restarting from the
-first hit. The cast is a step in the chain, not an interruption of it.
+**Both hands.** Casting from the left while your right hand holds a weapon looks like it should,
+rather than like the right-hand animation mirrored.
 
-### Abilities
+**Held spells.** Concentration spells run for as long as you hold the key, and attacking out of one
+ends the cast and becomes the swing. The hold still counts toward your combo, however long it ran.
 
-A slot can hold a special attack. Not a Spell, Scroll, Shout or potion — an actual MCO attack
-animation, bound and fired the same way a spell is, with its own cost and cooldown owned here
-rather than by a separate mod's hotkey.
+**Casts commit.** Once a cast starts you are in it — no steering out of it with WASD halfway
+through. Casting costs you a moment, and it is a moment you can be punished in.
 
-The catalogue ships 57 entries keyed to Ashes of War's animations, and it does not redistribute
-them: the rows point at the clips your own install already has. Any MCO-annotated clip your load
-order can see will work — there are drop-in folders for adding your own without touching anything
-else.
-
-An ability is a member of the combo chain too. The swing after it continues the count.
-
-### Both hands
-
-The left and right hands present differently over one neutral graph, so casting from the left while
-the right keeps a weapon looks like what it is instead of a mirrored guess.
-
-### Held casts
-
-A concentration spell held from a slot holds for as long as you hold it, and an attack during the
-hold ends the cast and becomes the swing. The hold counts toward the combo, so a channel of any
-length still hands its position on.
-
-### Commitment and the cooldown
-
-A cast commits. You cannot steer out of it with WASD partway through, because the state routes
-around locomotion rather than blending with it.
-
-The global cooldown is anchored to the press, not to the animation, and it is tunable. Cranking it
-down makes the bar feel like an action game's; leaving it up makes casting a decision. I play at
-0.5.
-
-### Configuration
-
-The SkyUI MCM, as in the base mod, plus this fork's own in-game editors and bind menu.
+**A cooldown you can feel.** The global cooldown starts on the press. Set it low and the bar plays
+like an action game; set it high and each cast is a decision. I play at 0.5.
 
 ---
 
-## Requirements
+### Requirements
 
-**Required.** All of them, each one with everything it requires in turn, in this order.
+*(One tier. Each entry brings its own requirements with it — several of these have long chains of
+their own, listed on their pages.)*
 
-- **Spell Hotbar 2**, version 0.0.14, and all of its requirements — the base mod. This
-  overwrites it, so install it first. GitHub releases, not Nexus.
-- **Thu'um Reborn**, and all of its requirements — the shout mod: behavior engine and
-  animations in one file. Every hotbar shout routes through its cast-intent API.
-- **(SE) Ashes of War Weapon Art Via Additional Attack** (100174), and all of its requirements
-  — take the FULL SUITE OAR main file. The shipped ability catalogue points at its clips. Nine
-  further mods in its chain, listed on its page.
+- **Spell Hotbar 2** — the base mod. Install it first; this replaces its plugin.
+- **Thu'um Reborn** — every hotbar shout routes through it.
+- **(SE) Ashes of War Weapon Art Via Additional Attack** (100174) — take the FULL SUITE OAR main
+  file. The shipped weapon arts point at its clips.
 - Address Library for SKSE Plugins (32444)
 - Nemesis Unlimited Behavior Engine (60033)
-- Open Animation Replacer (92109), and all of its requirements — Animation Queue Fix and
-  Paired Animation Improvements included
-- Payload Interpreter (65089), and all of its requirements
-- Behavior Data Injector (78146), and all of its requirements
+- Open Animation Replacer (92109)
+- Payload Interpreter (65089)
+- Behavior Data Injector (78146)
 
-Two Nexus cannot link: **SKSE64** (skse.silverlock.org) and **ADXP | MCO** (Distar's
-skyrim-guild / Discord, with its own requirement list there). MCO is not optional — there is
-no combo to chain into without it.
+Two Nexus cannot link: **SKSE64** (skse.silverlock.org) and **ADXP | MCO** (Distar's skyrim-guild /
+Discord). MCO is not optional — there is no combo to chain into without it.
 
-A current **Visual C++ redistributable** sits off-site in several of those chains. Every SKSE
-plugin here fails to load without it, usually silently.
+You also need a current **Visual C++ redistributable**. Every SKSE plugin here fails without it,
+usually silently.
 
-## Installation
+### Installation
 
-1. Install base Spell Hotbar 2, and the rest of the requirements.
-2. Install this after Spell Hotbar 2 and let it win the conflict. It is an add-on that
-   overwrites its base mod.
-3. Run Nemesis, tick the patches, Launch. You do not need Update Engine.
+1. Install Spell Hotbar 2 first. This replaces its plugin, so it has to sit underneath.
+2. Install this and let it overwrite.
+3. Run Nemesis, tick the patches, Launch.
 
-## Compatibility
+Built against Spell Hotbar 2 0.0.14. Nemesis only — Pandora is not supported.
 
-*(To be written against what the video and the playtest actually establish. Do not guess it.)*
+### Compatibility
 
-## AI disclosure
+*(To be written against what the video and the playtest establish. Do not guess it.)*
+
+### AI disclosure
 
 *(Owner's own words. The shape that works, from the model page: first person, specific about what
-the tools did and what you did, credentials stated plainly, no defensiveness, one joke. This is the
-only section on the page with a voice — do not write a defence, and do not spread the register into
-the rest of the page.)*
+the tools did and what you did, credentials plainly stated, no defensiveness, one joke. The only
+section on the page with a voice.)*
 
-## Credits
+### Credits
 
 Spell Hotbar 2 by **pWn3d1337**. This is a fork, not an official continuation — they were not
 involved in it.
 
 ---
 
-## Claims to verify before upload — NOT page text
+## Not page text — check before upload
 
-- **The GCD default number.** The copy says "tunable" and cites the owner playing at 0.5, but the
-  shipped default was not found in `game_data.cpp` on the 2026-08-29 read. Get the number or cut
-  the sentence.
-- **"57 entries."** That is the row count of `data/SKSE/Plugins/SpellHotbar/artdata/arts_ashes.csv`.
-  Confirm every row resolves, and confirm the pointer-not-redistribution wording is exactly right —
-  it is a permissions statement as much as a feature one.
-- **Runtimes.** Read them off the built DLL. Not stated above because they were not checked.
-- **"Pandora is not supported."** Inherited from the sibling repo's page. Confirm it holds here.
-- **Payload Interpreter and OAR as hard requirements.** Confirm against what the archive actually
-  needs, rather than against what the dev profile happens to have.
-- Word count of the body above: roughly 640. Ticket 08 targets 700–900, so the Compatibility
-  section has room and does not need trimming to fit.
+- **The GCD default.** The copy says it is tunable and that the owner plays at 0.5; the shipped
+  default was not found in `game_data.cpp` on the 2026-08-29 read. Get the number or cut the line.
+- **"57 of Ashes of War's arts."** Row count of `arts_ashes.csv`. Confirm every row resolves, and
+  confirm the pointer-not-redistribution wording is right — it is a permissions statement as much
+  as a feature one.
+- **"an MCO animation picked for that kind of spell."** Confirm the per-family selection covers
+  every school a reader would try, or soften the claim.
+- **Runtimes.** Read them off the built DLL.
+- **Thu'um Reborn's Nexus id**, once that page exists.
+- Body above (intro plus features): about 480 words. Deliberately shorter than the 700–900 in
+  ticket 08 — that target was set for a page carrying a known-limits section and an overwrite
+  essay, both of which the owner cut.
