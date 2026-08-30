@@ -47,11 +47,16 @@ hotbar shout routes through. Not `Thu'um - Fully Animated Shouts Reborn`, which 
 candidate. Not `Shouts for MCO`, which is retired. `ShoutMCO` stays the internal identifier and
 is not a public name at all.
 
-The reasoning put to the owner before the call, recorded so it is not re-argued: "Thu'um" is
-the searched word and sits in both candidates, so the long form buys no discoverability, while
-it does cost a truncated Nexus tile and a search result that reads as a duplicate of
-BOTuser999's own `Thu'um - Fully Animated Shouts` (50559). The upgrade relationship goes in the
-summary line instead, where it can link 50559 in a full sentence.
+**This is the owner's preference, and the record should not dress it as anything more.** An
+agent recommended the short form beforehand on three grounds; only the first was checked.
+"Thu'um" appears in both candidates — true, verifiable. That the long form truncates on a Nexus
+tile, and that it reads as a duplicate of BOTuser999's `Thu'um - Fully Animated Shouts` (50559)
+in a result list — neither was measured, and neither should be cited as a finding. The sibling
+repo's opposing ruling one day earlier was not refuted by evidence; it was superseded by a
+later call.
+
+The one consequence that does follow: the successor relationship to 50559 is not in the title,
+so the page's summary line carries it.
 
 **This is one mod with several names, and it takes exactly one entry anywhere.** A session on
 2026-08-29 read the aliases as two mods and put a phantom requirement on the page. The alias
