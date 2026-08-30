@@ -1,4 +1,5 @@
 #include "hotbar.h"
+#include "hotbar_serialization.h"
 #include "../logger/logger.h"
 #include "../storage/storage.h"
 #include "hotbars.h"
@@ -69,60 +70,40 @@ namespace SpellHotbar
         }
 
         for (uint8_t i = 0U; i < slots; i++) {
-            uint8_t read_slot{0Ui8};
-            uint8_t read_kind{0Ui8};
-            RE::FormID read_id{0U};
-            uint32_t read_art{0U};
-            uint8_t read_hand{0Ui8};
-
-            if (!serializer->ReadRecordData(&read_slot, sizeof(uint8_t))) {
-                logger::error("Failed to load Hotbar {}!", name);
-                break;
-            } else {
-                read_slot = std::clamp(read_slot, 0Ui8, static_cast<uint8_t>(max_bar_size));
-            }
-
-            if (version >= 6) {
-                if (!serializer->ReadRecordData(&read_kind, sizeof(uint8_t))) {
-                    logger::error("Failed to load Hotbar {}!", name);
-                    break;
-                }
-            }
-
-            if (version >= 6 && read_kind == 1) {
-                if (!serializer->ReadRecordData(&read_art, sizeof(uint32_t))) {
-                    logger::error("Failed to load Hotbar {}!", name);
-                    break;
-                }
-                bar.m_slotted_skills[read_slot].update_art_assignment(read_art);
-                if (!GameData::get_art(read_art)) {
-                    logger::info("Restored unknown art {} on slot {}; bind kept for a later data load.", read_art, read_slot);
-                }
-            } else {
-                if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
-                    logger::error("Failed to load Hotbar {}!", name);
-                    break;
-                } else {
-                    RE::FormID resolved_id{0};
-                    serializer->ResolveFormID(read_id, resolved_id);
-                    RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
-                    if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
-                        bar.m_slotted_skills[read_slot] = resolved_id;
-                    }
-                    else {
-                        logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
-                        bar.m_slotted_skills[read_slot] = 0;
-                    }
-                }
-            }
-
-            if (!serializer->ReadRecordData(&read_hand, sizeof(uint8_t))) {
+            BarSerialization::SlotRecord record;
+            const auto read_record_data = [serializer](void* destination, std::size_t size) {
+                return serializer->ReadRecordData(destination, static_cast<std::uint32_t>(size));
+            };
+            if (!BarSerialization::read_slot_record(read_record_data, version, record)) {
                 logger::error("Failed to load Hotbar {}!", name);
                 break;
             }
-            else {
-                bar.m_slotted_skills[read_slot].hand = hand_mode(std::clamp(read_hand, 0Ui8, static_cast<uint8_t>(hand_mode::end-1)));
+
+            if (!BarSerialization::slot_is_in_range(record, bar.m_slotted_skills.size())) {
+                logger::warn("Ignoring out-of-range slot {} while loading Hotbar {} (valid range 0-{}).",
+                    record.slot, name, bar.m_slotted_skills.size() - 1);
+                continue;
             }
+
+            auto& skill = bar.m_slotted_skills[record.slot];
+            if (version >= 6 && record.kind == 1) {
+                skill.update_art_assignment(record.payload);
+                if (!GameData::get_art(record.payload)) {
+                    logger::info("Restored unknown art {} on slot {}; bind kept for a later data load.", record.payload, record.slot);
+                }
+            } else {
+                RE::FormID resolved_id{0};
+                serializer->ResolveFormID(record.payload, resolved_id);
+                RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
+                if (form != nullptr && Hotbar::is_valid_formtype_for_hotbar(form)) {
+                    skill = resolved_id;
+                }
+                else {
+                    logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
+                    skill = 0;
+                }
+            }
+            skill.hand = hand_mode(std::clamp(record.hand, 0Ui8, static_cast<uint8_t>(hand_mode::end-1)));
         }
 
     }

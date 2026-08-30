@@ -102,8 +102,8 @@ namespace SpellHotbar {
 
         static void on_game_load();
 
-        static TextureImage & load_texture(const std::string path);
-        static int load_texture_return_index(const std::string path);
+        static TextureImage* load_texture(const std::string& path);
+        static int load_texture_return_index(const std::string& path);
 
         static void add_spell_texture(TextureImage & main_texture, RE::FormID formID, ImVec2 uv0, ImVec2 uv1, const std::string& filename);
         static void add_default_icon(TextureImage & main_texture, GameData::DefaultIconType type, ImVec2 uv0, ImVec2 uv1, const std::string& icon_name);

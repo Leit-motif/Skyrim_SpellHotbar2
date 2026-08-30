@@ -2,13 +2,24 @@ cmake_minimum_required(VERSION 3.21)
 
 project(SpellHotbar2 VERSION 2.0.10 LANGUAGES CXX)
 
-#output folder to copy dll after building (override with -DOUTPUT_FOLDER=...)
-if(NOT DEFINED OUTPUT_FOLDER)
-    set(OUTPUT_FOLDER "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2")
+include(CTest)
+
+# Optional MO2 mod folder for local development. A normal configure never deploys.
+set(OUTPUT_FOLDER "" CACHE PATH "Optional mod folder that receives the built SKSE plugin")
+
+# The producer owns this ABI contract. Keep the vendored snapshot byte-equivalent after newline
+# normalization; refreshing it requires an explicit producer commit and hash change here.
+set(SHOUTMCO_CAST_INTENT_CANONICAL_COMMIT "e952394ba0392cccfcb6dc2ba0cb651e2b048024")
+set(SHOUTMCO_CAST_INTENT_CANONICAL_SHA256 "30f6e3a4698f666a4695dd78ea4ab43b17b31709da3dc5deb27981f7795cc9cc")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/extern/ShoutMCO_CastIntent.h" SHOUTMCO_CAST_INTENT_HEADER)
+string(REPLACE "\r\n" "\n" SHOUTMCO_CAST_INTENT_HEADER "${SHOUTMCO_CAST_INTENT_HEADER}")
+string(REPLACE "\r" "\n" SHOUTMCO_CAST_INTENT_HEADER "${SHOUTMCO_CAST_INTENT_HEADER}")
+string(SHA256 SHOUTMCO_CAST_INTENT_SHA256 "${SHOUTMCO_CAST_INTENT_HEADER}")
+if(NOT SHOUTMCO_CAST_INTENT_SHA256 STREQUAL SHOUTMCO_CAST_INTENT_CANONICAL_SHA256)
+    message(FATAL_ERROR
+        "src/extern/ShoutMCO_CastIntent.h differs from the canonical ShoutMCO contract at "
+        "${SHOUTMCO_CAST_INTENT_CANONICAL_COMMIT}. Refresh it from the producer and update the pinned hash.")
 endif()
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_5_97/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_6_1170/mods/Spell Hotbar 2")
 
 
 find_package(imgui CONFIG REQUIRED)
@@ -23,6 +34,7 @@ set(source_files src/plugin.cpp
                  src/rendering/render_manager.cpp
                  src/rendering/texture_loader.h
                  src/rendering/texture_loader.cpp
+                 src/rendering/texture_registry.h
                  src/papyrus_extensions/papyrus_functions.h
                  src/papyrus_extensions/papyrus_functions.cpp
                  src/storage/storage.h
@@ -31,6 +43,7 @@ set(source_files src/plugin.cpp
                  src/game_data/game_data.cpp
                  src/bar/hotbar.h
                  src/bar/hotbar.cpp
+                 src/bar/hotbar_serialization.h
                  src/bar/hotbars.h
                  src/bar/hotbars.cpp
                  src/bar/oblivion_bar.h
@@ -122,6 +135,7 @@ set(source_files src/plugin.cpp
                  src/game_data/localization.cpp
 )
 
+if(BUILD_TESTING)
 add_executable(combo_cache_test src/casts/combo_cache_test.cpp)
 target_compile_features(combo_cache_test PRIVATE cxx_std_23)
 target_include_directories(combo_cache_test PRIVATE src/casts)
@@ -150,6 +164,25 @@ add_executable(bind_drop_test src/rendering/bind_drop_test.cpp)
 target_compile_features(bind_drop_test PRIVATE cxx_std_23)
 target_include_directories(bind_drop_test PRIVATE src/rendering)
 
+add_executable(hotbar_serialization_test src/bar/hotbar_serialization_test.cpp)
+target_compile_features(hotbar_serialization_test PRIVATE cxx_std_23)
+target_include_directories(hotbar_serialization_test PRIVATE src/bar)
+
+add_executable(texture_registry_test src/rendering/texture_registry_test.cpp)
+target_compile_features(texture_registry_test PRIVATE cxx_std_23)
+target_include_directories(texture_registry_test PRIVATE src/rendering)
+
+add_test(NAME combo_cache_test COMMAND combo_cache_test)
+add_test(NAME clip_translation_test COMMAND clip_translation_test)
+add_test(NAME art_pack_gen_test COMMAND art_pack_gen_test)
+add_test(NAME art_data_test COMMAND art_data_test)
+add_test(NAME cast_anim_ids_test COMMAND cast_anim_ids_test)
+add_test(NAME art_bind_record_test COMMAND art_bind_record_test)
+add_test(NAME bind_drop_test COMMAND bind_drop_test)
+add_test(NAME hotbar_serialization_test COMMAND hotbar_serialization_test)
+add_test(NAME texture_registry_test COMMAND texture_registry_test)
+endif()
+
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/PCH.h)
@@ -159,8 +192,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE "src")
 target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTK)
 
-#automatically copy to output folder if set
-if(DEFINED OUTPUT_FOLDER)
+# Automatically copy to the explicitly requested output folder.
+if(OUTPUT_FOLDER)
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")

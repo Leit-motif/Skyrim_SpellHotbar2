@@ -1,4 +1,5 @@
 #include "render_manager.h"
+#include "texture_registry.h"
 #include "texture_loader.h"
 #include "../bar/hotbars.h"
 #include "../bar/hotbar.h"
@@ -750,16 +751,20 @@ void RenderManager::load_gamedata_dependant_resources() {
 
 void RenderManager::load_fixed_textures() {
     if (std::filesystem::exists(std::filesystem::path(texture_frame_bg_path))) {
-        RenderManager::load_texture(std::string(texture_frame_bg_path));
-        frame_bg_texture_index = static_cast<long>(loaded_textures.size()) - 1;
+        frame_bg_texture_index = RenderManager::load_texture_return_index(std::string(texture_frame_bg_path));
+        if (frame_bg_texture_index < 0) {
+            logger::error("Could not Load texture {}", texture_frame_bg_path);
+        }
     }
     else {
         logger::error("Could not Load texture {}", texture_frame_bg_path);
     }
 
     if (std::filesystem::exists(std::filesystem::path(texture_cursor_path))) {
-        RenderManager::load_texture(std::string(texture_cursor_path));
-        cursor_texture_index = static_cast<long>(loaded_textures.size()) - 1;
+        cursor_texture_index = RenderManager::load_texture_return_index(std::string(texture_cursor_path));
+        if (cursor_texture_index < 0) {
+            logger::error("Could not Load texture {}", texture_cursor_path);
+        }
     }
     else {
         logger::error("Could not Load texture {}", texture_cursor_path);
@@ -797,26 +802,23 @@ void RenderManager::on_game_load()
 {
 }
 
-TextureImage & RenderManager::load_texture(const std::string path) {
-    TextureImage tex_img;
-
-    if (tex_img.load(path)) {
-        loaded_textures.push_back(std::move(tex_img));
+TextureImage* RenderManager::load_texture(const std::string& path)
+{
+    const auto index = TextureRegistry::load(loaded_textures, [&path](TextureImage& texture) {
+        return texture.load(path);
+    });
+    if (!index.has_value()) {
+        return nullptr;
     }
-    return loaded_textures.back();
+    return &loaded_textures[*index];
 }
 
-int RenderManager::load_texture_return_index(const std::string path)
+int RenderManager::load_texture_return_index(const std::string& path)
 {
-    TextureImage tex_img;
-
-    if (tex_img.load(path)) {
-        loaded_textures.push_back(std::move(tex_img));
-        return static_cast<int>(loaded_textures.size()) - 1;
-    }
-    else {
+    if (!load_texture(path)) {
         return -1;
     }
+    return static_cast<int>(loaded_textures.size()) - 1;
 }
 
 void RenderManager::add_spell_texture(TextureImage& main_texture, RE::FormID formID, ImVec2 uv0, ImVec2 uv1, const std::string& filename) {

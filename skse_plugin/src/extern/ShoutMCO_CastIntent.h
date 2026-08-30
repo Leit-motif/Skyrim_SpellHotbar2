@@ -1,4 +1,4 @@
-/* ShoutMCO cast-intent driver API -- the public contract (ticket 50, ADR-0008).
+/* ShoutMCO cast-intent driver API -- the public contract (ADR-0008).
  *
  * WHAT THIS IS FOR. A driver (Spell Hotbar 2 and anything after it) initiates casts through its
  * own code and owns a payload ShoutMCO cannot safely copy, validate or execute. ShoutMCO owns the
@@ -79,8 +79,10 @@ typedef enum ShoutMCO_CastDecision {
     SHOUTMCO_CAST_PASS_THROUGH = 0,
     /* ShoutMCO owns the intent. EXACTLY ONE callback will follow, on the main thread. */
     SHOUTMCO_CAST_DEFERRED = 1,
-    /* ShoutMCO will not take it (disabled, no player, malformed request, or the feature is off).
-     * No callback follows. The driver behaves exactly as it would with no ShoutMCO present. */
+    /* ShoutMCO will not take it: the request is malformed, or it names a major version this build
+     * does not implement, or ShoutMCO is switched off. Those are the only three causes -- nothing
+     * here inspects the player. No callback follows. The driver behaves exactly as it would with
+     * no ShoutMCO present. */
     SHOUTMCO_CAST_REJECTED = 2
 } ShoutMCO_CastDecision;
 
@@ -98,18 +100,33 @@ typedef enum ShoutMCO_CastOutcome {
  * whole contract. Values may be appended in a MINOR version, so treat unknown values as generic. */
 typedef enum ShoutMCO_CastCause {
     SHOUTMCO_CAUSE_NONE = 0,
-    /* RELEASE: the graph confirmed it is ready again (`inRdy` after an MCO attack, or the shout's
-     * own `shoutStop`). Which confirmed state applies is ShoutMCO's decision, not the driver's. */
+    /* RELEASE: the confirmed state the intent was waiting for arrived. Behind an MCO attack that
+     * is the attack itself ending -- the character is no longer attacking -- which lands later
+     * than the graph first calling itself ready, because a cut attack reports ready while it is
+     * still swinging. Behind a shout it is that shout ending in any way that is not an
+     * abandonment: the exhale running out on its own, and equally the graph reporting that it has
+     * left the shout state. There the callback follows a short fixed delay rather than the end
+     * itself, because a cast attempted in the same frame as the shout's own exit is silently
+     * refused. Which confirmed state applies is ShoutMCO's decision, not the driver's. */
     SHOUTMCO_CAUSE_READY = 1,
     /* ABANDON: a newer intent -- from this driver, another driver, or the player's own shout
      * press -- took the single slot. The newest valid intent always wins. */
     SHOUTMCO_CAUSE_REPLACED = 2,
     /* ABANDON: the driver called `Cancel`. */
     SHOUTMCO_CAUSE_CANCELLED = 3,
-    /* ABANDON: the context the intent was made in is gone. In v1 this is raised on a game load
-     * and nothing else -- an intent left stranded by any other kind of context loss is retired by
-     * the watchdog below instead, so a driver must not treat this as the complete set of ways an
-     * intent can lose its world. */
+    /* ABANDON: the context the intent was made in is gone -- a game load, or the state the intent
+     * was waiting for ending in a way it can never arrive from (the shout it was deferred behind
+     * being cut for an MCO chain, or ending abandoned).
+     *
+     * This is still not the complete set of ways an intent can lose its world: one stranded by
+     * anything ShoutMCO does not observe is retired by the watchdog below instead. Treat the cause
+     * as diagnostic, exactly as this enum's own header says.
+     *
+     * Sites that know an intent's release condition is destroyed must abandon the slot, not only
+     * the player's own press: leaving a driver intent for the watchdog waits out the full cap and
+     * then tells the driver the wrong reason. No value is added or renumbered, so no driver's
+     * build changes; a driver that logs this string sees it in every such case, which is the
+     * point. */
     SHOUTMCO_CAUSE_CONTEXT_LOST = 4,
     /* ABANDON: the bounded watchdog expired before any confirmed state arrived. ShoutMCO abandons
      * and logs; it never forces execution. This is the path that keeps an intent from waiting
@@ -156,16 +173,35 @@ typedef struct ShoutMCO_CastIntentApi {
     uint32_t versionMinor;
     uint32_t reserved;
 
-    /* Offer an intent. Synchronous and constant-time: it takes no locks the game holds, allocates
-     * nothing, touches no filesystem, and never blocks. Safe from any thread.
+    /* Offer an intent. Synchronous and safe from any thread -- but not free, and not constant-time.
+     * What it costs:
+     *
+     *   - It takes TWO of ShoutMCO's own locks, the second inside the first: the engine lock, and
+     *     the pending-slot lock. Neither is a lock the game holds, so this cannot deadlock against
+     *     the game's own work, but a concurrent caller waits for both. Reading the current
+     *     settings, just before them, is a synchronized load of its own.
+     *   - It allocates when it queues a callback: the displaced owner's notice is copied into a
+     *     task handed to the game's main-thread queue.
+     *   - WITH TRACING SWITCHED ON IT WRITES TO DISK, and more than once in the replacement case.
+     *     ShoutMCO's log flushes every line as it is written, so a traced call synchronously
+     *     writes and flushes and can block on that I/O. With tracing off it writes nothing here,
+     *     except that a missing main-thread queue is reported as an error whatever the setting.
+     *   - It starts no thread.
      *
      * On SHOUTMCO_CAST_DEFERRED, `*a_outHandle` receives the live handle. On any other decision it
      * receives SHOUTMCO_CAST_HANDLE_INVALID. `a_outHandle` may be NULL if the caller does not
      * intend to cancel.
      *
-     * A deferred request REPLACES whatever intent was pending, whoever owned it -- the displaced
-     * owner gets its one callback with ABANDON / REPLACED before this call returns' effects are
-     * observable. */
+     * A deferred request REPLACES whatever intent was pending, whoever owned it.
+     *
+     * GUARANTEED on return: the displaced owner is retired, so its handle is stale and `Cancel` on
+     * it returns zero; and it will receive exactly one ABANDON / REPLACED callback.
+     *
+     * NOT GUARANTEED, AND DO NOT ORDER AGAINST IT EITHER WAY: whether that callback has run. It is
+     * never invoked inline on your thread -- it is queued for the main thread -- so if you call
+     * from the main thread it cannot run before this returns, and if you call from any other
+     * thread the main thread may drain it at any moment, including before this returns. Write the
+     * callback and the code after this call so that either order is correct. */
     ShoutMCO_CastDecision (*Request)(const ShoutMCO_CastRequest* a_request,
                                      ShoutMCO_CastHandle* a_outHandle);
 
