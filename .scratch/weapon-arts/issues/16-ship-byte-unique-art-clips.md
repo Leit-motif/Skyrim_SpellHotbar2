@@ -1,5 +1,10 @@
 # 16 — Ship byte-unique art clips instead of pointing at the author's
 
+> **AMENDED 2026-08-29 — the Ashes of War author granted permission**, on the single
+> condition that Ashes of War is listed as a requirement. Every line below about shipping being
+> gated, blocked, or awaiting an answer is superseded. See
+> `.scratch/weapon-arts/issues/18-ship-the-stamped-art-clips.md`.
+
 Arts drop at random — one or two per launch, a different one each time — because our submod and a
 stance submod point at the same bytes and OAR's duplicate filter keeps only one. Own the bytes and
 the collision cannot happen.

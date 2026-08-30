@@ -1,5 +1,10 @@
 # The shipped art pack carries its own clip bytes
 
+> **AMENDED 2026-08-29 — the Ashes of War author granted permission**, on the single
+> condition that Ashes of War is listed as a requirement. Every line below about shipping being
+> gated, blocked, or awaiting an answer is superseded. See
+> `.scratch/weapon-arts/issues/18-ship-the-stamped-art-clips.md`.
+
 Date: 2026-08-25
 
 Status: accepted — the shipping half is gated on the Ashes of War author's permission, requested

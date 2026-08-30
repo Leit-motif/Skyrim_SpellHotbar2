@@ -88,7 +88,7 @@ their own, listed on their pages.)*
 - **Thu'um Reborn** — every hotbar shout routes through it.
 - **MSCO - Magic Casting Behavior Overhaul** (168499) — the casting animations.
 - **(SE) Ashes of War Weapon Art Via Additional Attack** (100174) — take the FULL SUITE OAR main
-  file. The shipped weapon arts point at its clips.
+  file. **This entry is a condition of the author's permission and never comes off the page.**
 - Address Library for SKSE Plugins (32444)
 - Nemesis Unlimited Behavior Engine (60033)
 - Open Animation Replacer (92109)
@@ -171,27 +171,17 @@ what makes it true.** Listing a mod as a requirement grants nothing by itself. W
 true is the archive containing none of their bytes — requiring MSCO and driving its installed clips
 at runtime needs no permission at all. Right now the archive contains 32 of them.
 
-**The Ashes of War precedent is real but it does not transfer cleanly. Corrected 2026-08-29 after
-checking the code rather than the memory of it.**
+**There is no Ashes of War precedent to lean on any more.** The author answered, 2026-08-29:
+permission granted to integrate and to rename, on the single condition that Ashes of War is listed
+as a requirement. So that side is not a workaround, it is a yes. weapon-arts ticket 18 is unblocked
+and the 57 stamped clips ship.
 
-What was actually ruled and shipped there, from `../weapon-arts/issues/18-ship-the-stamped-art-clips.md`:
-the author never answered, the owner ruled *"i want to ship. that would mean we defer this effort to
-a future enhancement"*, and the pack stays **pointer-style** — `art_pack_gen.cpp` writes
-`config.json` files with `overrideAnimationsFolder` and copies no clip bytes at all. That is clean
-precisely because Ashes of War's clips are used **as they are**.
+That removes the analogy I reached for and leaves MSCO where it actually stands: **ask
+VVVK-distar-xing-adri** (mod 168499). One author said yes when asked; this one has not been asked.
 
-MSCO's are not. Our 32 clips carry our own annotations, and those annotations are the feature —
-cast timing and the per-hand payloads. A pointer at MSCO's unmodified clip does not carry them, so
-the shipped Ashes of War answer cannot simply be repeated here.
-
-**What it would actually take.** `python_scripts/stamp_art_clips.py` does the copy-and-annotate, but
-it is a build-time script on this machine, and ticket 18 is explicit that running it locally *"needed
-no permission because copying locally is not redistribution. Shipping them does."* Getting the same
-property for the cast clips means doing that stamping **on the user's machine, against their own MSCO
-install** — porting the copy-and-annotate into the DLL. `art_pack_gen.cpp` is the natural home and
-today it writes configs only, never bytes. That is new work, not a reuse.
-
-**So the honest options are two, not one.** Ask VVVK-distar-xing-adri (mod 168499) and ship the 32
-clips if the answer is yes; or build runtime stamping and ship no clips at all. Asking is cheap and
-worth starting now either way — the sibling case says silence is the likely reply, and it is better
-to learn that before the second option is needed rather than after.
+If the answer is no, or does not come, the fallback is real work rather than a flag flip.
+`art_pack_gen.cpp` writes `config.json` only and never clip bytes, and
+`python_scripts/stamp_art_clips.py` does the copy-and-annotate at build time on this machine —
+which needs no permission, because copying locally is not redistribution. Shipping the output does.
+Getting there means porting the stamping into the DLL so it runs against the user's own MSCO
+install. Do not plan on it before the answer; do not assume it is cheap if it is needed.
