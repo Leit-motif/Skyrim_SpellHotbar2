@@ -35,6 +35,18 @@ namespace SpellHotbar::casts::ArtDriver {
 		}
 	}
 
+	/**
+	 * TICKET 37. The bound on a live art state does NOT live in this file. It is
+	 * `CastingInstanceWeaponArt::update()` in casting_controller.cpp, which caps the art at eight
+	 * seconds and tears it down through `cancel()` below -- the same number, and the same
+	 * teardown, the cast state's own watchdog uses.
+	 *
+	 * That holds only because `begin()` is called exactly once, with a `CastingInstanceWeaponArt`
+	 * freshly installed as `current_cast`, so something is always polling this state. A change
+	 * that lets the driver outlive its casting instance removes the bound silently: `state_active`
+	 * would stay true with nothing to time it out, and the input latch behind it would retain
+	 * every press. Give the driver its own deadline before making that change.
+	 */
 	bool begin(RE::PlayerCharacter* pc)
 	{
 		if (!pc) {

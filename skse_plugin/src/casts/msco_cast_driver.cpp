@@ -2,9 +2,9 @@
 #include "art_driver.h"
 #include "clip_translation_driver.h"
 #include "combo_cache.h"
+#include "unpaused_clock.h"
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <cstdlib>
 #include <string>
 #include <Windows.h>
@@ -44,11 +44,13 @@ namespace SpellHotbar::casts::MscoCastDriver {
 			"SH2_Cast4"sv,
 		};
 
+		// TICKET 37. One clock for the whole file, and it is the unpaused one: the sample ages
+		// and the channel hold have to agree with the state watchdog, and all three are measured
+		// in gameplay time. A menu visit neither ages a combo sample out of range nor spends the
+		// watchdog's cap.
 		double now_ms()
 		{
-			using clock = std::chrono::steady_clock;
-			static const auto origin = clock::now();
-			return std::chrono::duration<double, std::milli>(clock::now() - origin).count();
+			return UnpausedClock::now_ms();
 		}
 
 		std::string_view event_for(int index)
