@@ -82,6 +82,15 @@ _Avoid_: root motion (ambiguous — in Havok/Skyrim tooling that usually means a
 The interval late in a shout exhale during which attack input is honored, letting the animation hand off to an MCO attack. Owned by the separate MCO shout behavior engine, not by this mod — and it governs **shouts only**. A driver cast has no window: an attack press past its commitment point ends the cast state directly, on this side (ticket 10).
 _Avoid_: Attack cancel, animation blend, driver-cast chain-out
 
+**ShoutMCO**:
+The **internal** identifier for the owner's shout mod — it fixes `ShoutMCO.dll`, `ShoutMCO.ini`, the SKSE log filename, and the header this repo compiles against (`skse_plugin/src/casts/cast_intent.cpp` includes `ShoutMCO_CastIntent.h` and calls `ShoutMCO_CastIntentApi`). Source is the sibling repo `thuum-fully-animated-shouts-mco`.
+**It is ONE mod, and it carries several names. None of them is a second mod.** Public name is `Thu'um Reborn` (see below); `Shouts for MCO` is the retired public name, still on `Shouts-for-MCO-1.0.3.zip` and the MO2 folder because renaming those touches the live playtest profile. Reading two names as two mods happened on 2026-08-29 and put a phantom second requirement on the release page.
+_Avoid_: Shouts for MCO (as a current name), MCO Shout Behavior Engine (older still), a separate animation pack, "an engine that ships no animations"
+
+**Thu'um Reborn**:
+The public name of the ShoutMCO mod, and a hard requirement of this one: every hotbar shout routes through its cast-intent API. **One page, one file** — behavior engine, Nemesis patch and all 216 clips together (sibling-repo owner ruling 2026-08-28: *"no the animations are not a separate file. they will be shipped with the mod."*). It is an upgrade to BOTuser999's `Thu'um - Fully Animated Shouts` (Nexus 50559), whose animation assets it ships with credit. The final public name is **not settled** — `Thu'um - Fully Animated Shouts Reborn` is the other candidate. Do not guess it into a deliverable; the release effort's ticket 01 owns naming.
+_Avoid_: the animation half of Shouts for MCO, a shout animation pack, an optional requirement
+
 **Cast Driver**:
 A mod that owns a cast payload and asks ShoutMCO whether the request should pass through now or be deferred. That call is release timing (ADR-0005). Spell Hotbar 2 is the first driver; it keeps ownership of the slot, spell, resources, and execution. Combo-position continuity across a Driver Cast this mod started is a named exception in the same ADR, owned here, not a second ShoutMCO call.
 _Avoid_: ShoutMCO spell integration, engine-owned hotbar slot
