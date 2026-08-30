@@ -7,8 +7,8 @@ same treatment, plus one defect of its own.
 **Blocked by:** nothing. Ticket 14 closed DONE, owner-accepted 2026-08-25 — this ticket has
 been unblocked since then and the line above said otherwise until the 2026-08-29 sweep.
 
-**Status:** in progress — built and deployed 2026-08-29, awaiting the owner's live pass. See
-`## Diagnosis and build` at the bottom: the staleness was never staleness.
+**Status:** DONE — owner-accepted 2026-08-29. See `## Diagnosis and build` at the bottom: the
+staleness was never staleness, and the first fix reintroduced it in a new coat of paint.
 
 ## What the owner saw (Two-Handed bar, Binding Menu)
 
@@ -113,12 +113,40 @@ inheritance marks, and it is consistent: the row is the unit.
       three new cases in `art_data_test.cpp` pin the tier across every bar (parents, sneak
       variants, Magic/Ranged), prove gray always outranks yellow, and pin the owner's own
       Two-Handed and Dual Wield rows. All seven suites pass.
-- [ ] **Owner cell.** Open the menu fresh with arts already bound: every bound slot's tint is
-      correct with no rebind.
-- [ ] **Owner cell.** Switch bars in the dropdown; the strip's tints follow at once. Dual Wield in
-      particular should now show only 2H arts gray, not the whole strip.
-- [ ] **Owner cell.** A dead art's icon, keybind label and name are all gray; a direct match
-      (Blood Flurry on Two-Handed) is yellow on label and name; Generic stays white.
+- [x] **Owner cell**, accepted 2026-08-29. Open the menu fresh with arts already bound: every
+      bound slot's tint is correct with no rebind.
+- [x] **Owner cell**, accepted 2026-08-29. Switch bars in the dropdown; the strip's tints follow
+      at once, and Dual Wield shows only 2H arts gray rather than the whole strip.
+- [x] **Owner cell**, accepted 2026-08-29. A dead art's icon, keybind label and name gray
+      together; a direct match is yellow on label and name; everything else stays white.
 
 Visual cells are owner cells by the standing no-agent-screenshot ruling in the headless testing
 playbook.
+
+### The fix took two passes, and the first one was the same bug
+
+Worth recording, because the first pass looked right and shipped anyway. The diagnosis above is
+correct: the collision was inheritance-grey sitting on the liveness channel. The first fix moved
+inheritance from a grey *hue* to a half *alpha* and declared the two signals separated. They were
+not. **Brightness is one channel**, and hue-vs-alpha is a distinction the eye does not make on a
+dim slot label — so the strip still dimmed nearly every row on a child bar, and the owner reported
+it again four days later, this time on a Dual Wield strip of nothing but spells and shouts:
+
+> they're all spells and shouts, so they shouldn't be grayed out. it's like there's some sort of
+> stale reference or something
+
+Which is the original complaint, verbatim, against a build that was supposed to have fixed it.
+
+So the second pass spends brightness on liveness and nothing else. `inherited` still drives the
+hover affordance and the drag source; it no longer touches colour. A slot with no art class —
+every spell, shout, and power — is white, always.
+
+**The cost, stated rather than buried:** the strip no longer shows which slots are inherited from
+the parent bar versus bound on this one. That is a real signal, deliberately dropped. The argument
+for dropping it is that on a child bar nearly every slot is inherited, so it approached "always
+on" — low information, at the price of the one channel the tint tiers need. If it is wanted back,
+it needs a channel that is not brightness; a corner marker on the icon is the cheap option. Owner
+accepted the trade on 2026-08-29 without asking for it back.
+
+Owner 2026-08-29, acceptance: "weaponart17 working. we can close it." — verified against the
+21:51 build on profile `Nolvus Awakening`, after a relaunch, with no rebinding.
