@@ -96,20 +96,30 @@ The SkyUI MCM, as in the base mod, plus this fork's own in-game editors and bind
 
 ## Requirements
 
-**Required.** All of them, in this order.
+**Required.** All of them, each one with everything it requires in turn, in this order.
 
-- **Spell Hotbar 2**, version 0.0.14 — the base mod. This overwrites it, so install it first.
-  GitHub releases, not Nexus.
-- **(SE) Ashes of War Weapon Art Via Additional Attack** (100174) — take the FULL SUITE OAR
-  main file. The shipped ability catalogue points at its clips.
+- **Spell Hotbar 2**, version 0.0.14, and all of its requirements — the base mod. This
+  overwrites it, so install it first. GitHub releases, not Nexus.
+- **Shouts for MCO**, and all of its requirements — the shout behavior engine. Every hotbar
+  shout routes through its cast-intent API.
+- **Thu'um Reborn**, and all of its requirements — the shout animations. Shouts for MCO ships
+  none; without a pack your shouts chain correctly and look vanilla.
+- **(SE) Ashes of War Weapon Art Via Additional Attack** (100174), and all of its requirements
+  — take the FULL SUITE OAR main file. The shipped ability catalogue points at its clips. Nine
+  further mods in its chain, listed on its page.
 - Address Library for SKSE Plugins (32444)
 - Nemesis Unlimited Behavior Engine (60033)
-- Open Animation Replacer (92109)
-- Payload Interpreter (65089)
-- Behavior Data Injector (78146)
+- Open Animation Replacer (92109), and all of its requirements — Animation Queue Fix and
+  Paired Animation Improvements included
+- Payload Interpreter (65089), and all of its requirements
+- Behavior Data Injector (78146), and all of its requirements
 
 Two Nexus cannot link: **SKSE64** (skse.silverlock.org) and **ADXP | MCO** (Distar's
-skyrim-guild / Discord). MCO is not optional — there is no combo to chain into without it.
+skyrim-guild / Discord, with its own requirement list there). MCO is not optional — there is
+no combo to chain into without it.
+
+A current **Visual C++ redistributable** sits off-site in several of those chains. Every SKSE
+plugin here fails to load without it, usually silently.
 
 ## Installation
 
