@@ -8,11 +8,15 @@ gets blocked.
 **Blocked by:** nothing. Ticket 38's rooting change is the thing being corrected, so read it and
 `docs/adr/0015-commitment-is-a-property-of-the-behavior-state.md` first.
 
-**Status:** claimed — 2026-08-29, implementation session. Built, deployed, and live-verified
-the same evening (see `## Live verification 2026-08-29`): cells 1 and 2 closed (owner eyes +
-telemetry), cell 3 open pending an owner steering check. The scope also grew by owner ruling
-mid-test: the slight forward traverse MSCO's animmotion authors is WANTED back, which
-dissolves ticket 40 — see the live section.
+**Status:** resolved — 2026-08-29, owner-accepted the same evening. All three cells closed:
+legs animate (owner eyes), MSCO-parity traverse and rotation (telemetry, 45.0/0.0/60.9/0.0
+across the aimed rotation), and no steering on a held movement key mid-cast (owner hands:
+"cell 3 is good--no steering"). The scope grew twice by owner ruling mid-test — the traverse
+came back (dissolving ticket 40), and the rotation itself was corrected to MSCO's authored
+1,5,3,4 chain. One accepted quirk, deliberately not doctored: the self sets' clip B carries a
+small native backstep (MSCO shipped it that way; the right set is likely the original). Owner:
+"i just don't care enough to doctor these right now. we can consider this closed."
+
 
 ## Triage 2026-08-29: the discriminator this ticket asked for already exists
 
