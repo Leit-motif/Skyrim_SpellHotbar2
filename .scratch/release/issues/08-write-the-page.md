@@ -26,6 +26,28 @@ Every rule below is a draft that was rejected in the sibling repo. They are not 
 
 One dry line lands better than five. Understatement, not build-up.
 
+## The rule that matters most, added 2026-08-29
+
+**Write every sentence from the player's side, not the plugin's.** Owner, rejecting the sibling
+repo's draft: *"this is a technical documentation, not user facing copy. i even gave you a
+reference of what good looks like."*
+
+That draft had almost no AI tells. It was flat, it had numbers, it followed every rule above — and
+it was still wrong, because it explained how the mod worked where it should have said what happens
+when you play. The reference pages never do this: Fury says 25% more damage and five stacks, Mern
+says ten outfit slots and that stats never change. Neither says how it is implemented.
+
+Two mechanical checks before this draft ships:
+
+- **No config identifier appears outside a Settings section.** Numbers belong in the feature
+  bullets; variable names do not. The sibling draft had seven scattered through its body.
+- **Every sentence names something the player does or sees.** "You plant where you stand" passes.
+  "The state routes around locomotion rather than blending with it" does not, and that sentence is
+  in the current SH2 draft.
+
+The house rule "name the mechanism" governs internal docs. On a mod page the mechanism *is* the
+internal detail.
+
 ## Structure
 
 Sections are the features, one per gallery image (ticket 07), matching the model page's shape.
