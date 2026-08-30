@@ -6,6 +6,9 @@
   "identity_frozen": false,
 
   "author_public": "Leitmotives",
+
+  "_identities_comment": "Names the real-name guard must NOT flag. author_public plus these: the GitHub handle, the web-UI committer name that signs merges made on github.com, and upstream's handle, which is a credit the README carries on purpose.",
+  "public_identities": ["Leit-motif", "GitHub", "pWn3d1337"],
   "extra_forbidden_strings": [],
 
   "base_mod": {

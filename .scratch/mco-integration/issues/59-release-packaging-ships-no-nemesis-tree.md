@@ -116,3 +116,44 @@ One conflict to flag rather than resolve: `.scratch/release/spec.md` and release
 state the owner settled permissions on 2026-08-29 and call this ticket's deferral line stale.
 The instruction for this build said the opposite — build but do not publish. The build is
 gated on a flag in `release.json`, so settling it is a one-line change either way.
+
+### 2026-08-29 — second-model review, and the leak it turned up
+
+Reviewed by `cursor-grok-4.6-high-fast` through `scripts/cursor-delegate.mjs`, read-only
+(transcript `20260830035442-souebz.ndjson`). It found real holes. Fixed in this pass:
+
+- **The `.pex` staleness guard did not guard.** `--refresh-pex` recorded the *current* `.psc`
+  hash against whatever bytecode was on disk, so importing without recompiling reset the check
+  and every later build reported a match. The `.pex` header carries its own compilation
+  timestamp; the build now reads it and fails when the `.psc` on disk is newer. Proven by
+  touching the source: build fails, naming the compile time.
+- **Classification was path-keyed.** A base asset copied to a new name classified as ADDITION
+  and shipped. The whole base tree (373 distinct files by content) is now indexed by SHA-256
+  and a member matching any of them fails, whatever it is called.
+- **`install_path` was never checked.** The overwrite proof is only as good as the tree it
+  compares against, and `is_dir()` proves nothing. The build now reads MO2's `meta.ini` and
+  fails unless the installed version matches the pinned `0.0.14`.
+- **The real-name guard skipped the README and every binary.** It scanned a text-suffix
+  allowlist over `members`, and the generated README is not a member. It now scans every
+  packaged byte plus the README, case-insensitively, in ASCII and UTF-16, matching whole names
+  and their individual words.
+
+**That widened guard immediately caught a leak that would have shipped.** Both `.pex` headers
+carried `user=Rando, machine=DESKTOP-AMRIT` — the Papyrus compiler stamps the building account
+and machine into every file it emits. `papyrus/skyrimse.ppj` already sets `Anonymize="true"`
+and it plainly did not take. No text scan would ever have found it: it is in a binary, and
+`DESKTOP-AMRIT` matches no full name, which is why the guard now splits names into words.
+`--refresh-pex` blanks both header strings on import — 18 bytes shorter, bytecode after the
+header byte-identical, verified against the original. The two `.pex` tracked here are clean.
+
+Smaller fixes from the same review: `git ls-files -z` so a non-ASCII path is never quoted;
+tracked symlinks rejected rather than followed into the base install; the CRLF check tightened
+so a CR-only or newline-free file no longer passes; the DLL re-hashed at verify time instead of
+trusting the collect-time value; duplicate zip entries rejected; predictable exceptions (`git`
+off PATH, a missing config key, malformed JSON, an `--out` outside the repo) turned into
+`BUILD FAILED` instead of a traceback.
+
+Findings read and not acted on: `--check` does not open an existing archive (that is what it is
+for — its help text now says so); count-versus-set comparisons inside `verify_archive` that the
+full name-set check already covers; and the observation that there are no unit tests for the
+script, which is true. The guards were each proven by injection instead.

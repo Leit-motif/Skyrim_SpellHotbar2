@@ -18,7 +18,7 @@ addition. Base SH2 is a hard requirement; ours installs after it and wins the co
 is compiled from upstream's own source at release `0.0.14`, with our changes on top, so it
 replaces the base DLL rather than sitting beside it.
 
-The archive holds 158 files: 155 additions and exactly three overwrites.
+The archive holds 159 files: 155 additions, three overwrites, and a generated `README.md`.
 
 | Overwrite | Why |
 |---|---|
@@ -30,7 +30,7 @@ Everything else is new: the `shtb` and `shcr` Nemesis patches, the `SpellHotbar2
 `SpellHotbar2Arts` OAR submods, the Ability catalogues, the Weapon Art icon atlas, the
 Behavior Data Injector config, and our two `.psc` sources.
 
-## The five rules the build enforces
+## The six rules the build enforces
 
 Each of these is a failure the script produces, not advice it prints.
 
@@ -38,25 +38,38 @@ Each of these is a failure the script produces, not advice it prints.
 animation drop, a scratch file, or anything `.gitignore` covers cannot reach a release. The DLL
 and the two `.pex` are the named exceptions, because they are build outputs.
 
-**Every member is classified against the installed base mod, byte for byte.** Absent from base
-is an addition. Present and different is an overwrite. Present and *identical* is redundant, and
-fails the build — a byte-identical file is by definition an upstream-untouched asset, and it
-belongs to the user's base install. This is what makes "upstream assets provably absent"
-checkable rather than asserted. It needs the base mod on disk; `base_mod.install_path` in
-`deploy/release/release.json` points at it.
+**Every member is classified against the installed base mod, by content.** Absent from base is
+an addition. Present at the same path and different is an overwrite. Byte-identical to *any*
+file the base mod installs — same path or not — is redundant, and fails the build: a
+byte-identical file is an upstream-untouched asset and belongs to the user's base install. The
+whole base tree is indexed by SHA-256 first, so renaming a base asset does not smuggle it in.
+This is what makes "upstream assets provably absent" checkable rather than asserted.
 
-**The overwrite set is declared.** `EXPECTED_OVERWRITES` in the script lists the three files
-above. If classification disagrees in either direction the build fails, so a new overwrite has
-to be a deliberate edit to that list.
+It needs the base mod on disk, and the right version of it: `base_mod.install_path` in
+`deploy/release/release.json` points at the folder, and the build reads MO2's `meta.ini` there
+and fails if the installed version does not match `base_mod.supported_version`. A proof against
+the wrong tree proves nothing.
+
+**The overwrite set is declared.** `REQUIRED_OVERWRITES` lists the three files above and every
+one must classify as an overwrite; `ALLOWED_OVERWRITES` adds the two `.psc`, which overwrite
+something only when the user installed base SH2 from upstream's archive rather than the FOMOD.
+Anything outside the allowed set fails, so a new overwrite has to be a deliberate edit.
 
 **Nemesis patch files ship CRLF.** The repo stores them LF and relies on `core.autocrlf=true`
 to restore CRLF on checkout. A machine with `autocrlf=false` would hand the build LF files and
 ship them, and nothing downstream would say so, so the build checks and fails instead.
 
-**No real name reaches a packaged file.** The guard reads committer names out of `git log` and
-scans every packaged text file for them. Nemesis prints `author=` from `info.ini` in its own
-mod list, and that is exactly where a real name leaked in the sibling repo's release. Both
-`info.ini` files read `author=Leitmotives`.
+**A stale `.pex` cannot ship.** Each `.pex` header carries the timestamp of its own compile.
+If the `.psc` on disk is newer than that, the build fails. See the next section for why the
+recorded hash alone was not enough.
+
+**No real name reaches a packaged byte.** The guard reads committer names out of our own
+commits (upstream's authors excluded, `public_identities` in the config allowlisted), splits
+them into words, and scans every packaged file whole — binaries included, case-insensitively,
+in both ASCII and UTF-16 — plus the generated README. Two leaks are why it is that broad:
+Nemesis prints `author=` from `info.ini` in its own mod list, and the Papyrus compiler stamps
+the building account and machine into the `.pex` header. Both `info.ini` now read
+`author=Leitmotives`, and the `.pex` headers are blanked at import.
 
 ## Compiled Papyrus scripts
 
@@ -68,10 +81,19 @@ python python_scripts/build_mod_release.py --refresh-pex
 ```
 
 That copies them from `compiled_scripts_dir` (the deployed MO2 dev mod) into
-`papyrus/Scripts/`, and records in `papyrus/Scripts/compiled.json` the SHA-256 of the `.psc`
-each one was compiled from. Every later build re-checks that hash and fails if a `.psc` has
-changed since, so a stale `.pex` cannot ship silently. After editing a `.psc`: recompile, then
-`--refresh-pex`.
+`papyrus/Scripts/`, blanks the compiler's account and machine out of each header, and records
+in `papyrus/Scripts/compiled.json` the SHA-256 of the `.psc` each was compiled from.
+
+The recorded hash alone only catches "the `.psc` changed since the last import", which a
+careless `--refresh-pex` resets. The check that survives that is the `.pex` header's own
+compilation timestamp: if the `.psc` on disk is newer than the bytecode, the build fails
+whatever the record says. Both `--refresh-pex` and every later build apply it.
+
+Anonymizing rewrites two length-prefixed header strings and copies the bytecode after them
+verbatim — 18 bytes shorter, byte-identical body. The `.ppj` already sets `Anonymize="true"`;
+it plainly did not take, and both files carried `DESKTOP-AMRIT` until this step existed.
+
+After editing a `.psc`: recompile, then `--refresh-pex`.
 
 ## Identity is not frozen yet
 

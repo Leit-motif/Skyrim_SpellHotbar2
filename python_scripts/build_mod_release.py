@@ -6,7 +6,7 @@ Spell Hotbar 2: the base mod is a hard requirement, ours installs after it and w
 conflict. This script assembles only the files that are ours, proves that no
 upstream-untouched asset rode along, and writes a reviewable manifest beside the archive.
 
-Three rules do the real work here:
+Four rules do the real work here:
 
 1.  **Only git-tracked files ship.** Trees are enumerated through `git ls-files`, so a
     local scratch file, a playtest animation drop, or anything else `.gitignore` covers
@@ -16,9 +16,13 @@ Three rules do the real work here:
     Absent from base -> ADDITION. Present and different -> OVERWRITE. Present and
     identical -> REDUNDANT, which fails the build: a byte-identical file is by definition
     an upstream-untouched asset and belongs to the base install, not to us.
-3.  **The overwrite set is declared, not discovered.** `EXPECTED_OVERWRITES` below is the
-    list of upstream files we replace. If the classification disagrees with it in either
-    direction the build fails, so the overwrite ruling stays checkable instead of drifting.
+3.  **The overwrite set is declared, not discovered.** `REQUIRED_OVERWRITES` below is the
+    list of upstream files we replace, and `ALLOWED_OVERWRITES` the superset that may. If
+    the classification disagrees with either the build fails, so the overwrite ruling stays
+    checkable instead of drifting.
+4.  **Neither a real name nor a stale compile gets out.** Every packaged byte is scanned
+    for committer names in ASCII and UTF-16, and the `.pex` headers are read for their own
+    compilation timestamp and checked against the `.psc` on disk.
 
 Usage:
     python python_scripts/build_mod_release.py                 # build + verify
@@ -32,7 +36,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
+import struct
 import subprocess
 import sys
 import zipfile
@@ -56,11 +62,21 @@ PEX_SOURCES = {
 }
 
 # Archive paths that replace a file the base mod installs. Everything else must be new.
-# Keep this in sync deliberately; the build fails rather than letting it drift.
-EXPECTED_OVERWRITES = {
+# Keep these in sync deliberately; the build fails rather than letting them drift.
+#
+# REQUIRED must all classify as overwrites: if one does not, either the list is stale or the
+# configured base install is not the mod it claims to be. ALLOWED is the superset that may.
+# The two `.psc` are in ALLOWED and not REQUIRED because upstream's own packer ships
+# `Scripts/Source/*.psc` while the FOMOD does not install them, so whether ours overwrite
+# anything depends on how the user installed the base mod.
+REQUIRED_OVERWRITES = {
     "SKSE/Plugins/SpellHotbar2.dll",
     "Scripts/SpellHotbar.pex",
     "Scripts/SpellHotbarMCM.pex",
+}
+ALLOWED_OVERWRITES = REQUIRED_OVERWRITES | {
+    "Scripts/Source/SpellHotbar.psc",
+    "Scripts/Source/SpellHotbarMCM.psc",
 }
 
 # Files under a packaged tree that stay out, and why. The reason is printed, so an
@@ -120,9 +136,13 @@ def git(*args: str) -> str:
 
 
 def tracked_files(prefix: str) -> list[str]:
-    """Repo-relative paths tracked by git under `prefix`, posix separators."""
-    out = git("ls-files", "--", prefix).splitlines()
-    return sorted(line.strip() for line in out if line.strip())
+    """Repo-relative paths tracked by git under `prefix`, posix separators.
+
+    `-z` matters: without it git quotes any path with a non-ASCII or control character and
+    the quoted string is not a real filesystem path. NUL-separated output is verbatim.
+    """
+    out = git("ls-files", "-z", "--", prefix)
+    return sorted(part for part in out.split("\0") if part)
 
 
 def load_config() -> dict:
@@ -142,25 +162,102 @@ def forbidden_strings(config: dict) -> list[str]:
     Nemesis prints `author=` in its own mod list, and that is exactly where a real name
     leaked in the sibling repo's release. Committer names come from git history, so the
     guard needs no hard-coded name and covers whoever commits next.
+
+    Whole names are not enough. The leak that actually shipped in the compiled `.pex` was
+    `DESKTOP-AMRIT`, a machine name that contains one word of the committer's name and
+    matches no full string, so every word of four characters or more is a needle too.
     """
     names: set[str] = set()
     try:
         names.add(git("config", "user.name").strip())
     except subprocess.CalledProcessError:
         pass
+    # Only our own commits. `--all` alone would pull in upstream's authors, and upstream's
+    # handle is a public credit that belongs in the README rather than a leak.
+    log_args = ["log", "--format=%an%n%cn", "--all"]
     try:
-        for line in git("log", "--format=%an%n%cn", "-n", "200").splitlines():
+        git("rev-parse", "--verify", "--quiet", "upstream/master")
+        log_args += ["--not", "upstream/master"]
+    except subprocess.CalledProcessError:
+        pass
+    try:
+        for line in git(*log_args).splitlines():
             if line.strip():
                 names.add(line.strip())
     except subprocess.CalledProcessError:
         pass
-    names.discard("")
-    names.discard(config.get("author_public", ""))
-    names.update(config.get("extra_forbidden_strings", []))
-    return sorted(n for n in names if len(n) >= 4)
+
+    needles: set[str] = set()
+    for name in names:
+        needles.add(name)
+        needles.update(part for part in re.split(r"[^A-Za-z0-9]+", name) if len(part) >= 4)
+    needles.update(config.get("extra_forbidden_strings", []))
+
+    allowed: set[str] = set()
+    for public in [config.get("author_public", ""), *config.get("public_identities", [])]:
+        if not public:
+            continue
+        allowed.add(public.lower())
+        allowed.update(part.lower() for part in re.split(r"[^A-Za-z0-9]+", public) if part)
+    return sorted(n for n in needles if len(n) >= 4 and n.lower() not in allowed)
 
 
 # ------------------------------------------------------------------- compiled scripts
+
+PEX_MAGIC = 0xFA57C0DE
+
+
+def read_pex_header(path: Path) -> dict:
+    """Parse a Skyrim `.pex` header: compile time, source name, user, machine.
+
+    The header is big-endian and carries three length-prefixed strings after the timestamp.
+    Two of them are why this function exists: the compiler stamps the account and machine
+    that built the file, and both `.pex` in this repo shipped `DESKTOP-AMRIT` until the
+    import step started blanking them.
+    """
+    data = path.read_bytes()
+    magic, = struct.unpack_from(">I", data, 0)
+    if magic != PEX_MAGIC:
+        fail(f"{path.name} is not a Papyrus .pex (magic {magic:#010x})")
+    offset = 16  # magic(4) + major(1) + minor(1) + gameID(2) + compilationTime(8)
+    compiled_at, = struct.unpack_from(">Q", data, 8)
+    strings = []
+    for _ in range(3):
+        length, = struct.unpack_from(">H", data, offset)
+        offset += 2
+        strings.append(data[offset:offset + length].decode("utf-8", "replace"))
+        offset += length
+    source, user, machine = strings
+    return {
+        "compiled_at": compiled_at,
+        "source": source,
+        "user": user,
+        "machine": machine,
+        "strings_end": offset,
+    }
+
+
+def anonymize_pex(path: Path) -> bool:
+    """Blank the user and machine names in a `.pex` header. Returns True if it changed.
+
+    The `.ppj` sets `Anonymize="true"` and it plainly did not take, so this does the same
+    job at import time. Only the two header strings change; the bytecode after them is
+    copied verbatim, and nothing in the game reads either field.
+    """
+    header = read_pex_header(path)
+    if not header["user"] and not header["machine"]:
+        return False
+    data = path.read_bytes()
+    source = header["source"].encode("utf-8")
+    rebuilt = (
+        data[:16]
+        + struct.pack(">H", len(source)) + source
+        + struct.pack(">H", 0)
+        + struct.pack(">H", 0)
+        + data[header["strings_end"]:]
+    )
+    path.write_bytes(rebuilt)
+    return True
 
 
 def refresh_pex(config: dict) -> None:
@@ -183,22 +280,43 @@ def refresh_pex(config: dict) -> None:
             fail(f"compiled script not found: {src}")
         dst = PEX_DIR / pex_name
         shutil.copy2(src, dst)
+        if anonymize_pex(dst):
+            print(f"  anonymized {pex_name} (blanked the compiler's user and machine names)")
+        header = read_pex_header(dst)
         psc = PROJECT_ROOT / psc_rel
+        if not psc.is_file():
+            fail(f"Papyrus source missing: {psc_rel}")
         record[pex_name] = {
             "psc": psc_rel,
             "psc_sha256": sha256_of(psc),
+            "psc_mtime": psc.stat().st_mtime,
             "pex_sha256": sha256_of(dst),
-            "imported_from": str(src),
+            "pex_compiled_at": header["compiled_at"],
+            "pex_compiled_utc": datetime.fromtimestamp(
+                header["compiled_at"], timezone.utc
+            ).isoformat(timespec="seconds"),
             "imported_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         }
-        print(f"  imported {pex_name} <- {src}")
+        if psc.stat().st_mtime > header["compiled_at"]:
+            fail(
+                f"{psc_rel} was modified after {pex_name} was compiled "
+                f"({record[pex_name]['pex_compiled_utc']}). Recompile before importing."
+            )
+        print(f"  imported {pex_name} <- {src.name}, compiled "
+              f"{record[pex_name]['pex_compiled_utc']}")
 
     PEX_RECORD.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     print(f"  wrote {PEX_RECORD.relative_to(PROJECT_ROOT)}")
 
 
 def verify_pex_currency() -> None:
-    """Fail if a `.psc` changed since its `.pex` was imported."""
+    """Fail if a `.pex` is stale, anonymous no longer, or not from the source it claims.
+
+    The recorded `.psc` hash alone only catches "changed since the last import", which a
+    careless `--refresh-pex` resets. The `.pex` header's own compilation timestamp is the
+    check that survives that: if the source is newer than the compile, the bytecode is
+    stale whatever the record says.
+    """
     if not PEX_RECORD.exists():
         fail(
             f"{PEX_RECORD.relative_to(PROJECT_ROOT)} is missing. "
@@ -223,7 +341,28 @@ def verify_pex_currency() -> None:
                 f"(recorded {entry['psc_sha256'][:12]}, now {current[:12]}). "
                 "Recompile the Papyrus scripts, then run --refresh-pex."
             )
-        print(f"  {pex_name} matches {psc_rel}")
+
+        header = read_pex_header(pex)
+        if header["user"] or header["machine"]:
+            fail(
+                f"{pex_name} still carries the compiler's identity "
+                f"(user={header['user']!r}, machine={header['machine']!r}). "
+                "Run --refresh-pex, which blanks both."
+            )
+        if header["source"] != Path(psc_rel).name:
+            fail(
+                f"{pex_name} was compiled from {header['source']!r}, not "
+                f"{Path(psc_rel).name!r}"
+            )
+        if psc.stat().st_mtime > header["compiled_at"]:
+            compiled = datetime.fromtimestamp(header["compiled_at"], timezone.utc)
+            fail(
+                f"{psc_rel} is newer than the bytecode in {pex_name} "
+                f"(compiled {compiled.isoformat(timespec='seconds')}). Recompile, then "
+                "run --refresh-pex."
+            )
+        print(f"  {pex_name} matches {psc_rel}, anonymous, compiled "
+              f"{datetime.fromtimestamp(header['compiled_at'], timezone.utc):%Y-%m-%d %H:%M UTC}")
 
 
 # ----------------------------------------------------------------------- the manifest
@@ -237,6 +376,10 @@ def collect_members() -> list[Member]:
     def add(source: Path, arcname: str) -> None:
         if arcname in seen:
             fail(f"two sources map to the same archive path: {arcname}")
+        if source.is_symlink():
+            # zipfile follows the link and packs the target's bytes, so a link pointing into
+            # the base install would ship upstream content under one of our paths.
+            fail(f"packaged source is a symlink: {source}")
         if not source.is_file():
             fail(f"source file missing: {source}")
         seen.add(arcname)
@@ -279,17 +422,67 @@ def collect_members() -> list[Member]:
     return members
 
 
-def classify_against_base(members: list[Member], base_root: Path) -> dict[str, int]:
-    """Tag each member ADDITION / OVERWRITE / REDUNDANT against the installed base mod."""
+def verify_base_install(base_root: Path, base_config: dict) -> None:
+    """Check the configured base install is the version the package pins itself to.
+
+    Classification is only worth as much as the tree it compares against, and `is_dir()`
+    proves nothing. MO2 records the installed version and the archive it came from in
+    `meta.ini`, so read it.
+    """
+    meta = base_root / "meta.ini"
+    pinned = base_config["supported_version"]
+    if not meta.is_file():
+        fail(
+            f"{base_root} has no meta.ini, so the base mod's version cannot be confirmed "
+            f"against the pinned {pinned}."
+        )
+    text = meta.read_text(encoding="utf-8", errors="ignore")
+    installed = ""
+    for line in text.splitlines():
+        if line.startswith("version="):
+            installed = line.split("=", 1)[1].strip()
+            break
+    # MO2 writes 0.0.14 as `0.0.14.0`; compare on the pinned prefix.
+    if not installed.startswith(pinned):
+        fail(
+            f"base mod at {base_root} reports version {installed!r}, but the package pins "
+            f"{pinned!r}. Fix base_mod.supported_version or install the pinned base."
+        )
+    print(f"  meta.ini reports {installed}, matching the pinned {pinned}")
+
+
+def index_base_by_content(base_root: Path) -> dict[str, str]:
+    """SHA-256 -> a representative path, over every file the base mod installs.
+
+    Path-keyed comparison alone would let a base asset ship under a new name. This index
+    catches it by content, which is what "upstream-untouched" actually means.
+    """
+    index: dict[str, str] = {}
+    for path in base_root.rglob("*"):
+        if path.is_file():
+            index.setdefault(sha256_of(path), str(path.relative_to(base_root)).replace("\\", "/"))
+    return index
+
+
+def classify_against_base(
+    members: list[Member], base_root: Path, content_index: dict[str, str]
+) -> dict[str, int]:
+    """Tag each member ADDITION / OVERWRITE / REDUNDANT against the installed base mod.
+
+    REDUNDANT covers both shapes: identical bytes at the same path, and identical bytes
+    anywhere else in the base tree.
+    """
     counts = {"ADDITION": 0, "OVERWRITE": 0, "REDUNDANT": 0}
     for member in members:
         base_file = base_root / member.arcname
-        if not base_file.is_file():
-            member.classification = "ADDITION"
-        elif sha256_of(base_file) == member.sha256:
+        if base_file.is_file() and sha256_of(base_file) == member.sha256:
             member.classification = "REDUNDANT"
-        else:
+        elif member.sha256 in content_index:
+            member.classification = "REDUNDANT"
+        elif base_file.is_file():
             member.classification = "OVERWRITE"
+        else:
+            member.classification = "ADDITION"
         counts[member.classification] += 1
     return counts
 
@@ -298,22 +491,22 @@ def check_classification(members: list[Member]) -> None:
     redundant = [m.arcname for m in members if m.classification == "REDUNDANT"]
     if redundant:
         fail(
-            "these files are byte-identical to the base mod and must not ship "
-            "(upstream-untouched assets come from the base install):\n  "
+            "these files are byte-identical to a file the base mod installs and must not "
+            "ship (upstream-untouched assets come from the base install):\n  "
             + "\n  ".join(redundant)
         )
 
     found = {m.arcname for m in members if m.classification == "OVERWRITE"}
-    unexpected = sorted(found - EXPECTED_OVERWRITES)
-    missing = sorted(EXPECTED_OVERWRITES - found)
+    unexpected = sorted(found - ALLOWED_OVERWRITES)
+    missing = sorted(REQUIRED_OVERWRITES - found)
     if unexpected:
         fail(
-            "these files overwrite a base-mod file but are not in EXPECTED_OVERWRITES:\n  "
+            "these files overwrite a base-mod file but are not in ALLOWED_OVERWRITES:\n  "
             + "\n  ".join(unexpected)
         )
     if missing:
         fail(
-            "EXPECTED_OVERWRITES names files that do not actually overwrite the base "
+            "REQUIRED_OVERWRITES names files that do not actually overwrite the base "
             "mod (stale list, or the base install changed):\n  " + "\n  ".join(missing)
         )
 
@@ -330,7 +523,11 @@ def check_nemesis_line_endings(members: list[Member]) -> None:
         if not member.arcname.startswith("Nemesis_Engine/"):
             continue
         data = member.source.read_bytes()
-        if b"\n" in data and data.count(b"\r\n") != data.count(b"\n"):
+        crlf = data.count(b"\r\n")
+        # Every LF must be part of a CRLF, every CR must be too, and there has to be at
+        # least one line break. A file that is CR-only, or has no break at all, is not CRLF
+        # however the counts happen to line up.
+        if crlf == 0 or data.count(b"\n") != crlf or data.count(b"\r") != crlf:
             offenders.append(member.arcname)
     if offenders:
         fail(
@@ -341,27 +538,52 @@ def check_nemesis_line_endings(members: list[Member]) -> None:
           "Nemesis files are CRLF")
 
 
-def check_forbidden_strings(members: list[Member], config: dict) -> None:
-    """Scan packaged text for a real name. Nemesis shows `author=` to every user."""
+def check_forbidden_strings(members: list[Member], config: dict, readme: str) -> None:
+    """Scan every packaged byte for a real name, text and binary alike.
+
+    Nemesis shows `author=` from `info.ini` to every user, and the Papyrus compiler stamps
+    its account and machine into the `.pex` header. A suffix allowlist would have missed
+    the second one, so this reads whole files and matches case-insensitively in both ASCII
+    and UTF-16, which is how a name appears in a Windows binary.
+    """
     needles = forbidden_strings(config)
     if not needles:
-        print("  (no committer names resolved; real-name guard did not run)")
-        return
-    text_suffixes = {".txt", ".ini", ".json", ".csv", ".psc", ".md", ".xml"}
+        fail(
+            "the real-name guard resolved no committer names, so it would pass everything. "
+            "Check that git works here, or pin names in extra_forbidden_strings."
+        )
+
+    encoded = [
+        (needle, needle.lower().encode("utf-8"), needle.lower().encode("utf-16-le"))
+        for needle in needles
+    ]
     hits: list[str] = []
+
+    def scan(label: str, data: bytes) -> None:
+        low = data.lower()
+        for needle, ascii_form, utf16_form in encoded:
+            if ascii_form in low or utf16_form in low:
+                hits.append(f"{label}: contains {needle!r}")
+
     for member in members:
-        if member.source.suffix.lower() not in text_suffixes:
-            continue
-        content = member.source.read_text(encoding="utf-8", errors="ignore")
-        for needle in needles:
-            if needle in content:
-                hits.append(f"{member.arcname}: contains {needle!r}")
+        scan(member.arcname, member.source.read_bytes())
+    scan("README.md", readme.encode("utf-8"))
+
     if hits:
         fail("real name found in packaged files:\n  " + "\n  ".join(hits))
-    print(f"  clean against {len(needles)} committer name(s)")
+    print(f"  {len(members) + 1} files clean against {len(needles)} needle(s): "
+          f"{', '.join(needles)}")
 
 
 # ------------------------------------------------------------------------- the output
+
+
+def display_path(path: Path) -> str:
+    """Repo-relative when it can be, absolute when `--out` points elsewhere."""
+    try:
+        return str(path.resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def archive_stem(config: dict, name: str, version: str) -> str:
@@ -408,7 +630,11 @@ def write_archive(members: list[Member], readme: str, out_path: Path) -> None:
 def verify_archive(archive: Path, members: list[Member], readme: str, dll_sha: str) -> None:
     """Reopen the archive and check it byte for byte. A build report is not evidence."""
     with zipfile.ZipFile(archive) as zf:
-        names = set(zf.namelist())
+        listed = zf.namelist()
+        names = set(listed)
+        if len(listed) != len(names):
+            duplicates = sorted({n for n in listed if listed.count(n) > 1})
+            fail("archive has duplicate entries:\n  " + "\n  ".join(duplicates))
         expected = {m.arcname for m in members} | {"README.md"}
 
         surplus = sorted(names - expected)
@@ -446,11 +672,16 @@ def verify_archive(archive: Path, members: list[Member], readme: str, dll_sha: s
                 fail(f"missing compiled script in archive: Scripts/{pex_name}")
         print(f"  compiled scripts: {', '.join(sorted(PEX_SOURCES))}")
 
-        # Acceptance: the DLL in the archive is the current build.
+        # Acceptance: the DLL in the archive is the current build. Re-read the build output
+        # now rather than trusting the hash taken when members were collected.
+        current_dll_sha = sha256_of(DLL_SOURCE)
         archived_dll_sha = sha256_of_bytes(zf.read("SKSE/Plugins/SpellHotbar2.dll"))
-        if archived_dll_sha != dll_sha:
-            fail("archived DLL does not match skse_plugin/build/release/SpellHotbar2.dll")
-        print(f"  DLL matches the current build ({dll_sha[:16]})")
+        if archived_dll_sha != current_dll_sha or current_dll_sha != dll_sha:
+            fail(
+                "archived DLL does not match skse_plugin/build/release/SpellHotbar2.dll "
+                f"(archive {archived_dll_sha[:16]}, on disk {current_dll_sha[:16]})"
+            )
+        print(f"  DLL matches the current build ({current_dll_sha[:16]})")
 
 
 def write_manifest(
@@ -496,7 +727,12 @@ def write_manifest(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--check", action="store_true", help="verify only; write no archive")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="run every pre-archive check and write the manifest, but no zip. This does "
+        "not inspect an existing archive; only a full build verifies one.",
+    )
     parser.add_argument(
         "--refresh-pex",
         action="store_true",
@@ -544,7 +780,10 @@ def main() -> int:
         )
     print(f"\nClassifying against base {config['base_mod']['name']} "
           f"{config['base_mod']['supported_version']}")
-    counts = classify_against_base(members, base_root)
+    verify_base_install(base_root, config["base_mod"])
+    content_index = index_base_by_content(base_root)
+    print(f"  indexed {len(content_index)} distinct base files by content")
+    counts = classify_against_base(members, base_root, content_index)
     print(f"  {counts['ADDITION']} additions, {counts['OVERWRITE']} overwrites, "
           f"{counts['REDUNDANT']} redundant")
     check_classification(members)
@@ -555,22 +794,22 @@ def main() -> int:
     print("\nLine endings")
     check_nemesis_line_endings(members)
 
-    print("\nReal-name guard")
-    check_forbidden_strings(members, config)
-
     dll_sha = next(m.sha256 for m in members if m.arcname.endswith("SpellHotbar2.dll"))
     readme = render_readme(config, name, version, dll_sha)
+
+    print("\nReal-name guard")
+    check_forbidden_strings(members, config, readme)
 
     stem = archive_stem(config, name, version)
     manifest_path = args.out / f"{stem}.manifest.json"
 
     if args.check:
         write_manifest(manifest_path, members, config, name, version, None, counts)
-        print(f"\nCheck passed. Manifest: {manifest_path.relative_to(PROJECT_ROOT)}")
+        print(f"\nCheck passed. Manifest: {display_path(manifest_path)}")
         return 0
 
     archive = args.out / f"{stem}.zip"
-    print(f"\nWriting {archive.relative_to(PROJECT_ROOT)}")
+    print(f"\nWriting {display_path(archive)}")
     write_archive(members, readme, archive)
 
     print("Verifying the archive")
@@ -580,7 +819,7 @@ def main() -> int:
     size_mb = archive.stat().st_size / (1024 * 1024)
     print(
         f"\nDone. {archive.name}: {len(members) + 1} files, {size_mb:.2f} MB\n"
-        f"Manifest: {manifest_path.relative_to(PROJECT_ROOT)}"
+        f"Manifest: {display_path(manifest_path)}"
     )
     if config.get("publication_blocked", True):
         print("Do not upload this archive: publication is blocked in release.json.")
@@ -588,4 +827,14 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except FileNotFoundError as exc:
+        # `git` off PATH lands here, as does a source file that vanished mid-build.
+        fail(f"{exc.filename or exc}: {exc.strerror or exc}")
+    except KeyError as exc:
+        fail(f"deploy/release/release.json is missing the key {exc}")
+    except json.JSONDecodeError as exc:
+        fail(f"deploy/release/release.json is not valid JSON: {exc}")
+    except subprocess.CalledProcessError as exc:
+        fail(f"git failed: {' '.join(exc.cmd)}\n{exc.stderr}")
