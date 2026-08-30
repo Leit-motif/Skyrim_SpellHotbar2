@@ -33,16 +33,32 @@ shippable work. That marking is the point: the ruling has been given several tim
 more firmly has not held, so it is now mechanical. Any agent that reads those tickets as live is
 reading a status line that says otherwise.
 
-## The two calls that shape everything else
+## Do not build the demo on an A/B, and do not sell modes we did not design for
 
-**1. The A/B is a runtime setting flip, in one session, on one save.** `Input::set_input_mode`
-takes Cast (0), Equip (1), Oblivion (2) — Equip mode *is* the equip-first behaviour our Direct
-Cast replaces (`skse_plugin/src/input/modes.cpp:31`). So the demo can show the old behaviour and
-the new one seconds apart, same light, same camera, same combo. Two separate recording sessions
-could never match that, and a viewer would be right not to trust them. This is the single
-highest-value fact in the plan; the video is built around it.
+**Owner ruling, 2026-08-29:** *"i only designed this for direct cast. i dont even know what equip
+and oblivion mode are — and frankly, i dont care."*
 
-**2. The hotbar is what the mod *is*, and the engine's own screenshot path does not draw it.**
+An earlier version of this spec made `Input::set_input_mode`'s Equip mode the spine of the demo
+video, on the reasoning that it is the equip-first behaviour Direct Cast replaces and therefore a
+free same-session A/B. That was wrong twice over. Equip and Oblivion are **upstream's** modes,
+inherited by our build and never designed for, tested, or driven here — putting one on camera shows
+untested behaviour under our name. And it is not even an honest "before": it is our modified DLL in
+a path we do not support, not base Spell Hotbar 2.
+
+The consequence is bigger than a swapped shot. **The video has no A/B and should not want one.**
+The sibling repo needed its A/B because that mod is purely a timing change and there is nothing else
+to see. This one has a bar, icons, abilities, per-hand casting and a cooldown — there is a great
+deal to simply show. An A/B "before" beat is also a way of arguing the reader had a problem, which
+this spec's own voice rules forbid.
+
+So: **show the product working, and do not stage the alternative.** Ticket 04 is built that way.
+
+The ruling reaches the page too. Do not list Equip or Oblivion mode as features in ticket 08, and
+do not put either in a screenshot. Direct Cast is the product.
+
+## The call that shapes everything else
+
+**The hotbar is what the mod *is*, and the engine's own screenshot path does not draw it.**
 `capture kind=native` produced a 3440x1440 frame with the world and no hotbar, because SH2 draws
 its bar through its own ImGui present hook (measured 2026-08-25, memory
 `sh2-imgui-hotbar-is-uncapturable`). Desktop-level capture composites the presented frame and

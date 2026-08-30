@@ -14,13 +14,15 @@ convinced without pressing play.
 One per claim, from the ticket-04 master. Three or four total, not seven — a page of GIFs is a
 page nobody reads.
 
-1. **Shot 2, the mid-combo cast.** Non-negotiable. Sits next to the Direct Cast paragraph.
-2. **Shot 4, the weapon art from a slot.** Sits next to the Abilities section.
-3. **Shot 7, the GCD refusal and the slot tint.** Sits next to the cooldown paragraph, and does
+1. **Shot 1, the mid-combo cast.** Non-negotiable. Sits next to the Direct Cast paragraph.
+2. **Shot 2, the weapon art from a slot.** Sits next to the Abilities section.
+3. **Shot 6, the GCD refusal and the slot tint.** Sits next to the cooldown paragraph, and does
    the job a sentence about tint tiers cannot.
-4. Optional: **shot 1 against shot 2 side by side** as one A/B GIF, if it can be cut without
-   caption text. If it needs a caption to read, drop it — burned-in text ages badly and the model
-   page uses none.
+4. Optional: **shot 3, per-hand casting.** Weapon right, spell left, in one loop.
+
+**No A/B GIF.** An earlier version of this ticket offered a before-and-after loop against Equip
+mode. Struck with the owner's 2026-08-29 ruling — those modes are upstream's and untested here, and
+ticket 04 stages no alternative at all.
 
 ## Constraints
 

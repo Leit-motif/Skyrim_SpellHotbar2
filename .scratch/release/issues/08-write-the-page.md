@@ -54,6 +54,11 @@ fix is reverted by our overwrite until we rebase. Name the base version this bui
 | Commitment and the GCD | A cast commits; the press-anchored GCD is the clock. Name the default and say it is tunable — the owner plays at 0.5 |
 | Configuration | The SkyUI MCM. SMF is post-release, so do not describe a Mod Control Panel |
 
+**Do not list Equip mode or Oblivion mode.** Owner ruling 2026-08-29: *"i only designed this for
+direct cast. i dont even know what equip and oblivion mode are — and frankly, i dont care."* They
+are upstream's, inherited by our build, untested here. Advertising a mode nobody has driven is how
+a support thread starts. Direct Cast is the product.
+
 **Requirements, tiered** the way the model page tiers them: REQUIRED, OPTIONAL, RECOMMENDED. Base
 Spell Hotbar 2 goes at the top of REQUIRED with its version pinned. Anything Nexus cannot link —
 SKSE, ADXP | MCO — gets named again in the body, because a reader scanning green links will not
