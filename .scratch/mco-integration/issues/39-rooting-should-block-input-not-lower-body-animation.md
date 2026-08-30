@@ -326,6 +326,25 @@ Fixture notes: owner's live bars backed up and restored via `saveBarsToFile`/
 `loadBarsFromFile` (probe added Ice Spike at slot 0); no save was written; all seven
 `skse_plugin` test executables pass after the DLL change.
 
+### Addendum, same evening: the traverse was dead on arrival, and the fix is the dual-graph bind
+
+The first deployed traverse applied almost nothing (owner: SH2 casts 2 and 3 move; measured:
+clip 2 frozen to the last digit through an 8 s GCD window, so retirement timing was not the
+eater). The clip bytes were never the problem — `hkxc-anno-cli` dumps show the SH2 pack copies
+byte-identical to the natives (left1: -12 then +45; left2: +48; left3: +61; left4/left5: zero,
+which is exactly why the native rotation 1,5,3,4 steps only on 1 and 3).
+
+The eater: a cast clip exists under the same name in BOTH full-body graphs, both activate on a
+driver cast, and `ClipTranslationDriver` bound only the last activation — a clip whose
+`localTime` can simply never advance. `SH2_Art_Clip` lives in `1hm_behavior` only, which is why
+arts always translated. Fix in commit `51ff309`: track every live activation for the current
+clip name, interpolate against the furthest-advanced `localTime`, re-key on clip-name change so
+combo chains stay correct.
+
+Verified live after redeploy, three-cast rotation: 45.4 / 48.1 / 61.0 units against authored
+45 / 48 / 61. Cell 2's re-scoped form (MSCO-parity traverse) is CLOSED by that measurement plus
+the owner's earlier eyes on casts 2 and 3.
+
 ## Comments
 
 Owner 2026-08-25: reported during the tickets 25/06/14 acceptance pass, as the answer to ticket
