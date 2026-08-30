@@ -2,8 +2,7 @@
 
 **Type:** defect (DLL), low severity, small scope. Residual of ticket 36.
 
-**Status:** in progress — built, deployed, and the pause cell verified live 2026-08-29. One
-incidental cell left. Code landed, `combo_cache_test`
+**Status:** closed 2026-08-29 — built, deployed, and the pause cell verified live. Code landed, `combo_cache_test`
 and the other six suites pass unchanged, one acceptance box is still open — see `## Build` at the
 bottom.
 
@@ -150,11 +149,16 @@ what let the time source change under them.
       makes it hold, and says what a future change would have to add before breaking it.
 - [x] **Verified live, 2026-08-29 21:23.** A cast paused mid-clip past the cap completes normally
       on unpause: no watchdog line, no cut. Transcript below.
-- [ ] A press retained just before a pause behaves as it would have unpaused (the 4s cap measured
-      in unpaused time only). NOT exercised — no press was retained during the run, so no
-      `retained on local latch` line appears. Both stamps read the same counter the cell above
-      proves pause-correct, and the triage above already called this half "by design, not a
-      defect", so it is left as the incidental cell it was filed as rather than chased.
+- [x] **Closed by construction, not by observation** — say which, because they are not the same
+      claim. No press was retained during the verified run, so no `retained on local latch` line
+      appears and this cell was never driven. What is proven is each half separately: the counter
+      does not advance under pause (the transcript below, 0.52s across 11.91s), and
+      `local_latch_hold_expired` is pure and unit-tested. The composition is the part taken on
+      construction, and it is a short argument — `retained_at_ms` and `state_entered_ms` are
+      stamped from the same `UnpausedClock::now_ms()` call and compared by predicates that take
+      the time as a parameter, so there is no second time source left for the latch to read.
+      The owner's call, 2026-08-29: the two cells rhyme. Agreed — chasing a second live run to
+      re-prove one shared counter buys a checkbox, not evidence.
 
 ### The pause transcript
 

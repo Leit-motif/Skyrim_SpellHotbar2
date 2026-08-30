@@ -35,21 +35,6 @@ namespace SpellHotbar::BindMenu {
         }
     }
 
-    // A slot the bar did not bind itself, but inherited from its parent, is drawn at half alpha.
-    // That used to be a gray text colour, which collided head-on with the dead-art gray this
-    // ticket adds: on Dual Wield every slot inherits from Main, so the whole strip read as dead
-    // (owner, 2026-08-25) when nothing was. Hue now means liveness and alpha means inheritance,
-    // and the two signals stop overwriting each other.
-    ImU32 with_inherited_alpha(ImU32 col, bool inherited)
-    {
-        if (!inherited) {
-            return col;
-        }
-        ImVec4 rgba = ImGui::ColorConvertU32ToFloat4(col);
-        rgba.w *= 0.5f;
-        return ImGui::ColorConvertFloat4ToU32(rgba);
-    }
-
     constexpr int filter_buf_size = 256;
     char filter_buf[filter_buf_size] = "";
     int tab_index{ 0 };
@@ -1079,13 +1064,22 @@ namespace SpellHotbar::BindMenu {
             // TICKET 17. Recomputed here every frame against the bar the dropdown currently
             // selects, and read by the icon, the keybind label and the name below, so all three
             // say the same thing about the slot and none of them can lag a bar switch.
+            //
+            // On this strip, dimness means ONE thing: the art cannot play on the selected bar.
+            // Inherited slots used to dim too -- first as a flat grey, then (briefly) as half
+            // alpha, which was the same mistake wearing a different hat. Brightness is a single
+            // channel, and on a child bar like Dual Wield nearly every slot is inherited, so
+            // that reading swamped the strip and got misread as dead twice (owner, 2026-08-25
+            // and 2026-08-29 -- the second time on a strip of nothing but spells and shouts,
+            // which have no art class and can never be dead). `inherited` still drives the
+            // hover affordance and the drag source; it no longer touches colour.
             ArtBarTint slot_tint = ArtBarTint::generic;
             if (skill.type == slot_type::weapon_art) {
                 if (const ArtDefinition* slotted_art = GameData::get_art(skill.art_id)) {
                     slot_tint = art_bar_tint(slotted_art->art_class, Bars::menu_bar_id);
                 }
             }
-            const ImU32 slot_text_col = with_inherited_alpha(art_tint_color(slot_tint), inherited);
+            const ImU32 slot_text_col = art_tint_color(slot_tint);
 
             GameData::Spell_cast_data skill_dat;
             auto form = RE::TESForm::LookupByID(skill.formID);
@@ -1298,8 +1292,6 @@ namespace SpellHotbar::BindMenu {
 
             std::string text = GameData::resolve_slot_name(skill);
 
-            // Hue is the art's tier against the selected bar; the half alpha is inheritance from
-            // the parent bar, which is what the old flat grey meant on its own (ticket 17).
             ImGui::TextColored(ImColor(slot_text_col), text.c_str());
         }
 
