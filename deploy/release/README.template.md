@@ -19,30 +19,27 @@ Install in this order.
    add-on overwrites it, so it has to be installed and working first. Distributed through
    GitHub releases, not Nexus: <https://github.com/pWn3d1337/Skyrim_SpellHotbar2>. Read the
    version pin below before using any other release.
-2. **Shouts for MCO**, and all of its requirements — {{author_public}}'s shout behavior
-   engine. This add-on routes every shout it fires through that engine's cast-intent API, so
-   a hotbar shout has nothing to talk to without it. Nemesis only; Pandora and BFCO are out
-   of scope there.
-3. **Thu'um Reborn**, and all of its requirements — the shout animations. Shouts for MCO is
-   an engine and ships none, so without a pack your shouts chain correctly and look like
-   vanilla. Credit for those assets belongs to BOTuser999, whose Thu'um (Nexus 50559) they
-   come from.
-4. **(SE) Ashes of War Weapon Art Via Additional Attack**, and all of its requirements —
+2. **Thu'um Reborn**, and all of its requirements — {{author_public}}'s shout mod: the
+   behavior engine and its animations in one file. This add-on routes every shout it fires
+   through that engine's cast-intent API, so a hotbar shout has nothing to talk to without
+   it. Nemesis only; Pandora and BFCO are out of scope there. Animation assets are
+   BOTuser999's Thu'um (Nexus 50559), credited on its own page.
+3. **(SE) Ashes of War Weapon Art Via Additional Attack**, and all of its requirements —
    Nexus 100174, by Gild. Take the **FULL SUITE ... OAR** main file. The shipped Ability
    catalogue points at its clips, so the Abilities resolve to nothing without it. This is the
    longest chain on the list: nine further mods, all of them named on its Nexus page.
-5. **SKSE64** — <https://skse.silverlock.org>. Match your game runtime.
-6. **Address Library for SKSE Plugins** — Nexus 32444.
-7. **Nemesis Unlimited Behavior Engine** — Nexus 60033. Two behavior patches ship here and
+4. **SKSE64** — <https://skse.silverlock.org>. Match your game runtime.
+5. **Address Library for SKSE Plugins** — Nexus 32444.
+6. **Nemesis Unlimited Behavior Engine** — Nexus 60033. Two behavior patches ship here and
    have to be generated. Pandora is untested.
-8. **Open Animation Replacer**, and all of its requirements — Nexus 92109. Picks the per-hand
+7. **Open Animation Replacer**, and all of its requirements — Nexus 92109. Picks the per-hand
    cast clips and the Ability animations. Its chain includes Animation Queue Fix and Paired
    Animation Improvements, which are easy to skip and are not optional here.
-9. **Payload Interpreter**, and all of its requirements — Nexus 65089. Carries the annotation
+8. **Payload Interpreter**, and all of its requirements — Nexus 65089. Carries the annotation
    payloads the cast and Ability clips fire.
-10. **Behavior Data Injector**, and all of its requirements — Nexus 78146. A
-    `SpellHotbar2_BDI.json` ships here and does nothing without it.
-11. **ADXP | MCO**, and all of its requirements — Distar's moveset system, off Nexus
+9. **Behavior Data Injector**, and all of its requirements — Nexus 78146. A
+   `SpellHotbar2_BDI.json` ships here and does nothing without it.
+10. **ADXP | MCO**, and all of its requirements — Distar's moveset system, off Nexus
     (skyrim-guild), with its own requirement list there. Not optional: without it there is no
     combo to cast out of, which is what this add-on exists to do.
 

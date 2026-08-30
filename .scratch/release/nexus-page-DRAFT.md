@@ -100,10 +100,8 @@ The SkyUI MCM, as in the base mod, plus this fork's own in-game editors and bind
 
 - **Spell Hotbar 2**, version 0.0.14, and all of its requirements — the base mod. This
   overwrites it, so install it first. GitHub releases, not Nexus.
-- **Shouts for MCO**, and all of its requirements — the shout behavior engine. Every hotbar
-  shout routes through its cast-intent API.
-- **Thu'um Reborn**, and all of its requirements — the shout animations. Shouts for MCO ships
-  none; without a pack your shouts chain correctly and look vanilla.
+- **Thu'um Reborn**, and all of its requirements — the shout mod: behavior engine and
+  animations in one file. Every hotbar shout routes through its cast-intent API.
 - **(SE) Ashes of War Weapon Art Via Additional Attack** (100174), and all of its requirements
   — take the FULL SUITE OAR main file. The shipped ability catalogue points at its clips. Nine
   further mods in its chain, listed on its page.

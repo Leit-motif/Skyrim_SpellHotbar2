@@ -60,9 +60,11 @@ are upstream's, inherited by our build, untested here. Advertising a mode nobody
 a support thread starts. Direct Cast is the product.
 
 **Requirements are one tier: REQUIRED, each one with everything it requires in turn.** Owner
-ruling 2026-08-29. Base Spell Hotbar 2 first with its version pinned. Then the author's own two
-— **Shouts for MCO** (the engine every hotbar shout routes through) and **Thu'um Reborn** (the
-animations that engine does not ship) — then Ashes of War (Nexus 100174, FULL SUITE OAR file).
+ruling 2026-08-29. Base Spell Hotbar 2 first with its version pinned. Then **Thu'um Reborn** — the
+author's own shout mod, ONE entry, engine and animations in one file per that repo's owner
+ruling 2026-08-28 (*"no the animations are not a separate file. they will be shipped with the
+mod"*). Do not list "Shouts for MCO"; that is the old name, still on the release zip and the
+MO2 folder pending a rename. Then Ashes of War (Nexus 100174, FULL SUITE OAR file).
 None of these is a recommendation. Do not borrow the model page's OPTIONAL and RECOMMENDED
 tiers just because it has them. Several entries carry long chains of their own, so the "and all
 of its requirements" phrasing is load-bearing, not filler. Anything Nexus cannot link — SKSE, ADXP | MCO — gets
@@ -96,5 +98,5 @@ Say plainly that this is not an official continuation.
       list. Three surfaces, because the support burden if it is missed is every install.
 - [ ] Ashes of War (100174) in REQUIRED, and the FULL SUITE OAR file named. A reader who takes
       a different main file gets an ability catalogue that resolves to nothing.
-- [ ] Shouts for MCO and Thu'um Reborn in REQUIRED, with their Nexus ids filled in once those
-      pages exist. Both are the author's own; neither has an id recorded in MO2 yet.
+- [ ] Thu'um Reborn in REQUIRED as a single entry, Nexus id filled in once that page exists.
+      Not two entries, and not under the old "Shouts for MCO" name.
