@@ -10,6 +10,7 @@
 #include "art_driver.h"
 #include "combo_cache.h"
 #include "cast_intent.h"
+#include "unpaused_clock.h"
 #include "../game_data/custom_ability_config.h"
 
 namespace SpellHotbar::casts::CastingController {
@@ -1020,6 +1021,10 @@ namespace SpellHotbar::casts::CastingController {
 
 	void update_cast(float delta)
 	{
+		// TICKET 37. First thing in the frame, before anything below reads a deadline off it.
+		// This is the only advance: the caller runs this whole function only while the game is
+		// unpaused, which is what makes the counter gameplay time rather than wall time.
+		UnpausedClock::advance(delta);
 		// One bool graph read per unpaused frame on the player: the shout's own liveness, which
 		// is what a deferred selectedPower write-back is waiting on.
 		if (auto* player = RE::PlayerCharacter::GetSingleton()) {

@@ -1,11 +1,11 @@
 #include "cast_intent.h"
 #include <array>
-#include <chrono>
 #include <string>
 #include "art_driver.h"
 #include "casting_controller.h"
 #include "combo_cache.h"
 #include "msco_cast_driver.h"
+#include "unpaused_clock.h"
 #include "../extern/ShoutMCO_CastIntent.h"
 #include "../game_data/game_data.h"
 #include "../logger/logger.h"
@@ -29,24 +29,18 @@ namespace SpellHotbar::casts::CastIntent {
 		const ShoutMCO_CastIntentApi* api{ nullptr };
 		Status status{ Status::unavailable };
 
-		double now_ms()
-		{
-			using clock = std::chrono::steady_clock;
-			static const auto origin = clock::now();
-			return std::chrono::duration<double, std::milli>(clock::now() - origin).count();
-		}
-
 		// The one intent this mod can own. `live_handle` is invalid exactly when no payload is
 		// retained; the two are always cleared together.
 		ShoutMCO_CastHandle live_handle{ SHOUTMCO_CAST_HANDLE_INVALID };
 		Payload payload{};
 		bool payload_retained{ false };
 
-		// When the local latch took the press. The latch's only drain is a driver saying it is
-		// done, and a driver whose graph never answers never says so, so the press needs a
-		// deadline of its own -- one that belongs to this press and is refreshed when another
-		// replaces it. Meaningless while `payload_retained` is false or a ShoutMCO handle is
-		// live; that path is bounded by ShoutMCO's own caps.
+		// When the local latch took the press, on the unpaused clock (ticket 37) rather than on
+		// wall time, so a menu visit does not spend the cap. The latch's only drain is a driver
+		// saying it is done, and a driver whose graph never answers never says so, so the press
+		// needs a deadline of its own -- one that belongs to this press and is refreshed when
+		// another replaces it. Meaningless while `payload_retained` is false or a ShoutMCO handle
+		// is live; that path is bounded by ShoutMCO's own caps.
 		double retained_at_ms{ 0.0 };
 
 		// True only while the release callback re-attempts the press. The seam reads it and
@@ -287,7 +281,7 @@ namespace SpellHotbar::casts::CastIntent {
 			payload = Payload{ slot, skill.formID, skill.art_id, skill.type, skill.hand, &keybind };
 			payload_retained = true;
 			// A replaced press is replaced, not stuck: each press is held at most one cap.
-			retained_at_ms = now_ms();
+			retained_at_ms = UnpausedClock::now_ms();
 			logger::debug("SH2 cast intent: slot {} retained on local latch (type={})", slot,
 				static_cast<int>(skill.type));
 			return true;
@@ -336,9 +330,9 @@ namespace SpellHotbar::casts::CastIntent {
 		// retain bail cannot see past. The press was consumed on our word that it would fire
 		// later; when that word expires, say so loudly on both channels rather than quietly
 		// keeping it.
-		if (local_latch_hold_expired(now_ms(), retained_at_ms, kLocalLatchCapMs)) {
+		if (local_latch_hold_expired(UnpausedClock::now_ms(), retained_at_ms, kLocalLatchCapMs)) {
 			const size_t slot = payload.slot;
-			const double held = now_ms() - retained_at_ms;
+			const double held = UnpausedClock::now_ms() - retained_at_ms;
 			clear_payload();
 			logger::warn("SH2 cast intent: local latch dropped slot {} after {:.0f}ms cap", slot, held);
 			RenderManager::highlight_skill_slot(static_cast<int>(slot), 0.5f, true);

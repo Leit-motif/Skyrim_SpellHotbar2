@@ -2,8 +2,14 @@
 
 **Type:** defect (DLL), low severity, small scope. Residual of ticket 36.
 
-**Status:** ready-for-agent — triaged 2026-08-25 against the source; one of the two filed claims
-was rejected outright, the other confirmed and narrowed. Read the triage below before working it.
+**Status:** in progress — built and deployed 2026-08-29, awaiting the owner's live pause
+cells. Code landed, `combo_cache_test`
+and the other six suites pass unchanged, one acceptance box is still open — see `## Build` at the
+bottom.
+
+**Status at the time (historical):** ready-for-agent — triaged 2026-08-25 against the source; one
+of the two filed claims was rejected outright, the other confirmed and narrowed. Read the triage
+below before working it.
 
 **Blocked by:** None.
 
@@ -108,3 +114,47 @@ raiser, and zeroing it there would add an animation-thread write to a main-threa
 zero-sentinel on `local_latch_hold_expired` (the call site always stamps first); and the recovery
 frame's release being refused rather than fired while the wedged instance is still live (documented
 at the call site).
+
+## Build, 2026-08-29
+
+`skse_plugin/src/casts/unpaused_clock.h` is the counter: `advance(delta)` is called once at the
+top of `update_cast`, which the game-loop hook calls only while `!GameIsPaused()`, so the counter
+is gameplay milliseconds. It is `std::atomic<double>` because `observe_graph_event` reads it from
+the animation thread; relaxed ordering is enough, since nothing is published through it and a
+reader one frame behind measures an age off by one frame. It starts at 1.0 rather than 0.0 so the
+first frame of a session cannot mint a stamp that reads as the "nothing recorded" sentinel in
+`cast_state_watchdog_expired`.
+
+**One clock per file, not two.** The fix as filed only names the two ticket-36 deadlines, but
+`msco_cast_driver.cpp`'s `now_ms()` predates them (it came in with ticket 11) and also stamps the
+rolling combo samples and the channel hold. Splitting the file between two clocks would have left
+`credit_held_time` discounting a wall-clock hold from a wall-clock age while the watchdog beside it
+ran on gameplay time. So `now_ms()` in that file now *is* the unpaused clock, and every timestamp
+in it moves together. That widens the fix slightly beyond the letter of the ticket, and in the
+direction the ticket argues for: a 6s inventory visit no longer ages a combo sample past
+`kMaxAgeMs` and resets the chain to attack1 either.
+
+Predicates in `combo_cache.h` were not touched — they take their times as parameters, which is
+what let the time source change under them.
+
+### Acceptance
+
+- [x] No wall-clock deadline remains in `cast_intent.cpp` or `msco_cast_driver.cpp`; both read the
+      unpaused counter. `steady_clock` now appears in exactly one place in the DLL, `input.cpp`,
+      which is real-time input debounce and not a gameplay deadline.
+- [x] `combo_cache_test` passes unchanged — not one line of it was edited. All seven suites green
+      (`combo_cache`, `clip_translation`, `art_data`, `art_pack_gen`, `cast_anim_ids`,
+      `art_bind_record`, `bind_drop`).
+- [x] A comment at `ArtDriver::begin()` records that the art state's bound lives in
+      `CastingInstanceWeaponArt::update()` (casting_controller.cpp:1797), names the coupling that
+      makes it hold, and says what a future change would have to add before breaking it.
+- [ ] **Owner cell.** A cast paused mid-clip past the cap completes normally on unpause: no
+      watchdog line in SpellHotbar2.log, no cut. Fire a Driver Cast, open the inventory inside the
+      1–2s clip, stay past 8s, close it.
+- [ ] **Owner cell.** A press retained just before a pause behaves as it would have unpaused (the
+      4s cap measured in unpaused time only).
+
+Both open cells need a pause held across a live cast, which is one action for a player at the
+keyboard and a timing race for an agent driving injected input. The static half of the argument is
+strong: the caps now read the same counter `advance_time`, `m_cast_timer` and the GCDs have always
+used, all of which are already known pause-correct in play.
