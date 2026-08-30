@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <mutex>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -18,7 +19,13 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 
 	namespace {
 		std::mutex mutex;
-		RE::hkbClipGenerator* bound_clip = nullptr;
+		// A cast clip exists under the same name in BOTH full-body graphs (1hm_behavior
+		// and magicbehavior) and both activate on a driver cast; only one advances its
+		// localTime. Track every live activation and let apply() read time from the one
+		// that moves — binding only the last activation froze motion whenever the inert
+		// graph's clip activated second (SH2_Art_Clip is single-graph and never saw this).
+		std::vector<RE::hkbClipGenerator*> bound_clips;
+		std::string bound_name;
 		std::vector<ClipTranslationKey> keys;
 		ClipTranslation last_applied{};
 		bool primed = false;
@@ -119,25 +126,37 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 				ArtDriver::bind_latch(has_win_open, has_hit_frame);
 			}
 			std::lock_guard lock{ mutex };
-			bound_clip = clip;
-			keys = std::move(parsed);
-			last_applied = {};
-			primed = false;
-			if (keys.empty()) {
-				logger::warn("SH2 motion: {} activated with no animmotion keys", raw);
-			} else {
-				logger::info("SH2 motion: bound {} ({} animmotion keys)", raw, keys.size());
+			if (raw != bound_name) {
+				// A different clip took over (combo chain, or a fresh cast): the new
+				// name owns the key set and the candidate list from here.
+				bound_clips.clear();
+				bound_name = raw;
+				keys = std::move(parsed);
+				last_applied = {};
+				primed = false;
+				if (keys.empty()) {
+					logger::warn("SH2 motion: {} activated with no animmotion keys", raw);
+				} else {
+					logger::info("SH2 motion: bound {} ({} animmotion keys)", raw, keys.size());
+				}
+			}
+			if (std::find(bound_clips.begin(), bound_clips.end(), clip) == bound_clips.end()) {
+				bound_clips.push_back(clip);
 			}
 		}
 
 		void unbind_clip(RE::hkbClipGenerator* clip)
 		{
 			std::lock_guard lock{ mutex };
-			if (bound_clip == clip) {
-				bound_clip = nullptr;
-				keys.clear();
-				last_applied = {};
-				primed = false;
+			const auto it = std::find(bound_clips.begin(), bound_clips.end(), clip);
+			if (it != bound_clips.end()) {
+				bound_clips.erase(it);
+				if (bound_clips.empty()) {
+					bound_name.clear();
+					keys.clear();
+					last_applied = {};
+					primed = false;
+				}
 			}
 		}
 
@@ -174,10 +193,14 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 		ClipTranslation worldDelta{};
 		{
 			std::lock_guard lock{ mutex };
-			if (!bound_clip || keys.empty()) {
+			if (bound_clips.empty() || keys.empty()) {
 				return;
 			}
-			const auto cumulative = interpolate_clip_translation(keys, bound_clip->localTime);
+			float clipTime = 0.0f;
+			for (const auto* clip : bound_clips) {
+				clipTime = std::max(clipTime, clip->localTime);
+			}
+			const auto cumulative = interpolate_clip_translation(keys, clipTime);
 			if (!primed) {
 				last_applied = cumulative;
 				primed = true;
@@ -200,7 +223,8 @@ namespace SpellHotbar::casts::ClipTranslationDriver {
 	void reset()
 	{
 		std::lock_guard lock{ mutex };
-		bound_clip = nullptr;
+		bound_clips.clear();
+		bound_name.clear();
 		keys.clear();
 		last_applied = {};
 		primed = false;
