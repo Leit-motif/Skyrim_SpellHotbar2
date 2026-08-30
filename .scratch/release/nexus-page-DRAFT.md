@@ -171,12 +171,27 @@ what makes it true.** Listing a mod as a requirement grants nothing by itself. W
 true is the archive containing none of their bytes — requiring MSCO and driving its installed clips
 at runtime needs no permission at all. Right now the archive contains 32 of them.
 
-**Recommendation: do here what was already done for Ashes of War.** That author never answered the
-permission request, the owner ruled to ship pointer-style without stamped clips, and the in-DLL
-generation machinery exists for exactly this — stamp the clips on the user's machine from their own
-install. Adapting it to the cast clips is real work, not a flag flip, but it removes the question
-rather than answering it.
+**The Ashes of War precedent is real but it does not transfer cleanly. Corrected 2026-08-29 after
+checking the code rather than the memory of it.**
 
-**Otherwise, ask.** VVVK-distar-xing-adri, mod 168499. Worth doing in parallel with the work either
-way: a yes is the cheapest outcome available, and the sibling repo's experience is that silence is
-the likely one.
+What was actually ruled and shipped there, from `../weapon-arts/issues/18-ship-the-stamped-art-clips.md`:
+the author never answered, the owner ruled *"i want to ship. that would mean we defer this effort to
+a future enhancement"*, and the pack stays **pointer-style** — `art_pack_gen.cpp` writes
+`config.json` files with `overrideAnimationsFolder` and copies no clip bytes at all. That is clean
+precisely because Ashes of War's clips are used **as they are**.
+
+MSCO's are not. Our 32 clips carry our own annotations, and those annotations are the feature —
+cast timing and the per-hand payloads. A pointer at MSCO's unmodified clip does not carry them, so
+the shipped Ashes of War answer cannot simply be repeated here.
+
+**What it would actually take.** `python_scripts/stamp_art_clips.py` does the copy-and-annotate, but
+it is a build-time script on this machine, and ticket 18 is explicit that running it locally *"needed
+no permission because copying locally is not redistribution. Shipping them does."* Getting the same
+property for the cast clips means doing that stamping **on the user's machine, against their own MSCO
+install** — porting the copy-and-annotate into the DLL. `art_pack_gen.cpp` is the natural home and
+today it writes configs only, never bytes. That is new work, not a reuse.
+
+**So the honest options are two, not one.** Ask VVVK-distar-xing-adri (mod 168499) and ship the 32
+clips if the answer is yes; or build runtime stamping and ship no clips at all. Asking is cheap and
+worth starting now either way — the sibling case says silence is the likely reply, and it is better
+to learn that before the second option is needed rather than after.
