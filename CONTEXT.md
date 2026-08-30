@@ -88,7 +88,7 @@ The **internal** identifier for the owner's shout mod — it fixes `ShoutMCO.dll
 _Avoid_: Shouts for MCO (as a current name), MCO Shout Behavior Engine (older still), a separate animation pack, "an engine that ships no animations"
 
 **Thu'um Reborn**:
-The public name of the ShoutMCO mod, and a hard requirement of this one: every hotbar shout routes through its cast-intent API. **One page, one file** — behavior engine, Nemesis patch and all 216 clips together (sibling-repo owner ruling 2026-08-28: *"no the animations are not a separate file. they will be shipped with the mod."*). It is an upgrade to BOTuser999's `Thu'um - Fully Animated Shouts` (Nexus 50559), whose animation assets it ships with credit. The final public name is **not settled** — `Thu'um - Fully Animated Shouts Reborn` is the other candidate. Do not guess it into a deliverable; the release effort's ticket 01 owns naming.
+The public name of the ShoutMCO mod, and a hard requirement of this one: every hotbar shout routes through its cast-intent API. **One page, one file** — behavior engine, Nemesis patch and all 216 clips together (sibling-repo owner ruling 2026-08-28: *"no the animations are not a separate file. they will be shipped with the mod."*). It is an upgrade to BOTuser999's `Thu'um - Fully Animated Shouts` (Nexus 50559), whose animation assets it ships with credit. The public name is **settled: `Thu'um Reborn`** (owner ruling 2026-08-29, recorded in the release effort's ticket 01). `Thu'um - Fully Animated Shouts Reborn` was the other candidate and was not taken.
 _Avoid_: the animation half of Shouts for MCO, a shout animation pack, an optional requirement
 
 **Cast Driver**:

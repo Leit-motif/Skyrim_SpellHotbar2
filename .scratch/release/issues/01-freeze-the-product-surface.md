@@ -38,6 +38,30 @@ Decide and record, so nothing downstream guesses.
 | Author identity | **Leitmotives** on Nexus, **Leit-motif** on GitHub, per the sibling repo. No real name on any public artifact |
 | Source repo | Settle whether the public source is a push of this fork or a fresh repo, and whether the licence obliges publishing it at all |
 
+## Ruling 3: the shout mod is Thu'um Reborn. SETTLED.
+
+**Owner ruling, 2026-08-29:** *"go with Thu'um Reborn, lock it in ticket 01."*
+
+`Thu'um Reborn` is the public name of the owner's shout mod — the hard requirement every
+hotbar shout routes through. Not `Thu'um - Fully Animated Shouts Reborn`, which was the other
+candidate. Not `Shouts for MCO`, which is retired. `ShoutMCO` stays the internal identifier and
+is not a public name at all.
+
+The reasoning put to the owner before the call, recorded so it is not re-argued: "Thu'um" is
+the searched word and sits in both candidates, so the long form buys no discoverability, while
+it does cost a truncated Nexus tile and a search result that reads as a duplicate of
+BOTuser999's own `Thu'um - Fully Animated Shouts` (50559). The upgrade relationship goes in the
+summary line instead, where it can link 50559 in a full sentence.
+
+**This is one mod with several names, and it takes exactly one entry anywhere.** A session on
+2026-08-29 read the aliases as two mods and put a phantom requirement on the page. The alias
+table in `thuum-fully-animated-shouts-mco/README.md` is canonical; this repo's `CONTEXT.md`
+carries matching glossary entries.
+
+Two follow-ups, neither blocking this ticket and neither done unilaterally: the sibling's
+release artifacts (`Shouts-for-MCO-1.0.3.zip`, the `Shouts for MCO` MO2 folder) still carry the
+retired name, and renaming the folder touches the live playtest profile.
+
 ## This is now a two-field edit
 
 Ticket 59 landed the packaging build (`5d1227b`, `e03bc50`) and it reads identity from
@@ -58,6 +82,8 @@ on this except the archive filename and the key art's title lockup (ticket 06).
 - [ ] `public_name` and `version` in `deploy/release/release.json` are the owner's, and
       `identity_frozen` is `true`.
 - [ ] Category, runtimes and the source-repo question are recorded in the table above.
+- [x] **Shout mod named: `Thu'um Reborn`** (Ruling 3). Recorded in this repo's `CONTEXT.md`, the
+      archive README, the Nexus page draft, and the sibling repo's canonical alias table.
 - [x] **Done by ticket 59.** `nemesis/Nemesis_Engine/mod/shtb/info.ini` and `mod/shcr/info.ini`
       both read `author=Leitmotives`, verified rather than assumed, and the build now enforces it
       with a real-name guard instead of leaving it to a checklist.
