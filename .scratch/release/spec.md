@@ -17,10 +17,6 @@ An **overwrite** over base Spell Hotbar 2 (owner ruling 2026-08-29, recorded in
 requirement; ours installs on top and wins the conflict. Our DLL is a modified build of
 upstream's, so it cannot sit beside it. Prospective name: **Spell Hotbar 2 NG**.
 
-Upstream permissions are settled. Do not raise, re-litigate, or caveat any deliverable in this
-effort with them — ticket 59's acceptance still carries a stale "publication deferred until
-permissions are settled" line, and ticket 01 here retires it.
-
 ## SMF is not in this release, and that is not an open question
 
 **Owner ruling, 2026-08-29:** *"i've said this so many times. this is out of scope until after

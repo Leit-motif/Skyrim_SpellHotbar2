@@ -697,8 +697,6 @@ def write_manifest(
         "public_name": name,
         "version": version,
         "identity_frozen": config.get("identity_frozen", False),
-        "publication_blocked": config.get("publication_blocked", True),
-        "publication_blocked_reason": config.get("publication_blocked_reason", ""),
         "built_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "repo_commit": git("rev-parse", "HEAD").strip(),
         "repo_dirty": bool(git("status", "--porcelain").strip()),
@@ -759,9 +757,6 @@ def main() -> int:
             "  NOTE: identity is not frozen (release ticket 01). Name and version are\n"
             "        provisional and the archive filename says so. Verification only."
         )
-    if config.get("publication_blocked", True):
-        print(f"  NOTE: publication is blocked. {config['publication_blocked_reason']}")
-
     print("\nCompiled scripts")
     verify_pex_currency()
 
@@ -821,8 +816,6 @@ def main() -> int:
         f"\nDone. {archive.name}: {len(members) + 1} files, {size_mb:.2f} MB\n"
         f"Manifest: {display_path(manifest_path)}"
     )
-    if config.get("publication_blocked", True):
-        print("Do not upload this archive: publication is blocked in release.json.")
     return 0
 
 

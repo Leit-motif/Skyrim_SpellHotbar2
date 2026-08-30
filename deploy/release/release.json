@@ -19,8 +19,5 @@
     "install_path": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Spell Hotbar 2"
   },
 
-  "compiled_scripts_dir": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2/Scripts",
-
-  "publication_blocked": true,
-  "publication_blocked_reason": "Redistributing a modified build of pWn3d's DLL is the owner's call. See .scratch/mco-integration/upstream-permission-issue-draft.md. Build freely; do not upload while this is true."
+  "compiled_scripts_dir": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2/Scripts"
 }

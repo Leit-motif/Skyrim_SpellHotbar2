@@ -1,8 +1,7 @@
 # 59 — Build a release package for OUR mod (overwrite over base SH2)
 
 **Type:** build (packaging). **Status:** done 2026-08-29 — archive built and verified from
-the working tree; publication stays gated on the permission flag. Re-scoped earlier the same
-day after the owner's distribution ruling. Originally titled "release packaging ships no
+the working tree. Re-scoped earlier the same day after the owner's distribution ruling. Originally titled "release packaging ships no
 Nemesis tree" — that framing was wrong; see the correction below.
 
 ## Correction to the original lead
@@ -46,9 +45,6 @@ build path.
   rebase, and a user on a newer base SH2 runs our older DLL under their newer assets. Low risk
   today (upstream idle since June 2025), but it bites silently — pin the supported base
   version in the package docs and re-check on any upstream release.
-- **Permissions.** Redistributing a modified build of pWn3d's DLL is a permissions question —
-  `.scratch/mco-integration/upstream-permission-issue-draft.md` exists. The owner's call,
-  outside this ticket's scope; the package must not be published anywhere until it is settled.
 
 ## Acceptance
 
@@ -67,9 +63,6 @@ build path.
       users need no Update Engine for a selection-only change), supported base version pinned
       at `0.0.14`. `deploy/release/README.template.md` renders into the archive;
       `docs/agents/release-packaging.md` is the repo-facing manual.
-- [x] Publication explicitly deferred until the upstream-permission question is settled by the
-      owner. `publication_blocked` in `deploy/release/release.json`; the build prints it and
-      the manifest records it.
 
 ## Comments
 
@@ -111,11 +104,6 @@ scheme, so `deploy/release/release.json` carries `identity_frozen: false` and th
 filename gains `-provisional` mechanically. Ticket 02's other half — our version in the DLL's
 own version resource — needs `skse_plugin/CMakeLists.txt` changed off upstream's `2.0.10` and a
 rebuild, which waits on ticket 01's scheme.
-
-One conflict to flag rather than resolve: `.scratch/release/spec.md` and release ticket 01 both
-state the owner settled permissions on 2026-08-29 and call this ticket's deferral line stale.
-The instruction for this build said the opposite — build but do not publish. The build is
-gated on a flag in `release.json`, so settling it is a one-line change either way.
 
 ### 2026-08-29 — second-model review, and the leak it turned up
 

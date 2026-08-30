@@ -106,13 +106,6 @@ Ticket 02 of the release effort also wants our version in the DLL's own version 
 `skse_plugin/CMakeLists.txt` still reads `project(SpellHotbar2 VERSION 2.0.10)`, which is
 upstream's number. Changing it requires a DLL rebuild and belongs with ticket 01's version call.
 
-## Publication gate
-
-`publication_blocked` in `release.json` is `true`. Redistributing a modified build of pWn3d's
-DLL is a permissions question the owner settles; the draft ask is at
-`.scratch/mco-integration/upstream-permission-issue-draft.md`. The build prints the block and
-records it in the manifest. Build freely; do not upload while the flag is set.
-
 ## The version coupling, which bites silently
 
 Our fork point is exactly upstream tag `0.0.14` (`git describe upstream/master` confirms it), and

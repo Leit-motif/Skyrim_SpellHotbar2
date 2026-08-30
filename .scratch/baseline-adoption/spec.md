@@ -109,7 +109,7 @@ If a suspected Material Interaction is found, reproduce and attribute it before 
 - Native behavior, fixes, and improvements that are generally applicable belong in the Core Fork.
 - Records, presets, configuration, and adaptations specific to the Nolvus load order belong in the Compatibility Package.
 - The Compatibility Package remains a separate runtime layer even when a finding is discovered while testing the Core Fork.
-- The result is a Personal Integration. It is not a public compatibility claim, supported community release, or permission to redistribute modified binaries.
+- The result is a Personal Integration: not a public compatibility claim, and not a supported community release. Superseded 2026-08-29 for distribution — this fork ships publicly; see `docs/adr/0002-keep-integration-personal.md`.
 - Preserve the Accepted Baseline as a stable checkpoint before any customization work begins.
 - Review future upstream changes deliberately rather than automatically merging them. Rerun all acceptance cells affected by a reviewed change.
 - Restore runtime fixtures after validation and close Skyrim unless an immediate authorized follow-up requires it to remain open.

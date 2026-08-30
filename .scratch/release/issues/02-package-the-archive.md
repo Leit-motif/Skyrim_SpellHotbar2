@@ -31,9 +31,3 @@ decision is now a two-field edit rather than a hunt.
 **It pinned the base version.** `base_mod.supported_version` is `0.0.14`, upstream commit
 `f203cd2`. Ticket 08's known-limits paragraph and ticket 09's day-one sticky both need that number
 and can now read it instead of deriving it.
-
-## One stale flag, noted once
-
-`release.json` carries `publication_blocked: true` with a reason naming the upstream-permission
-question. The owner settled that on 2026-08-29. The flag is a one-field owner edit whenever they
-next touch the file; it is mechanical, and it is not re-opened here.
