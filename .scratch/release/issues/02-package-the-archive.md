@@ -1,27 +1,39 @@
 # 02 — Package the archive
 
 **Type:** build
-**Status:** ready-for-agent
+**Status:** resolved 2026-08-29 — delivered by `../mco-integration/issues/59-release-packaging-ships-no-nemesis-tree.md` in `5d1227b` and `e03bc50`, on main.
 
-**This ticket does not restate the work.** It is owned in full by
-`../mco-integration/issues/59-release-packaging-ships-no-nemesis-tree.md`, which carries the
-package contents, the overwrite reasoning, the version-coupling cost, and the acceptance list.
+**Do not start work here.** A parallel session built this while the release plan was being written.
+This ticket exists now only to record what landed and what it changed for the rest of the effort.
 
-Tracked here because it is the one release ticket that does **not** wait on ticket 01. The archive
-contents do not change with the SMF ruling: SMF changes which UI hosts the settings, not which
-files ship.
+## What shipped
 
-## What this ticket adds to 59
+- `python_scripts/build_mod_release.py` — the lever. Output goes to gitignored `build/`: the `.zip`
+  plus a `.manifest.json` listing every file with its SHA-256 and its classification against the
+  base mod. 159 files, 155 additions, three overwrites (`SpellHotbar2.dll`, `SpellHotbar.pex`,
+  `SpellHotbarMCM.pex`).
+- `deploy/release/release.json` — the single identity and path config point.
+- `deploy/release/README.template.md` and `docs/agents/release-packaging.md` — the operating manual.
+- `papyrus/Scripts/*.pex` committed, with `DESKTOP-AMRIT` stripped out of them.
+- A real-name guard, with `public_identities` naming what it must *not* flag.
 
-- A version stamp inside the archive that names **our** build, not upstream's `2.0.10`. Ticket 01
-  picks the scheme; 59's build script writes it.
-- The archive filename and the MO2 folder name must match the public name from ticket 01. The
-  sibling repo shipped artifacts named for a title it had already changed, and renaming them
-  afterwards touched the live playtest profile.
+## What it did to the rest of this effort
 
-## Acceptance
+**It closed two of ticket 01's acceptance cells.** `nemesis/Nemesis_Engine/mod/shtb/info.ini` and
+`mod/shcr/info.ini` both read `author=Leitmotives` — verified, not assumed. And the build now
+enforces it rather than leaving it to a checklist.
 
-- [ ] Ticket 59's acceptance list passes.
-- [ ] The archive's version stamp is ours, and appears in both the README and the DLL's own
-      version resource.
-- [ ] Archive filename and MO2 folder name match ticket 01's recorded public name.
+**It solved ticket 02's own addition better than this ticket asked.** Name and version are
+parameters in `release.json`, and `identity_frozen: false` stamps `-provisional` into the archive
+filename so a verification build cannot be mistaken for an upload candidate. Ticket 01's naming
+decision is now a two-field edit rather than a hunt.
+
+**It pinned the base version.** `base_mod.supported_version` is `0.0.14`, upstream commit
+`f203cd2`. Ticket 08's known-limits paragraph and ticket 09's day-one sticky both need that number
+and can now read it instead of deriving it.
+
+## One stale flag, noted once
+
+`release.json` carries `publication_blocked: true` with a reason naming the upstream-permission
+question. The owner settled that on 2026-08-29. The flag is a one-field owner edit whenever they
+next touch the file; it is mechanical, and it is not re-opened here.
