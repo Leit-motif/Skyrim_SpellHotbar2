@@ -16,7 +16,8 @@ One per page section, so the gallery and the description are the same document r
 1. The hotbar in combat, weapon drawn, a cooldown running.
 2. The bind menu open on a slot, showing a spell being bound.
 3. The same menu binding an **Ability** — the thing base SH2 cannot hold in a slot.
-4. Settings, whichever surface ticket 01 rules ships (Mod Control Panel pages, or the MCM).
+4. The SkyUI MCM settings. SMF is post-release (ticket 01), so this release's settings surface
+   is the MCM and the gallery shows the MCM.
 5. The bar editor / drag layout.
 6. Per-hand casting mid-frame: weapon right, spell left.
 7. The slot strip showing its tint tiers — bound, on cooldown, unavailable — in one frame.

@@ -21,23 +21,28 @@ Upstream permissions are settled. Do not raise, re-litigate, or caveat any deliv
 effort with them — ticket 59's acceptance still carries a stale "publication deferred until
 permissions are settled" line, and ticket 01 here retires it.
 
-## The three calls that shape everything else
+## SMF is not in this release, and that is not an open question
 
-**1. The SKSE Menu Framework migration is a media gate, not a feature.** Five open tickets in
-`../skse-menu-framework/` move every settings surface out of the SkyUI MCM and every editor,
-bar-drag and bind menu into Mod Control Panel windows. That changes what the UI *looks like* in
-every screenshot and every second of video. Recording before it lands means shooting the whole
-gallery twice. Ticket 01 forces the call: ship without SMF and shoot now, or hold media until
-SMF closes. There is no third option where media is recorded early and survives.
+**Owner ruling, 2026-08-29:** *"i've said this so many times. this is out of scope until after
+release."* The `../skse-menu-framework/` effort ships after the first release. Media and copy shoot
+against the currently deployed surface — the SkyUI MCM plus the current ImGui editors, bar drag and
+bind menu.
 
-**2. The A/B is a runtime setting flip, in one session, on one save.** `Input::set_input_mode`
+The five tickets there carry `deferred — post-release` so a frontier scan does not surface them as
+shippable work. That marking is the point: the ruling has been given several times and restating it
+more firmly has not held, so it is now mechanical. Any agent that reads those tickets as live is
+reading a status line that says otherwise.
+
+## The two calls that shape everything else
+
+**1. The A/B is a runtime setting flip, in one session, on one save.** `Input::set_input_mode`
 takes Cast (0), Equip (1), Oblivion (2) — Equip mode *is* the equip-first behaviour our Direct
 Cast replaces (`skse_plugin/src/input/modes.cpp:31`). So the demo can show the old behaviour and
 the new one seconds apart, same light, same camera, same combo. Two separate recording sessions
 could never match that, and a viewer would be right not to trust them. This is the single
 highest-value fact in the plan; the video is built around it.
 
-**3. The hotbar is what the mod *is*, and the engine's own screenshot path does not draw it.**
+**2. The hotbar is what the mod *is*, and the engine's own screenshot path does not draw it.**
 `capture kind=native` produced a 3440x1440 frame with the world and no hotbar, because SH2 draws
 its bar through its own ImGui present hook (measured 2026-08-25, memory
 `sh2-imgui-hotbar-is-uncapturable`). Desktop-level capture composites the presented frame and
@@ -91,18 +96,19 @@ the departure to copy. Everywhere else, flat.
 ## Sequence
 
 ```
-01 freeze the surface (SMF call + identity)   ← blocks everything
-02 package the archive (= mco-integration 59) ← independent, can run now
-03 prove the capture path                     ← blocked by 01
+01 settle the public identity                 ← name and version only; needs the owner
+02 package the archive (= mco-integration 59) ← needs 01's name and version stamp
+03 prove the capture path                     ← can run now
 04 record the demo video                      ← blocked by 03
 05 cut the GIFs                               ← blocked by 04
-06 key art and header banner                  ← blocked by 01
+06 key art and header banner                  ← blocked by 01 (the title lockup)
 07 gallery screenshots                        ← blocked by 03
-08 write the page                             ← blocked by 01, informed by 04
+08 write the page                             ← informed by 04
 09 upload session                             ← blocked by all
 ```
 
-Ticket 02 is the only one that can start before the SMF call. Everything visual waits on 01.
+Ticket 03 can start today and is the cheapest thing on the list; it decides whether 04 and 07 are
+possible as written. Ticket 01 needs the owner, and only the name and version block anything.
 
 ## The owner's playtest is a publication gate
 

@@ -2,8 +2,8 @@
 
 **Type:** task
 **Status:** ready-for-agent
-**Blocked by:** 01. Informed by 04 — write it after the video exists, because the video settles
-which claims are actually demonstrable.
+**Blocked by:** nothing structural. Informed by 04 — write it after the video exists, because the
+video settles which claims are actually demonstrable. Ticket 01's name is needed only for the title.
 
 The draft lives at `../nexus-page-DRAFT.md` when it is written. **Not** in `docs/`: in the sibling
 repo a draft under `docs/release/` was twice cited as though it were the finished page.
@@ -52,7 +52,7 @@ fix is reverted by our overwrite until we rebase. Name the base version this bui
 | Per-hand casting | Left and right hands present differently over one neutral graph. ADR-0018 |
 | Held casts | A concentration spell holds for the hold and chains out into an attack. ADR-0013 |
 | Commitment and the GCD | A cast commits; the press-anchored GCD is the clock. Name the default and say it is tunable — the owner plays at 0.5 |
-| Configuration | Whichever surface ticket 01 ships |
+| Configuration | The SkyUI MCM. SMF is post-release, so do not describe a Mod Control Panel |
 
 **Requirements, tiered** the way the model page tiers them: REQUIRED, OPTIONAL, RECOMMENDED. Base
 Spell Hotbar 2 goes at the top of REQUIRED with its version pinned. Anything Nexus cannot link —

@@ -2,7 +2,6 @@
 
 **Type:** prototype
 **Status:** ready-for-agent
-**Blocked by:** 01
 
 Three seconds of footage decides whether tickets 04 and 07 are possible as planned. Do this before
 writing a shot list.

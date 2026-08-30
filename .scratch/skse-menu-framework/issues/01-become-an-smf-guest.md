@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** deferred — post-release. Owner ruling 2026-08-29: *"i've said this so many times. this is out of scope until after release."* The whole SMF effort ships **after** the first Nexus release; the release ships the SkyUI MCM and the current ImGui editors. Marked deferred so a frontier scan stops surfacing it — the ruling has been given repeatedly and restating it more firmly did not hold. Unblocks the moment the release is published; see `../release/issues/01-freeze-the-product-surface.md`.
 
 - [ ] With SMF present, the HUD bar is visible in gameplay without capturing movement or camera (captured frames, not a log that a callback ran).
 - [ ] Direct Cast still works from keyboard and from native gamepad through the existing native slot-activation seam.

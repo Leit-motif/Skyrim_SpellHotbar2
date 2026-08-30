@@ -3,30 +3,26 @@
 **Type:** task
 **Status:** ready-for-agent — needs owner rulings, not agent work
 
-Everything visual in this effort is blocked on this ticket. Nothing else here can start except
-ticket 02.
+Identity has to be settled before the archive is named and before the key art carries a title.
+Nothing else in this effort waits on it — media shoots against the currently deployed UI.
 
-## Ruling 1: does SMF ship in the first release?
+## Ruling 1: SMF is post-release. SETTLED, and it stays settled.
 
-`../skse-menu-framework/` has five open tickets that move the settings surface out of the SkyUI
-MCM into Mod Control Panel pages, and turn the editors, bar drag and bind menu into framework
-windows. Its own spec says "function of the shipped product stays 100%" and the aesthetic follows
-the Mod Control Panel's Skyrim theme.
+**Owner ruling, 2026-08-29:** *"i've said this so many times. this is out of scope until after
+release."* The `../skse-menu-framework/` effort ships **after** the first release. The first
+release's UI is what is deployed today: the SkyUI MCM plus the current ImGui editors, bar drag and
+bind menu.
 
-That is a full repaint of every configuration screen a screenshot would show. Two options:
+Media and copy therefore shoot against the current surface, and nothing in this effort waits on
+SMF. The five tickets there are marked `deferred — post-release` so a frontier scan stops
+surfacing them as shippable work; that marking is the structural fix, because wording it more
+strongly has already failed several times.
 
-**Ship without SMF, shoot now.** The gallery shows the MCM and the current ImGui editors. Media is
-unblocked today. Cost: the first release's screenshots are stale the moment SMF lands, and the
-page's settings section is rewritten at that point too.
+Do not re-open this, do not re-caveat a deliverable with it, and do not offer it as an option
+again.
 
-**Hold media until SMF closes.** One shoot, one page, and the settings screenshots match the model
-page's structure — a section per UI page, with a screenshot of that page. Cost: the release waits
-on five tickets.
-
-**Recommended: hold.** The owner's stated bar is presentation quality, and the model page's whole
-structure is a section per UI page. Shipping the MCM and replacing it inside a month spends the
-first-impression budget on the version being retired. A recommendation, not a decision — record
-the owner's call here.
+~~Two options: ship without SMF and shoot now, or hold media until SMF closes.~~ Struck. There was
+never a decision to make here.
 
 ## Ruling 2: the public identity
 
@@ -44,8 +40,9 @@ Decide and record, so nothing downstream guesses.
 
 ## Acceptance
 
-- [ ] The SMF ruling is recorded here in the owner's words.
 - [ ] The identity table is filled in with no "prospective" left.
+- [ ] The five `../skse-menu-framework/` tickets read `deferred — post-release`, so they leave the
+      frontier.
 - [ ] The `author=` field in `nemesis/Nemesis_Engine/mod/shtb/info.ini` and `mod/shcr/info.ini`
       carries no real name, checked rather than assumed. Nemesis displays it in its own mod list,
       and this is exactly where a real name leaked in the sibling repo's release.

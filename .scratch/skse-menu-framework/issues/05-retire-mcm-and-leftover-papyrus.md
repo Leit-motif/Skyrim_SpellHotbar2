@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — Configure from the Mod Control Panel; 03 — Editors and bar drag as windows; 04 — Bind menu as a framework window
 
-**Status:** ready-for-agent
+**Status:** deferred — post-release. Owner ruling 2026-08-29: *"i've said this so many times. this is out of scope until after release."* The whole SMF effort ships **after** the first Nexus release; the release ships the SkyUI MCM and the current ImGui editors. Marked deferred so a frontier scan stops surfacing it — the ruling has been given repeatedly and restating it more firmly did not hold. Unblocks the moment the release is published; see `../release/issues/01-freeze-the-product-surface.md`.
 
 - [ ] No Spell Hotbar entry in SkyUI MCM.
 - [ ] BattleMage opener power is not granted; the tree still opens from the Perks page.

@@ -2,7 +2,7 @@
 
 **Type:** task
 **Status:** ready-for-agent
-**Blocked by:** 01
+**Blocked by:** 01 — the title lockup only; the composition can be built now
 
 Two separate images, and most pages ship neither. The main image is the tile every browsing user
 sees before they see anything else; the header banner is the wide strip at the top of the page.
