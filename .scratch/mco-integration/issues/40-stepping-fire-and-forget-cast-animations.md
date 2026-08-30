@@ -6,9 +6,20 @@
 
 **Type:** enhancement (animation assets)
 
-**Status:** parked — needs new animation assets, same wall as tickets 32 and 34
+**Status:** resolved — dissolved 2026-08-29 by ticket 39's live outcome, exactly the
+condition the header names. Ticket 39 removed the `bAnimationDriven` plant from the four
+fire-and-forget cast states and the owner confirmed live that "legs animate" — SH2's graph
+was suppressing motion the clips do carry, so no new assets are needed. The other half of
+this ticket's premise (consuming the animmotion glides the character) fell with it: with
+legs animating, the traverse is authored motion, and the owner asked for it back. The
+one-line revert this ticket documented was applied the same evening
+(`skse_plugin/src/casts/clip_translation_driver.cpp`, commit `88cff9c` on ticket 39's
+branch): the four `SH2_Cast*_Clip` names are back in the motion filter and `apply()` arms
+during a driver cast. Verified live: `bound SH2_CastRight_Clip (4 animmotion keys)`, ~5.7
+units of front-loaded XY traverse through the cast. The "no stepping in the leg tracks"
+claim recorded below did not survive the owner's eyes; kept as history.
 
-**Blocked by:** asset procurement or authoring; owner decision on source.
+**Blocked by:** nothing — closed.
 
 ## The ideal the owner named
 
