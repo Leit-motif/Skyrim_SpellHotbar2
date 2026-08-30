@@ -2,24 +2,21 @@ cmake_minimum_required(VERSION 3.21)
 
 project(SpellHotbar2 VERSION 2.0.10 LANGUAGES CXX)
 
-#output folder to copy dll after building
-set(OUTPUT_FOLDER "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_5_97/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_6_1170/mods/Spell Hotbar 2")
+# Optional local deployment target. Leave empty for normal/CI builds.
+set(OUTPUT_FOLDER "" CACHE PATH "MO2 mod folder to receive built plugin artifacts")
 
 
-find_package(imgui CONFIG REQUIRED)
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
-find_package(directxtk CONFIG REQUIRED)
 
 set(source_files src/plugin.cpp
                  src/logger/logger.h
                  src/logger/logger.cpp
                  src/rendering/render_manager.h
                  src/rendering/render_manager.cpp
-                 src/rendering/texture_loader.h
-                 src/rendering/texture_loader.cpp
+                 src/smf/imgui_mcp_compat.h
+                 src/smf/smf_guest.h
+                 src/smf/smf_guest.cpp
                  src/papyrus_extensions/papyrus_functions.h
                  src/papyrus_extensions/papyrus_functions.cpp
                  src/storage/storage.h
@@ -99,16 +96,13 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE src/PCH.h)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "src")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
-target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTK)
-
 include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
 #automatically copy to output folder if set
-if(DEFINED OUTPUT_FOLDER)
+if(OUTPUT_FOLDER)
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
