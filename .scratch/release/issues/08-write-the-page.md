@@ -91,8 +91,9 @@ Each one was in the 2026-08-29 draft and each was struck by the ruling above.
 
 ### Length
 
-**No target.** The old 700-900 was set for a page carrying a known-limits section and an overwrite
-essay, and the owner cut both. Short is correct here; the current draft's body runs about 480 words.
+~~**No target.** The old 700-900 was set for a page carrying a known-limits section and an overwrite
+essay.~~ **STRUCK 2026-08-29 by owner ruling** — *"let's not worry about that... There's no need to
+be so prescriptive right now."* No word count, no target, and do not reintroduce one.
 
 ### The rulings that survive unchanged
 

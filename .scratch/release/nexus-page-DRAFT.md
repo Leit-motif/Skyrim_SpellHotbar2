@@ -53,17 +53,16 @@ Spell Hotbar 2 borrows the shout animation for its casts. That is a reasonable c
 but it means every spell you fire looks like a Thu'um, and casting drops you out of MCO the same way
 shouting does.
 
-**Real casting animations.** Every hotbar cast plays an MCO animation picked for that kind of spell
-instead of the shout inhale.
+**MSCO integration.** Hotbar casts play MSCO's casting animations instead of the shout inhale, so a
+spell looks like a spell being cast and not like a Thu'um.
 
 **Your combo survives the cast.** Swing, cast, swing — the second swing carries on from where the
 first left off rather than resetting to the first hit. A cast is a step in the chain, not a break
 in it.
 
-**Weapon arts on the bar.** A slot can hold a special attack. Bind one the way you would bind a
+**Ashes of War integration.** A slot can hold a special attack. Bind one the way you would bind a
 spell and it fires from the hotbar, with its own cost and cooldown, instead of living behind a
-separate mod's hotkey and an item you have to be wearing. 57 of Ashes of War's arts are set up out
-of the box, and there are drop-in folders for adding your own clips.
+separate mod's hotkey and an item you have to be wearing. Drop-in folders take your own clips too.
 
 **Both hands.** Casting from the left while your right hand holds a weapon looks like it should,
 rather than like the right-hand animation mirrored.
@@ -74,8 +73,9 @@ ends the cast and becomes the swing. The hold still counts toward your combo, ho
 **Casts commit.** Once a cast starts you are in it — no steering out of it with WASD halfway
 through. Casting costs you a moment, and it is a moment you can be punished in.
 
-**A cooldown you can feel.** The global cooldown starts on the press. Set it low and the bar plays
-like an action game; set it high and each cast is a decision. I play at 0.5.
+**A cooldown you can feel.** The global cooldown starts on the press, and you set it in the MCM
+under Settings. Low and the bar plays like an action game; high and each cast is a decision. I play
+at 0.5.
 
 ---
 
@@ -86,6 +86,7 @@ their own, listed on their pages.)*
 
 - **Spell Hotbar 2** — the base mod. Install it first; this replaces its plugin.
 - **Thu'um Reborn** — every hotbar shout routes through it.
+- **MSCO - Magic Casting Behavior Overhaul** (168499) — the casting animations.
 - **(SE) Ashes of War Weapon Art Via Additional Attack** (100174) — take the FULL SUITE OAR main
   file. The shipped weapon arts point at its clips.
 - Address Library for SKSE Plugins (32444)
@@ -127,15 +128,55 @@ involved in it.
 
 ## Not page text — check before upload
 
-- **The GCD default.** The copy says it is tunable and that the owner plays at 0.5; the shipped
-  default was not found in `game_data.cpp` on the 2026-08-29 read. Get the number or cut the line.
-- **"57 of Ashes of War's arts."** Row count of `arts_ashes.csv`. Confirm every row resolves, and
-  confirm the pointer-not-redistribution wording is right — it is a permissions statement as much
-  as a feature one.
-- **"an MCO animation picked for that kind of spell."** Confirm the per-family selection covers
-  every school a reader would try, or soften the claim.
+- **MSCO's permissions are the open question, and they are not settled.** See the block below.
+  Nothing ships until they are.
+- **"Ashes of War integration"** replaced a count of 57. If a number goes back in, confirm every
+  row of `arts_ashes.csv` resolves first.
 - **Runtimes.** Read them off the built DLL.
 - **Thu'um Reborn's Nexus id**, once that page exists.
-- Body above (intro plus features): about 480 words. Deliberately shorter than the 700–900 in
-  ticket 08 — that target was set for a page carrying a known-limits section and an overwrite
-  essay, both of which the owner cut.
+- **Behavior Data Injector's id.** The list says 78146. MSCO's own requirements name **78159**,
+  "Behavior Data Injector Universal Support". Confirm which one this needs before entering it.
+- **SKSE Menu Framework is already a transitive requirement**, via MSCO (168499 requires 120352).
+  That does not change the post-release SMF ruling, but it means every user of this already has the
+  framework installed.
+
+---
+
+## MSCO permissions — the finding, 2026-08-29
+
+**We ship 32 of MSCO's animation files, modified.** This was assumed otherwise and checked instead.
+
+- `data/meshes/.../OpenAnimationReplacer/SpellHotbar2Casts/**/MSCO_*.hkx` — 32 files, and they are
+  every `.hkx` in the repo.
+- `build_mod_release.py` ships them: line 416 is `for rel in tracked_files("data")`, with no
+  animation exclusion.
+- They are derived, not copied. MSCO's own root clips are all one hash (`95b61e1…`); our eight
+  per-context variants of `MSCO_left1.hkx` are eight distinct hashes, none of them MSCO's. Ours is
+  15,520 bytes against MSCO's 13,152 for the real submod clip — MSCO's animation data with our
+  annotations stamped into it.
+
+**Read of the two clauses.** They do different jobs, and the distinction is the whole answer.
+
+*Modification permission* — granted with credit — governs releasing a modified version of **their
+mod**: a bug fix, a patch, an improved MSCO. *Asset use permission* — not granted, ask first —
+governs taking assets **out of their file and into yours**.
+
+We are doing the second one. The clips leave MSCO's package and ship inside ours, under our own
+folder name. Editing them first does not move that into the modification bucket; the modification
+clause is permission to improve MSCO, not permission to reuse MSCO's animation data elsewhere
+because you changed it on the way.
+
+**The instinct behind "it's a requirement, so we're not using the assets" is right, but it is not
+what makes it true.** Listing a mod as a requirement grants nothing by itself. What would make it
+true is the archive containing none of their bytes — requiring MSCO and driving its installed clips
+at runtime needs no permission at all. Right now the archive contains 32 of them.
+
+**Recommendation: do here what was already done for Ashes of War.** That author never answered the
+permission request, the owner ruled to ship pointer-style without stamped clips, and the in-DLL
+generation machinery exists for exactly this — stamp the clips on the user's machine from their own
+install. Adapting it to the cast clips is real work, not a flag flip, but it removes the question
+rather than answering it.
+
+**Otherwise, ask.** VVVK-distar-xing-adri, mod 168499. Worth doing in parallel with the work either
+way: a yes is the cheapest outcome available, and the sibling repo's experience is that silence is
+the likely one.
