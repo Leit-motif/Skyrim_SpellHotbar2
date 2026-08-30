@@ -13,6 +13,8 @@ using SpellHotbar::GameData::EquippedType;
 using SpellHotbar::art_class_is_live;
 using SpellHotbar::art_class_is_direct_on_bar;
 using SpellHotbar::art_class_is_live_on_bar;
+using SpellHotbar::art_bar_tint;
+using SpellHotbar::ArtBarTint;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
 using SpellHotbar::resolve_art_icon_draw_kind;
@@ -260,6 +262,70 @@ void every_direct_match_is_also_live()
 			}
 		}
 	}
+}
+
+// TICKET 17. One rule, two panes: the Abilities list and the bound-slot strip both read the tier
+// from `art_bar_tint`, so the tier itself is what gets pinned down here.
+void the_tint_tier_agrees_with_the_two_predicates_it_composes()
+{
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAIN'),
+		static_cast<std::uint32_t>('MAGC'), static_cast<std::uint32_t>('RNGD'),
+		static_cast<std::uint32_t>('2HND') + 1, static_cast<std::uint32_t>('1HDW') + 1,
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : bars) {
+		for (const auto art_class : classes) {
+			const auto tint = art_bar_tint(art_class, bar);
+			if (!art_class_is_live_on_bar(art_class, bar)) {
+				expect(tint == ArtBarTint::dead, "dead whenever the class cannot play on the bar");
+			}
+			else if (art_class_is_direct_on_bar(art_class, bar)) {
+				expect(tint == ArtBarTint::direct, "direct whenever the bar owns the class");
+			}
+			else {
+				expect(tint == ArtBarTint::generic, "generic whenever live but not owned");
+			}
+		}
+	}
+}
+
+void a_dead_class_is_never_tinted_direct()
+{
+	// Gray outranks yellow. The strip paints the icon from `dead` and the text from the tier, so
+	// a tier that could be both would gray the icon and yellow the name on the same row.
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAIN'),
+		static_cast<std::uint32_t>('MAGC'), static_cast<std::uint32_t>('RNGD'),
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : bars) {
+		for (const auto art_class : classes) {
+			if (art_bar_tint(art_class, bar) == ArtBarTint::direct) {
+				expect(art_class_is_live_on_bar(art_class, bar), "a direct tier is always live");
+			}
+		}
+	}
+}
+
+void the_owners_two_handed_and_dual_wield_cases()
+{
+	constexpr std::uint32_t two_handed = static_cast<std::uint32_t>('2HND');
+	constexpr std::uint32_t dual_wield = static_cast<std::uint32_t>('1HDW');
+	// The owner's Two-Handed screenshots: a 1H art (Blood Seeker) is dead, a 2H art (Blood
+	// Flurry) is the direct match, and a Generic ash stays plain.
+	expect(art_bar_tint(ArtClass::OneHand, two_handed) == ArtBarTint::dead, "1H dead on Two-Handed");
+	expect(art_bar_tint(ArtClass::TwoHand, two_handed) == ArtBarTint::direct, "2H direct on Two-Handed");
+	expect(art_bar_tint(ArtClass::Generic, two_handed) == ArtBarTint::generic, "Generic plain on Two-Handed");
+	// The whole-strip gray the owner saw on Dual Wield was never this: only 2H is dead there.
+	expect(art_bar_tint(ArtClass::Dual, dual_wield) == ArtBarTint::direct, "Dual direct on Dual Wield");
+	expect(art_bar_tint(ArtClass::OneHand, dual_wield) == ArtBarTint::generic, "1H live on Dual Wield");
+	expect(art_bar_tint(ArtClass::Generic, dual_wield) == ArtBarTint::generic, "Generic live on Dual Wield");
+	expect(art_bar_tint(ArtClass::TwoHand, dual_wield) == ArtBarTint::dead, "2H dead on Dual Wield");
 }
 
 void custom_folder_number_is_not_a_slot_index()
@@ -552,6 +618,9 @@ int main()
 	generic_is_never_a_direct_match();
 	parent_and_non_melee_bars_have_no_direct_match();
 	every_direct_match_is_also_live();
+	the_tint_tier_agrees_with_the_two_predicates_it_composes();
+	a_dead_class_is_never_tinted_direct();
+	the_owners_two_handed_and_dual_wield_cases();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();
 	sidecar_is_the_folder_source_of_truth();
