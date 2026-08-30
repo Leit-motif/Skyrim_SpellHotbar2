@@ -193,4 +193,23 @@ void apply_art_player_overlay(ArtDefinition& art, const ArtPlayerOverlay& overla
 	}
 }
 
+// TICKET 17. One rule for how an art reads against the selected bar, so the Abilities list and
+// the bound-slot strip cannot drift apart. Gray outranks yellow: a dead row is dead.
+enum class ArtBarTint {
+	generic,  // live on this bar, but so is every other stance -- says nothing about this one
+	direct,   // this bar's own stance owns the class outright
+	dead      // the bar's stance cannot play it at all
+};
+
+[[nodiscard]] constexpr ArtBarTint art_bar_tint(ArtClass art_class, std::uint32_t bar_id) noexcept
+{
+	if (!art_class_is_live_on_bar(art_class, bar_id)) {
+		return ArtBarTint::dead;
+	}
+	if (art_class_is_direct_on_bar(art_class, bar_id)) {
+		return ArtBarTint::direct;
+	}
+	return ArtBarTint::generic;
+}
+
 }  // namespace SpellHotbar

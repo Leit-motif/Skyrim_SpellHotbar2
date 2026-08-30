@@ -19,6 +19,37 @@ namespace SpellHotbar::BindMenu {
         return "$TYPE_ABILITY";
     }
 
+    // TICKET 17. The Abilities list and the bound-slot strip paint the same three tiers, so both
+    // read them from here. `art_bar_tint` owns which tier an art is in; this owns what that looks
+    // like.
+    ImU32 art_tint_color(ArtBarTint tint)
+    {
+        switch (tint) {
+        case ArtBarTint::dead:
+            return IM_COL32(127, 127, 127, 255);
+        case ArtBarTint::direct:
+            return IM_COL32(255, 210, 74, 255);
+        case ArtBarTint::generic:
+        default:
+            return IM_COL32_WHITE;
+        }
+    }
+
+    // A slot the bar did not bind itself, but inherited from its parent, is drawn at half alpha.
+    // That used to be a gray text colour, which collided head-on with the dead-art gray this
+    // ticket adds: on Dual Wield every slot inherits from Main, so the whole strip read as dead
+    // (owner, 2026-08-25) when nothing was. Hue now means liveness and alpha means inheritance,
+    // and the two signals stop overwriting each other.
+    ImU32 with_inherited_alpha(ImU32 col, bool inherited)
+    {
+        if (!inherited) {
+            return col;
+        }
+        ImVec4 rgba = ImGui::ColorConvertU32ToFloat4(col);
+        rgba.w *= 0.5f;
+        return ImGui::ColorConvertFloat4ToU32(rgba);
+    }
+
     constexpr int filter_buf_size = 256;
     char filter_buf[filter_buf_size] = "";
     int tab_index{ 0 };
@@ -787,23 +818,17 @@ namespace SpellHotbar::BindMenu {
                             AbilityEditor::open(art_id);
                         }
                         RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
-                        const bool dead_on_bar =
-                            !art_class_is_live_on_bar(art->art_class, Bars::menu_bar_id);
-                        if (dead_on_bar) {
+                        // Gray outranks yellow: a dead row is dead (tickets 14, 17).
+                        const ArtBarTint tint = art_bar_tint(art->art_class, Bars::menu_bar_id);
+                        if (tint == ArtBarTint::dead) {
                             RenderManager::draw_cd_overlay(icon_pos, table_icon_size, 0.0f, IM_COL32_WHITE);
                         }
                         if (!ArtIconEditor::is_open() && !AbilityEditor::is_open()) {
                             set_drag_source_art(art_id, scale_factor);
                         }
 
-                        // Gray outranks yellow: a dead row is dead (ticket 14).
-                        const bool direct_on_bar =
-                            !dead_on_bar && art_class_is_direct_on_bar(art->art_class, Bars::menu_bar_id);
-                        if (dead_on_bar) {
-                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(127, 127, 127, 255));
-                        }
-                        else if (direct_on_bar) {
-                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 210, 74, 255));
+                        if (tint != ArtBarTint::generic) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, art_tint_color(tint));
                         }
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(art->display_name.c_str());
@@ -814,7 +839,7 @@ namespace SpellHotbar::BindMenu {
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(translate_c(art_row_type_key(art_id)));
-                        if (dead_on_bar || direct_on_bar) {
+                        if (tint != ArtBarTint::generic) {
                             ImGui::PopStyleColor();
                         }
 
@@ -1051,6 +1076,17 @@ namespace SpellHotbar::BindMenu {
         for (int i = 0; i < bar.get_bar_size(); i++) {
             auto [skill, inherited] = bar.get_skill_in_bar_with_inheritance(i, mod, false);
 
+            // TICKET 17. Recomputed here every frame against the bar the dropdown currently
+            // selects, and read by the icon, the keybind label and the name below, so all three
+            // say the same thing about the slot and none of them can lag a bar switch.
+            ArtBarTint slot_tint = ArtBarTint::generic;
+            if (skill.type == slot_type::weapon_art) {
+                if (const ArtDefinition* slotted_art = GameData::get_art(skill.art_id)) {
+                    slot_tint = art_bar_tint(slotted_art->art_class, Bars::menu_bar_id);
+                }
+            }
+            const ImU32 slot_text_col = with_inherited_alpha(art_tint_color(slot_tint), inherited);
+
             GameData::Spell_cast_data skill_dat;
             auto form = RE::TESForm::LookupByID(skill.formID);
             if (form) {
@@ -1069,7 +1105,7 @@ namespace SpellHotbar::BindMenu {
                 float key_icon_size = icon_size * 2.0f / 3.0f;
                 icon_pos.y += icon_size * 1.0f / 6.0f;
                 ImGui::Dummy(ImVec2(key_icon_size * key_icon_length - ImGui::GetStyle().ItemSpacing.x, static_cast<float>(icon_size))); ImGui::SameLine();
-                RenderManager::draw_button_icon_menu(icon_pos, tex_id_key, -1, static_cast<int>(key_icon_size));
+                RenderManager::draw_button_icon_menu(icon_pos, tex_id_key, -1, static_cast<int>(key_icon_size), slot_text_col);
             }
 
             ImVec2 bpos = ImGui::GetCursorScreenPos();
@@ -1132,9 +1168,7 @@ namespace SpellHotbar::BindMenu {
             else {
                 if (skill.type == slot_type::weapon_art) {
                     drawn_skill = RenderManager::draw_art_icon_in_editor(skill.art_id, bpos, icon_size, skill.color);
-                    const ArtDefinition* slotted_art = GameData::get_art(skill.art_id);
-                    if (slotted_art &&
-                        !art_class_is_live_on_bar(slotted_art->art_class, Bars::menu_bar_id)) {
+                    if (slot_tint == ArtBarTint::dead) {
                         RenderManager::draw_cd_overlay(bpos, icon_size, 0.0f, IM_COL32_WHITE);
                     }
                 }
@@ -1236,7 +1270,7 @@ namespace SpellHotbar::BindMenu {
             if (!Bars::use_keybind_icons()) {
                 std::string key_text = GameData::get_keybind_text(i, mod);
                 ImVec2 tex_pos(bpos.x + text_offset_x, bpos.y + text_offset_y);
-                ImGui::GetWindowDrawList()->AddText(tex_pos, ImColor(255, 255, 255), key_text.c_str());
+                ImGui::GetWindowDrawList()->AddText(tex_pos, slot_text_col, key_text.c_str());
             }
 
             if (skill.hand == hand_mode::left_hand || skill.hand == hand_mode::right_hand || skill.hand == hand_mode::dual_hand) {
@@ -1264,15 +1298,9 @@ namespace SpellHotbar::BindMenu {
 
             std::string text = GameData::resolve_slot_name(skill);
 
-            //draw text in grey if it was inherited from parent bar
-            int grey_val = inherited ? 127 : 255;
-            auto color = ImColor(grey_val, grey_val, grey_val);
-
-            /*if (highlight_slot == i) {
-                color = ImColor(255, 255, 127 + static_cast<int>(128.0 * (1.0f - highlight_factor)));
-            }*/
-
-            ImGui::TextColored(color, text.c_str());
+            // Hue is the art's tier against the selected bar; the half alpha is inheritance from
+            // the parent bar, which is what the old flat grey meant on its own (ticket 17).
+            ImGui::TextColored(ImColor(slot_text_col), text.c_str());
         }
 
         if (Bars::use_keybind_icons()) {
