@@ -2,8 +2,8 @@
 
 **Type:** defect (DLL), low severity, small scope. Residual of ticket 36.
 
-**Status:** in progress — built and deployed 2026-08-29, awaiting the owner's live pause
-cells. Code landed, `combo_cache_test`
+**Status:** in progress — built, deployed, and the pause cell verified live 2026-08-29. One
+incidental cell left. Code landed, `combo_cache_test`
 and the other six suites pass unchanged, one acceptance box is still open — see `## Build` at the
 bottom.
 
@@ -148,13 +148,40 @@ what let the time source change under them.
 - [x] A comment at `ArtDriver::begin()` records that the art state's bound lives in
       `CastingInstanceWeaponArt::update()` (casting_controller.cpp:1797), names the coupling that
       makes it hold, and says what a future change would have to add before breaking it.
-- [ ] **Owner cell.** A cast paused mid-clip past the cap completes normally on unpause: no
-      watchdog line in SpellHotbar2.log, no cut. Fire a Driver Cast, open the inventory inside the
-      1–2s clip, stay past 8s, close it.
-- [ ] **Owner cell.** A press retained just before a pause behaves as it would have unpaused (the
-      4s cap measured in unpaused time only).
+- [x] **Verified live, 2026-08-29 21:23.** A cast paused mid-clip past the cap completes normally
+      on unpause: no watchdog line, no cut. Transcript below.
+- [ ] A press retained just before a pause behaves as it would have unpaused (the 4s cap measured
+      in unpaused time only). NOT exercised — no press was retained during the run, so no
+      `retained on local latch` line appears. Both stamps read the same counter the cell above
+      proves pause-correct, and the triage above already called this half "by design, not a
+      defect", so it is left as the incidental cell it was filed as rather than chased.
 
-Both open cells need a pause held across a live cast, which is one action for a player at the
-keyboard and a timing race for an agent driving injected input. The static half of the argument is
-strong: the caps now read the same counter `advance_time`, `m_cast_timer` and the GCDs have always
-used, all of which are already known pause-correct in play.
+### The pause transcript
+
+`castSlot(0)` fired a Driver Cast, TweenMenu opened 450ms into the clip, held 11.5s, closed:
+
+```
+21:23:43.285  castSlot(0): processed -- notified SH2_Cast4 (clip 4) -> true
+21:23:43.469  casting state active became true (0.5s on the cast timer)
+21:23:43.808  lockout over at 0.52s on the cast clock (payload still owed, staying armed)
+              -- 11.91s with no SH2 line at all: update_cast is not running --
+21:23:55.722  commitment point (MLh_SpellFire_Event), shape=fnf, window=true
+21:23:55.743  armed payload delivered at its own SpellFire (0.52s on the cast clock)
+21:23:56.561  state exiting (clip end or cancel)
+```
+
+**The cast clock reads 0.52s on both sides of an 11.91s wall-clock pause.** That is the whole
+fix in one pair of numbers: the counter advanced by zero across the menu visit, so the 8s cap
+was never approached, and the first unpaused frame resumed the cast instead of cancelling it.
+The old code would have measured 11.91s there and written the false `state watchdog expired`
+line this ticket was filed over. Zero watchdog lines and zero latch drops across the whole run;
+the owner's own unpaused casts at 21:24:13 and 21:24:26 were normal.
+
+### Driving this headlessly
+
+Nothing new was learned here, and three attempts were wasted proving it: the playbook already
+records that SH2 keybind presses are owner-hands only and that `castSlot` is the seam to use
+(`headless-testing-playbook.md:212`), and it already names the exact `castSlot(0): not in ingame
+state` refusal that ate those attempts (`:333`). Read that far before driving the next one. The
+run that worked was `castSlot(0)` after closing MagicMenu, with `waitUntil: noBlockingMenu`
+ahead of it.
