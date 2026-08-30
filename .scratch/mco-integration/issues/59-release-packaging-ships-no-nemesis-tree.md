@@ -1,8 +1,9 @@
 # 59 — Build a release package for OUR mod (overwrite over base SH2)
 
-**Type:** build (packaging). **Status:** ready-for-agent, re-scoped 2026-08-29 after the
-owner's distribution ruling. Originally titled "release packaging ships no Nemesis tree" —
-that framing was wrong; see the correction below.
+**Type:** build (packaging). **Status:** done 2026-08-29 — archive built and verified from
+the working tree; publication stays gated on the permission flag. Re-scoped earlier the same
+day after the owner's distribution ruling. Originally titled "release packaging ships no
+Nemesis tree" — that framing was wrong; see the correction below.
 
 ## Correction to the original lead
 
@@ -51,14 +52,67 @@ build path.
 
 ## Acceptance
 
-- [ ] A build script in this repo produces the archive from the working tree (the lever, not a
+- [x] A build script in this repo produces the archive from the working tree (the lever, not a
       hand-assembled zip), enumerating our-files-only; upstream-untouched assets provably
-      absent.
-- [ ] The archive byte-contains the `shtb` and `shcr` patch files and both `.pex`.
-- [ ] The DLL in the archive is the current build (hash-match against `skse_plugin/build`
-      output).
-- [ ] Install docs: base SH2 required, install ours after/over it, run Nemesis (Launch;
-      end users need no Update Engine for a selection-only change), supported base version
-      pinned.
-- [ ] Publication explicitly deferred until the upstream-permission question is settled by
-      the owner.
+      absent. `python_scripts/build_mod_release.py`. Trees come from `git ls-files`, so nothing
+      untracked can leak in. Absence is proved by byte-comparison against the installed base
+      mod rather than by a hand-written denylist: a member identical to a base file classifies
+      REDUNDANT and fails the build. Proven by injection, both directions.
+- [x] The archive byte-contains the `shtb` and `shcr` patch files and both `.pex`. The verify
+      pass reopens the zip and compares every member's SHA-256 against its source: 80 shtb
+      files, 14 shcr files, both `info.ini`, both `.pex`.
+- [x] The DLL in the archive is the current build (hash-match against `skse_plugin/build`
+      output). `3c18ed8a79aeb6ae5f5fd8ea28618278fbcc8be0b3ff87dbcac8f15e86f4512d`.
+- [x] Install docs: base SH2 required, install ours after/over it, run Nemesis (Launch; end
+      users need no Update Engine for a selection-only change), supported base version pinned
+      at `0.0.14`. `deploy/release/README.template.md` renders into the archive;
+      `docs/agents/release-packaging.md` is the repo-facing manual.
+- [x] Publication explicitly deferred until the upstream-permission question is settled by the
+      owner. `publication_blocked` in `deploy/release/release.json`; the build prints it and
+      the manifest records it.
+
+## Comments
+
+### 2026-08-29 — built
+
+`build/Spell Hotbar 2 NG 0.1.0-provisional.zip`, 159 files, 2.96 MB. 155 additions, 3
+overwrites (`SpellHotbar2.dll`, `SpellHotbar.pex`, `SpellHotbarMCM.pex`), 0 redundant. A
+`.manifest.json` lands beside it with a SHA-256 and a classification per file.
+
+Four things the ticket did not specify, decided here:
+
+**No Papyrus compiler exists on this machine** — Nolvus ships no Creation Kit, and nothing on
+disk answers to `PapyrusCompiler.exe`. The build imports the two `.pex` from the deployed dev
+mod (`--refresh-pex`) into `papyrus/Scripts/`, now tracked, and records the SHA-256 of the
+`.psc` each was compiled from in `papyrus/Scripts/compiled.json`. Every build re-checks that
+hash, so an edited `.psc` fails the build instead of shipping a stale `.pex`.
+
+**`data/SKSE/Plugins/SpellHotbar/localization/translation.txt` is excluded.** It is base's
+English translation with exactly one typo fixed (`Globald Cooldown` -> `Global Cooldown`) and
+a trailing newline. The base FOMOD installs the user's chosen language under that same
+filename, so shipping ours forces English on every non-English user to fix one word — and the
+DLL's compiled default already carries the corrected string plus the ten keys the file lacks.
+The script prints the exclusion and this reason on every run.
+
+**Both `info.ini` files read `author=Amrit Chana`.** That is the leak release ticket 01's
+acceptance names, and it would have shipped in this archive, so it is fixed here:
+`author=Leitmotives`, the Nexus identity from ticket 01's table. Written byte-level, CRLF
+preserved. The build now scans every packaged text file for committer names read out of
+`git log` and fails if it finds one — the guard, not the fix, is the durable part. The
+deployed MO2 copy still carries the old string until it is redeployed; harmless, not public.
+
+**The version pin is exact, not approximate.** `git describe upstream/master` returns `0.0.14`
+at the tag, and the installed base mod is `Spell.Hotbar.2.-.0.0.14.zip`. Our fork point *is*
+upstream's 0.0.14 release, so nothing upstream fixed is currently being reverted. The recorded
+cost stands for the next upstream release, not for today.
+
+Left open on purpose: identity. Release ticket 01 has not frozen the public name or the version
+scheme, so `deploy/release/release.json` carries `identity_frozen: false` and the archive
+filename gains `-provisional` mechanically. Ticket 02's other half — our version in the DLL's
+own version resource — needs `skse_plugin/CMakeLists.txt` changed off upstream's `2.0.10` and a
+rebuild, which waits on ticket 01's scheme.
+
+One conflict to flag rather than resolve: `.scratch/release/spec.md` and release ticket 01 both
+state the owner settled permissions on 2026-08-29 and call this ticket's deferral line stale.
+The instruction for this build said the opposite — build but do not publish. The build is
+gated on a flag in `release.json`, so settling it is a one-line change either way.

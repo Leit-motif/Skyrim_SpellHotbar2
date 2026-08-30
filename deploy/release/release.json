@@ -1,0 +1,23 @@
+{
+  "_comment": "Identity and machine paths for python_scripts/build_mod_release.py. Release ticket 01 owns public_name and version; while identity_frozen is false the build stamps '-provisional' into the archive filename so a verification build cannot be mistaken for an upload candidate. Paths use forward slashes; pathlib resolves them on Windows.",
+
+  "public_name": "Spell Hotbar 2 NG",
+  "version": "0.1.0",
+  "identity_frozen": false,
+
+  "author_public": "Leitmotives",
+  "extra_forbidden_strings": [],
+
+  "base_mod": {
+    "name": "Spell Hotbar 2",
+    "supported_version": "0.0.14",
+    "upstream_tag": "0.0.14",
+    "upstream_commit": "f203cd26747e875336caed91f7d1453ca9a8a808",
+    "install_path": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Spell Hotbar 2"
+  },
+
+  "compiled_scripts_dir": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2/Scripts",
+
+  "publication_blocked": true,
+  "publication_blocked_reason": "Redistributing a modified build of pWn3d's DLL is the owner's call. See .scratch/mco-integration/upstream-permission-issue-draft.md. Build freely; do not upload while this is true."
+}

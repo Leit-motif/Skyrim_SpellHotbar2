@@ -1,0 +1,16 @@
+{
+  "SpellHotbar.pex": {
+    "psc": "papyrus/Scripts/Source/SpellHotbar.psc",
+    "psc_sha256": "65c1bd9c68da78dae9fa06a8d5067043828d3db359b7e151d9d2eadb6ecad4da",
+    "pex_sha256": "ebf8efe3b8891decb69cc0611bc9a67b1ee98b9c835f03b4354e3ee6c1f1f8ff",
+    "imported_from": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\mods\\Dev - Spell Hotbar 2\\Scripts\\SpellHotbar.pex",
+    "imported_utc": "2026-08-30T03:49:26+00:00"
+  },
+  "SpellHotbarMCM.pex": {
+    "psc": "papyrus/Scripts/Source/SpellHotbarMCM.psc",
+    "psc_sha256": "7efd96d32240178a40f7d6fdf1ce641529496e905c9d4b003718d2ecec0329c2",
+    "pex_sha256": "83bfa72b8a88f77c19044239f73642d55036eaa74bcb495ed8c6d055cc1cb272",
+    "imported_from": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\mods\\Dev - Spell Hotbar 2\\Scripts\\SpellHotbarMCM.pex",
+    "imported_utc": "2026-08-30T03:49:26+00:00"
+  }
+}
