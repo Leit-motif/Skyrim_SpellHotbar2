@@ -1,7 +1,7 @@
 # 01 — Freeze the product surface: the SMF call and the public identity
 
 **Type:** task
-**Status:** ready-for-agent — needs owner rulings, not agent work
+**Status:** DONE — owner ruled every open field 2026-08-31; identity is frozen in release.json.
 
 Identity has to be settled before the archive is named and before the key art carries a title.
 Nothing else in this effort waits on it — media shoots against the currently deployed UI.
@@ -30,13 +30,13 @@ Decide and record, so nothing downstream guesses.
 
 | | |
 |---|---|
-| Public name | `deploy/release/release.json` reads **Spell Hotbar 2 NG**, provisionally. Not frozen |
-| Nexus title | The name plus at most one clause. Under the Fury ruling the product is the pitch, not one feature of it |
-| Version | Solved by ticket 59: `release.json` carries our own `version` (currently `0.1.0`), separate from upstream's `2.0.10` in `CMakeLists.txt`. Confirm the number and the scheme |
-| Category | Gameplay, matching base SH2. Not Animation — animations are a means here, not the product |
-| Runtimes | Read off the built DLL's target, do not assume |
+| Public name | **Spell Hotbar 2 NG**. FROZEN 2026-08-31 — *"This name is good."* |
+| Nexus title | **Spell Hotbar 2 NG**, the name alone. No clause |
+| Version | **1.0.0**. FROZEN. Owner: *"This mod is an add-on. It has nothing to do with the upstream other than requiring it. It is a separate piece of software."* A first public release of separate software is 1.0.0, and `CMakeLists.txt` now reads `VERSION 1.0.0` instead of upstream's 2.0.10 |
+| Category | **Gameplay**. Confirmed |
+| Runtimes | **SE 1.5.97 only** — the only runtime ever tested. The binary is an unrestricted CommonLibSSE-NG build and probably loads on AE 1.6.x, but probably is not a claim worth publishing. AE and VR deferred to ticket 10 |
 | Author identity | **Leitmotives** on Nexus, **Leit-motif** on GitHub, per the sibling repo. No real name on any public artifact |
-| Source repo | Settle whether the public source is a push of this fork or a fresh repo, and whether the licence obliges publishing it at all |
+| Source repo | **Will be published** — the base mod's licence requires it. Which repo, and the mechanics, are the upload ticket's problem, not this one |
 
 ## Ruling 3: the shout mod is Thu'um Reborn. SETTLED.
 
@@ -84,13 +84,15 @@ on this except the archive filename and the key art's title lockup (ticket 06).
 
 ## Acceptance
 
-- [ ] `public_name` and `version` in `deploy/release/release.json` are the owner's, and
-      `identity_frozen` is `true`.
-- [ ] Category, runtimes and the source-repo question are recorded in the table above.
+- [x] `public_name` and `version` in `deploy/release/release.json` are the owner's, and
+      `identity_frozen` is `true`. Archives no longer carry `-provisional`.
+- [x] Category, runtimes and the source-repo question are recorded in the table above.
+- [x] `CMakeLists.txt` reads `project(SpellHotbar2 VERSION 1.0.0)`, so the DLL's own version
+      resource stops advertising upstream's number. Rebuilt and deployed; CTest 9/9.
 - [x] **Shout mod named: `Thu'um Reborn`** (Ruling 3). Recorded in this repo's `CONTEXT.md`, the
       archive README, the Nexus page draft, and the sibling repo's canonical alias table.
 - [x] **Done by ticket 59.** `nemesis/Nemesis_Engine/mod/shtb/info.ini` and `mod/shcr/info.ini`
       both read `author=Leitmotives`, verified rather than assumed, and the build now enforces it
       with a real-name guard instead of leaving it to a checklist.
-- [ ] The five `../skse-menu-framework/` tickets read `deferred — post-release`, so they leave the
+- [x] The five `../skse-menu-framework/` tickets read `deferred — post-release`, so they leave the
       frontier.

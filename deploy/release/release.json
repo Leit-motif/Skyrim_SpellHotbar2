@@ -1,16 +1,16 @@
 {
   "_comment": "Identity and machine paths for python_scripts/build_mod_release.py. Release ticket 01 owns public_name and version; while identity_frozen is false the build stamps '-provisional' into the archive filename so a verification build cannot be mistaken for an upload candidate. Paths use forward slashes; pathlib resolves them on Windows.",
-
   "public_name": "Spell Hotbar 2 NG",
-  "version": "0.1.0",
-  "identity_frozen": false,
-
+  "version": "1.0.0",
+  "identity_frozen": true,
   "author_public": "Leitmotives",
-
   "_identities_comment": "Names the real-name guard must NOT flag. author_public plus these: the GitHub handle, the web-UI committer name that signs merges made on github.com, and upstream's handle, which is a credit the README carries on purpose.",
-  "public_identities": ["Leit-motif", "GitHub", "pWn3d1337"],
+  "public_identities": [
+    "Leit-motif",
+    "GitHub",
+    "pWn3d1337"
+  ],
   "extra_forbidden_strings": [],
-
   "base_mod": {
     "name": "Spell Hotbar 2",
     "supported_version": "0.0.14",
@@ -18,6 +18,9 @@
     "upstream_commit": "f203cd26747e875336caed91f7d1453ca9a8a808",
     "install_path": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Spell Hotbar 2"
   },
-
-  "compiled_scripts_dir": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2/Scripts"
+  "compiled_scripts_dir": "C:/Nolvus/Instances/Nolvus Awakening/MODS/mods/Dev - Spell Hotbar 2/Scripts",
+  "nexus_title": "Spell Hotbar 2 NG",
+  "nexus_category": "Gameplay",
+  "supported_runtimes": "Skyrim SE 1.5.97 (the only runtime tested)",
+  "source_repo_decision": "Source will be published; the base mod's licence requires it."
 }
