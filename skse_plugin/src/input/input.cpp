@@ -1,45 +1,15 @@
 #include "input.h"
+#include "input_event_adapter.h"
 #include "keybinds.h"
 #include "../logger/logger.h"
-#include <imgui_impl_dx11.h>
-#include <imgui_impl_win32.h>
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
 #include "../storage/storage.h"
-#include "keycode_helper.h"
 #include "modes.h"
 #include "../rendering/advanced_bind_menu.h"
 
 namespace {
-
-    // from https://github.com/SlavicPotato/ied-dev / https://github.com/D7ry/wheeler/
-
-    /// Hooks the input event dispatching function, this function dispatches a linked list of input events
-    /// to other input event handlers, hence by modifying the linked list we can filter out unwanted input events.
-    class OnInputEventDispatch {
-    public:
-        static void Install() {
-            auto& trampoline = SKSE::GetTrampoline();
-            REL::Relocation<uintptr_t> caller{RELOCATION_ID(67315, 68617)};
-            _DispatchInputEvent = trampoline.write_call<5>(
-                caller.address() + REL::VariantOffset(0x7B, 0x7B, 0).offset(), DispatchInputEvent);
-        }
-
-    private:
-        static void DispatchInputEvent(RE::BSTEventSource<RE::InputEvent*>* a_dispatcher, RE::InputEvent** a_evns) {
-            if (!a_evns) {
-                _DispatchInputEvent(a_dispatcher, a_evns);
-                return;
-            }
-
-            SpellHotbar::Input::processAndFilter(a_evns);
-
-            _DispatchInputEvent(a_dispatcher, a_evns);
-        }
-        static inline REL::Relocation<decltype(DispatchInputEvent)> _DispatchInputEvent;
-    };
-
-
+    thread_local SpellHotbar::Input::InputEventAdapter<RE::InputEvent> input_event_adapter;
 }
 namespace SpellHotbar::Input {
 
@@ -116,39 +86,22 @@ namespace SpellHotbar::Input {
         return std::make_tuple(key, dev);
     }
 
-    void install_hook() { OnInputEventDispatch::Install(); }
-
-    void processAndFilter(RE::InputEvent** a_event)
+    static InputEventDecision<RE::InputEvent> process_event_impl(RE::InputEvent* event)
     {
-        //based on wheeler
-        if (!a_event) {
-            return;
+        if (!event) {
+            return {};
         }
 
         //don't react to inputs outside of the game:
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (!pc || !pc->Is3DLoaded()) {
-            return;  // no player, no draw
+            return {};
         }
 
-
-        RE::InputEvent* event = *a_event;
-        RE::InputEvent* prev = nullptr;
-
         RE::InputEvent* addEvent = nullptr;
-
-        /*auto controlmap = RE::ControlMap::GetSingleton();
-        uint32_t shoutkey = 0;
-        if (controlmap) {
-             shoutkey = controlmap->GetMappedKey("Shout", RE::INPUT_DEVICE::kKeyboard);
-        }*/
-
         auto [shoutKeyDev, shoutKey] = get_shout_key_and_device();
 
-
-        while (event != nullptr) {
-            bool captureEvent = false; //Capure this event? (not forward to game)
-            auto eventType = event->eventType;
+        bool captureEvent = false; // Capture this event? (do not forward to Skyrim)
 
             if (event->eventType == RE::INPUT_EVENT_TYPE::kMouseMove) {
                 if (RenderManager::should_block_game_cursor_inputs()) {
@@ -164,33 +117,14 @@ namespace SpellHotbar::Input {
                     }
                 }
             }
-            else if (event->eventType == RE::INPUT_EVENT_TYPE::kChar) {
-                if (!captureEvent && RenderManager::should_block_game_key_inputs()) {
-                    auto ch_event = event->AsCharEvent();
-                    
-                    auto& io = ImGui::GetIO();
-                    io.AddInputCharacter(ch_event->keycode);
-
-                }
-            } else if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
+            else if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
                 RE::ButtonEvent* bEvent = event->AsButtonEvent();
                 if (bEvent) {
-                    auto& io = ImGui::GetIO();
-
                     auto [key_code, key_device] = get_device_and_input(bEvent);
                     bool is_pressed = bEvent->IsPressed();
 
                     if (key_device == RE::INPUT_DEVICE::kKeyboard) {
-                        //update imgui mods
-                        if (key_code == 29 || key_code == 157) {
-                            io.AddKeyEvent(ImGuiKey_ModCtrl, is_pressed);
-                        }
-                        if (key_code == 42 || key_code == 54) {
-                            io.AddKeyEvent(ImGuiKey_ModShift, is_pressed);
-                            //mod_shift.update(bEvent);
-                        }
                         if (key_code == 56 || key_code == 184) {
-                            io.AddKeyEvent(ImGuiKey_ModAlt, is_pressed);
                             mod_alt.update(key_code, key_device, is_pressed);
                         }
                     }
@@ -208,14 +142,6 @@ namespace SpellHotbar::Input {
                     key_oblivion_potion.update(key_code, key_device, is_pressed);
 
                     if (key_device == RE::INPUT_DEVICE::kMouse) {
-                        // credits open animation replacer
-                        //forward the mouse inputs to ImGUI
-                        if (bEvent->GetIDCode() > 7) {
-                            io.AddMouseWheelEvent(0, bEvent->value * (bEvent->GetIDCode() == 8 ? 1 : -1));
-                        } else {
-                            if (bEvent->GetIDCode() > 5) bEvent->idCode = 5;
-                            io.AddMouseButtonEvent(bEvent->idCode, bEvent->IsPressed());
-                        }
                         if (RenderManager::should_block_game_cursor_inputs()) {
                             captureEvent = true;
                         }
@@ -239,15 +165,6 @@ namespace SpellHotbar::Input {
                                 && bEvent->IsDown() && Input::key_open_advanced_bind_menu.matches(key_code, key_device)) {
                                 //Close Bind Menu when key is pressed
                                 RenderManager::close_key_blocking_frames();
-                            }
-                            else {
-                                int dx_code = input_to_dx_scancode(key_device, static_cast<uint8_t>(key_code));
-                                if (dx_code >= 0 && dx_code < dx_to_imgui.size()) {
-                                    ImGuiKey key = dx_to_imgui[dx_code];
-                                    if (key != ImGuiKey_None) {
-                                        io.AddKeyEvent(key, is_pressed);
-                                    }
-                                }
                             }
                         }
                     }
@@ -385,27 +302,12 @@ namespace SpellHotbar::Input {
                 }
             }
 
-            RE::InputEvent* nextEvent = event->next;
-            if (captureEvent) {
-                //remove event out of queue
-                if (prev != nullptr) {
-                    prev->next = nextEvent;
-                } else {
-                    *a_event = nextEvent;
-                }
-            } else {
-                prev = event;
-            }
-            event = nextEvent;
-        }
-        if (addEvent) {
-            if (prev) {
-                prev->next = addEvent;
-            }
-            else {
-                *a_event = addEvent;
-            }
-        }
+        return InputEventDecision<RE::InputEvent>{ .capture = captureEvent, .injected = addEvent };
+    }
+
+    bool __stdcall process_event(RE::InputEvent* event)
+    {
+        return input_event_adapter.process(event, process_event_impl);
     }
 
     KeyModifier::KeyModifier(RE::INPUT_DEVICE device, uint8_t code1, uint8_t code2)
@@ -489,6 +391,7 @@ namespace SpellHotbar::Input {
         auto [dev, key] = dx_scan_code_to_input(code);
         input_device = dev;
         keycode = key;
+        m_isDown = false;
     }
 
     void KeyBind::update(uint32_t key_code, RE::INPUT_DEVICE key_device, bool is_pressed)

@@ -1,4 +1,6 @@
 import shutil
+import subprocess
+import sys
 from enum import Enum
 from glob import glob
 from pathlib import Path
@@ -181,12 +183,11 @@ def _get_battle_mage_perk_config_csf2(folder: str, folder2: str) -> str:
 
 
 def _get_profile_config(name: str, json_name: str, desc: str, image: str | None = None) -> str:
+    image_element = f'<image path="installer_images/{image}"/>' if image is not None else ""
     return f"""
                          <plugin name="{name}">
                             <description>{desc}</description>
-                            {
-    f'<image path = "installer_images\\{image}"/>' if image is not None else ""
-    }
+                            {image_element}
                             <files>
                                 <file source="9000 ConditionalFiles/auto_profiles/{json_name}.json" destination="SKSE/Plugins/SpellHotbar/presets/auto_profile.json" priority="0"/>
                             </files>
@@ -313,7 +314,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                 <group name="Chose a Profile that automatically gets loaded" type="SelectExactlyOne">
                     <plugins order="Explicit">
                          <plugin name="No Auto Profile">
-                            <description>All variables will be set to default and no keybinds will be set on initialisation. Will require manual configuration of the mod or manual loading of a profile through MCM.</description>
+                            <description>All variables will be set to default and no keybinds will be set on initialisation. Manual configuration or loading a profile through the Mod Control Panel is required.</description>
                             <files>
                             </files>
                             <typeDescriptor>
@@ -327,7 +328,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         {_get_profile_config("Oblivion Mode", "oblivion_mode",
                                              "Activates Oblivion mode, Keybinds: 1-10.= for selection, 'v' and 'b' to cast spell/potion", "oblivion_mode.jpg")}
                         {_get_profile_config("Controller", "controller",
-                                             "Starting point for controller config, binds DPad + ABXY with RS/LS as modifiers, non-modifier bar is disabled. Might need config adjustments to not conflict with your setup/MCM menus", "controller_simple.jpg")}
+                                             "Starting point for controller config, binds DPad + ABXY with RS/LS as modifiers, non-modifier bar is disabled. May need adjustments to avoid conflicts with other controls or menu bindings.", "controller_simple.jpg")}
                         {_get_profile_config("Controller with Bindmenu", "controller_bindmenu",
                                              "Same as 'Controller' but uses the dedicated Mouse operated 'Bind Menu' to avoid menu conflicts with controller keys.", "controller_simple.jpg")}
                     </plugins>
@@ -420,12 +421,8 @@ main_mod_folder = f"./{required_folder}/"
 released_files_main_plugin_v2 = [
     (project_root / "skse_plugin/build/release_with_debug_info/SpellHotbar2.dll", main_mod_folder + "SKSE/Plugins"),
     (project_root / "skse_plugin/build/release_with_debug_info/SpellHotbar2.pdb", main_mod_folder + "SKSE/Plugins"),
-    (dev_mod_root / "SpellHotbar.esp", (dev_mod_root, main_mod_folder)),
-    (dev_mod_root / "Scripts/SpellHotbar.pex", (dev_mod_root, main_mod_folder)),
-    # if Path, add relative path to root in zip
-    (dev_mod_root / "Scripts/SpellHotbarInitQuestScript.pex", (dev_mod_root, main_mod_folder)),
-    (dev_mod_root / "Scripts/SpellHotbarMCM.pex", (dev_mod_root, main_mod_folder)),
-    (dev_mod_root / "Scripts/SpellHotbarToggleDualCastingEffect.pex", (dev_mod_root, main_mod_folder)),
+    (project_root / "build/plugins/SpellHotbar.esp", main_mod_folder),
+    (project_root / "papyrus/Scripts/SpellHotbar.pex", main_mod_folder + "Scripts"),
     # (dev_mod_root / "Scripts/Source/*.psc", dev_mod_root), script source is no longer in install
     (dev_mod_root / "Interface/SpellHotbar/spell_icons.swf", (dev_mod_root, main_mod_folder)),
     (dev_mod_root / "meshes/SpellHotbar/*.nif", (dev_mod_root, main_mod_folder)),
@@ -474,16 +471,13 @@ released_files_main_plugin_v2 += [
 ]
 
 battlemage_perk_files = [
-    (dev_mod_root_battlemage / "SpellHotbar_BattleMage.esp", (dev_mod_root_battlemage, battlemage_mod_folder)),
+    (project_root / "build/plugins/SpellHotbar_BattleMage.esp", battlemage_mod_folder),
     (dev_mod_root_battlemage / "meshes/interface/intbattlemageperkskydome.nif",
      (dev_mod_root_battlemage, battlemage_mod_folder)),
     (dev_mod_root_battlemage / "textures/interface/battlemage_bluemoon.dds",
      (dev_mod_root_battlemage, battlemage_mod_folder)),
     (dev_mod_root_battlemage / "textures/interface/battlemage_constellation.dds",
      (dev_mod_root_battlemage, battlemage_mod_folder)),
-    # yes the scripts are located in the main mods folder in the dev setup
-    (dev_mod_root / "Scripts/SpellHotbarBattleMageInitQuestScript.pex", (dev_mod_root, battlemage_mod_folder)),
-    (dev_mod_root / "Scripts/SpellHotbarOpenBattleMagePerkTree.pex", (dev_mod_root, battlemage_mod_folder)),
     (dev_mod_root_battlemage_csf3 / "SKSE/Plugins/CustomSkills/SpellHotbar_Battlemage.json",
      (dev_mod_root_battlemage_csf3, battlemage_mod_folder_csf3)),
     (dev_mod_root_battlemage_csf3 / "Interface/MetaSkillsMenu/SpellHotbar_Battlemage SpellHotbar.dds",
@@ -588,6 +582,11 @@ if __name__ == "__main__":
         module_xml.write(_get_module_config_xml(version, spell_packs_out))
 
     if not ONLY_XML_FILES:
+        subprocess.run(
+            [sys.executable, str(project_root / "python_scripts/build_plugins.py")],
+            cwd=project_root,
+            check=True,
+        )
 
         release_files: list[tuple[Path, str | Path]] = list()
 

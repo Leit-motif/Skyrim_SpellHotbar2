@@ -1143,6 +1143,17 @@ namespace SpellHotbar::GameData {
         spell_cd_magiceffect_tracking.insert_or_assign(spell, cd_effect);
     }
 
+    void reset_persistent_state()
+    {
+        gametime_cooldowns.clear();
+        user_spell_cast_info.clear();
+        user_custom_entry_info.clear();
+        oblivion_bar.clear();
+        potion_gcd = 1.0f;
+        individual_shout_cooldowns = false;
+        block_timer = 0.0f;
+    }
+
     void save_to_SKSE_save(SKSE::SerializationInterface* a_intfc)
     {
         //purge expired cooldowns before saving
