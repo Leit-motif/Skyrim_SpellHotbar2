@@ -1,0 +1,6 @@
+# Havok animations are binary. Git's own NUL-byte detection has always classified
+# them correctly, but core.autocrlf is true on this machine and the packaging build
+# depends on Nemesis .txt files still getting CRLF on checkout -- so the safe fix is
+# to pin the binaries explicitly rather than to touch the global text setting.
+# A mangled .hkx does not fail the build; it fails in game, silently.
+*.hkx binary

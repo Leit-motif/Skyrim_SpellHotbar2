@@ -5,6 +5,7 @@
   "identity_frozen": true,
   "author_public": "Leitmotives",
   "_identities_comment": "Names the real-name guard must NOT flag. author_public plus these: the GitHub handle, the web-UI committer name that signs merges made on github.com, and upstream's handle, which is a credit the README carries on purpose.",
+  "_requirements_comment": "PERMISSION CONDITION, not a courtesy. The archive ships 57 stamped copies of Gild's Ashes of War art clips (mod 100174) under data/meshes/.../OpenAnimationReplacer/SpellHotbar2Arts/. Gild granted that on the single condition that Ashes of War is listed as a requirement on the mod page. That listing never comes off. If the clips are ever dropped from the archive, this note goes with them and not before.",
   "public_identities": [
     "Leit-motif",
     "GitHub",

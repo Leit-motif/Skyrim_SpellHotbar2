@@ -128,6 +128,9 @@ involved in it.
 Casting animations from **MSCO - Magic Casting Behavior Overhaul**, built on animations by
 **botuser999**.
 
+Weapon art animations from **(SE) Ashes of War Weapon Art Via Additional Attack** by **Gild**,
+shipped with the author's permission.
+
 ---
 
 ## Not page text — check before upload
