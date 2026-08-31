@@ -105,7 +105,8 @@ usually silently.
 
 1. Install Spell Hotbar 2 first. This replaces its plugin, so it has to sit underneath.
 2. Install this and let it overwrite.
-3. Run Nemesis, tick the patches, Launch.
+3. Run Nemesis, tick **Spell Hotbar 2** — one box, and it is the only one this mod adds — then
+   press Launch.
 
 Built against Spell Hotbar 2 0.0.14. Nemesis only — Pandora is not supported.
 
