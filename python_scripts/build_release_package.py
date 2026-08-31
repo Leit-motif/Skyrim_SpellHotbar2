@@ -1,14 +1,16 @@
 from pathlib import Path
 from zipfile import ZipFile, ZIP_STORED, ZIP_LZMA
 from glob import glob
+import os
 import subprocess
 import sys
 
 # this scripts builds a releasable zip file
 
 
-dev_mod_root = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar 2")
-dev_mod_root_nordic_ui = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar NordicUI")
+ASSET_ROOT = Path(os.environ.get("SPELLHOTBAR_ASSET_ROOT", r"F:\Skyrim Dev\ADT\mods"))
+dev_mod_root = ASSET_ROOT / "Spell Hotbar 2"
+dev_mod_root_nordic_ui = ASSET_ROOT / "Spell Hotbar NordicUI"
 
 project_root = Path(__file__).parent.parent
 
@@ -22,7 +24,7 @@ released_files_main_plugin = [
     (dev_mod_root / "meshes/**/*.hkx", dev_mod_root),
     (dev_mod_root / "SKSE/Plugins/InventoryInjector/SpellHotbar.json", dev_mod_root),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/effectdata/vanilla_cast_effects.csv", dev_mod_root),
-    (dev_mod_root / "SKSE/Plugins/SpellHotbar/fonts/*.ttf", dev_mod_root),
+    (dev_mod_root / "SKSE/Plugins/SpellHotbar/fonts/*.ttf", "SKSE/Plugins/Fonts"),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/default_icons.csv", dev_mod_root),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/default_icons.png", dev_mod_root),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/icons_cooldown.csv", dev_mod_root),

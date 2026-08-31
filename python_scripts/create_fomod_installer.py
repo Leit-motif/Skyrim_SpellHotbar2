@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import sys
@@ -8,11 +9,12 @@ from typing import Callable
 
 from build_release_package import test_build_release_zip, build_release_zip
 
-dev_mod_root = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar 2")
-dev_mod_root_nordic_ui = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar NordicUI")
-dev_mod_root_battlemage = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar 2 Battlemage")
-dev_mod_root_battlemage_csf2 = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar 2 Battlemage CSF2")
-dev_mod_root_battlemage_csf3 = Path(r"F:\Skyrim Dev\ADT\mods\Spell Hotbar 2 Battlemage CSF3")
+ASSET_ROOT = Path(os.environ.get("SPELLHOTBAR_ASSET_ROOT", r"F:\Skyrim Dev\ADT\mods"))
+dev_mod_root = ASSET_ROOT / "Spell Hotbar 2"
+dev_mod_root_nordic_ui = ASSET_ROOT / "Spell Hotbar NordicUI"
+dev_mod_root_battlemage = ASSET_ROOT / "Spell Hotbar 2 Battlemage"
+dev_mod_root_battlemage_csf2 = ASSET_ROOT / "Spell Hotbar 2 Battlemage CSF2"
+dev_mod_root_battlemage_csf3 = ASSET_ROOT / "Spell Hotbar 2 Battlemage CSF3"
 
 project_root = Path(__file__).parent.parent
 
@@ -201,6 +203,9 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
     return f"""<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
     <moduleName>Spell Hotbar 2 - {version} Installer</moduleName>
     <moduleImage path="installer_images\\spell_hotbar_logo.jpg" />
+    <moduleDependencies operator="And">
+        <fileDependency file="SKSEMenuFramework.dll" state="Active"/>
+    </moduleDependencies>
     <requiredInstallFiles>
         <folder source="{required_folder}" destination="" priority="0"/>
     </requiredInstallFiles>
@@ -252,9 +257,9 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                 <group name="Chose a Text Font" type="SelectExactlyOne">
                     <plugins order="Explicit">
                          <plugin name="Default">
-                            <description>Install Skyrims 'Futura Condensed' Font</description>
+                            <description>Install Skyrim's Futura Condensed face into SKSE Menu Framework's Fonts folder (Data/SKSE/Plugins/Fonts)</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Recommended"/>
@@ -263,7 +268,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         <plugin name="Sovngarde Font">
                             <description>Install the Sovngarde (https://www.nexusmods.com/skyrimspecialedition/mods/386) Font, use together with Nordic UI, does not support JP/CN, should work with RU and PL</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font_sovngarde.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font_sovngarde.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Optional"/>
@@ -272,7 +277,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         <plugin name="PL">
                             <description>Install Skyrims 'Futura Condensed' Font with PL support</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font_pl.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font_pl.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Optional"/>
@@ -281,7 +286,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         <plugin name="RU">
                             <description>Install Skyrims 'Futura Condensed' Font with RU support</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font_ru.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font-cyrillic.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font_ru.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Optional"/>
@@ -290,7 +295,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         <plugin name="JP">
                             <description>Install Skyrims 'Futura Condensed' Font with JP support</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font_jp.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font-japanese.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font_jp.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Optional"/>
@@ -299,7 +304,7 @@ def _get_module_config_xml(version: str, spell_packs: list[tuple[str, str, str, 
                         <plugin name="CN">
                             <description>Install a CN font from fonts_cn.swf</description>
                             <files>
-                                <file source="4000 Interface Files/fonts/text_font_cn.ttf" destination="SKSE/Plugins/SpellHotbar/fonts/text_font-chinese.ttf" priority="0" /> 
+                                <file source="4000 Interface Files/fonts/text_font_cn.ttf" destination="SKSE/Plugins/Fonts/text_font.ttf" priority="0" /> 
                             </files>
                             <typeDescriptor>
                                 <type name="Optional"/>
@@ -431,7 +436,7 @@ released_files_main_plugin_v2 = [
     (dev_mod_root / "SKSE/Plugins/InventoryInjector/SpellHotbar.json", (dev_mod_root, main_mod_folder)),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/animationdata/*.csv", (dev_mod_root, main_mod_folder)),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/effectdata/vanilla_cast_effects.csv", (dev_mod_root, main_mod_folder)),
-    (dev_mod_root / "SKSE/Plugins/SpellHotbar/fonts/skyrim_symbols_font.ttf", (dev_mod_root, main_mod_folder)),
+    (dev_mod_root / "SKSE/Plugins/SpellHotbar/fonts/skyrim_symbols_font.ttf", main_mod_folder + "SKSE/Plugins/Fonts"),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/default_icons.csv", (dev_mod_root, main_mod_folder)),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/default_icons.dds", (dev_mod_root, main_mod_folder)),
     (dev_mod_root / "SKSE/Plugins/SpellHotbar/images/icons_cooldown.csv", (dev_mod_root, main_mod_folder)),

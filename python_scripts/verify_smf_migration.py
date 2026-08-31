@@ -213,6 +213,34 @@ def mcm_retired() -> CheckResult:
     )
 
 
+def packaging_smf_and_fonts() -> CheckResult:
+    fomod = read(ROOT / "python_scripts" / "create_fomod_installer.py")
+    release = read(ROOT / "python_scripts" / "build_release_package.py")
+    packaging = fomod + "\n" + release
+    missing = []
+    if 'fileDependency file="SKSEMenuFramework.dll"' not in fomod:
+        missing.append("FOMOD SMF fileDependency")
+    if "build_plugins.py" not in fomod or "build_plugins.py" not in release:
+        missing.append("build_plugins.py producer")
+    if "SKSE/Plugins/Fonts" not in packaging:
+        missing.append("SMF Fonts install path")
+    leaked_host = []
+    for label, text in (("create_fomod_installer.py", fomod), ("build_release_package.py", release)):
+        if re.search(r"SKSEMenuFramework\.dll['\"]\s*,", text) or "SKSEMenuFramework.dll)" in text:
+            leaked_host.append(label)
+    stale_font_dest = "SKSE/Plugins/SpellHotbar/fonts" in fomod and 'destination="SKSE/Plugins/SpellHotbar/fonts' in fomod
+    ok = not missing and not leaked_host and not stale_font_dest
+    if leaked_host:
+        detail = "packages SMF host DLL from " + ", ".join(leaked_host)
+    elif stale_font_dest:
+        detail = "FOMOD still installs fonts under SpellHotbar/fonts"
+    elif missing:
+        detail = "missing: " + ", ".join(missing)
+    else:
+        detail = "SMF dependency, Fonts path, and ESP producer are present; host DLL is not shipped"
+    return CheckResult("package SMF/fonts/ESP producer", ok, detail)
+
+
 def plugin_provenance() -> CheckResult:
     try:
         verify_provenance(ROOT)
@@ -265,6 +293,7 @@ def run(base: str) -> int:
         serialization_formats_unchanged(),
         mcm_retired(),
         plugin_provenance(),
+        packaging_smf_and_fonts(),
         upstream_only_diff(base),
         mcp_pages(),
     )

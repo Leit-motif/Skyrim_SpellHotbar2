@@ -24,11 +24,20 @@ If you have created cool Screenshots or video clips using the mods I could also 
 [Sprint Sneak Movement Speed Fix](https://www.nexusmods.com/skyrimspecialedition/mods/86631) - fixes sneak hotbar casting related movement speed  
 [ImGui Icons](https://www.nexusmods.com/skyrimspecialedition/mods/114790) - OPTIONAL, allows keybind icons to be used instead of text, different styles also work.
 
+SkyUI is not required for Spell Hotbar 2. Configuration lives in SKSE Menu Framework's Mod Control Panel (seven pages: Keybinds, Settings, Bars, Perks, Presets, Spells, Util).
+
+Saves stay compatible with upstream 0.0.14: SKSE co-save format `5` and JSON presets format `2`. Custom fonts, when packaged, install into `Data/SKSE/Plugins/Fonts` (SMF's global font folder), not under `SpellHotbar/fonts`.
+
 Opposed to v1 DAR is no longer supported as OAR is a superior alternative in any way and has an easier file structure.  
 All papyrus lib requirements have been dropped.
 
 ## Supported Skyrim Version
 The mod is built with CommonLib-NG and was tested on 1.5.97, 1.6.640 and 1.6.1070. Other versions will not be officially supported.
+
+## Building
+From `skse_plugin`, configure with CMake preset `release` (`VCPKG_ROOT` must point at a CommonLibSSE-NG triplet matching `CMakePresets.json`). The Release DLL lands in `skse_plugin/build/release/SpellHotbar2.dll`. Rebuild both ESPs with `python python_scripts/build_plugins.py` (Spriggit 0.40.1). Static SMF guest checks: `python python_scripts/verify_smf_guest_boundary.py` and `python python_scripts/verify_smf_migration.py`. The FOMOD/release zip scripts read packed assets from `SPELLHOTBAR_ASSET_ROOT` (defaults to the upstream maintainer's `F:\Skyrim Dev\ADT\mods` layout) and never copy `SKSEMenuFramework.dll`.
+
+The consumer API header and LGPL-2.1 license are vendored under `skse_plugin/third_party/skse-menu-framework/`; see `UPSTREAM.md` there for pinned commits and hashes.
 
 # Updating from v1:
 * Keep a backup of your save.  
