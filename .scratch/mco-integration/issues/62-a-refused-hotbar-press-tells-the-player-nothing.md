@@ -3,7 +3,9 @@
 **Type:** defect (UX), owner-reported. **Handed over from the Shouts for MCO side 2026-08-30** after
 that engine was investigated and cleared.
 
-**Status:** open, ready-for-agent. Not started.
+**Status:** DONE — owner-accepted 2026-08-31. **No code was written for this ticket.** The red
+feedback already existed; the ticket was filed from a stale read of the source. See the correction
+below. One follow-up observation is recorded and deliberately not fixed.
 
 ## What the owner hit
 
@@ -15,7 +17,23 @@ Whirlwind Sprint was eaten and did not fire."* Then, on being shown where it wen
 **The cast really was refused. The complaint is not that it was refused — it is that nothing said
 so.** The press disappeared and the player was left to guess whether the mod was broken.
 
-## SH2 already knows the reason and already logs it. It just does not draw it.
+## CORRECTION 2026-08-31: it already drew it
+
+**The premise below is wrong and stays only as a record of how the ticket was filed.** Every
+refusal path already calls `RenderManager::highlight_skill_slot(slot, 0.5, true)`, which sets
+`highlight_isred` and paints the slot red:
+
+- `modes.cpp:74` — a spell refused by `allowed_to_cast` (casting / sprinting / swimming / jumping).
+- `modes.cpp:119` — the outer press gate, the `cast live=true` refusal.
+- `modes.cpp:298` — the same two, in the second input mode.
+
+`allowed_to_cast` at `input.cpp:927` is a pure predicate: it logs and returns false, and its
+callers own the drawing. Reading only that function is what produced the wrong premise.
+
+**Owner verification, 2026-08-31**, jumping and pressing a hotbar slot: red fired on a spell and
+red fired on a shout. *"I'd say for where we are right now, that is suitable."*
+
+## The original (incorrect) premise, kept as a record
 
 From `SpellHotbar2.log` during that fight — the only two refusals in the session:
 
@@ -60,14 +78,25 @@ Checked in that repo's trace and cleared, so nobody re-runs the investigation:
 
 ## Acceptance
 
-- [ ] A62.1 — a hotbar press refused at `input.cpp:927` draws the red border on that slot's icon,
-      for each live reason: casting, sprinting, swimming, jumping.
-- [ ] A62.2 — a press refused at `modes.cpp:117` (`cast live=true`) draws it too.
-- [ ] A62.3 — the border is visible for long enough to read during combat, and does not persist into
-      the next successful cast.
-- [ ] A62.4 — no error sound unless the owner rules for one; ask first.
-- [ ] A62.5 — driven in game by the owner, who reproduces a refusal on purpose (jumping is the
-      cheapest: jump and press a hotbar slot) and confirms the feedback reads as "not usable now".
+- [x] A62.1 — already drawn at `modes.cpp:74`. Owner confirmed live on a spell and a shout.
+- [x] A62.2 — already drawn at `modes.cpp:119`.
+- [x] A62.3 — 0.5 s, and `update_highlight` clears `highlight_slot` and `highlight_isred` when the
+      timer expires, so it cannot bleed into the next cast. Owner read it fine in combat.
+- [x] A62.4 — **no error sound. Owner ruled 2026-08-31: _"agree not necessary at this time."_**
+- [x] A62.5 — owner drove it by jumping and pressing a slot. Nine refusals in the log between
+      15:25:23 and 15:25:42, all `jumping=true`, session DLL `e27041a9`.
+
+## Follow-up, observed and NOT fixed
+
+The owner's **first** attempt after a fresh load showed no red, though the press was refused:
+*"I first tried it with a spell upon a fresh load, and I didn't see any red feedback, but nothing
+fired."* Every later attempt in the same session drew it.
+
+One press, one session, no reproduction attempted, and the owner accepted the behavior as-is. A
+plausible mechanism — `highlight_skill_slot` sets the flash whether or not the bar is currently
+drawn, so a flash during the bar's post-load fade would be invisible — is a **guess from reading
+the fade path, not a diagnosis.** Recorded so it is not rediscovered from scratch; open a fresh
+ticket if it recurs.
 
 ## One loose end handed over with it
 
