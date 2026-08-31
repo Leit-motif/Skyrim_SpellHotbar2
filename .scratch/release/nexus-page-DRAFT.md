@@ -125,12 +125,13 @@ section on the page with a voice.)*
 Spell Hotbar 2 by **pWn3d1337**. This is a fork, not an official continuation — they were not
 involved in it.
 
+Casting animations from **MSCO - Magic Casting Behavior Overhaul**, built on animations by
+**botuser999**.
+
 ---
 
 ## Not page text — check before upload
 
-- **MSCO's permissions are the open question, and they are not settled.** See the block below.
-  Nothing ships until they are.
 - **"Ashes of War integration"** replaced a count of 57. If a number goes back in, confirm every
   row of `arts_ashes.csv` resolves first.
 - **Runtimes.** Read them off the built DLL.
@@ -143,46 +144,12 @@ involved in it.
 
 ---
 
-## MSCO permissions — the finding, 2026-08-29
+## MSCO permissions — SETTLED 2026-08-31, do not reopen
 
-**We ship 32 of MSCO's animation files, modified.** This was assumed otherwise and checked instead.
+**Granted.** The author gave permission. They noted they cannot grant on behalf of
+**botuser999**, who authored the underlying animations — and botuser999 has open permissions for
+all their Nexus mods, so that side is covered too.
 
-- `data/meshes/.../OpenAnimationReplacer/SpellHotbar2Casts/**/MSCO_*.hkx` — 32 files, and they are
-  every `.hkx` in the repo.
-- `build_mod_release.py` ships them: line 416 is `for rel in tracked_files("data")`, with no
-  animation exclusion.
-- They are derived, not copied. MSCO's own root clips are all one hash (`95b61e1…`); our eight
-  per-context variants of `MSCO_left1.hkx` are eight distinct hashes, none of them MSCO's. Ours is
-  15,520 bytes against MSCO's 13,152 for the real submod clip — MSCO's animation data with our
-  annotations stamped into it.
-
-**Read of the two clauses.** They do different jobs, and the distinction is the whole answer.
-
-*Modification permission* — granted with credit — governs releasing a modified version of **their
-mod**: a bug fix, a patch, an improved MSCO. *Asset use permission* — not granted, ask first —
-governs taking assets **out of their file and into yours**.
-
-We are doing the second one. The clips leave MSCO's package and ship inside ours, under our own
-folder name. Editing them first does not move that into the modification bucket; the modification
-clause is permission to improve MSCO, not permission to reuse MSCO's animation data elsewhere
-because you changed it on the way.
-
-**The instinct behind "it's a requirement, so we're not using the assets" is right, but it is not
-what makes it true.** Listing a mod as a requirement grants nothing by itself. What would make it
-true is the archive containing none of their bytes — requiring MSCO and driving its installed clips
-at runtime needs no permission at all. Right now the archive contains 32 of them.
-
-**There is no Ashes of War precedent to lean on any more.** The author answered, 2026-08-29:
-permission granted to integrate and to rename, on the single condition that Ashes of War is listed
-as a requirement. So that side is not a workaround, it is a yes. weapon-arts ticket 18 is unblocked
-and the 57 stamped clips ship.
-
-That removes the analogy I reached for and leaves MSCO where it actually stands: **ask
-VVVK-distar-xing-adri** (mod 168499). One author said yes when asked; this one has not been asked.
-
-If the answer is no, or does not come, the fallback is real work rather than a flag flip.
-`art_pack_gen.cpp` writes `config.json` only and never clip bytes, and
-`python_scripts/stamp_art_clips.py` does the copy-and-annotate at build time on this machine —
-which needs no permission, because copying locally is not redistribution. Shipping the output does.
-Getting there means porting the stamping into the DLL so it runs against the user's own MSCO
-install. Do not plan on it before the answer; do not assume it is cheap if it is needed.
+The 32 modified MSCO clips ship. This is closed: never raise, re-verify, or caveat with MSCO
+permissions again, and do not re-derive the asset-use-versus-modification argument that used to
+live here. If a future reader wants the shape of the old analysis, it is in git history.
