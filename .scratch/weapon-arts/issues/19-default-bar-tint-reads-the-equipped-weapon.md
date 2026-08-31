@@ -6,7 +6,7 @@ that for Default, it checks your currently equipped weapon and then gives the pe
 
 **Blocked by:** nothing. Continues the tint lineage of tickets 13, 14, and 17.
 
-**Status:** DONE — built and unit-tested 2026-08-31, awaiting owner acceptance in the bind menu.
+**Status:** DONE — owner-accepted 2026-08-31, live in game on both Default and Melee.
 
 ## The defect
 
@@ -60,10 +60,11 @@ was ever yellow there either.
       `art_class_is_live` across all 11 `EquippedType` values — the menu cannot color an ability
       the cast would refuse, nor gray one it would allow.
 - [x] Full Release DLL builds at `/W4`; CTest 9/9.
-- [ ] **Owner cell.** Open the bind menu on Default with a greatsword out and confirm the 2H
-      abilities read yellow, the 1H and Dual ones gray, and Generic white — then swap to a bow and
-      confirm the whole list grays. Repeat on Melee. The ImGui hotbar is not agent-capturable, so
-      the colors themselves need eyes.
+- [x] **Owner cell — PASSED 2026-08-31.** Owner tested Default and Melee in the live bind menu
+      and confirmed the tint works on both: *"I tested the default. Tested melee as well. It's
+      working."* Save `Save4_…_20260831153204`, profile Nolvus Awakening, DLL `3e14465d`, session
+      launched 11:47. The ImGui hotbar is not agent-capturable, so this cell was always the
+      owner's.
 
 ## Consequence worth knowing
 
