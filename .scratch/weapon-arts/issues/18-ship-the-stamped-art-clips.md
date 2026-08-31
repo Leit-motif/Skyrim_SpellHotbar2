@@ -2,8 +2,8 @@
 
 **Type:** task (packaging).
 
-**Status:** DONE 2026-08-31 -- the clips are committed and verified inside the archive. One
-owner cell remains: confirm in game that weapon arts still fire from a hotbar slot.
+**Status:** DONE -- owner-accepted 2026-08-31. Clips committed, verified inside the archive, and
+confirmed firing in game.
 
 **PERMISSION GRANTED 2026-08-29. The author answered.** Owner: *"The author of Weapon Arts did
 respond to me and said as long as I list Ashes of War as a requirement, I'm free to integrate the
@@ -36,9 +36,9 @@ machine. `python_scripts/stamp_art_clips.py` produces them; `--verify` re-checks
 - [x] **Ashes of War is listed as a requirement on the mod page**, and
       `deploy/release/release.json` carries `_requirements_comment` recording that the listing is
       a permission condition, next to the data the packaging build actually reads.
-- [ ] **Owner cell.** Bind a weapon art and fire it from a hotbar slot. The shipped pack is the
-      same bytes the machine has been running on, so nothing should change -- but the DLL now
-      self-skips generation because the pack arrives populated, and that path is what a user gets.
+- [x] **Owner cell -- PASSED 2026-08-31.** Owner fired a weapon art from a hotbar slot with the
+      shipped pack in place: *"tested the weapon art from a hotbar slot, it fires."* Session DLL
+      `e27041a9`, archive `Spell Hotbar 2 NG 1.0.0.zip`.
 
 ## Two things found on the way
 
