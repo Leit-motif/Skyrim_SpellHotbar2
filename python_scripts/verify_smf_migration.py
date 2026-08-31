@@ -81,11 +81,43 @@ def required_host_files() -> CheckResult:
 
 def mcp_pages() -> CheckResult:
     missing = [str(path.relative_to(ROOT)) for path in MCP_FILES if not path.is_file()]
-    return CheckResult(
-        "MCP pages",
-        not missing,
-        "present" if not missing else "intentionally absent until Phase 2: " + ", ".join(missing),
+    pages = read(PLUGIN / "src" / "mcp" / "mcp_pages.cpp")
+    guest = read(PLUGIN / "src" / "smf" / "smf_guest.cpp")
+    required_items = (
+        "Keybinds",
+        "Settings",
+        "Bars",
+        "Perks",
+        "Presets",
+        "Spells",
+        "Util",
     )
+    missing_items = [
+        name for name in required_items if f'AddSectionItem("{name}"' not in pages
+    ]
+    section_ok = 'SetSection("Spell Hotbar 2")' in pages
+    registered = "Mcp::register_pages()" in guest
+    addon_tokens = (
+        "Ability",
+        "Weapon Art",
+        "castSlot",
+        "save_format = 6",
+    )
+    leaked = [token for token in addon_tokens if token in pages]
+    ok = not missing and section_ok and registered and not missing_items and not leaked
+    if missing:
+        detail = "missing: " + ", ".join(missing)
+    elif missing_items:
+        detail = "missing page registrations: " + ", ".join(missing_items)
+    elif not section_ok:
+        detail = "SetSection(\"Spell Hotbar 2\") is missing"
+    elif not registered:
+        detail = "SmfGuest::install does not call Mcp::register_pages()"
+    elif leaked:
+        detail = "addon-only tokens in MCP pages: " + ", ".join(leaked)
+    else:
+        detail = "seven MCP pages registered under Spell Hotbar 2"
+    return CheckResult("MCP pages", ok, detail)
 
 
 def no_private_imgui_dependencies() -> CheckResult:
@@ -109,6 +141,8 @@ def plugin_source_invariants() -> CheckResult:
         (r"src/lifecycle/lifecycle\.cpp", "lifecycle source"),
         (r"src/storage/runtime_state_reset\.h", "runtime reset header"),
         (r"src/input/input_event_adapter\.h", "input adapter"),
+        (r"src/mcp/mcp_pages\.cpp", "MCP pages"),
+        (r"src/mcp/bind_capture\.cpp", "bind capture"),
         (r"set\(OUTPUT_FOLDER\s+\"\"\s+CACHE\s+PATH", "opt-in OUTPUT_FOLDER"),
         (r"add_subdirectory\(tests\)", "unit tests"),
     )
@@ -239,15 +273,12 @@ def run(base: str) -> int:
         status = "PASS" if result.ok else "FAIL"
         print(f"[{status}] {result.name}: {result.detail}")
 
-    blocking = [result for result in checks if not result.ok and result.name != "MCP pages"]
-    mcp = next(result for result in checks if result.name == "MCP pages")
+    blocking = [result for result in checks if not result.ok]
     passed = sum(result.ok for result in checks)
     print(f"\n{passed}/{len(checks)} static migration checks passed")
     if blocking:
         print("Static acceptance is incomplete; build and runtime acceptance are separate gates.")
         return 1
-    if not mcp.ok:
-        print("Host/input/persistence/plugin-source checks are green; MCP pages remain a Phase 2 blocker.")
     return 0
 
 

@@ -21,3 +21,9 @@ target_compile_features(runtime_state_reset_tests PRIVATE cxx_std_23)
 target_include_directories(runtime_state_reset_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
 add_test(NAME runtime_state_reset_tests COMMAND runtime_state_reset_tests)
+
+add_executable(mcp_contract_tests mcp_contract_tests.cpp)
+target_compile_features(mcp_contract_tests PRIVATE cxx_std_23)
+target_include_directories(mcp_contract_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../src")
+
+add_test(NAME mcp_contract_tests COMMAND mcp_contract_tests)

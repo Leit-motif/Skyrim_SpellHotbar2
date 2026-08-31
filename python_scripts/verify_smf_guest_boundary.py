@@ -50,6 +50,8 @@ def verify() -> None:
     render_source = read("skse_plugin/src/rendering/render_manager.cpp")
     guest = read("skse_plugin/src/smf/smf_guest.cpp")
     pin = read("skse_plugin/third_party/skse-menu-framework/UPSTREAM.md")
+    pages = read("skse_plugin/src/mcp/mcp_pages.cpp")
+    input_source = read("skse_plugin/src/input/input.cpp")
 
     require(cmake, r"set\(OUTPUT_FOLDER\s+\"\"\s+CACHE\s+PATH", "opt-in output folder")
     forbid(cmake, r"find_package\((?:imgui|directxtk)\b", "private UI dependency")
@@ -69,7 +71,14 @@ def verify() -> None:
     require(guest, r"GetProcAddress\([^\n]*\"RegisterHudElement\"", "required SMF export validation")
     require(guest, r"GetProcAddress\([^\n]*\"AddWindow\"", "required SMF window export validation")
     require(guest, r"GetProcAddress\([^\n]*\"RegisterInpoutEvent\"", "required SMF input export validation")
+    require(guest, r"GetProcAddress\([^\n]*\"AddSectionItem\"", "required SMF MCP export validation")
+    require(guest, r"Mcp::register_pages\s*\(\s*\)", "MCP page registration after host ready")
     require(guest, r"k_required_smf_release\s*=\s*3\.14F", "player-facing SMF 3.14 pin")
+    require(pages, r'SKSEMenuFramework::SetSection\("Spell Hotbar 2"\)', "MCP section name")
+    if len(re.findall(r"SKSEMenuFramework::AddSectionItem\s*\(", pages)) != 7:
+        raise AssertionError("MCP must register exactly seven section items")
+    require(input_source, r"Mcp::bind_capture\s*\(\s*\)", "bind capture uses the single SMF input callback")
+    require(input_source, r"apply_down_edge\s*\(", "bind capture consumes the next down edge")
     forbid(
         guest,
         r"if\s*\(\s*installed_version\s*<\s*required_version\s*\)",

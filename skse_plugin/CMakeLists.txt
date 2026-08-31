@@ -17,6 +17,11 @@ set(source_files src/plugin.cpp
                  src/smf/imgui_mcp_compat.h
                  src/smf/smf_guest.h
                  src/smf/smf_guest.cpp
+                 src/mcp/bind_capture.h
+                 src/mcp/bind_capture.cpp
+                 src/mcp/mcp_preset_name.h
+                 src/mcp/mcp_pages.h
+                 src/mcp/mcp_pages.cpp
                  src/papyrus_extensions/papyrus_functions.h
                  src/papyrus_extensions/papyrus_functions.cpp
                  src/storage/storage.h

@@ -2,6 +2,7 @@
 
 #include "../input/input.h"
 #include "../logger/logger.h"
+#include "../mcp/mcp_pages.h"
 #include "../rendering/render_manager.h"
 
 #include <array>
@@ -60,6 +61,10 @@ namespace SpellHotbar::SmfGuest {
                 logger::error("SKSE Menu Framework is missing required export 'RegisterInpoutEvent'");
                 return false;
             }
+            if (!GetProcAddress(module, "AddSectionItem")) {
+                logger::error("SKSE Menu Framework is missing required export 'AddSectionItem'");
+                return false;
+            }
 
             // Player-facing minimum is SMF 3.14 (Nexus 120352; this machine's
             // SKSE plugin version is 3.14.0 and the public MAIN file is 3.14.1).
@@ -92,7 +97,27 @@ namespace SpellHotbar::SmfGuest {
                 "ImGuiListClipper_ImGuiListClipper",
                 "ImGuiListClipper_destroy",
                 "ImGuiListClipper_Begin",
-                "ImGuiListClipper_Step"};
+                "ImGuiListClipper_Step",
+                "igSeparatorText",
+                "igButton",
+                "igSameLine",
+                "igTextV",
+                "igTextUnformatted",
+                "igPushID_Int",
+                "igPushID_Str",
+                "igPopID",
+                "igCheckbox",
+                "igCombo_Str_arr",
+                "igSliderFloat",
+                "igSliderInt",
+                "igInputText",
+                "igBeginDisabled",
+                "igEndDisabled",
+                "igBeginPopupModal",
+                "igEndPopup",
+                "igOpenPopup_Str",
+                "igCloseCurrentPopup",
+                "igSeparator"};
 
             for (const auto* export_name : required_exports) {
                 if (!GetProcAddress(module, export_name)) {
@@ -143,7 +168,8 @@ namespace SpellHotbar::SmfGuest {
             return false;
         }
 
-        logger::info("Spell Hotbar 2 registered one HUD element, one input callback, and four blocking windows with SKSE Menu Framework");
+        Mcp::register_pages();
+        logger::info("Spell Hotbar 2 registered one HUD element, one input callback, four blocking windows, and seven MCP pages with SKSE Menu Framework");
         return true;
     }
 

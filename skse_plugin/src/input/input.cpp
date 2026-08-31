@@ -2,6 +2,7 @@
 #include "input_event_adapter.h"
 #include "keybinds.h"
 #include "../logger/logger.h"
+#include "../mcp/bind_capture.h"
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
 #include "../storage/storage.h"
@@ -123,6 +124,30 @@ namespace SpellHotbar::Input {
                     auto [key_code, key_device] = get_device_and_input(bEvent);
                     bool is_pressed = bEvent->IsPressed();
 
+                    auto& capture = Mcp::bind_capture();
+                    if (capture.armed()) {
+                        if (bEvent->IsDown()) {
+                            const bool is_escape =
+                                key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1;
+                            const bool rebindable =
+                                key_device == RE::INPUT_DEVICE::kKeyboard ||
+                                key_device == RE::INPUT_DEVICE::kMouse ||
+                                key_device == RE::INPUT_DEVICE::kGamepad;
+                            if (is_escape) {
+                                capture.apply_down_edge(true);
+                            } else if (rebindable) {
+                                const int pending_id = capture.pending_id();
+                                if (capture.apply_down_edge(false) == Mcp::CaptureApply::rebound) {
+                                    const int dx = input_to_dx_scancode(
+                                        key_device, static_cast<uint8_t>(key_code));
+                                    if (dx >= 0) {
+                                        rebind_key(pending_id, dx);
+                                    }
+                                }
+                            }
+                        }
+                        captureEvent = true;
+                    } else {
                     if (key_device == RE::INPUT_DEVICE::kKeyboard) {
                         if (key_code == 56 || key_code == 184) {
                             mod_alt.update(key_code, key_device, is_pressed);
@@ -297,6 +322,7 @@ namespace SpellHotbar::Input {
                             }
                         }
 
+                    }
                     }
 
                 }
