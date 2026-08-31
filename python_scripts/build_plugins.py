@@ -10,6 +10,9 @@ import tempfile
 from pathlib import Path
 
 
+from plugin_provenance import verify_provenance
+
+
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "build" / "plugins"
 PACKAGE = "Spriggit.Yaml.Skyrim"
@@ -104,6 +107,7 @@ def build_and_verify(source: Path, filename: str) -> None:
 def main() -> int:
     subprocess.run(["dotnet", "tool", "restore"], cwd=ROOT, check=True)
     verify_native_pex()
+    verify_provenance(ROOT)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for source, filename in PLUGINS:
         build_and_verify(source, filename)

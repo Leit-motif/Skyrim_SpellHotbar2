@@ -15,9 +15,36 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from plugin_provenance import verify_provenance
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "skse_plugin"
+
+RETIRED_SCRIPT_NAMES = (
+    "SpellHotbarMCM.psc",
+    "SpellHotbarMCM.pex",
+    "SpellHotbarInitQuestScript.psc",
+    "SpellHotbarInitQuestScript.psc.off",
+    "SpellHotbarInitQuestScript.pex",
+    "SpellHotbarToggleDualCastingEffect.psc",
+    "SpellHotbarToggleDualCastingEffect.pex",
+    "SpellHotbarOpenBattleMagePerkTree.psc",
+    "SpellHotbarOpenBattleMagePerkTree.pex",
+    "SpellHotbarBattleMageInitQuestScript.psc",
+    "SpellHotbarBattleMageInitQuestScript.pex",
+)
+
+REQUIRED_HOST_FILES = (
+    PLUGIN / "third_party" / "skse-menu-framework" / "SKSEMenuFramework.h",
+    PLUGIN / "src" / "smf" / "smf_guest.h",
+    PLUGIN / "src" / "smf" / "smf_guest.cpp",
+)
+
+MCP_FILES = (
+    PLUGIN / "src" / "mcp" / "mcp_pages.h",
+    PLUGIN / "src" / "mcp" / "mcp_pages.cpp",
+)
 
 
 @dataclass(frozen=True)
@@ -34,19 +61,30 @@ def read(path: Path) -> str:
         return ""
 
 
-def required_files() -> CheckResult:
-    paths = (
-        PLUGIN / "src" / "smf" / "SKSEMenuFramework.h",
-        PLUGIN / "src" / "smf" / "smf_guest.h",
-        PLUGIN / "src" / "smf" / "smf_guest.cpp",
-        PLUGIN / "src" / "mcp" / "mcp_pages.h",
-        PLUGIN / "src" / "mcp" / "mcp_pages.cpp",
+def git_output(args: list[str]) -> list[str]:
+    completed = subprocess.run(
+        ["git", *args], cwd=ROOT, check=False, capture_output=True, text=True
     )
-    missing = [str(path.relative_to(ROOT)) for path in paths if not path.is_file()]
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or "git command failed")
+    return [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+
+
+def required_host_files() -> CheckResult:
+    missing = [str(path.relative_to(ROOT)) for path in REQUIRED_HOST_FILES if not path.is_file()]
     return CheckResult(
-        "required SMF source",
+        "required SMF host source",
         not missing,
         "present" if not missing else "missing: " + ", ".join(missing),
+    )
+
+
+def mcp_pages() -> CheckResult:
+    missing = [str(path.relative_to(ROOT)) for path in MCP_FILES if not path.is_file()]
+    return CheckResult(
+        "MCP pages",
+        not missing,
+        "present" if not missing else "intentionally absent until Phase 2: " + ", ".join(missing),
     )
 
 
@@ -62,6 +100,23 @@ def no_private_imgui_dependencies() -> CheckResult:
         "SMF owns ImGui and textures",
         not offenders,
         "no private dependencies" if not offenders else "found " + ", ".join(offenders),
+    )
+
+
+def plugin_source_invariants() -> CheckResult:
+    cmake = read(PLUGIN / "CMakeLists.txt")
+    required = (
+        (r"src/lifecycle/lifecycle\.cpp", "lifecycle source"),
+        (r"src/storage/runtime_state_reset\.h", "runtime reset header"),
+        (r"src/input/input_event_adapter\.h", "input adapter"),
+        (r"set\(OUTPUT_FOLDER\s+\"\"\s+CACHE\s+PATH", "opt-in OUTPUT_FOLDER"),
+        (r"add_subdirectory\(tests\)", "unit tests"),
+    )
+    missing = [label for pattern, label in required if re.search(pattern, cmake) is None]
+    return CheckResult(
+        "plugin source/build invariants",
+        not missing,
+        "present" if not missing else "missing: " + ", ".join(missing),
     )
 
 
@@ -101,35 +156,51 @@ def serialization_formats_unchanged() -> CheckResult:
 
 
 def mcm_retired() -> CheckResult:
-    mcm_source = ROOT / "papyrus" / "Scripts" / "Source" / "SpellHotbarMCM.psc"
     packaging_text = "\n".join(
         read(path)
         for path in (
             ROOT / "python_scripts" / "build_release_package.py",
             ROOT / "python_scripts" / "create_fomod_installer.py",
+            ROOT / "papyrus" / "skyrimse.ppj",
         )
     )
     stale = []
-    if mcm_source.exists():
-        stale.append(str(mcm_source.relative_to(ROOT)))
-    if "SpellHotbarMCM.pex" in packaging_text:
-        stale.append("release packaging references SpellHotbarMCM.pex")
+    for name in RETIRED_SCRIPT_NAMES:
+        if (ROOT / "papyrus" / "Scripts" / "Source" / name).exists() or (
+            ROOT / "papyrus" / "Scripts" / name
+        ).exists():
+            stale.append(name)
+        if name in packaging_text:
+            stale.append(f"package/project references {name}")
     return CheckResult(
-        "legacy MCM retired",
+        "legacy MCM/init/opener scripts retired",
         not stale,
-        "no MCM source/package entry" if not stale else "; ".join(stale),
+        "no retired script/PEX names" if not stale else "; ".join(stale),
     )
+
+
+def plugin_provenance() -> CheckResult:
+    try:
+        verify_provenance(ROOT)
+    except (OSError, RuntimeError, ValueError) as error:
+        return CheckResult("plugin provenance", False, str(error))
+    return CheckResult("plugin provenance", True, "YAML FormIDs and five VMAD removals match the 0.0.14 manifest")
+
+
+def working_tree_names() -> set[str]:
+    names = set(git_output(["diff", "--name-only", "--cached"]))
+    names.update(git_output(["diff", "--name-only"]))
+    names.update(git_output(["ls-files", "--others", "--exclude-standard"]))
+    return names
 
 
 def upstream_only_diff(base: str) -> CheckResult:
-    command = ["git", "diff", "--name-only", f"{base}...HEAD"]
-    completed = subprocess.run(
-        command, cwd=ROOT, check=False, capture_output=True, text=True
-    )
-    if completed.returncode != 0:
-        return CheckResult("upstream-only scope", False, completed.stderr.strip())
+    try:
+        changed = set(git_output(["diff", "--name-only", f"{base}...HEAD"]))
+        changed.update(working_tree_names())
+    except RuntimeError as error:
+        return CheckResult("upstream-only scope", False, str(error))
 
-    changed = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
     addon_markers = (
         ".scratch/",
         "addon",
@@ -139,35 +210,44 @@ def upstream_only_diff(base: str) -> CheckResult:
     )
     leaked = [
         path
-        for path in changed
+        for path in sorted(changed)
         if any(marker in path.casefold() for marker in addon_markers)
     ]
     return CheckResult(
         "upstream-only scope",
         not leaked,
-        "no addon paths in diff" if not leaked else "leaked paths: " + ", ".join(leaked),
+        "no addon paths in committed/staged/unstaged/untracked names"
+        if not leaked
+        else "leaked paths: " + ", ".join(leaked),
     )
 
 
 def run(base: str) -> int:
     checks = (
-        required_files(),
+        required_host_files(),
         no_private_imgui_dependencies(),
+        plugin_source_invariants(),
         no_legacy_host_hooks(),
         serialization_formats_unchanged(),
         mcm_retired(),
+        plugin_provenance(),
         upstream_only_diff(base),
+        mcp_pages(),
     )
 
     for result in checks:
         status = "PASS" if result.ok else "FAIL"
         print(f"[{status}] {result.name}: {result.detail}")
 
-    failed = sum(not result.ok for result in checks)
-    print(f"\n{len(checks) - failed}/{len(checks)} static migration checks passed")
-    if failed:
+    blocking = [result for result in checks if not result.ok and result.name != "MCP pages"]
+    mcp = next(result for result in checks if result.name == "MCP pages")
+    passed = sum(result.ok for result in checks)
+    print(f"\n{passed}/{len(checks)} static migration checks passed")
+    if blocking:
         print("Static acceptance is incomplete; build and runtime acceptance are separate gates.")
         return 1
+    if not mcp.ok:
+        print("Host/input/persistence/plugin-source checks are green; MCP pages remain a Phase 2 blocker.")
     return 0
 
 

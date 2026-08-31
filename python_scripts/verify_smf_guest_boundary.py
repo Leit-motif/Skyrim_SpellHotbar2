@@ -69,8 +69,12 @@ def verify() -> None:
     require(guest, r"GetProcAddress\([^\n]*\"RegisterHudElement\"", "required SMF export validation")
     require(guest, r"GetProcAddress\([^\n]*\"AddWindow\"", "required SMF window export validation")
     require(guest, r"GetProcAddress\([^\n]*\"RegisterInpoutEvent\"", "required SMF input export validation")
-    require(guest, r"required_version\s*=\s*3\.14F", "minimum SMF runtime version")
-    require(guest, r"installed_version\s*<\s*required_version", "SMF runtime version gate")
+    require(guest, r"k_required_smf_release\s*=\s*3\.14F", "player-facing SMF 3.14 pin")
+    forbid(
+        guest,
+        r"if\s*\(\s*installed_version\s*<\s*required_version\s*\)",
+        "stale GetMenuFrameworkVersion fail-closed gate",
+    )
     require(guest, r"window->BlockUserInput\.store\(true\)", "blocking SMF windows")
     require(
         guest,

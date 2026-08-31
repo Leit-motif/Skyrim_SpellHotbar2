@@ -4,6 +4,7 @@ namespace SpellHotbar::Lifecycle {
     void reset();
     void on_new_game();
     void on_post_load_game();
+    void try_pending_first_initialization();
 
     bool player_has_power(int type);
     bool toggle_player_power(int type);

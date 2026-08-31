@@ -17,7 +17,7 @@ If you have created cool Screenshots or video clips using the mods I could also 
 ## Requirements
 [SKSE](https://skse.silverlock.org/)  
 [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)  
-[SKSE Menu Framework](https://github.com/Skyrim-Modding-Community/skse-menu-framework)  
+[SKSE Menu Framework 3.14+](https://www.nexusmods.com/skyrimspecialedition/mods/120352) ([runtime source](https://github.com/QTR-Modding/SKSE-Menu-Framework-3), [consumer API](https://github.com/QTR-Modding/SKSE-Menu-Framework-3-API)) — required UI host; install separately, this mod does not redistribute it  
 [OAR](https://www.nexusmods.com/skyrimspecialedition/mods/92109)  
 [Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702) - if you want icons in the swf menu  
 [Custom Skill Framework v3](https://www.nexusmods.com/skyrimspecialedition/mods/41780) - when using custom perk tree, a v2 compatible config is also provided for 1.5.97 users    
@@ -157,7 +157,7 @@ Allows the user to have a dedicated menu to slot skills with drag and drop; inpu
 
 ## SKSE
 [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSSE-NG)  
-[SKSE Menu Framework](https://github.com/Skyrim-Modding-Community/skse-menu-framework)  
+[SKSE Menu Framework](https://github.com/QTR-Modding/SKSE-Menu-Framework-3) ([consumer API](https://github.com/QTR-Modding/SKSE-Menu-Framework-3-API), [Nexus](https://www.nexusmods.com/skyrimspecialedition/mods/120352))  
 [RapidCSV](https://github.com/d99kris/rapidcsv)  
 [RapidJSON](https://rapidjson.org/)   
 [spdlog](https://github.com/gabime/spdlog)  

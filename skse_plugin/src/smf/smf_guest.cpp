@@ -61,20 +61,18 @@ namespace SpellHotbar::SmfGuest {
                 return false;
             }
 
-            constexpr float required_version = 3.14F;
+            // Player-facing minimum is SMF 3.14 (Nexus 120352; this machine's
+            // SKSE plugin version is 3.14.0 and the public MAIN file is 3.14.1).
+            // GetMenuFrameworkVersion() is stale at 3.7f in the pinned host and
+            // is logged only; required exports are the fail-closed gate.
+            constexpr float k_required_smf_release = 3.14F;
             const auto get_version = reinterpret_cast<float (*)()>(
                 GetProcAddress(module, "GetMenuFrameworkVersion"));
-            if (!get_version) {
-                logger::error("SKSE Menu Framework is missing required export 'GetMenuFrameworkVersion'");
-                return false;
-            }
-            const auto installed_version = get_version();
-            if (installed_version < required_version) {
-                logger::error(
-                    "SKSE Menu Framework {} is incompatible; Spell Hotbar 2 requires {} or newer",
-                    installed_version,
-                    required_version);
-                return false;
+            if (get_version) {
+                logger::info(
+                    "SKSE Menu Framework GetMenuFrameworkVersion() reported {}; player requirement is {}+ and is not gated on this export",
+                    get_version(),
+                    k_required_smf_release);
             }
 
             constexpr std::array required_exports{

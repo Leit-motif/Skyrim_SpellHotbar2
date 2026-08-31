@@ -9,7 +9,15 @@
 
 namespace SpellHotbar::Lifecycle {
     namespace {
+        // Vanilla SOUN 000362B6 MAGCloakIn and 0003966B MAGCloakOut — the same
+        // descriptors the retired Papyrus SoundToggleOn/SoundToggleOff properties used.
+        constexpr const char* k_dual_cast_on_sound = "MAGCloakIn";
+        constexpr const char* k_dual_cast_off_sound = "MAGCloakOut";
+
         bool initialized_this_game{ false };
+        bool pending_first_init{ false };
+        bool pending_is_new_game{ false };
+        int first_init_retries_remaining{ 0 };
 
         RE::SpellItem* power_for_type(int type)
         {
@@ -54,24 +62,19 @@ namespace SpellHotbar::Lifecycle {
             }
         }
 
-        void run_first_initialization()
+        void grant_powers(RE::PlayerCharacter* player)
         {
-            if (initialized_this_game) {
-                return;
-            }
-
-            auto* player = RE::PlayerCharacter::GetSingleton();
-            if (player == nullptr) {
-                logger::error("SpellHotbar2 first initialization deferred: player is unavailable");
-                return;
-            }
-
             for (int type = 0; type < 2; ++type) {
                 auto* power = power_for_type(type);
                 if (power != nullptr && !player->HasSpell(power)) {
                     player->AddSpell(power);
                 }
             }
+        }
+
+        void finish_first_initialization(RE::PlayerCharacter* player)
+        {
+            grant_powers(player);
 
             const bool profile_loaded = Storage::IO::load_preset("auto_profile.json", false);
             const std::filesystem::path auto_edits{
@@ -81,23 +84,50 @@ namespace SpellHotbar::Lifecycle {
                                       GameData::load_icon_edits_from_json(auto_edits.string());
 
             initialized_this_game = true;
+            pending_first_init = false;
+            first_init_retries_remaining = 0;
             logger::info(
                 "SpellHotbar2 first initialization complete (auto profile: {}, auto icon edits: {})",
                 profile_loaded,
                 edits_loaded);
+        }
+
+        void begin_first_initialization(bool is_new_game)
+        {
+            auto* player = RE::PlayerCharacter::GetSingleton();
+            const auto attempt = classify_first_init_attempt(
+                true,
+                initialized_this_game,
+                player != nullptr,
+                k_max_first_init_retries);
+
+            if (attempt == FirstInitAttempt::complete) {
+                finish_first_initialization(player);
+                return;
+            }
+
+            if (attempt == FirstInitAttempt::retry) {
+                pending_first_init = true;
+                pending_is_new_game = is_new_game;
+                first_init_retries_remaining = k_max_first_init_retries;
+                logger::warn("SpellHotbar2 first initialization deferred: player is unavailable; retrying on the main loop");
+            }
         }
     }
 
     void reset()
     {
         initialized_this_game = false;
+        pending_first_init = false;
+        pending_is_new_game = false;
+        first_init_retries_remaining = 0;
     }
 
     void on_new_game()
     {
         remove_legacy_battlemage_power();
         if (should_run_first_initialization(true, Storage::loaded_existing_settings())) {
-            run_first_initialization();
+            begin_first_initialization(true);
         }
     }
 
@@ -105,8 +135,38 @@ namespace SpellHotbar::Lifecycle {
     {
         remove_legacy_battlemage_power();
         if (should_run_first_initialization(false, Storage::loaded_existing_settings())) {
-            run_first_initialization();
+            begin_first_initialization(false);
         }
+    }
+
+    void try_pending_first_initialization()
+    {
+        if (!pending_first_init) {
+            return;
+        }
+
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        const auto attempt = classify_first_init_attempt(
+            true,
+            initialized_this_game,
+            player != nullptr,
+            first_init_retries_remaining);
+
+        if (attempt == FirstInitAttempt::complete) {
+            finish_first_initialization(player);
+            return;
+        }
+
+        if (attempt == FirstInitAttempt::retry) {
+            --first_init_retries_remaining;
+            return;
+        }
+
+        pending_first_init = false;
+        logger::error(
+            "SpellHotbar2 first initialization abandoned after {} retries (new game: {})",
+            k_max_first_init_retries,
+            pending_is_new_game);
     }
 
     bool player_has_power(int type)
@@ -134,7 +194,8 @@ namespace SpellHotbar::Lifecycle {
 
     bool open_battlemage_tree()
     {
-        if (GameData::spellhotbar_battlemage_open_perks_power == nullptr) {
+        const bool plugin_loaded = GameData::spellhotbar_battlemage_open_perks_power != nullptr;
+        if (!plugin_loaded) {
             logger::warn("Cannot open BattleMage tree: SpellHotbar_BattleMage.esp is not loaded");
             return false;
         }
@@ -147,7 +208,8 @@ namespace SpellHotbar::Lifecycle {
 
         static const RE::BSFixedString class_name{ "CustomSkills" };
         static const RE::BSFixedString function_name{ "OpenCustomSkillMenu" };
-        if (!has_papyrus_static_function(skyrim_vm->impl.get(), class_name, function_name)) {
+        const bool csf_present = has_papyrus_static_function(skyrim_vm->impl.get(), class_name, function_name);
+        if (!battlemage_tree_may_dispatch(plugin_loaded, csf_present)) {
             logger::error("Cannot open BattleMage tree: CustomSkills.OpenCustomSkillMenu is unavailable");
             return false;
         }
@@ -171,7 +233,7 @@ namespace SpellHotbar::Lifecycle {
 
         const bool enabled = toggle_global->value == 0.0F;
         toggle_global->value = enabled ? 1.0F : 0.0F;
-        RE::PlaySound(enabled ? "MAGCloakIn" : "MAGCloakOut");
+        RE::PlaySound(enabled ? k_dual_cast_on_sound : k_dual_cast_off_sound);
         return true;
     }
 }
