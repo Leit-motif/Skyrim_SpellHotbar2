@@ -804,7 +804,8 @@ namespace SpellHotbar::BindMenu {
                         }
                         RenderManager::draw_art_icon_in_editor(art_id, icon_pos, table_icon_size);
                         // Gray outranks yellow: a dead row is dead (tickets 14, 17).
-                        const ArtBarTint tint = art_bar_tint(art->art_class, Bars::menu_bar_id);
+                        const ArtBarTint tint = art_bar_tint_for_player(art->art_class, Bars::menu_bar_id,
+                            GameData::getPlayerEquipmentType());
                         if (tint == ArtBarTint::dead) {
                             RenderManager::draw_cd_overlay(icon_pos, table_icon_size, 0.0f, IM_COL32_WHITE);
                         }
@@ -1076,7 +1077,8 @@ namespace SpellHotbar::BindMenu {
             ArtBarTint slot_tint = ArtBarTint::generic;
             if (skill.type == slot_type::weapon_art) {
                 if (const ArtDefinition* slotted_art = GameData::get_art(skill.art_id)) {
-                    slot_tint = art_bar_tint(slotted_art->art_class, Bars::menu_bar_id);
+                    slot_tint = art_bar_tint_for_player(slotted_art->art_class, Bars::menu_bar_id,
+                        GameData::getPlayerEquipmentType());
                 }
             }
             const ImU32 slot_text_col = art_tint_color(slot_tint);

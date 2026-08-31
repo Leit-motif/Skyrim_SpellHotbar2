@@ -14,6 +14,8 @@ using SpellHotbar::art_class_is_live;
 using SpellHotbar::art_class_is_direct_on_bar;
 using SpellHotbar::art_class_is_live_on_bar;
 using SpellHotbar::art_bar_tint;
+using SpellHotbar::art_bar_tint_for_player;
+using SpellHotbar::art_equipped_tint;
 using SpellHotbar::ArtBarTint;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
@@ -290,6 +292,94 @@ void the_tint_tier_agrees_with_the_two_predicates_it_composes()
 			}
 		}
 	}
+}
+
+void default_bar_reads_the_equipped_weapon()
+{
+	constexpr std::uint32_t main_bar = static_cast<std::uint32_t>('MAIN');
+	// Two-handed out: the 2H art owns the stance, 1H and Dual cannot play, Generic still can.
+	expect(art_bar_tint_for_player(ArtClass::TwoHand, main_bar, EquippedType::TWOHAND) == ArtBarTint::direct,
+		"2H is direct on Default while a greatsword is out");
+	expect(art_bar_tint_for_player(ArtClass::OneHand, main_bar, EquippedType::TWOHAND) == ArtBarTint::dead,
+		"1H is dead on Default while a greatsword is out");
+	expect(art_bar_tint_for_player(ArtClass::Dual, main_bar, EquippedType::TWOHAND) == ArtBarTint::dead,
+		"Dual is dead on Default while a greatsword is out");
+	expect(art_bar_tint_for_player(ArtClass::Generic, main_bar, EquippedType::TWOHAND) == ArtBarTint::generic,
+		"Generic stays generic on Default -- it says nothing about this stance");
+
+	// Dual wield: Dual owns it and a lone one-hander does not.
+	expect(art_bar_tint_for_player(ArtClass::Dual, main_bar, EquippedType::DUAL_WIELD) == ArtBarTint::direct,
+		"Dual is direct on Default while dual wielding");
+	expect(art_bar_tint_for_player(ArtClass::Dual, main_bar, EquippedType::ONEHAND_EMPTY) == ArtBarTint::dead,
+		"Dual is dead on Default with one hand full and the other empty");
+	expect(art_bar_tint_for_player(ArtClass::OneHand, main_bar, EquippedType::ONEHAND_SHIELD) == ArtBarTint::direct,
+		"1H is direct on Default behind a shield");
+}
+
+void default_bar_grays_everything_the_runtime_would_refuse()
+{
+	constexpr std::uint32_t main_bar = static_cast<std::uint32_t>('MAIN');
+	// The defect this fixes: a bow or a staff opens no melee stance, so the runtime refuses every
+	// art, and the old bar-based tint painted them all white anyway.
+	constexpr EquippedType no_art_stances[] = {
+		EquippedType::BOW, EquippedType::CROSSBOW, EquippedType::SPELL,
+		EquippedType::STAFF_SHIELD, EquippedType::STAFF_LEFT
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto equipped : no_art_stances) {
+		for (const auto art_class : classes) {
+			expect(art_bar_tint_for_player(art_class, main_bar, equipped) == ArtBarTint::dead,
+				"Default grays every art when the equipment opens no melee stance");
+		}
+	}
+	// Barehanded only Generic survives.
+	expect(art_bar_tint_for_player(ArtClass::Generic, main_bar, EquippedType::FIST) == ArtBarTint::generic,
+		"Generic is live barehanded");
+	expect(art_bar_tint_for_player(ArtClass::TwoHand, main_bar, EquippedType::FIST) == ArtBarTint::dead,
+		"2H is dead barehanded");
+}
+
+void the_default_tint_never_disagrees_with_the_runtime_gate()
+{
+	// One rule, two readers. The bind menu must not color an art the cast would refuse, nor gray
+	// one it would allow -- `art_class_is_live` is what hotbar.cpp and casting_controller.cpp ask.
+	constexpr EquippedType equips[] = {
+		EquippedType::FIST, EquippedType::ONEHAND_EMPTY, EquippedType::ONEHAND_SHIELD,
+		EquippedType::ONEHAND_SPELL, EquippedType::DUAL_WIELD, EquippedType::TWOHAND,
+		EquippedType::BOW, EquippedType::SPELL, EquippedType::CROSSBOW,
+		EquippedType::STAFF_SHIELD, EquippedType::STAFF_LEFT
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto equipped : equips) {
+		for (const auto art_class : classes) {
+			const bool dead = art_equipped_tint(art_class, equipped) == ArtBarTint::dead;
+			expect(dead != art_class_is_live(art_class, equipped),
+				"dead on Default is exactly what the runtime would refuse");
+		}
+	}
+}
+
+void every_other_bar_keeps_its_stance_answer()
+{
+	// Only Default defers to equipment. A stance bar means the stance it names, whatever the
+	// player happens to be holding while the menu is open.
+	constexpr std::uint32_t bars[] = {
+		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAGC'),
+		static_cast<std::uint32_t>('RNGD'),
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : bars) {
+		for (const auto art_class : classes) {
+			expect(art_bar_tint_for_player(art_class, bar, EquippedType::TWOHAND) == art_bar_tint(art_class, bar),
+				"a stance bar ignores what is equipped");
+		}
+	}
+	// The sneak twin of Default resolves by equipment too -- it shares Default's stance root.
+	expect(art_bar_tint_for_player(ArtClass::TwoHand, static_cast<std::uint32_t>('MAIN') + 1,
+			   EquippedType::TWOHAND) == ArtBarTint::direct,
+		"Sneak follows Default and resolves by equipment");
 }
 
 void a_dead_class_is_never_tinted_direct()
@@ -620,6 +710,10 @@ int main()
 	every_direct_match_is_also_live();
 	the_tint_tier_agrees_with_the_two_predicates_it_composes();
 	a_dead_class_is_never_tinted_direct();
+	default_bar_reads_the_equipped_weapon();
+	default_bar_grays_everything_the_runtime_would_refuse();
+	the_default_tint_never_disagrees_with_the_runtime_gate();
+	every_other_bar_keeps_its_stance_answer();
 	the_owners_two_handed_and_dual_wield_cases();
 	custom_folder_number_is_not_a_slot_index();
 	custom_folder_files_override_name_and_icon();

@@ -212,4 +212,36 @@ enum class ArtBarTint {
 	return ArtBarTint::generic;
 }
 
+// TICKET 19. Default ('MAIN') pins no stance. `art_class_is_live_on_bar` unions every melee child
+// there and `art_class_is_direct_on_bar` owns nothing, so on Default every art reads generic --
+// the tint says nothing about what will actually fire, and with a bow or staff out it stays white
+// while the cast is refused. The runtime gate never had that problem: hotbar.cpp and
+// casting_controller.cpp both decide on `art_class_is_live(class, equipped)`. Resolve Default the
+// same way and the menu agrees with the game.
+//
+// A non-Generic class is live only for the equipment that owns it, so live-and-not-Generic *is*
+// the direct match. There is no second ownership table to keep in step with the first.
+[[nodiscard]] constexpr ArtBarTint art_equipped_tint(ArtClass art_class,
+	GameData::EquippedType equipped) noexcept
+{
+	if (!art_class_is_live(art_class, equipped)) {
+		return ArtBarTint::dead;
+	}
+	if (art_class == ArtClass::Generic) {
+		return ArtBarTint::generic;
+	}
+	return ArtBarTint::direct;
+}
+
+// The tint the bind menu paints. Every bar that names its own stance keeps the bar-based answer;
+// Default defers to what the player is holding.
+[[nodiscard]] constexpr ArtBarTint art_bar_tint_for_player(ArtClass art_class, std::uint32_t bar_id,
+	GameData::EquippedType equipped) noexcept
+{
+	if (art_bar_stance_root(bar_id) == static_cast<std::uint32_t>('MAIN')) {
+		return art_equipped_tint(art_class, equipped);
+	}
+	return art_bar_tint(art_class, bar_id);
+}
+
 }  // namespace SpellHotbar
