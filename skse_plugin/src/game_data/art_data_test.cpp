@@ -16,6 +16,7 @@ using SpellHotbar::art_class_is_live_on_bar;
 using SpellHotbar::art_bar_tint;
 using SpellHotbar::art_bar_tint_for_player;
 using SpellHotbar::art_equipped_tint;
+using SpellHotbar::art_bar_pins_no_stance;
 using SpellHotbar::ArtBarTint;
 using SpellHotbar::parse_art_duration_days;
 using SpellHotbar::parse_art_tsv;
@@ -339,6 +340,46 @@ void default_bar_grays_everything_the_runtime_would_refuse()
 		"2H is dead barehanded");
 }
 
+void both_parent_bars_defer_to_equipment()
+{
+	// Default and Melee are the only two bars that stand for a set of stances rather than one, so
+	// they are the only two with no answer of their own to give (owner, 2026-08-31: "do 'mele'
+	// too... full coverage").
+	constexpr std::uint32_t parents[] = {
+		static_cast<std::uint32_t>('MAIN'), static_cast<std::uint32_t>('MELE'),
+		static_cast<std::uint32_t>('MAIN') + 1, static_cast<std::uint32_t>('MELE') + 1,
+	};
+	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
+	for (const auto bar : parents) {
+		expect(art_bar_pins_no_stance(bar), "Default and Melee pin no stance, sneak twins included");
+		for (const auto art_class : classes) {
+			expect(art_bar_tint_for_player(art_class, bar, EquippedType::DUAL_WIELD) ==
+					   art_equipped_tint(art_class, EquippedType::DUAL_WIELD),
+				"a parent bar answers with the equipment");
+		}
+	}
+	// Melee specifically: it used to union its children and tint nothing.
+	expect(art_bar_tint_for_player(ArtClass::TwoHand, static_cast<std::uint32_t>('MELE'),
+			   EquippedType::TWOHAND) == ArtBarTint::direct,
+		"2H is direct on Melee with a greatsword out");
+	expect(art_bar_tint_for_player(ArtClass::Dual, static_cast<std::uint32_t>('MELE'),
+			   EquippedType::TWOHAND) == ArtBarTint::dead,
+		"Dual is dead on Melee with a greatsword out");
+}
+
+void only_the_parent_bars_defer()
+{
+	constexpr std::uint32_t stance_bars[] = {
+		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
+		static_cast<std::uint32_t>('1HDW'), static_cast<std::uint32_t>('2HND'),
+		static_cast<std::uint32_t>('RNGD'), static_cast<std::uint32_t>('MAGC'),
+		static_cast<std::uint32_t>('VMPL'), static_cast<std::uint32_t>('WWOL'),
+	};
+	for (const auto bar : stance_bars) {
+		expect(!art_bar_pins_no_stance(bar), "a bar that names one stance keeps its own answer");
+	}
+}
+
 void the_default_tint_never_disagrees_with_the_runtime_gate()
 {
 	// One rule, two readers. The bind menu must not color an art the cast would refuse, nor gray
@@ -366,8 +407,8 @@ void every_other_bar_keeps_its_stance_answer()
 	constexpr std::uint32_t bars[] = {
 		static_cast<std::uint32_t>('2HND'), static_cast<std::uint32_t>('1HDW'),
 		static_cast<std::uint32_t>('1HSD'), static_cast<std::uint32_t>('1HSP'),
-		static_cast<std::uint32_t>('MELE'), static_cast<std::uint32_t>('MAGC'),
-		static_cast<std::uint32_t>('RNGD'),
+		static_cast<std::uint32_t>('MAGC'), static_cast<std::uint32_t>('RNGD'),
+		static_cast<std::uint32_t>('VMPL'), static_cast<std::uint32_t>('WWOL'),
 	};
 	constexpr ArtClass classes[] = { ArtClass::OneHand, ArtClass::TwoHand, ArtClass::Dual, ArtClass::Generic };
 	for (const auto bar : bars) {
@@ -713,6 +754,8 @@ int main()
 	default_bar_reads_the_equipped_weapon();
 	default_bar_grays_everything_the_runtime_would_refuse();
 	the_default_tint_never_disagrees_with_the_runtime_gate();
+	both_parent_bars_defer_to_equipment();
+	only_the_parent_bars_defer();
 	every_other_bar_keeps_its_stance_answer();
 	the_owners_two_handed_and_dual_wield_cases();
 	custom_folder_number_is_not_a_slot_index();

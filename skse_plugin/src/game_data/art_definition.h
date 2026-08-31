@@ -233,12 +233,21 @@ enum class ArtBarTint {
 	return ArtBarTint::direct;
 }
 
-// The tint the bind menu paints. Every bar that names its own stance keeps the bar-based answer;
-// Default defers to what the player is holding.
+// Default and Melee are parent bars: they stand for a set of stances rather than one, so
+// `art_class_is_live_on_bar` unions their children and `art_class_is_direct_on_bar` owns nothing
+// on them. Every other bar names exactly one stance and its own answer is the right one.
+[[nodiscard]] constexpr bool art_bar_pins_no_stance(std::uint32_t bar_id) noexcept
+{
+	const std::uint32_t bar = art_bar_stance_root(bar_id);
+	return bar == static_cast<std::uint32_t>('MAIN') || bar == static_cast<std::uint32_t>('MELE');
+}
+
+// The tint the bind menu paints. A bar that names its own stance keeps the bar-based answer; a
+// parent bar has no stance to answer with, so it defers to what the player is holding.
 [[nodiscard]] constexpr ArtBarTint art_bar_tint_for_player(ArtClass art_class, std::uint32_t bar_id,
 	GameData::EquippedType equipped) noexcept
 {
-	if (art_bar_stance_root(bar_id) == static_cast<std::uint32_t>('MAIN')) {
+	if (art_bar_pins_no_stance(bar_id)) {
 		return art_equipped_tint(art_class, equipped);
 	}
 	return art_bar_tint(art_class, bar_id);

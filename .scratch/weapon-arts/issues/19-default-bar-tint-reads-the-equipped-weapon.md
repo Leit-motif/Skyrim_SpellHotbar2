@@ -1,4 +1,4 @@
-# 19 — The Default bar's ability tint says nothing, because Default names no stance
+# 19 — The parent bars' ability tint says nothing, because they name no stance
 
 Filed by the owner, 2026-08-31: *"currently our logic for weapon art availability coloring,
 yellow, white, gray, works for specific sets, but the logic doesn't work for Default. The ideal is
@@ -31,14 +31,19 @@ additions in [art_definition.h](../../../skse_plugin/src/game_data/art_definitio
 - `art_equipped_tint(ArtClass, EquippedType)` — dead when the runtime would refuse it, generic for
   a live Generic, direct otherwise. A non-Generic class is live only for the equipment that owns
   it, so live-and-not-Generic *is* the direct match; no second ownership table exists to drift.
-- `art_bar_tint_for_player(ArtClass, bar_id, EquippedType)` — Default (and its Sneak twin, which
-  shares the stance root) defers to equipment; every bar that names its own stance keeps the
-  existing bar-based answer unchanged.
+- `art_bar_pins_no_stance(bar_id)` — true for Default and Melee, the only two bars that stand for
+  a set of stances rather than one. Sneak twins share their parent's stance root and follow.
+- `art_bar_tint_for_player(ArtClass, bar_id, EquippedType)` — a parent bar defers to equipment;
+  every bar that names its own stance keeps the existing bar-based answer unchanged.
 
 Both bind-menu call sites — the Abilities list and the bound-slot strip — now pass
 `GameData::getPlayerEquipmentType()`.
 
-## What the player sees on Default
+Melee was added on the owner's call the same day: *"do 'mele' too. might as well go for full
+coverage."* It has the identical defect — it unions its melee children and owns nothing, so nothing
+was ever yellow there either.
+
+## What the player sees on Default and Melee
 
 | Equipped | Yellow | White | Gray |
 |---|---|---|---|
@@ -57,11 +62,13 @@ Both bind-menu call sites — the Abilities list and the bound-slot strip — no
 - [x] Full Release DLL builds at `/W4`; CTest 9/9.
 - [ ] **Owner cell.** Open the bind menu on Default with a greatsword out and confirm the 2H
       abilities read yellow, the 1H and Dual ones gray, and Generic white — then swap to a bow and
-      confirm the whole list grays. The ImGui hotbar is not agent-capturable, so the colors
-      themselves need eyes.
+      confirm the whole list grays. Repeat on Melee. The ImGui hotbar is not agent-capturable, so
+      the colors themselves need eyes.
 
-## Not done here
+## Consequence worth knowing
 
-`'MELE'` (the Melee bar) has the same shape — it unions its children and owns nothing, so nothing
-is ever yellow there either. It is at least partly informative, since it correctly grays the
-non-melee stances, and the owner asked for Default. Left alone deliberately.
+A parent bar now answers with the equipment, full stop. Hold a bow and *both* Default and Melee
+gray every ability — truthful about what would fire right now, and it is the same rule in both
+places. Neither bar is the active one while a bow is out, so this shows up only when browsing
+those bars in the menu with ranged gear equipped. If it ever reads wrong, the alternative is one
+line: fall back to `art_bar_tint` when the equipment opens no melee stance.
