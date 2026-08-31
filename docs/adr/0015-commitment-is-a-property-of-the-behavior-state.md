@@ -219,3 +219,10 @@ commitment as an optional payload (the retired `shcc` FOMOD group was one) is su
 Rotation tracking during the committed cast is a requirement of this design, not polish — a
 committed caster that cannot face a moving target is useless against dodge mods — and it is
 carried by the `bAllowRotation` modifier on the same nodes.
+
+## Amended 2026-08-31: commitment lives in `shtb`, not a second checkbox
+
+The FOMOD ruling above made `shcr` unconditional. A second Nemesis row was leftover packaging
+from the optional-patch era, not a second product. The generator-replacement files now ship
+inside `shtb` (`#shtb$31`..`$36` plus the four vanilla locomotion-state patches). Nemesis shows
+one name (`Spell Hotbar 2`). The mechanism is unchanged.

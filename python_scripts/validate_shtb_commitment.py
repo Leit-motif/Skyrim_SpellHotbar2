@@ -249,7 +249,7 @@ for graph, want_set in (("1hm_behavior", "#shtb$10"), ("magicbehavior", "#shtb$1
 EXTERNAL = {
     "1hm_behavior": {"bAllowRotation": "vanilla", "bAnimationDriven": "vanilla",
                      "bHeadTrackSpine": "vanilla", "HKSMoveON": "hotkey"},
-    "magicbehavior": {"bHeadTrackSpine": "vanilla", "bAllowRotation": "hotkey/shcr",
+    "magicbehavior": {"bHeadTrackSpine": "vanilla",
                       "bAnimationDriven": "hotkey", "HKSMoveON": "hotkey",
                       "MSCO_attackspeed": "msco"},
 }

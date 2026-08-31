@@ -1,19 +1,17 @@
-"""Static validation for ticket 58 (the `shcr` Nemesis patch).
-
-Ported from `validate_shcc.py`, minus the FOMOD checks -- ticket 58 deliberately ships no
-FOMOD option until the mechanism is owner-certified.
+"""Static validation for ticket 58's casting-commitment payload, now inside `shtb`.
 
 Checks, in order:
-  1. the expected file census, and that every file is ASCII, BOM-free, CRLF-terminated and
+  1. the commitment-owned files exist, and each is ASCII, BOM-free, CRLF-terminated and
      ends with a newline;
-  2. MOD_CODE / ORIGINAL / CLOSE markers are balanced and correctly ordered, and every
-     MOD_CODE block in a vanilla-node file carries this mod's own code (`shcr`);
-  3. every file's `<hkobject name="#X">` matches its filename, and hkobject tags balance;
-  4. every `#shcr$N` referenced anywhere in the patch is defined by exactly one of its own
-     files, and every defined node is referenced;
-  5. the four target states are wired to the nodes the ticket says they should be, and keep
-     their vanilla pointer in the ORIGINAL body;
-  6. the plant binds `bAllowRotation` uninverted, and the variable tables all grew by one.
+  2. no leftover `shcr` tree or `~shcr~` marker remains under `nemesis/`;
+  3. MOD_CODE / ORIGINAL / CLOSE markers are balanced, and commitment-owned vanilla-node
+     files carry `shtb`;
+  4. every file's `<hkobject name="#X">` matches its filename, and hkobject tags balance;
+  5. every `#shtb$31`..`$36` referenced anywhere in those files is defined by exactly one
+     of them, and every defined commitment node is referenced;
+  6. the four target states are wired to those nodes, and keep their vanilla pointer in
+     the ORIGINAL body;
+  7. the plant binds `bAllowRotation` uninverted, and shtb's own #0077 declares it.
 
 Run:  python .scratch/shcr-build/validate_shcr.py
 """
@@ -25,9 +23,14 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+SHTB = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shtb"
 SHCR = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shcr"
 
-CODE = "shcr"
+CODE = "shtb"
+NODE_BASE = 31
+BIND = f"{CODE}${NODE_BASE}"
+PLANT = f"{CODE}${NODE_BASE + 1}"
+MGS = [f"{CODE}${NODE_BASE + i}" for i in range(2, 6)]
 
 failures: list[str] = []
 checks = 0
@@ -41,22 +44,28 @@ def check(ok: bool, label: str) -> bool:
     return ok
 
 
-# ---------------------------------------------------------------- 1. census / encoding
-files = sorted(p for p in SHCR.rglob("*") if p.is_file())
-EXPECTED = {"info.ini"} | {
-    f"magicbehavior/{n}"
-    for n in (
-        [f"#{CODE}${i}.txt" for i in range(6)]
-        + ["#0077.txt", "#0078.txt", "#0079.txt"]
-        + ["#0926.txt", "#0930.txt", "#0965.txt", "#0998.txt"]
-    )
+OWNED = {
+    f"magicbehavior/#{n}.txt" for n in [BIND, PLANT, *MGS]
+} | {
+    "magicbehavior/#0078.txt",
+    "magicbehavior/#0926.txt",
+    "magicbehavior/#0930.txt",
+    "magicbehavior/#0965.txt",
+    "magicbehavior/#0998.txt",
 }
-found = {p.relative_to(SHCR).as_posix() for p in files}
-check(found == EXPECTED,
-      f"census mismatch: missing {sorted(EXPECTED - found)}, extra {sorted(found - EXPECTED)}")
-check(len(files) == 14, f"expected 14 shcr files, found {len(files)}")
+
+# ---------------------------------------------------------------- 1. census / encoding
+check(not SHCR.exists(), f"leftover shcr tree still at {SHCR.relative_to(REPO)}")
+
+files = []
+for rel in sorted(OWNED):
+    p = SHTB / rel
+    files.append(p)
+    check(p.is_file(), f"missing commitment file {rel}")
 
 for p in files:
+    if not p.is_file():
+        continue
     raw = p.read_bytes()
     rel = p.relative_to(REPO)
     check(not raw.startswith(b"\xef\xbb\xbf"), f"{rel}: BOM")
@@ -64,14 +73,23 @@ for p in files:
     check(raw.endswith(b"\r\n"), f"{rel}: missing trailing CRLF")
     check(raw.count(b"\n") == raw.count(b"\r\n"), f"{rel}: bare LF present")
 
-# ---------------------------------------------------------------- 2. MOD_CODE markers
+# ---------------------------------------------------------------- 2. no shcr residue
+nemesis_root = REPO / "nemesis"
+for p in nemesis_root.rglob("*"):
+    if not p.is_file():
+        continue
+    text = p.read_text(encoding="utf-8", errors="replace")
+    check("~shcr~" not in text and "#shcr$" not in text,
+          f"{p.relative_to(REPO)}: leftover shcr token")
+
+# ---------------------------------------------------------------- 3. MOD_CODE markers
 MARKER = re.compile(r"^<!-- (?:MOD_CODE ~(\w+)~ OPEN|(ORIGINAL)|(CLOSE)) -->$")
 
-node_files = sorted((SHCR / "magicbehavior").glob("*.txt"))
+node_files = [p for p in files if p.suffix == ".txt" and p.is_file()]
 for p in node_files:
     rel = p.relative_to(REPO)
     lines = p.read_text().replace("\r\n", "\n").split("\n")
-    state = 0  # 0 outside, 1 in addition, 2 in ORIGINAL body
+    state = 0
     opens = 0
     for ln in lines:
         m = MARKER.match(ln.strip())
@@ -93,7 +111,10 @@ for p in node_files:
     check(opens == (0 if is_new_node else 1),
           f"{rel}: expected {'0' if is_new_node else '1'} MOD_CODE block, found {opens}")
 
-# ---------------------------------------------------------------- 3. node identity
+# #0077 / #0079 are shared with the cast-state payload; they must declare bAllowRotation
+# but may carry more than one shtb block. Checked separately below.
+
+# ---------------------------------------------------------------- 4. node identity (owned files)
 OBJ = re.compile(r'<hkobject name="#([^"]+)" class="(\w+)"')
 defined: dict[str, str] = {}
 for p in node_files:
@@ -109,46 +130,47 @@ for p in node_files:
     check(text.count("<hkobject") == text.count("</hkobject>"),
           f"{rel}: unbalanced hkobject tags")
 
-# ---------------------------------------------------------------- 4. reference closure
-own = {n for n in defined if n.startswith(f"{CODE}$")}
+# ---------------------------------------------------------------- 5. reference closure among $31..$36
+own = {n for n in defined if n.startswith(f"{CODE}$") and n.split("$")[-1].isdigit()
+       and int(n.split("$")[-1]) >= NODE_BASE}
 referenced: set[str] = set()
-for p in node_files:
+# Scan the whole shtb magicbehavior tree so the four state patches count as references.
+for p in (SHTB / "magicbehavior").glob("*.txt"):
     for ref in re.findall(rf"#({re.escape(CODE)}\$\d+)", p.read_text()):
         if f"#{ref}" != p.stem:
             referenced.add(ref)
-check(referenced <= own, f"dangling references: {sorted(referenced - own)}")
-check(own <= referenced, f"unreferenced new nodes: {sorted(own - referenced)}")
-check(len(own) == 6, f"expected 6 new nodes, found {len(own)}: {sorted(own)}")
+commitment_refs = {r for r in referenced if r.split("$")[-1].isdigit() and int(r.split("$")[-1]) >= NODE_BASE}
+check(commitment_refs <= own, f"dangling commitment references: {sorted(commitment_refs - own)}")
+check(own <= commitment_refs, f"unreferenced commitment nodes: {sorted(own - commitment_refs)}")
+check(len(own) == 6, f"expected 6 commitment nodes, found {len(own)}: {sorted(own)}")
 
-# ---------------------------------------------------------------- 5. the wiring
+# ---------------------------------------------------------------- 6. the wiring
 EXPECT_CLASS = {
-    f"{CODE}$0": "hkbVariableBindingSet",
-    f"{CODE}$1": "BSIsActiveModifier",
-    f"{CODE}$2": "hkbModifierGenerator",
-    f"{CODE}$3": "hkbModifierGenerator",
-    f"{CODE}$4": "hkbModifierGenerator",
-    f"{CODE}$5": "hkbModifierGenerator",
+    BIND: "hkbVariableBindingSet",
+    PLANT: "BSIsActiveModifier",
+    MGS[0]: "hkbModifierGenerator",
+    MGS[1]: "hkbModifierGenerator",
+    MGS[2]: "hkbModifierGenerator",
+    MGS[3]: "hkbModifierGenerator",
 }
 for name, cls in EXPECT_CLASS.items():
     check(defined.get(name) == cls, f"#{name}: expected class {cls}, got {defined.get(name)}")
 
-# Each replacement generator wraps vanilla #0088 and applies the one shared modifier.
-for name in (f"{CODE}$2", f"{CODE}$3", f"{CODE}$4", f"{CODE}$5"):
-    text = (SHCR / "magicbehavior" / f"#{name}.txt").read_text()
+for name in MGS:
+    text = (SHTB / "magicbehavior" / f"#{name}.txt").read_text()
     check('<hkparam name="generator">#0088</hkparam>' in text,
           f"#{name}: does not wrap vanilla #0088")
-    check(f'<hkparam name="modifier">#{CODE}$1</hkparam>' in text,
-          f"#{name}: does not apply #{CODE}$1")
+    check(f'<hkparam name="modifier">#{PLANT}</hkparam>' in text,
+          f"#{name}: does not apply #{PLANT}")
 
-# The four target states: new generator in the MOD_CODE body, vanilla one in ORIGINAL.
 WIRING = {
-    "#0926.txt": ("MagicCastingLocomotionState", "#0923", f"#{CODE}$2"),
-    "#0930.txt": ("MagicCast_Standing", "#0088", f"#{CODE}$3"),
-    "#0965.txt": ("MagicCast_TurnLeft_State", "#0961", f"#{CODE}$4"),
-    "#0998.txt": ("MagicCast_TurnRight_State", "#0996", f"#{CODE}$5"),
+    "#0926.txt": ("MagicCastingLocomotionState", "#0923", f"#{MGS[0]}"),
+    "#0930.txt": ("MagicCast_Standing", "#0088", f"#{MGS[1]}"),
+    "#0965.txt": ("MagicCast_TurnLeft_State", "#0961", f"#{MGS[2]}"),
+    "#0998.txt": ("MagicCast_TurnRight_State", "#0996", f"#{MGS[3]}"),
 }
 for fname, (state_name, vanilla, node) in WIRING.items():
-    p = SHCR / "magicbehavior" / fname
+    p = SHTB / "magicbehavior" / fname
     if not check(p.exists(), f"missing target patch {fname}"):
         continue
     text = p.read_text().replace("\r\n", "\n")
@@ -164,31 +186,41 @@ for fname, (state_name, vanilla, node) in WIRING.items():
     check(text.count('<hkparam name="generator">') == 2,
           f"{fname}: unexpected number of generator lines")
 
-# ---------------------------------------------------------------- 6. the plant / variables
-bset = (SHCR / "magicbehavior" / f"#{CODE}$0.txt").read_text()
+# ---------------------------------------------------------------- 7. the plant / variables
+bset = (SHTB / "magicbehavior" / f"#{BIND}.txt").read_text()
 order = re.findall(r"variableIndex\">\$variableID\[(\w+)\]\$", bset)
 check(order == ["bAllowRotation"], f"binding set changed: {order}")
 check('<hkparam name="bindings" numelements="1">' in bset,
       "binding set numelements does not match its one binding")
 
-plant = (SHCR / "magicbehavior" / f"#{CODE}$1.txt").read_text()
+plant = (SHTB / "magicbehavior" / f"#{PLANT}.txt").read_text()
 inverts = re.findall(r'bInvertActive(\d)">(\w+)<', plant)
 check(inverts == [(str(i), "false") for i in range(5)], f"invert flags changed: {inverts}")
 actives = re.findall(r'bIsActive(\d)">(\w+)<', plant)
 check(actives == [(str(i), "false") for i in range(5)], f"bIsActive flags changed: {actives}")
 
-decl = (SHCR / "magicbehavior" / "#0077.txt").read_text()
-block = decl.split(f"<!-- MOD_CODE ~{CODE}~ OPEN -->")[-1].split("<!-- CLOSE -->")[0]
-check("<hkcstring>bAllowRotation</hkcstring>" in block, "#0077.txt: bAllowRotation not declared")
+decl = (SHTB / "magicbehavior" / "#0077.txt").read_text()
+check("<hkcstring>bAllowRotation</hkcstring>" in decl, "#0077.txt: bAllowRotation not declared")
+var_blocks = re.findall(
+    rf"<!-- MOD_CODE ~{CODE}~ OPEN -->(.*?)<!-- CLOSE -->",
+    decl.replace("\r\n", "\n"),
+    re.S,
+)
+check(any("<hkcstring>bAllowRotation</hkcstring>" in b for b in var_blocks),
+      "#0077.txt: bAllowRotation is not inside a shtb MOD_CODE block")
 
-counts = {
-    "#0077.txt": len(re.findall(r"<hkcstring>", block)),
-    "#0078.txt": len(re.findall(r"<hkobject>", (SHCR / "magicbehavior" / "#0078.txt").read_text()
-                                .split(f"<!-- MOD_CODE ~{CODE}~ OPEN -->")[-1].split("<!-- CLOSE -->")[0])),
-    "#0079.txt": len(re.findall(r"<hkparam name=\"type\">", (SHCR / "magicbehavior" / "#0079.txt").read_text()
-                                .split(f"<!-- MOD_CODE ~{CODE}~ OPEN -->")[-1].split("<!-- CLOSE -->")[0])),
-}
-check(set(counts.values()) == {1}, f"variable-table additions disagree: {counts}")
+info79 = (SHTB / "magicbehavior" / "#0079.txt").read_text().replace("\r\n", "\n")
+var_info = info79.split('<hkparam name="variableInfos"')[1].split('<hkparam name="eventInfos"')[0]
+check(f"<!-- MOD_CODE ~{CODE}~ OPEN -->" in var_info,
+      "#0079.txt: variableInfos has no shtb MOD_CODE block")
+block79 = var_info.split(f"<!-- MOD_CODE ~{CODE}~ OPEN -->")[-1].split("<!-- CLOSE -->")[0]
+check("<hkparam name=\"type\">VARIABLE_TYPE_BOOL</hkparam>" in block79,
+      "#0079.txt: commitment variableInfos block is not a BOOL")
+
+info78 = (SHTB / "magicbehavior" / "#0078.txt").read_text()
+block78 = info78.split(f"<!-- MOD_CODE ~{CODE}~ OPEN -->")[-1].split("<!-- CLOSE -->")[0]
+check("<hkparam name=\"value\">0</hkparam>" in block78,
+      "#0078.txt: wordVariableValues block is not a zero default")
 
 # ---------------------------------------------------------------- report
 print(f"{checks} checks, {len(failures)} failure(s)")

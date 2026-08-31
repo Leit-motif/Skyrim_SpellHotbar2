@@ -18,7 +18,7 @@ addition. Base SH2 is a hard requirement; ours installs after it and wins the co
 is compiled from upstream's own source at release `0.0.14`, with our changes on top, so it
 replaces the base DLL rather than sitting beside it.
 
-The archive holds 159 files: 155 additions, three overwrites, and a generated `README.md`.
+The archive holds one generated `README.md`, three overwrites, and the rest additions. The exact file count is whatever the current tree ships; the build fails if the archive diverges from that tree.
 
 | Overwrite | Why |
 |---|---|
@@ -26,7 +26,7 @@ The archive holds 159 files: 155 additions, three overwrites, and a generated `R
 | `Scripts/SpellHotbar.pex` | `SpellHotbar.psc` is modified. |
 | `Scripts/SpellHotbarMCM.pex` | `SpellHotbarMCM.psc` is modified. |
 
-Everything else is new: the `shtb` and `shcr` Nemesis patches, the `SpellHotbar2Casts` and
+Everything else is new: the `shtb` Nemesis patch (cast states and casting commitment), the `SpellHotbar2Casts` and
 `SpellHotbar2Arts` OAR submods, the Ability catalogues, the Weapon Art icon atlas, the
 Behavior Data Injector config, and our two `.psc` sources.
 

@@ -4,8 +4,8 @@
 			<hkparam name="enterNotifyEvents">null</hkparam>
 			<hkparam name="exitNotifyEvents">null</hkparam>
 			<hkparam name="transitions">#0962</hkparam>
-<!-- MOD_CODE ~shcr~ OPEN -->
-			<hkparam name="generator">#shcr$4</hkparam>
+<!-- MOD_CODE ~shtb~ OPEN -->
+			<hkparam name="generator">#shtb$35</hkparam>
 <!-- ORIGINAL -->
 			<hkparam name="generator">#0961</hkparam>
 <!-- CLOSE -->

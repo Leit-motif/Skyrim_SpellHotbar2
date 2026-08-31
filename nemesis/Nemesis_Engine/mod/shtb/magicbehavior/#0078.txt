@@ -243,7 +243,7 @@
 				<hkobject>
 					<hkparam name="value">0</hkparam>
 				</hkobject>
-<!-- MOD_CODE ~shcr~ OPEN -->
+<!-- MOD_CODE ~shtb~ OPEN -->
 				<hkobject>
 					<hkparam name="value">0</hkparam>
 				</hkobject>

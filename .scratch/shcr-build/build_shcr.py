@@ -1,19 +1,18 @@
-"""Generate the `shcr` Nemesis patch (ticket 58 -- casting commitment).
+"""Emit ticket 58's casting-commitment nodes into the `shtb` Nemesis patch.
 
 Ticket 58 replaces the generators behind the four vanilla `magicbehavior` casting-locomotion
-state nodes so that casting stops routing through locomotion-blending generators. This is
-Enemy Magelock's structural approach, applied globally (no player/NPC split): each of the four
-states is re-pointed at a new `hkbModifierGenerator` that wraps the vanilla standing-cast
-manual-selector generator `#0088` and applies a single `BSIsActiveModifier` bound to
-`bAllowRotation`, so the caster can still pivot while committed.
+state nodes so that casting stops routing through locomotion-blending generators. That payload
+used to live under its own mod code (`shcr`) because commitment was going to be optional. It
+is not optional; this script now folds the same files into `shtb` so Nemesis shows one row.
 
 This script is the lever: it derives the PRISTINE vanilla text of every node it patches from
 the copies other Nemesis mods ship (each of which is vanilla text plus that mod's own MOD_CODE
 blocks), cross-verifies those derivations against each other where more than one donor carries
-the same node, and then emits the `shcr` patch files with only `shcr`'s own MOD_CODE blocks.
+the same node, and then merges only the commitment MOD_CODE blocks into the existing `shtb`
+tree. It does not rewrite `shtb`'s cast-state events, `info.ini`, or any other graph.
 
 Donors are read READ-ONLY from the MO2 mods directory and the local Enemy Magelock download.
-Nothing outside the repo is written.
+Nothing outside the repo is written except under `nemesis/Nemesis_Engine/mod/shtb/`.
 
 Run:  python .scratch/shcr-build/build_shcr.py [--check]
 
@@ -29,7 +28,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-OUT = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shcr"
+OUT = REPO / "nemesis" / "Nemesis_Engine" / "mod" / "shtb"
 
 MODS = Path(r"C:\Nolvus\Instances\Nolvus Awakening\MODS\mods")
 DONOR_MSCO = MODS / "MSCO Magic Casting Behavior Overhaul" / "Nemesis_engine" / "mod" / "msco" / "magicbehavior"
@@ -39,7 +38,9 @@ DONOR_ALTMAG = Path(
     r"\Enemy Magelock - NPC Magic Casting Commitment\Nemesis_engine\mod\altmag\magicbehavior"
 )
 
-CODE = "shcr"
+CODE = "shtb"
+# magicbehavior already uses #shtb$0 .. $30 for the cast / channel / art states.
+NODE_BASE = 31
 OPEN = f"<!-- MOD_CODE ~{CODE}~ OPEN -->"
 ORIGINAL = "<!-- ORIGINAL -->"
 CLOSE = "<!-- CLOSE -->"
@@ -135,6 +136,29 @@ def append_into_array(lines: list[str], param: str, additions: list[str]) -> lis
     return out
 
 
+def array_contains(lines: list[str], param: str, needle: str) -> bool:
+    """True if `needle` already appears inside `param`'s array (including MOD_CODE bodies)."""
+    open_re = re.compile(rf'<hkparam name="{re.escape(param)}"')
+    i = 0
+    while i < len(lines):
+        if open_re.search(lines[i]) and "</hkparam>" not in lines[i]:
+            closing = f"{T}</hkparam>"
+            i += 1
+            while i < len(lines) and lines[i] != closing:
+                if needle in lines[i]:
+                    return True
+                i += 1
+            return False
+        i += 1
+    return False
+
+
+def ensure_appended(lines: list[str], param: str, additions: list[str], needle: str) -> list[str]:
+    if array_contains(lines, param, needle):
+        return lines
+    return append_into_array(lines, param, additions)
+
+
 def replace_param(lines: list[str], param: str, new_value: str, expect: str) -> list[str]:
     """Wrap the single-valued `param` line in an OPEN/ORIGINAL/CLOSE replacement.
 
@@ -182,28 +206,32 @@ def zero_variable_value() -> list[str]:
 
 
 # --------------------------------------------------------------------------------------
-# the shcr payload
+# the commitment payload (folded into shtb)
 # --------------------------------------------------------------------------------------
 
-# The one variable the plant binds that vanilla magicbehavior's 81-entry table lacks.
 NEW_VARIABLES = ["bAllowRotation"]
 
-# The vanilla standing-cast generator every replacement modifier generator wraps.
 CAST_GENERATOR = "#0088"
 
-# The four vanilla casting-locomotion states, by file: (new node, vanilla generator, name).
+BIND = f"{CODE}${NODE_BASE}"       # $31
+PLANT = f"{CODE}${NODE_BASE + 1}"  # $32
+MG0 = f"{CODE}${NODE_BASE + 2}"    # $33
+MG1 = f"{CODE}${NODE_BASE + 3}"    # $34
+MG2 = f"{CODE}${NODE_BASE + 4}"    # $35
+MG3 = f"{CODE}${NODE_BASE + 5}"    # $36
+
 STATE_PATCHES = {
-    "#0926.txt": (f"#{CODE}$2", "#0923", "MagicCastingLocomotionState"),
-    "#0930.txt": (f"#{CODE}$3", "#0088", "MagicCast_Standing"),
-    "#0965.txt": (f"#{CODE}$4", "#0961", "MagicCast_TurnLeft_State"),
-    "#0998.txt": (f"#{CODE}$5", "#0996", "MagicCast_TurnRight_State"),
+    "#0926.txt": (f"#{MG0}", "#0923", "MagicCastingLocomotionState"),
+    "#0930.txt": (f"#{MG1}", "#0088", "MagicCast_Standing"),
+    "#0965.txt": (f"#{MG2}", "#0961", "MagicCast_TurnLeft_State"),
+    "#0998.txt": (f"#{MG3}", "#0996", "MagicCast_TurnRight_State"),
 }
 
 MG_NAMES = {
-    f"{CODE}$2": "SHCR_MagicCastingLocomotion_MG",
-    f"{CODE}$3": "SHCR_MagicCast_Standing_MG",
-    f"{CODE}$4": "SHCR_MagicCast_TurnLeft_MG",
-    f"{CODE}$5": "SHCR_MagicCast_TurnRight_MG",
+    MG0: "SH2_MagicCastingLocomotion_MG",
+    MG1: "SH2_MagicCast_Standing_MG",
+    MG2: "SH2_MagicCast_TurnLeft_MG",
+    MG3: "SH2_MagicCast_TurnRight_MG",
 }
 
 
@@ -219,15 +247,15 @@ def binding(member: str, var: str) -> list[str]:
 
 
 def new_nodes() -> dict[str, list[str]]:
-    """The six nodes shcr contributes.
+    """The six nodes commitment contributes, numbered past shtb's existing $0..$30.
 
-    `$0`/`$1` mirror Enemy Magelock's `#altmag$52`/`#altmag$51` pair -- a rotation-lock
-    release and nothing else. `$2`..`$5` are the four replacement generators.
+    `$31`/`$32` mirror Enemy Magelock's `#altmag$52`/`#altmag$51` pair -- a rotation-lock
+    release and nothing else. `$33`..`$36` are the four replacement generators.
     """
     nodes: dict[str, list[str]] = {}
 
-    nodes[f"{CODE}$0"] = [
-        f'\t\t<hkobject name="#{CODE}$0" class="hkbVariableBindingSet" signature="0x338ad4ff">',
+    nodes[BIND] = [
+        f'\t\t<hkobject name="#{BIND}" class="hkbVariableBindingSet" signature="0x338ad4ff">',
         f'{T}<hkparam name="bindings" numelements="1">',
         *binding("bIsActive0", "bAllowRotation"),
         f"{T}</hkparam>",
@@ -235,11 +263,11 @@ def new_nodes() -> dict[str, list[str]]:
         "\t\t</hkobject>",
     ]
 
-    nodes[f"{CODE}$1"] = [
-        f'\t\t<hkobject name="#{CODE}$1" class="BSIsActiveModifier" signature="0xb0fde45a">',
-        f'{T}<hkparam name="variableBindingSet">#{CODE}$0</hkparam>',
+    nodes[PLANT] = [
+        f'\t\t<hkobject name="#{PLANT}" class="BSIsActiveModifier" signature="0xb0fde45a">',
+        f'{T}<hkparam name="variableBindingSet">#{BIND}</hkparam>',
         f'{T}<hkparam name="userData">2</hkparam>',
-        f'{T}<hkparam name="name">SHCR_AllowRotation_IsActiveModifier</hkparam>',
+        f'{T}<hkparam name="name">SH2_AllowRotation_IsActiveModifier</hkparam>',
         f'{T}<hkparam name="enable">true</hkparam>',
         *[
             ln
@@ -258,7 +286,7 @@ def new_nodes() -> dict[str, list[str]]:
             f'{T}<hkparam name="variableBindingSet">null</hkparam>',
             f'{T}<hkparam name="userData">1</hkparam>',
             f'{T}<hkparam name="name">{label}</hkparam>',
-            f'{T}<hkparam name="modifier">#{CODE}$1</hkparam>',
+            f'{T}<hkparam name="modifier">#{PLANT}</hkparam>',
             f'{T}<hkparam name="generator">{CAST_GENERATOR}</hkparam>',
             "\t\t</hkobject>",
         ]
@@ -267,33 +295,53 @@ def new_nodes() -> dict[str, list[str]]:
 
 
 def vanilla_patches() -> dict[str, list[str]]:
-    """The four vanilla-node patch files, plus the three variable-table declarations."""
+    """Declaration merges plus the four vanilla-node generator swaps."""
     files: dict[str, list[str]] = {}
 
-    # --- variable declarations ---------------------------------------------------------
-    # `bAllowRotation` is not vanilla; shcr declares its own so the patch stands alone.
-    # Duplicate NEW declarations across mods are tolerated by Nemesis (verified in the
-    # merged temp_behaviors output, where `bAllowRotation` appears under several codes).
+    # `bAllowRotation` is not vanilla. Duplicate NEW declarations across mods (hotkey, etc.)
+    # are tolerated by Nemesis. Folded into shtb's existing #0077 / #0079 rather than a
+    # second patch's copies of those files.
     n = len(NEW_VARIABLES)
-    files["#0077.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0077.txt", DONOR_HOTKEY / "#0077.txt", DONOR_ALTMAG / "#0077.txt"),
+    existing_77 = OUT / "magicbehavior" / "#0077.txt"
+    files["#0077.txt"] = ensure_appended(
+        read_lines(existing_77) if existing_77.exists() else pristine(
+            DONOR_MSCO / "#0077.txt", DONOR_HOTKEY / "#0077.txt", DONOR_ALTMAG / "#0077.txt"
+        ),
         "variableNames",
         [f"{T4}<hkcstring>{v}</hkcstring>" for v in NEW_VARIABLES],
-    )
-    files["#0078.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0078.txt", DONOR_HOTKEY / "#0078.txt", DONOR_ALTMAG / "#0078.txt"),
-        "wordVariableValues",
-        [ln for _ in range(n) for ln in zero_variable_value()],
-    )
-    files["#0079.txt"] = append_into_array(
-        pristine(DONOR_MSCO / "#0079.txt", DONOR_HOTKEY / "#0079.txt", DONOR_ALTMAG / "#0079.txt"),
-        "variableInfos",
-        [ln for _ in range(n) for ln in bool_variable_info()],
+        "bAllowRotation",
     )
 
-    # --- the four casting-locomotion states --------------------------------------------
-    # Only ALTMAG carries these four; the ticket-57 contention table confirms no installed
-    # mod patches them, so a single-donor derivation is the whole available evidence.
+    existing_78 = OUT / "magicbehavior" / "#0078.txt"
+    if existing_78.exists() and array_contains(read_lines(existing_78), "wordVariableValues", OPEN):
+        files["#0078.txt"] = read_lines(existing_78)
+    else:
+        base_78 = (
+            read_lines(existing_78)
+            if existing_78.exists()
+            else pristine(DONOR_MSCO / "#0078.txt", DONOR_HOTKEY / "#0078.txt", DONOR_ALTMAG / "#0078.txt")
+        )
+        files["#0078.txt"] = append_into_array(
+            base_78,
+            "wordVariableValues",
+            [ln for _ in range(n) for ln in zero_variable_value()],
+        )
+
+    existing_79 = OUT / "magicbehavior" / "#0079.txt"
+    base_79 = read_lines(existing_79) if existing_79.exists() else pristine(
+        DONOR_MSCO / "#0079.txt", DONOR_HOTKEY / "#0079.txt", DONOR_ALTMAG / "#0079.txt"
+    )
+    # variableInfos already has vanilla BOOL entries; detect our block by a MOD_CODE sitting
+    # inside that array (shtb's other #0079 block is eventInfos).
+    if array_contains(base_79, "variableInfos", OPEN):
+        files["#0079.txt"] = base_79
+    else:
+        files["#0079.txt"] = append_into_array(
+            base_79,
+            "variableInfos",
+            [ln for _ in range(n) for ln in bool_variable_info()],
+        )
+
     for fname, (node, vanilla_gen, state_name) in STATE_PATCHES.items():
         lines = pristine(DONOR_ALTMAG / fname)
         joined = "\n".join(lines)
@@ -304,24 +352,19 @@ def vanilla_patches() -> dict[str, list[str]]:
     return files
 
 
-INFO_INI = [
-    "name=Spell Hotbar 2 - Casting Commitment",
-    "author=Amrit Chana",
-    "site=null",
-    "auto=null",
-]
+def encode(lines: list[str]) -> bytes:
+    body = "\r\n".join(ln.rstrip("\r") for ln in lines)
+    if not body.endswith("\r\n"):
+        body += "\r\n"
+    return body.encode("ascii")
 
 
 def build() -> dict[Path, bytes]:
     payload: dict[Path, bytes] = {}
 
     def emit(rel: str, lines: list[str]) -> None:
-        body = "\r\n".join(ln.rstrip("\r") for ln in lines)
-        if not body.endswith("\r\n"):
-            body += "\r\n"
-        payload[OUT / rel] = body.encode("ascii")
+        payload[OUT / rel] = encode(lines)
 
-    emit("info.ini", INFO_INI)
     for name, lines in new_nodes().items():
         emit(f"magicbehavior/#{name}.txt", lines)
     for name, lines in vanilla_patches().items():
@@ -343,11 +386,7 @@ def main() -> int:
             if have != data:
                 bad += 1
                 print(f"MISMATCH {path.relative_to(REPO)}")
-        extra = {p for p in (OUT.rglob("*") if OUT.exists() else []) if p.is_file()} - set(payload)
-        for p in sorted(extra):
-            bad += 1
-            print(f"UNEXPECTED {p.relative_to(REPO)}")
-        print(f"{'FAIL' if bad else 'OK'}: {len(payload)} files checked, {bad} problem(s)")
+        print(f"{'FAIL' if bad else 'OK'}: {len(payload)} commitment files checked, {bad} problem(s)")
         return 1 if bad else 0
 
     for path, data in sorted(payload.items()):

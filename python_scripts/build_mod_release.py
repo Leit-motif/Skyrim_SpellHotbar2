@@ -405,7 +405,7 @@ def collect_members() -> list[Member]:
         add(PEX_DIR / pex_name, f"Scripts/{pex_name}")
         add(PROJECT_ROOT / psc_rel, f"Scripts/Source/{Path(psc_rel).name}")
 
-    # 3. The Nemesis patches (shtb, shcr) and the behaviour-data injector config.
+    # 3. The Nemesis patch (shtb) and the behaviour-data injector config.
     #    `nemesis/` in the repo is already the install layout, so it maps to the root.
     for rel in tracked_files("nemesis"):
         arc = str(PurePosixPath(rel).relative_to("nemesis"))
@@ -652,19 +652,25 @@ def verify_archive(archive: Path, members: list[Member], readme: str, dll_sha: s
         if zf.read("README.md").decode("utf-8") != readme:
             fail("archive README.md does not match the rendered text")
 
-        # Acceptance: the archive byte-contains the shtb and shcr patch files.
-        for code in ("shtb", "shcr"):
-            prefix = f"Nemesis_Engine/mod/{code}/"
-            patch_files = [n for n in names if n.startswith(prefix)]
-            source_count = len(tracked_files(f"nemesis/Nemesis_Engine/mod/{code}"))
-            if len(patch_files) != source_count:
-                fail(
-                    f"{code}: archive has {len(patch_files)} files, working tree has "
-                    f"{source_count}"
-                )
-            if f"{prefix}info.ini" not in names:
-                fail(f"{code}: info.ini is missing from the archive")
-            print(f"  {code}: {len(patch_files)} patch files, info.ini present")
+        # Acceptance: the archive byte-contains the one shtb patch and no leftover shcr tree.
+        prefix = "Nemesis_Engine/mod/shtb/"
+        patch_files = [n for n in names if n.startswith(prefix)]
+        source_count = len(tracked_files("nemesis/Nemesis_Engine/mod/shtb"))
+        if len(patch_files) != source_count:
+            fail(
+                f"shtb: archive has {len(patch_files)} files, working tree has "
+                f"{source_count}"
+            )
+        if f"{prefix}info.ini" not in names:
+            fail("shtb: info.ini is missing from the archive")
+        extra_codes = sorted({
+            n.split("/")[2]
+            for n in names
+            if n.startswith("Nemesis_Engine/mod/") and n.count("/") >= 2
+        } - {"shtb"})
+        if extra_codes:
+            fail(f"archive ships extra Nemesis mod codes: {extra_codes}")
+        print(f"  shtb: {len(patch_files)} patch files, info.ini present")
 
         # Acceptance: both .pex are present.
         for pex_name in PEX_SOURCES:
