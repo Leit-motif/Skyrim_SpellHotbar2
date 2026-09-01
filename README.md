@@ -26,7 +26,7 @@ If you have created cool Screenshots or video clips using the mods I could also 
 
 SkyUI is not required for Spell Hotbar 2. Configuration lives in SKSE Menu Framework's Mod Control Panel (seven pages: Keybinds, Settings, Bars, Perks, Presets, Spells, Util).
 
-Saves stay compatible with upstream 0.0.14: SKSE co-save format `5` and JSON presets format `2`. Custom fonts, when packaged, install into `Data/SKSE/Plugins/Fonts` (SMF's global font folder), not under `SpellHotbar/fonts`.
+Saves stay compatible with upstream 0.0.14: SKSE co-save format `5` and JSON presets format `2`. The HUD uses SKSE Menu Framework's default ImGui face. Optional FOMOD font files still install into `Data/SKSE/Plugins/Fonts` so the host can discover them; this guest does not call `PushFont`.
 
 Opposed to v1 DAR is no longer supported as OAR is a superior alternative in any way and has an easier file structure.  
 All papyrus lib requirements have been dropped.

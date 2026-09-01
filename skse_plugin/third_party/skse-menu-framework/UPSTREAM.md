@@ -18,7 +18,7 @@ Spell Hotbar 2 includes the header but does not link or redistribute Menu
 Framework. Calls resolve dynamically from the separately installed runtime at
 `Data/SKSE/Plugins/SKSEMenuFramework.dll`.
 
-SMF discovers consumer fonts only under `Data/SKSE/Plugins/Fonts`. A package
-slice that preserves SH2's custom text and symbol faces must install them there
-and select named faces through `SKSEMenuFramework::PushFont`; the guest-host
-slice does not move packaged assets.
+SMF discovers consumer fonts only under `Data/SKSE/Plugins/Fonts`. Optional
+FOMOD TTFs still install there so the host can discover them. This guest does
+not call `SKSEMenuFramework::PushFont`; HUD text uses the host default ImGui
+face. The private `ImFont*` pointers stay null.

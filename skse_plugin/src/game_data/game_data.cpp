@@ -578,14 +578,13 @@ namespace SpellHotbar::GameData {
 
     std::string get_key_text_long(int code)
     {
-        std::string key_name;
+        if (code < 0) {
+            return translate("$KEY_UNBOUND");
+        }
         if (key_names.contains(code)) {
             return key_names.at(code).long_text;
         }
-        else {
-            key_name= "Unknown Key";
-        }
-        return key_name;
+        return "Unknown Key";
     }
 
     std::string strip_tooltip(const std::string& input, float magnitude, uint32_t duration)
