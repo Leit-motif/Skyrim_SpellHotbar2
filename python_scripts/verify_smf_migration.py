@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from plugin_provenance import verify_provenance
+from verify_smf_ui_smoke import verify as verify_ui_smoke
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,6 +86,7 @@ def mcp_pages() -> CheckResult:
     guest = read(PLUGIN / "src" / "smf" / "smf_guest.cpp")
     required_items = (
         "Keybinds",
+        "Spell Bind Menu",
         "Settings",
         "Bars",
         "Perks",
@@ -116,8 +118,20 @@ def mcp_pages() -> CheckResult:
     elif leaked:
         detail = "addon-only tokens in MCP pages: " + ", ".join(leaked)
     else:
-        detail = "seven MCP pages registered under Spell Hotbar 2"
+        detail = "eight MCP pages registered under Spell Hotbar 2"
     return CheckResult("MCP pages", ok, detail)
+
+
+def ui_smoke() -> CheckResult:
+    try:
+        verify_ui_smoke()
+    except AssertionError as exc:
+        return CheckResult("SMF UI smoke", False, str(exc))
+    return CheckResult(
+        "SMF UI smoke",
+        True,
+        "interactive widgets gated; guest input does not starve ImGui",
+    )
 
 
 def no_private_imgui_dependencies() -> CheckResult:
@@ -296,6 +310,7 @@ def run(base: str) -> int:
         packaging_smf_and_fonts(),
         upstream_only_diff(base),
         mcp_pages(),
+        ui_smoke(),
     )
 
     for result in checks:

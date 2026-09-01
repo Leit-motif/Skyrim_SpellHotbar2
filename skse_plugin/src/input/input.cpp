@@ -104,21 +104,12 @@ namespace SpellHotbar::Input {
 
         bool captureEvent = false; // Capture this event? (do not forward to Skyrim)
 
-            if (event->eventType == RE::INPUT_EVENT_TYPE::kMouseMove) {
-                if (RenderManager::should_block_game_cursor_inputs()) {
-                    //RE::MouseMoveEvent* mouseMove = static_cast<RE::MouseMoveEvent*>(event);
-                    captureEvent = true;
-                }
-            }
-            else if (event->eventType == RE::INPUT_EVENT_TYPE::kThumbstick) {
-                if (RenderManager::should_block_game_cursor_inputs()) {
-                    RE::ThumbstickEvent* thumbstick = static_cast<RE::ThumbstickEvent*>(event);
-                    if (thumbstick->IsRight()) {
-                        captureEvent = true;
-                    }
-                }
-            }
-            else if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
+            // SMF runs this callback before TranslateInputEvent. Returning true
+            // unlinks the event from the queue, so ImGui never sees the click.
+            // Blocking SH2 windows already pause the game through
+            // WindowInterface::BlockUserInput; do not capture cursor/key events
+            // for that case. Bind-capture still consumes the next down edge.
+            if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
                 RE::ButtonEvent* bEvent = event->AsButtonEvent();
                 if (bEvent) {
                     auto [key_code, key_device] = get_device_and_input(bEvent);
@@ -166,35 +157,23 @@ namespace SpellHotbar::Input {
                     key_oblivion_cast.update(key_code, key_device, is_pressed);
                     key_oblivion_potion.update(key_code, key_device, is_pressed);
 
-                    if (key_device == RE::INPUT_DEVICE::kMouse) {
-                        if (RenderManager::should_block_game_cursor_inputs()) {
-                            captureEvent = true;
-                        }
-                    }
+                    const bool smf_blocking = RenderManager::should_block_game_key_inputs();
 
-                    if (!captureEvent && RenderManager::is_dragging_bar() && key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1) {
+                    if (RenderManager::is_dragging_bar() && key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1 && bEvent->IsDown()) {
                         RenderManager::stop_bar_dragging();
-                        captureEvent = true;
                     }
 
-                    //Block control inputs when a special frame is opened (SpellEditor)
-                    if (!captureEvent && RenderManager::should_block_game_key_inputs()) {
-                        if (key_device == RE::INPUT_DEVICE::kKeyboard || key_device == RE::INPUT_DEVICE::kGamepad) {
-                            captureEvent = true;
-
-                            if (key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1 && bEvent->IsDown()) {
-                                //Close Frames when ESC is pressed
-                                RenderManager::close_key_blocking_frames();
-                            }
-                            else if (RenderManager::is_bind_menu_opened() && Input::key_open_advanced_bind_menu.isValidBound()
-                                && bEvent->IsDown() && Input::key_open_advanced_bind_menu.matches(key_code, key_device)) {
-                                //Close Bind Menu when key is pressed
-                                RenderManager::close_key_blocking_frames();
-                            }
+                    if (smf_blocking && bEvent->IsDown()) {
+                        if (key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1) {
+                            RenderManager::close_key_blocking_frames();
+                        }
+                        else if (RenderManager::is_bind_menu_opened() && Input::key_open_advanced_bind_menu.isValidBound()
+                            && Input::key_open_advanced_bind_menu.matches(key_code, key_device)) {
+                            RenderManager::close_key_blocking_frames();
                         }
                     }
 
-                    if (!captureEvent && (key_device == RE::INPUT_DEVICE::kKeyboard || key_device == RE::INPUT_DEVICE::kGamepad || key_device == RE::INPUT_DEVICE::kMouse)) {
+                    if (!captureEvent && !smf_blocking && (key_device == RE::INPUT_DEVICE::kKeyboard || key_device == RE::INPUT_DEVICE::kGamepad || key_device == RE::INPUT_DEVICE::kMouse)) {
 
                         if (casts::CastingController::is_movement_blocking_cast() && in_ingame_state()) {
                             auto cm = RE::ControlMap::GetSingleton();
@@ -214,7 +193,7 @@ namespace SpellHotbar::Input {
                         }
                     }
 
-                    if (!captureEvent) {
+                    if (!captureEvent && !smf_blocking) {
                         bool handled{ false };
                         if (!Bars::disable_non_modifier_bar || Input::mod_1.isDown() || Input::mod_2.isDown() || Input::mod_3.isDown()) {
 

@@ -47,6 +47,16 @@ namespace SpellHotbar::SmfGuest {
             RenderManager::render_bind_menu_window();
         }
 
+        void close_host_menu()
+        {
+            if (auto* main = SKSEMenuFramework::GetMainWindow()) {
+                if (main->IsOpen.load()) {
+                    logger::info("Closing the SKSE Menu Framework control panel so a Spell Hotbar 2 window can receive input");
+                }
+                main->IsOpen.store(false);
+            }
+        }
+
         bool has_required_exports(HMODULE module)
         {
             if (!GetProcAddress(module, "RegisterHudElement")) {
@@ -63,6 +73,10 @@ namespace SpellHotbar::SmfGuest {
             }
             if (!GetProcAddress(module, "AddSectionItem")) {
                 logger::error("SKSE Menu Framework is missing required export 'AddSectionItem'");
+                return false;
+            }
+            if (!GetProcAddress(module, "GetMainWindow")) {
+                logger::error("SKSE Menu Framework is missing required export 'GetMainWindow'");
                 return false;
             }
 
@@ -90,6 +104,8 @@ namespace SpellHotbar::SmfGuest {
                 "igGetForegroundDrawList_Nil",
                 "igBegin",
                 "igEnd",
+                "igBeginChild_Str",
+                "igEndChild",
                 "igImage",
                 "ImDrawList_AddImage",
                 "ImDrawList_AddText_Vec2",
@@ -100,24 +116,84 @@ namespace SpellHotbar::SmfGuest {
                 "ImGuiListClipper_Step",
                 "igSeparatorText",
                 "igButton",
+                "igSmallButton",
+                "igInvisibleButton",
                 "igSameLine",
+                "igNewLine",
+                "igDummy",
                 "igTextV",
                 "igTextUnformatted",
+                "igTextColoredV",
                 "igPushID_Int",
                 "igPushID_Str",
                 "igPopID",
                 "igCheckbox",
+                "igRadioButton_IntPtr",
                 "igCombo_Str_arr",
+                "igBeginCombo",
+                "igEndCombo",
+                "igSelectable_Bool",
                 "igSliderFloat",
                 "igSliderInt",
                 "igInputText",
+                "igInputTextWithHint",
+                "igInputScalar",
                 "igBeginDisabled",
                 "igEndDisabled",
                 "igBeginPopupModal",
                 "igEndPopup",
                 "igOpenPopup_Str",
                 "igCloseCurrentPopup",
-                "igSeparator"};
+                "igSeparator",
+                "igBeginTable",
+                "igEndTable",
+                "igTableSetupColumn",
+                "igTableSetupScrollFreeze",
+                "igTableHeadersRow",
+                "igTableNextRow",
+                "igTableNextColumn",
+                "igTableGetSortSpecs",
+                "igBeginDragDropSource",
+                "igEndDragDropSource",
+                "igSetDragDropPayload",
+                "igBeginDragDropTarget",
+                "igEndDragDropTarget",
+                "igAcceptDragDropPayload",
+                "igGetDragDropPayload",
+                "igCollapsingHeader_TreeNodeFlags",
+                "igIsItemHovered",
+                "igBeginItemTooltip",
+                "igEndTooltip",
+                "igSetItemDefaultFocus",
+                "igSetItemKeyOwner",
+                "igPushFont",
+                "igPopFont",
+                "igPushItemWidth",
+                "igPopItemWidth",
+                "igPushStyleColor_Vec4",
+                "igPopStyleColor",
+                "igPushStyleVar_Float",
+                "igPushStyleVar_Vec2",
+                "igPopStyleVar",
+                "igPushTextWrapPos",
+                "igPopTextWrapPos",
+                "igSetNextWindowSize",
+                "igSetNextWindowPos",
+                "igSetNextWindowBgAlpha",
+                "igGetCursorScreenPos",
+                "igSetCursorScreenPos",
+                "igGetCursorPos",
+                "igSetCursorPosX",
+                "igGetContentRegionAvail",
+                "igGetWindowPos",
+                "igGetWindowSize",
+                "igGetWindowWidth",
+                "igGetWindowHeight",
+                "igGetWindowContentRegionMax",
+                "igGetItemRectMax",
+                "igGetMousePos",
+                "igGetFontSize",
+                "igCalcTextSize"};
 
             for (const auto* export_name : required_exports) {
                 if (!GetProcAddress(module, export_name)) {
@@ -169,7 +245,7 @@ namespace SpellHotbar::SmfGuest {
         }
 
         Mcp::register_pages();
-        logger::info("Spell Hotbar 2 registered one HUD element, one input callback, four blocking windows, and seven MCP pages with SKSE Menu Framework");
+        logger::info("Spell Hotbar 2 registered one HUD element, one input callback, four blocking windows, and eight MCP pages with SKSE Menu Framework");
         return true;
     }
 
@@ -184,6 +260,7 @@ namespace SpellHotbar::SmfGuest {
             return false;
         }
         close_all_windows();
+        close_host_menu();
         windows[index(window)]->IsOpen.store(true);
         return true;
     }

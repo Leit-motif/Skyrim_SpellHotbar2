@@ -17,6 +17,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "skse_plugin"
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from verify_smf_ui_smoke import verify as verify_ui_smoke
+
 
 def read(relative: str) -> str:
     path = ROOT / relative
@@ -72,13 +75,25 @@ def verify() -> None:
     require(guest, r"GetProcAddress\([^\n]*\"AddWindow\"", "required SMF window export validation")
     require(guest, r"GetProcAddress\([^\n]*\"RegisterInpoutEvent\"", "required SMF input export validation")
     require(guest, r"GetProcAddress\([^\n]*\"AddSectionItem\"", "required SMF MCP export validation")
+    require(guest, r"GetProcAddress\([^\n]*\"GetMainWindow\"", "required SMF GetMainWindow export validation")
     require(guest, r"Mcp::register_pages\s*\(\s*\)", "MCP page registration after host ready")
     require(guest, r"k_required_smf_release\s*=\s*3\.14F", "player-facing SMF 3.14 pin")
     require(pages, r'SKSEMenuFramework::SetSection\("Spell Hotbar 2"\)', "MCP section name")
-    if len(re.findall(r"SKSEMenuFramework::AddSectionItem\s*\(", pages)) != 7:
-        raise AssertionError("MCP must register exactly seven section items")
+    if len(re.findall(r"SKSEMenuFramework::AddSectionItem\s*\(", pages)) != 8:
+        raise AssertionError("MCP must register exactly eight section items")
     require(input_source, r"Mcp::bind_capture\s*\(\s*\)", "bind capture uses the single SMF input callback")
     require(input_source, r"apply_down_edge\s*\(", "bind capture consumes the next down edge")
+    require(guest, r"\"igInvisibleButton\"", "required SMF InvisibleButton export")
+    forbid(
+        input_source,
+        r"should_block_game_cursor_inputs\(\)[\s\S]{0,160}captureEvent\s*=\s*true",
+        "guest must not strip cursor events before SMF TranslateInputEvent",
+    )
+    forbid(
+        input_source,
+        r"should_block_game_key_inputs\(\)[\s\S]{0,240}captureEvent\s*=\s*true",
+        "guest must not strip keyboard events before SMF TranslateInputEvent",
+    )
     forbid(
         guest,
         r"if\s*\(\s*installed_version\s*<\s*required_version\s*\)",
@@ -87,9 +102,10 @@ def verify() -> None:
     require(guest, r"window->BlockUserInput\.store\(true\)", "blocking SMF windows")
     require(
         guest,
-        r"(?s)bool open_window\(.*?close_all_windows\(\).*?IsOpen\.store\(true\)",
-        "mutually exclusive SMF windows",
+        r"(?s)bool open_window\(.*?close_all_windows\(\).*?close_host_menu\(\).*?IsOpen\.store\(true\)",
+        "mutually exclusive SMF windows dismiss the host control panel",
     )
+    require(guest, r"SKSEMenuFramework::GetMainWindow\s*\(\s*\)", "dismiss MCP via GetMainWindow")
     require(render_source, r"synchronize_window_models_with_host\(\)", "host-close lifecycle synchronization")
 
     require(pin, r"1dcb70179076aae4ab626f43c5baab2735ca5877", "pinned SMF consumer-API commit")
@@ -106,6 +122,8 @@ def verify() -> None:
     actual_license_hash = sha256("skse_plugin/third_party/skse-menu-framework/LICENSE")
     if actual_license_hash != expected_license_hash:
         raise AssertionError(f"SMF consumer-license SHA-256 changed: {actual_license_hash}")
+
+    verify_ui_smoke()
 
 
 if __name__ == "__main__":

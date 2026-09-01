@@ -24,7 +24,7 @@ If you have created cool Screenshots or video clips using the mods I could also 
 [Sprint Sneak Movement Speed Fix](https://www.nexusmods.com/skyrimspecialedition/mods/86631) - fixes sneak hotbar casting related movement speed  
 [ImGui Icons](https://www.nexusmods.com/skyrimspecialedition/mods/114790) - OPTIONAL, allows keybind icons to be used instead of text, different styles also work.
 
-SkyUI is not required for Spell Hotbar 2. Configuration lives in SKSE Menu Framework's Mod Control Panel (seven pages: Keybinds, Settings, Bars, Perks, Presets, Spells, Util).
+SkyUI is not required for Spell Hotbar 2. Configuration lives in SKSE Menu Framework's Mod Control Panel (eight pages: Keybinds, Spell Bind Menu, Settings, Bars, Perks, Presets, Spells, Util).
 
 Saves stay compatible with upstream 0.0.14: SKSE co-save format `5` and JSON presets format `2`. The HUD uses SKSE Menu Framework's default ImGui face. Optional FOMOD font files still install into `Data/SKSE/Plugins/Fonts` so the host can discover them; this guest does not call `PushFont`.
 
@@ -35,7 +35,7 @@ All papyrus lib requirements have been dropped.
 The mod is built with CommonLib-NG and was tested on 1.5.97, 1.6.640 and 1.6.1070. Other versions will not be officially supported.
 
 ## Building
-From `skse_plugin`, configure with CMake preset `release` (`VCPKG_ROOT` must point at a CommonLibSSE-NG triplet matching `CMakePresets.json`). The Release DLL lands in `skse_plugin/build/release/SpellHotbar2.dll`. Rebuild both ESPs with `python python_scripts/build_plugins.py` (Spriggit 0.40.1). Static SMF guest checks: `python python_scripts/verify_smf_guest_boundary.py` and `python python_scripts/verify_smf_migration.py`. The FOMOD/release zip scripts read packed assets from `SPELLHOTBAR_ASSET_ROOT` (defaults to the upstream maintainer's `F:\Skyrim Dev\ADT\mods` layout) and never copy `SKSEMenuFramework.dll`.
+From `skse_plugin`, configure with CMake preset `release` (`VCPKG_ROOT` must point at a CommonLibSSE-NG triplet matching `CMakePresets.json`). The Release DLL lands in `skse_plugin/build/release/SpellHotbar2.dll`. Rebuild both ESPs with `python python_scripts/build_plugins.py` (Spriggit 0.40.1). Static SMF guest checks: `python python_scripts/verify_smf_guest_boundary.py`, `python python_scripts/verify_smf_ui_smoke.py`, and `python python_scripts/verify_smf_migration.py`. The FOMOD/release zip scripts read packed assets from `SPELLHOTBAR_ASSET_ROOT` (defaults to the upstream maintainer's `F:\Skyrim Dev\ADT\mods` layout) and never copy `SKSEMenuFramework.dll`.
 
 The consumer API header and LGPL-2.1 license are vendored under `skse_plugin/third_party/skse-menu-framework/`; see `UPSTREAM.md` there for pinned commits and hashes.
 
@@ -120,7 +120,7 @@ The Mod Control Panel can open editors for Spells and Potions. They support cust
 ![#Ingame_Editor](docs/images/spell_editor1.jpg) ![#Ingame_Editor2](docs/images/spell_editor2.jpg)  
 
 ## Advanced Bind Menu
-Allows the user to have a dedicated menu to slot skills with drag and drop; inputs are NOT forwarded to the game while this menu is open. This avoids key conflicts. Configure the "Open Binding Menu" key on the Mod Control Panel's Keybinds page, then press it while the Magic Menu or a supported inventory tab is open (potions, food, scrolls).  
+Allows the user to have a dedicated menu to slot skills with drag and drop; inputs are NOT forwarded to the game while this menu is open. This avoids key conflicts. Open it from the Mod Control Panel's Spell Bind Menu page (the panel closes so the bind window can receive clicks), or configure the "Open Binding Menu" key on the Keybinds page and press it while the Magic Menu or a supported inventory tab is open (potions, food, scrolls).  
 ![#Binding Menu](docs/images/binding_menu.jpg)
 
 ## Currently supported Spell/Perk mods with icons

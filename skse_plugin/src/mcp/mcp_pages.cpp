@@ -494,6 +494,15 @@ namespace SpellHotbar::Mcp {
             }
         }
 
+        void draw_bind_menu()
+        {
+            ImGui::TextUnformatted(
+                "Slot known spells, shouts, potions, and powers onto the current hotbar.");
+            if (ImGui::Button("Open Spell Bind Menu")) {
+                RenderManager::open_advanced_binding_menu();
+            }
+        }
+
         void draw_spells()
         {
             if (ImGui::Button("Open Spell Editor")) {
@@ -551,6 +560,7 @@ namespace SpellHotbar::Mcp {
         }
 
         void __stdcall render_keybinds() { draw_keybinds(); }
+        void __stdcall render_bind_menu() { draw_bind_menu(); }
         void __stdcall render_settings() { draw_settings(); }
         void __stdcall render_bars() { draw_bars(); }
         void __stdcall render_perks() { draw_perks(); }
@@ -563,6 +573,7 @@ namespace SpellHotbar::Mcp {
     {
         SKSEMenuFramework::SetSection("Spell Hotbar 2");
         SKSEMenuFramework::AddSectionItem("Keybinds", render_keybinds);
+        SKSEMenuFramework::AddSectionItem("Spell Bind Menu", render_bind_menu);
         SKSEMenuFramework::AddSectionItem("Settings", render_settings);
         SKSEMenuFramework::AddSectionItem("Bars", render_bars);
         SKSEMenuFramework::AddSectionItem("Perks", render_perks);
