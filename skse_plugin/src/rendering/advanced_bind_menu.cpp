@@ -1293,7 +1293,7 @@ namespace SpellHotbar::BindMenu {
 
             std::string text = GameData::resolve_slot_name(skill);
 
-            ImGui::TextColored(ImColor(slot_text_col), text.c_str());
+            ImGui::TextColored(SpellHotbarImColor(slot_text_col), text.c_str());
         }
 
         if (Bars::use_keybind_icons()) {

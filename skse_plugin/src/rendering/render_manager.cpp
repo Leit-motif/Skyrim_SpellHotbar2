@@ -735,7 +735,6 @@ TextureImage* RenderManager::load_texture(const std::string& path)
     }
     return &loaded_textures[*index];
 }
-}
 
 int RenderManager::load_texture_return_index(const std::string& path)
 {

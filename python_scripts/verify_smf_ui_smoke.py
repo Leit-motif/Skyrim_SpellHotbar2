@@ -81,6 +81,8 @@ UI_SURFACES = (
     ("Spell Edit Dialog", SRC / "rendering" / "spell_edit_dialog.cpp", "drawEditDialog"),
     ("Potion Editor", SRC / "rendering" / "potion_editor.cpp", "renderEditor"),
     ("Icon Edit Dialog", SRC / "rendering" / "icon_edit_dialog.cpp", "drawEditDialog"),
+    ("Ability Editor", SRC / "rendering" / "ability_editor.cpp", "draw"),
+    ("Art Icon Edit Dialog", SRC / "rendering" / "art_icon_edit_dialog.cpp", "draw"),
     ("Bar Drag Settings", SRC / "rendering" / "bar_dragging_config_window.cpp", "draw_window"),
     ("Bar Drag Menu", SRC / "rendering" / "render_manager.cpp", "draw_drag_menu"),
     ("Tab Buttons", SRC / "rendering" / "gui_tab_button.cpp", "draw"),

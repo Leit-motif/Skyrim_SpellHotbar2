@@ -4,7 +4,6 @@
 #include "../game_data/custom_ability_runtime.h"
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
-#include "imgui.h"
 #include "render_manager.h"
 #include "texture_csv_loader.h"
 

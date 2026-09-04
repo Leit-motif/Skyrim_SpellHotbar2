@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -17,9 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "build" / "plugins"
 PACKAGE = "Spriggit.Yaml.Skyrim"
 VERSION = "0.40.1"
-OFFICIAL_NATIVE_PEX_SHA256 = (
-    "03DD7538E14E51A6E97317C7AFBBD833F8FD2621E2DB439CB63133AB4CB42FA8"
-)
+PEX_RECORD = ROOT / "papyrus" / "Scripts" / "compiled.json"
 PLUGINS = (
     (ROOT / "plugin-src" / "SpellHotbar", "SpellHotbar.esp"),
     (ROOT / "plugin-src" / "SpellHotbar_BattleMage", "SpellHotbar_BattleMage.esp"),
@@ -42,13 +41,15 @@ def files_under(root: Path) -> dict[str, bytes]:
     }
 
 
-def verify_native_pex() -> None:
+def verify_addon_pex() -> None:
     path = ROOT / "papyrus" / "Scripts" / "SpellHotbar.pex"
+    record = json.loads(PEX_RECORD.read_text(encoding="utf-8"))
+    expected = str(record["SpellHotbar.pex"]["pex_sha256"]).upper()
     actual = hashlib.sha256(path.read_bytes()).hexdigest().upper()
-    if actual != OFFICIAL_NATIVE_PEX_SHA256:
+    if actual != expected:
         raise RuntimeError(
-            "SpellHotbar.pex is not the upstream 0.0.14 artifact: "
-            f"expected {OFFICIAL_NATIVE_PEX_SHA256}, got {actual}"
+            "SpellHotbar.pex does not match the addon compiled.json record: "
+            f"expected {expected}, got {actual}"
         )
 
 
@@ -106,7 +107,7 @@ def build_and_verify(source: Path, filename: str) -> None:
 
 def main() -> int:
     subprocess.run(["dotnet", "tool", "restore"], cwd=ROOT, check=True)
-    verify_native_pex()
+    verify_addon_pex()
     verify_provenance(ROOT)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for source, filename in PLUGINS:

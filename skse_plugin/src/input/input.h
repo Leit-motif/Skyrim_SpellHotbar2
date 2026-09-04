@@ -38,9 +38,6 @@ namespace SpellHotbar::Input {
 
 	bool slot_spell(RE::TESForm* form, size_t index);
 
-	void reset_imgui_keyboard();
-	void apply_imgui_keyboard();
-
 	class KeyModifier
 	{
     public:

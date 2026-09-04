@@ -715,8 +715,8 @@ namespace SpellHotbar
         ImVec4 color = SpellHotbarImColor(skill.color);
         color.w = alpha;
         const bool drew_icon = (skill.type == slot_type::weapon_art)
-            ? RenderManager::draw_art_icon(skill.art_id, icon_size, ImColor(color))
-            : RenderManager::draw_skill(skill.formID, icon_size, ImColor(color));
+            ? RenderManager::draw_art_icon(skill.art_id, icon_size, SpellHotbarImColor(color))
+            : RenderManager::draw_skill(skill.formID, icon_size, SpellHotbarImColor(color));
         if (!drew_icon) {
             RenderManager::draw_bg(icon_size, alpha);
         }

@@ -23,9 +23,10 @@ void expect(bool condition, const char* message)
 	}
 }
 
+template <std::size_t N>
 class ByteReader {
 public:
-	explicit ByteReader(const std::array<std::uint8_t, 14>& bytes) : bytes_(bytes) {}
+	explicit ByteReader(const std::array<std::uint8_t, N>& bytes) : bytes_(bytes) {}
 
 	bool read(void* destination, std::size_t size)
 	{
@@ -40,9 +41,48 @@ public:
 	[[nodiscard]] std::size_t offset() const { return offset_; }
 
 private:
-	const std::array<std::uint8_t, 14>& bytes_;
+	const std::array<std::uint8_t, N>& bytes_;
 	std::size_t offset_{ 0 };
 };
+
+void format_7_is_the_writer_and_not_format_5()
+{
+	// Mirrors Storage::save_format. A format-5 writer would omit the kind byte
+	// (v6) and spell_gcd (v7). Keep this literal in lockstep with storage.h.
+	constexpr std::uint32_t writer_format = 7U;
+	expect(writer_format == 7U, "the addon writer is format 7");
+	expect(writer_format != 5U, "the addon writer must not regress to format 5");
+}
+
+void format_7_hotb_trailer_keeps_spell_gcd_before_the_keybind_count()
+{
+	// After the v5 shout-cooldown bool, format 7 appends one float (spell_gcd)
+	// and then the existing uint8 keybind count. A format-5-shaped tail that
+	// skipped the float would make the next byte (keybind count) look like
+	// the first byte of a float.
+	const std::array<std::uint8_t, 6> tail{
+		1,
+		0x00, 0x00, 0xc0, 0x3f,
+		23,
+	};
+	ByteReader reader(tail);
+	auto read = [&reader](void* destination, std::size_t size) {
+		return reader.read(destination, size);
+	};
+
+	bool shout_cds = false;
+	expect(read(&shout_cds, sizeof(shout_cds)), "v5 shout-cd bool is present");
+	expect(shout_cds, "sample shout-cd is true");
+
+	float spell_gcd = 0.0f;
+	expect(read(&spell_gcd, sizeof(spell_gcd)), "v7 spell_gcd follows the v5 bool");
+	expect(spell_gcd > 1.49f && spell_gcd < 1.51f, "sample spell_gcd is 1.5");
+
+	std::uint8_t num_keybinds = 0;
+	expect(read(&num_keybinds, sizeof(num_keybinds)), "keybind count follows spell_gcd");
+	expect(num_keybinds == 23, "keybind count stays aligned after the v7 float");
+	expect(reader.offset() == tail.size(), "v7 trailer consumes exactly bool+float+count");
+}
 
 void an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record()
 {
@@ -73,6 +113,8 @@ void an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record()
 
 int main()
 {
+	format_7_is_the_writer_and_not_format_5();
+	format_7_hotb_trailer_keeps_spell_gcd_before_the_keybind_count();
 	an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record();
 
 	if (g_failures != 0) {

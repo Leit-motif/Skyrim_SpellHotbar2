@@ -99,14 +99,11 @@ def mcp_pages() -> CheckResult:
     ]
     section_ok = 'SetSection("Spell Hotbar 2")' in pages
     registered = "Mcp::register_pages()" in guest
-    addon_tokens = (
-        "Ability",
-        "Weapon Art",
-        "castSlot",
-        "save_format = 6",
+    addon_required = (
+        'SliderFloat("Spell GCD"',
     )
-    leaked = [token for token in addon_tokens if token in pages]
-    ok = not missing and section_ok and registered and not missing_items and not leaked
+    missing_addon = [token for token in addon_required if token not in pages]
+    ok = not missing and section_ok and registered and not missing_items and not missing_addon
     if missing:
         detail = "missing: " + ", ".join(missing)
     elif missing_items:
@@ -115,10 +112,10 @@ def mcp_pages() -> CheckResult:
         detail = "SetSection(\"Spell Hotbar 2\") is missing"
     elif not registered:
         detail = "SmfGuest::install does not call Mcp::register_pages()"
-    elif leaked:
-        detail = "addon-only tokens in MCP pages: " + ", ".join(leaked)
+    elif missing_addon:
+        detail = "missing addon MCP controls: " + ", ".join(missing_addon)
     else:
-        detail = "eight MCP pages registered under Spell Hotbar 2"
+        detail = "eight MCP pages plus Spell GCD registered under Spell Hotbar 2"
     return CheckResult("MCP pages", ok, detail)
 
 
@@ -194,12 +191,13 @@ def no_legacy_host_hooks() -> CheckResult:
 def serialization_formats_unchanged() -> CheckResult:
     storage = read(PLUGIN / "src" / "storage" / "storage.h")
     presets = read(PLUGIN / "src" / "storage" / "user_data_io.h")
-    save_ok = bool(re.search(r"save_format\s*=\s*5(?:U)?\s*;", storage))
+    save_ok = bool(re.search(r"save_format\s*=\s*7(?:U)?\s*;", storage))
+    not_format_5 = not re.search(r"save_format\s*=\s*5(?:U)?\s*;", storage)
     preset_ok = bool(re.search(r"preset_save_version\s*=\s*2\s*;", presets))
     return CheckResult(
         "persistence compatibility",
-        save_ok and preset_ok,
-        f"co-save format 5={save_ok}; preset format 2={preset_ok}",
+        save_ok and not_format_5 and preset_ok,
+        f"co-save format 7={save_ok}; not format 5={not_format_5}; preset format 2={preset_ok}",
     )
 
 
@@ -209,6 +207,7 @@ def mcm_retired() -> CheckResult:
         for path in (
             ROOT / "python_scripts" / "build_release_package.py",
             ROOT / "python_scripts" / "create_fomod_installer.py",
+            ROOT / "python_scripts" / "build_mod_release.py",
             ROOT / "papyrus" / "skyrimse.ppj",
         )
     )
@@ -230,7 +229,8 @@ def mcm_retired() -> CheckResult:
 def packaging_smf_and_fonts() -> CheckResult:
     fomod = read(ROOT / "python_scripts" / "create_fomod_installer.py")
     release = read(ROOT / "python_scripts" / "build_release_package.py")
-    packaging = fomod + "\n" + release
+    addon_release = read(ROOT / "python_scripts" / "build_mod_release.py")
+    packaging = fomod + "\n" + release + "\n" + addon_release
     missing = []
     if 'fileDependency file="SKSEMenuFramework.dll"' not in fomod:
         missing.append("FOMOD SMF fileDependency")
@@ -238,8 +238,14 @@ def packaging_smf_and_fonts() -> CheckResult:
         missing.append("build_plugins.py producer")
     if "SKSE/Plugins/Fonts" not in packaging:
         missing.append("SMF Fonts install path")
+    if "SpellHotbarMCM.pex" in addon_release:
+        missing.append("addon package still ships MCM")
     leaked_host = []
-    for label, text in (("create_fomod_installer.py", fomod), ("build_release_package.py", release)):
+    for label, text in (
+        ("create_fomod_installer.py", fomod),
+        ("build_release_package.py", release),
+        ("build_mod_release.py", addon_release),
+    ):
         if re.search(r"SKSEMenuFramework\.dll['\"]\s*,", text) or "SKSEMenuFramework.dll)" in text:
             leaked_host.append(label)
     stale_font_dest = "SKSE/Plugins/SpellHotbar/fonts" in fomod and 'destination="SKSE/Plugins/SpellHotbar/fonts' in fomod
@@ -277,24 +283,18 @@ def upstream_only_diff(base: str) -> CheckResult:
     except RuntimeError as error:
         return CheckResult("upstream-only scope", False, str(error))
 
-    addon_markers = (
-        ".scratch/",
-        "addon",
-        "ability",
-        "weapon_art",
-        "skse_plugin/tests/fixtures/acceptance-matrix",
+    required_markers = (
+        "skse_plugin/src/smf/smf_guest.cpp",
+        "skse_plugin/src/mcp/mcp_pages.cpp",
     )
-    leaked = [
-        path
-        for path in sorted(changed)
-        if any(marker in path.casefold() for marker in addon_markers)
-    ]
+    missing = [path for path in required_markers if path not in changed and path.replace("\\", "/") not in changed]
+    # Combined addon line: addon paths are required, not leaks.
     return CheckResult(
-        "upstream-only scope",
-        not leaked,
-        "no addon paths in committed/staged/unstaged/untracked names"
-        if not leaked
-        else "leaked paths: " + ", ".join(leaked),
+        "combined-line SMF sources",
+        not missing,
+        "guest and MCP sources are on the development line"
+        if not missing
+        else "missing combined-line sources: " + ", ".join(missing),
     )
 
 
