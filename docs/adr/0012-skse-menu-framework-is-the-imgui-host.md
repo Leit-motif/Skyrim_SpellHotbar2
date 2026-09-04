@@ -21,6 +21,6 @@ ADR-0003's load-bearing facts survive as constraints, not as a host choice: the 
 
 ## Consequences
 
-- Core Fork work: guest adapter, `ImGuiMCP` port of editors, input filter moved onto the framework's `AddInputEvent`, MCM scripts gone from the Installed Configuration.
+- Core Fork work: guest adapter, `ImGuiMCP` port of editors, input filter moved onto the framework's `AddInputEvent`, MCM scripts gone from the Installed Configuration. Implement on `ng/smf-next`; see `docs/agents/smf-addon-line.md`.
 - Compatibility Package / FOMOD: CSF 2 vs 3 tree *data* stays out of this decision.
 - A later public list without SMF is out of scope until someone chooses to reverse the hard requirement.

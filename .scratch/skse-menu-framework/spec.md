@@ -106,40 +106,15 @@ Ticket 01 is the HUD call-site spike: if MenuManager misses frames, switch to Pr
 ## Further Notes
 
 - This list already has SKSE Menu Framework 3.13-Hotfix2. Default MCP toggle in this profile is F1 / LB double-press — do not steal those for SH2 without documenting the conflict.
-- Tickets: `.scratch/skse-menu-framework/issues/` (`01` guest host, `02` MCP pages, `03` editor windows, `04` bind-menu window, `05` retire MCM). Code for `01`–`05` is on `ng/smf-next`. Development-line checkboxes can close from static/build evidence; runtime checkboxes stay open until Compatibility Evidence exists. Do not merge `ng/smf-next` into stable `origin/master` until Phase 5 runtime cells pass.
+- Tickets: `.scratch/skse-menu-framework/issues/` (`01` guest host, `02` MCP pages, `03` editor windows, `04` bind-menu window, `05` retire MCM). Code for `01`–`05` is on this branch. Procedure: `docs/agents/smf-addon-line.md`. Runtime checkboxes stay open until Compatibility Evidence exists.
 - MCP must cover the seven former SkyUI pages **and** addon-only surfaces: Spell GCD, Ability catalogue/editor, Weapon Art icons, and bind-menu Arts tab. MCM source is already removed on this branch; treat any missing addon MCP control as an open development cell, not a reason to restore SkyUI MCM.
 - JSON preset format remains `2`.
 
 ## Branch policy — `ng/smf-next`
 
-Integrate the PR branch exactly once; never reapply equivalent changes. Upstream review changes
-land on `codex/smf-migration` first and are then merged into `ng/smf-next`.
-
-Use this whenever PR #86 changes state:
-
-1. **PR remains unmerged:** continue addon development normally on `ng/smf-next`.
-2. **PR receives review fixes:** implement upstream-appropriate fixes on
-   `codex/smf-migration`, validate that branch against upstream scope, then merge its new head once
-   into `ng/smf-next`. Resolve only addon-line differences there.
-3. **PR merges preserving ancestry:** fetch upstream and merge the new `upstream/master` into the
-   addon development line. Git should recognize the seven PR commits as ancestors. Verify that the
-   final DLL still has one SMF implementation and retains addon behavior.
-4. **PR is squashed or rebased:** fetch upstream, compare patch IDs and semantic file changes, and
-   merge/rebase deliberately. Treat the accepted upstream implementation as the new baseline,
-   retain only addon-specific deltas, and verify one guest/host/input/render/lifecycle path.
-   Duplicate commit history is acceptable; duplicate runtime implementation is not.
-5. **PR is partially accepted or substantially revised:** create a reconciliation matrix mapping
-   every PR concern to upstream, addon-only, replaced, or still carried downstream. Resolve the
-   final source to one implementation before updating the baseline.
-6. **PR is rejected or abandoned:** no addon rollback is required. The addon line already owns the
-   integrated SMF implementation.
-
-The standing rule is: **carry the SMF migration downstream until upstream contains an equivalent
-implementation; integrate it exactly once into each addon lineage and ship exactly one SMF guest.**
-
-Current case (2026-09-04): **1 — PR remains unmerged** (open PR #86 at `4131cf0`). The addon line
-already contains that commit as an ancestor. Owner closed the integration handoff the same day
-after a partial live test; remaining runtime cells stay parked.
+Procedure lives in `docs/agents/smf-addon-line.md`. Current case (2026-09-04): **1 — PR remains
+unmerged** (open PR #86 at `4131cf0`). The merge is already `e19b273`. Owner parked remaining
+runtime cells the same day after a partial live test.
 
 ## 2026-08-23 — two tracks: upstream PR and addon
 

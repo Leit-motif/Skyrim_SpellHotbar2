@@ -24,6 +24,11 @@ overwrite ruling against the installed base mod rather than trusting a file list
 
 Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 
+### SMF addon line
+
+`ng/smf-next`, SKSE Menu Framework guest, Mod Control Panel, or MCM retirement: read
+`docs/agents/smf-addon-line.md` before editing the UI host or merging that branch.
+
 ### Weapon Art icon prompts
 
 For Skyrim-grounded image-generation prompts or revisions under
