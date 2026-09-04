@@ -132,7 +132,7 @@ namespace SpellHotbar::Storage::IO {
         GameData::spell_gcd = std::clamp(get_float_or_default(d, "settings.spell_gcd", 1.5f), 0.1f, 10.0f);
         bool individual_shout_cds = get_int_or_default(d, "settings.individual_shout_cooldowns", 0) != 0;
         if (individual_shout_cds != GameData::individual_shout_cooldowns) {
-            GameData::toggle_individual_shout_cooldowns;
+            GameData::toggle_individual_shout_cooldowns();
         }
 
         //oblivion mode

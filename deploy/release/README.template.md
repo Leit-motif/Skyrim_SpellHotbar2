@@ -64,12 +64,11 @@ Nemesis has to be re-run whenever you add or remove a behavior mod, this one inc
 
 ## What this overwrites
 
-This is an add-on that wins the conflict against its own base mod. It replaces three files
+This is an add-on that wins the conflict against its own base mod. It replaces two files
 from Spell Hotbar 2 and nothing else:
 
 - `SKSE/Plugins/SpellHotbar2.dll`
 - `Scripts/SpellHotbar.pex`
-- `Scripts/SpellHotbarMCM.pex`
 
 Everything else in this archive is new. The base mod's icons, fonts, presets, spell data and
 plugin come from your base install and are untouched — that is checked at build time, so a

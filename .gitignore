@@ -3,6 +3,7 @@ build
 .vs
 vcpkg_installed
 /python_scripts/.idea
+/python_scripts/__pycache__/
 /SWF_Generator/.idea
 
 # Runtime evidence (frames, captures, dumps) stays local — never on the remote

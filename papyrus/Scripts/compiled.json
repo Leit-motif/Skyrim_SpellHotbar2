@@ -7,14 +7,5 @@
     "pex_compiled_at": 1787973026,
     "pex_compiled_utc": "2026-08-29T03:10:26+00:00",
     "imported_utc": "2026-08-30T04:07:40+00:00"
-  },
-  "SpellHotbarMCM.pex": {
-    "psc": "papyrus/Scripts/Source/SpellHotbarMCM.psc",
-    "psc_sha256": "7efd96d32240178a40f7d6fdf1ce641529496e905c9d4b003718d2ecec0329c2",
-    "psc_mtime": 1787716124.863369,
-    "pex_sha256": "b374fe953290cf886c578c7908043600638ed038db6d261376859d8e3f536efc",
-    "pex_compiled_at": 1787716530,
-    "pex_compiled_utc": "2026-08-26T03:55:30+00:00",
-    "imported_utc": "2026-08-30T04:07:40+00:00"
   }
 }

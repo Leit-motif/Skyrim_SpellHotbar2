@@ -8,8 +8,14 @@
 #include "../input/modes.h"
 #include "../casts/cast_intent.h"
 #include "../casts/casting_controller.h"
+#include "../lifecycle/lifecycle.h"
+#include "runtime_state_reset.h"
 
 namespace SpellHotbar::Storage {
+
+    namespace {
+        bool has_loaded_settings{ false };
+    }
 
     std::vector<ArtBind> collect_art_binds()
     {
@@ -52,6 +58,26 @@ namespace SpellHotbar::Storage {
             skill.update_art_assignment(bind.art_id);
             logger::info("WART: restored art {} on bar {:08x} slot {}", bind.art_id, bind.bar_id, bind.slot);
         }
+    }
+
+    bool loaded_existing_settings()
+    {
+        return has_loaded_settings;
+    }
+
+    void reset_all_runtime_state()
+    {
+        reset_runtime_state(
+            Bars::reset_to_defaults,
+            Input::reset_keybinds,
+            GameData::reset_persistent_state,
+            Lifecycle::reset);
+    }
+
+    void RevertCallback(SKSE::SerializationInterface*)
+    {
+        has_loaded_settings = false;
+        reset_all_runtime_state();
     }
 
     void SaveCallback(SKSE::SerializationInterface* a_intfc)
@@ -234,16 +260,14 @@ namespace SpellHotbar::Storage {
     void LoadCallback(SKSE::SerializationInterface* a_intfc)
     {
         logger::trace("Loading from SKSE save...");
-
         //A cast intent pending from the session being left behind names a slot on a bar that is
         //about to be replaced. ShoutMCO abandons it on a game load too; withdrawing here does not
         //depend on that.
         casts::CastIntent::cancel();
         casts::CastingController::drop_live_cast();
 
-        //clear all bars
-        SpellHotbar::Bars::clear_bars();
-        GameData::oblivion_bar.clear();
+        has_loaded_settings = false;
+        reset_all_runtime_state();
 
         uint32_t type{0};
         uint32_t version{0};
@@ -255,6 +279,7 @@ namespace SpellHotbar::Storage {
 
             if (type == 'HOTB')
             {
+                has_loaded_settings = true;
                 //HOTB is now variable length
                 //logger::trace("Reading 'HOTB' data from save...");
                 //if (length != ((sizeof(bool) * 3) + (sizeof(uint8_t) * 6) + (sizeof(float)* 3) )) {

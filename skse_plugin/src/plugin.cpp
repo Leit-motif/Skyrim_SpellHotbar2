@@ -13,6 +13,8 @@
 #include "casts/casting_controller.h"
 #include "casts/clip_translation_driver.h"
 #include "casts/msco_cast_driver.h"
+#include "lifecycle/lifecycle.h"
+#include "smf/smf_guest.h"
 
 
 constexpr uint32_t serializazion_id = 0xB8498471; //random generated 4byte
@@ -26,7 +28,6 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
     SpellHotbar::Bars::init();
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
-        //logger::trace("Received SKSE Message {}", message->type);
         if (message->type == SKSE::MessagingInterface::kPostLoad) {
             //Every SKSE plugin DLL is loaded by now, so ShoutMCO's optional cast-intent export
             //can be resolved. Absent or incompatible is normal and costs nothing (ADR 0005).
@@ -36,14 +37,18 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
             //generating any later means the arts only appear on the next launch (ADR-0016).
             //Pure filesystem work, so it needs nothing the game has not set up yet.
             SpellHotbar::ArtPackGen::generate_and_cache();
-        }
-        else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+            SpellHotbar::SmfGuest::install();
+        } else if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+            SpellHotbar::RenderManager::load_fixed_textures();
             SpellHotbar::GameData::onDataLoad();
             SpellHotbar::casts::MscoCastDriver::load_charge_curve();
             logger::info("SpellHotbar2 GameData loaded!");
-        }
-        else if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
-                 message->type == SKSE::MessagingInterface::kNewGame) {
+        } else if (message->type == SKSE::MessagingInterface::kNewGame) {
+            SpellHotbar::casts::CastingController::drop_live_cast();
+            SpellHotbar::Lifecycle::on_new_game();
+        } else if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
+            SpellHotbar::Lifecycle::on_post_load_game();
+        } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
             SpellHotbar::casts::CastingController::drop_live_cast();
         }
      });
@@ -67,16 +72,15 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
     //SKSE::GetActionEventSource()->AddEventSink(event_listener);
 
     SKSE::GetPapyrusInterface()->Register(SpellHotbar::register_papyrus_functions);
-    SpellHotbar::RenderManager::install();
 
     SKSE::AllocTrampoline(1 << 4);
-    SpellHotbar::Input::install_hook();
     logger::info("SpellHotbar2 Papyrus DLL functions registered!");
 
     auto serialization = SKSE::GetSerializationInterface();
     serialization->SetUniqueID(serializazion_id);
     serialization->SetSaveCallback(SpellHotbar::Storage::SaveCallback);
     serialization->SetLoadCallback(SpellHotbar::Storage::LoadCallback);
+    serialization->SetRevertCallback(SpellHotbar::Storage::RevertCallback);
     logger::info("SpellHotbar2 serialization registered!");
 
     return true;

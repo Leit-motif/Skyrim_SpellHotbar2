@@ -18,17 +18,16 @@ addition. Base SH2 is a hard requirement; ours installs after it and wins the co
 is compiled from upstream's own source at release `0.0.14`, with our changes on top, so it
 replaces the base DLL rather than sitting beside it.
 
-The archive holds one generated `README.md`, three overwrites, and the rest additions. The exact file count is whatever the current tree ships; the build fails if the archive diverges from that tree.
+The archive holds one generated `README.md`, two overwrites, and the rest additions. The exact file count is whatever the current tree ships; the build fails if the archive diverges from that tree.
 
 | Overwrite | Why |
 |---|---|
-| `SKSE/Plugins/SpellHotbar2.dll` | Our build of upstream's source. 25 of upstream's own `.cpp` files are modified. |
-| `Scripts/SpellHotbar.pex` | `SpellHotbar.psc` is modified. |
-| `Scripts/SpellHotbarMCM.pex` | `SpellHotbarMCM.psc` is modified. |
+| `SKSE/Plugins/SpellHotbar2.dll` | Our build of upstream's source plus the SMF guest and addon gameplay. |
+| `Scripts/SpellHotbar.pex` | `SpellHotbar.psc` is modified. SkyUI MCM is retired; configuration lives on SMF pages. |
 
 Everything else is new: the `shtb` Nemesis patch (cast states and casting commitment), the `SpellHotbar2Casts` and
 `SpellHotbar2Arts` OAR submods, the Ability catalogues, the Weapon Art icon atlas, the
-Behavior Data Injector config, and our two `.psc` sources.
+Behavior Data Injector config, and the remaining `.psc` source.
 
 ## The six rules the build enforces
 
@@ -36,7 +35,7 @@ Each of these is a failure the script produces, not advice it prints.
 
 **Only git-tracked files ship.** Trees are enumerated with `git ls-files`, so a playtest
 animation drop, a scratch file, or anything `.gitignore` covers cannot reach a release. The DLL
-and the two `.pex` are the named exceptions, because they are build outputs.
+and `SpellHotbar.pex` are the named exceptions, because they are build outputs.
 
 **Every member is classified against the installed base mod, by content.** Absent from base is
 an addition. Present at the same path and different is an overwrite. Byte-identical to *any*
@@ -74,7 +73,7 @@ the building account and machine into the `.pex` header. Both `info.ini` now rea
 ## Compiled Papyrus scripts
 
 There is no Papyrus compiler on this machine — Nolvus ships no Creation Kit — so the build
-imports the two `.pex` instead of compiling them:
+imports `SpellHotbar.pex` instead of compiling it:
 
 ```bash
 python python_scripts/build_mod_release.py --refresh-pex

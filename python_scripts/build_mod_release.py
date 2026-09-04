@@ -10,7 +10,7 @@ Four rules do the real work here:
 
 1.  **Only git-tracked files ship.** Trees are enumerated through `git ls-files`, so a
     local scratch file, a playtest animation drop, or anything else `.gitignore` covers
-    cannot leak into a release. The two build outputs (the DLL, the two `.pex`) are the
+    cannot leak into a release. The two build outputs (the DLL, `SpellHotbar.pex`) are the
     named exceptions.
 2.  **Every member is classified against the installed base mod, byte for byte.**
     Absent from base -> ADDITION. Present and different -> OVERWRITE. Present and
@@ -58,7 +58,6 @@ PEX_RECORD = PEX_DIR / "compiled.json"
 # The compiled scripts we ship, and the source each was compiled from.
 PEX_SOURCES = {
     "SpellHotbar.pex": "papyrus/Scripts/Source/SpellHotbar.psc",
-    "SpellHotbarMCM.pex": "papyrus/Scripts/Source/SpellHotbarMCM.psc",
 }
 
 # Archive paths that replace a file the base mod installs. Everything else must be new.
@@ -66,17 +65,15 @@ PEX_SOURCES = {
 #
 # REQUIRED must all classify as overwrites: if one does not, either the list is stale or the
 # configured base install is not the mod it claims to be. ALLOWED is the superset that may.
-# The two `.psc` are in ALLOWED and not REQUIRED because upstream's own packer ships
+# The remaining `.psc` is in ALLOWED and not REQUIRED because upstream's own packer ships
 # `Scripts/Source/*.psc` while the FOMOD does not install them, so whether ours overwrite
 # anything depends on how the user installed the base mod.
 REQUIRED_OVERWRITES = {
     "SKSE/Plugins/SpellHotbar2.dll",
     "Scripts/SpellHotbar.pex",
-    "Scripts/SpellHotbarMCM.pex",
 }
 ALLOWED_OVERWRITES = REQUIRED_OVERWRITES | {
     "Scripts/Source/SpellHotbar.psc",
-    "Scripts/Source/SpellHotbarMCM.psc",
 }
 
 # Files under a packaged tree that stay out, and why. The reason is printed, so an
@@ -400,7 +397,7 @@ def collect_members() -> list[Member]:
         )
     add(DLL_SOURCE, "SKSE/Plugins/SpellHotbar2.dll")
 
-    # 2. The two compiled scripts, plus the sources they were compiled from.
+    # 2. The remaining compiled script, plus the source it was compiled from.
     for pex_name, psc_rel in PEX_SOURCES.items():
         add(PEX_DIR / pex_name, f"Scripts/{pex_name}")
         add(PROJECT_ROOT / psc_rel, f"Scripts/Source/{Path(psc_rel).name}")

@@ -1,6 +1,5 @@
 #include "advanced_bind_menu.h"
 #include "bind_drop.h"
-#include <imgui.h>
 #include "render_manager.h"
 #include "../input/keybinds.h"
 #include "gui_tab_button.h"
@@ -695,7 +694,7 @@ namespace SpellHotbar::BindMenu {
         bool clear_button_hovered = ImGui::IsItemHovered();
         RenderManager::draw_default_icon_in_editor(GameData::DefaultIconType::UNBIND_SLOT, p, bsize);
         if (clear_button_hovered) {
-            RenderManager::draw_highlight_overlay(p, bsize, ImColor(255,127,127));
+            RenderManager::draw_highlight_overlay(p, bsize, SpellHotbarImColor(255,127,127));
         }
         ImGui::SameLine();
 
@@ -776,7 +775,7 @@ namespace SpellHotbar::BindMenu {
             }
 
             if (tab_index == TabIndex_Arts) {
-                ImGuiListClipper clipper;
+                SpellHotbarImGuiListClipper clipper;
                 clipper.Begin(static_cast<int>(list_of_arts_filtered.size()));
                 while (clipper.Step())
                 {
@@ -847,7 +846,7 @@ namespace SpellHotbar::BindMenu {
                 }
             }
             else {
-            ImGuiListClipper clipper;
+            SpellHotbarImGuiListClipper clipper;
             clipper.Begin(static_cast<int>(list_of_skills_filtered.size()));
             while (clipper.Step())
             {
@@ -891,7 +890,7 @@ namespace SpellHotbar::BindMenu {
 
                     ImGui::TableNextColumn();
                     if (is_shout && rank == 0) {
-                        ImGui::TextColored(ImColor(0.5f, 0.5f, 0.5f), item->GetName());
+                        ImGui::TextColored(SpellHotbarImColor(0.5f, 0.5f, 0.5f), item->GetName());
                     }
                     else {
                         ImGui::TextUnformatted(item->GetName());
@@ -1245,7 +1244,7 @@ namespace SpellHotbar::BindMenu {
             }
 
             if (button_hovered || is_being_dragged) {
-                RenderManager::draw_highlight_overlay(bpos, icon_size, ImColor(127, 127, 255));
+                RenderManager::draw_highlight_overlay(bpos, icon_size, SpellHotbarImColor(127, 127, 255));
             }
             if (button_hovered && form != nullptr) {
                 if (GameData::is_clear_spell(form->formID)) {
@@ -1281,7 +1280,7 @@ namespace SpellHotbar::BindMenu {
                     hand_text = translate("$HAND_TEXT_DUAL");
                 }
                 ImVec2 tex_pos_hand(bpos.x + text_offset_x_right, bpos.y + text_offset_y);
-                ImGui::GetWindowDrawList()->AddText(tex_pos_hand, ImColor(255, 255, 255), hand_text.c_str());
+                ImGui::GetWindowDrawList()->AddText(tex_pos_hand, SpellHotbarImColor(255, 255, 255), hand_text.c_str());
             }
 
             if (skill.consumed != consumed_type::none) {
@@ -1289,7 +1288,7 @@ namespace SpellHotbar::BindMenu {
                 std::string text = std::to_string(std::clamp(count, 0Ui64, 999Ui64));
                 ImVec2 textsize = ImGui::CalcTextSize(text.c_str());
                 ImVec2 count_text_pos(bpos.x + icon_size - textsize.x, bpos.y + icon_size - textsize.y);
-                ImGui::GetWindowDrawList()->AddText(count_text_pos, ImColor(255, 255, 255), text.c_str());
+                ImGui::GetWindowDrawList()->AddText(count_text_pos, SpellHotbarImColor(255, 255, 255), text.c_str());
             }
 
             std::string text = GameData::resolve_slot_name(skill);
