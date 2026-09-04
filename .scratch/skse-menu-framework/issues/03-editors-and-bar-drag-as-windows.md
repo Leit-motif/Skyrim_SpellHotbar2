@@ -4,7 +4,9 @@
 
 **Blocked by:** 01 — Become an SMF guest
 
-**Status:** claimed — development-line windows exist on `ng/smf-next`; runtime acceptance open
+**Status:** parked — owner 2026-09-04 accepted the development line after a partial live test; remaining runtime cells stay unchecked. Do not merge to `origin/master`.
+
+**Status (superseded — see the top):** claimed — development-line windows exist on `ng/smf-next`; runtime acceptance open
 
 **Status (superseded — see the top):** deferred — post-release. Owner ruling 2026-08-29.
 
@@ -15,3 +17,7 @@
 - [ ] Main bar and Oblivion bar can be dragged from a framework window / Util action; offsets persist.
 - [ ] These tools are not drawn inside the HUD callback.
 - [ ] Editor-open still captures the keys it must and does not steal input when closed.
+
+## Comments
+
+Owner 2026-09-04: partial live test; integration handoff closed for now. Runtime checkboxes stay open. No stable merge.

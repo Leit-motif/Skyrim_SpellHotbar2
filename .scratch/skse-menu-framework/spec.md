@@ -1,6 +1,8 @@
 # SKSE Menu Framework as Spell Hotbar 2's ImGui host
 
-Status: development line `ng/smf-next` — PR #86 merged once at `e19b273`. Static/development acceptance is in progress on that branch. Runtime and stable-`master` acceptance remain open. This is not release-ready.
+Status: parked — owner 2026-09-04 accepted `ng/smf-next` after a partial live test (“feels like it works”). Remaining runtime cells stay unchecked. Do not merge to stable `origin/master`. This is not release-ready.
+
+**Status (superseded — see the top):** development line `ng/smf-next` — PR #86 merged once at `e19b273`. Static/development acceptance is in progress on that branch. Runtime and stable-`master` acceptance remain open.
 
 **Status (superseded — see the top):** deferred — post-release. Owner ruling 2026-08-29: the SMF effort was out of scope until after the first Nexus release. That gate is lifted for the addon development line; it does not authorize a stable merge.
 
@@ -135,8 +137,9 @@ Use this whenever PR #86 changes state:
 The standing rule is: **carry the SMF migration downstream until upstream contains an equivalent
 implementation; integrate it exactly once into each addon lineage and ship exactly one SMF guest.**
 
-Current case (2026-09-04): **1 — PR remains unmerged** (draft PR #86 at `4131cf0`). The addon line
-already contains that commit as an ancestor.
+Current case (2026-09-04): **1 — PR remains unmerged** (open PR #86 at `4131cf0`). The addon line
+already contains that commit as an ancestor. Owner closed the integration handoff the same day
+after a partial live test; remaining runtime cells stay parked.
 
 ## 2026-08-23 — two tracks: upstream PR and addon
 

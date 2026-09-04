@@ -4,7 +4,9 @@
 
 **Blocked by:** 01 — Become an SMF guest
 
-**Status:** claimed — development-line window exists on `ng/smf-next`; runtime acceptance open
+**Status:** parked — owner 2026-09-04 accepted the development line after a partial live test; remaining runtime cells stay unchecked. Do not merge to `origin/master`.
+
+**Status (superseded — see the top):** claimed — development-line window exists on `ng/smf-next`; runtime acceptance open
 
 **Status (superseded — see the top):** deferred — post-release. Owner ruling 2026-08-29.
 
@@ -14,3 +16,7 @@
 - [ ] The Arts tab lists Abilities / Weapon Arts; drag or assign still writes `art_id` slots.
 - [ ] The menu is not drawn from the HUD callback.
 - [ ] Existing slot-activation natives still match what the player just bound, including `castSlot` and `slotArt`.
+
+## Comments
+
+Owner 2026-09-04: partial live test; integration handoff closed for now. Runtime checkboxes stay open. No stable merge.

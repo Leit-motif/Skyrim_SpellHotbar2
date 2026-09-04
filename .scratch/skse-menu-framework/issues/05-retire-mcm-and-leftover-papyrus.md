@@ -6,7 +6,9 @@ MCM retirement stays last in *acceptance*: do not call this ticket runtime-compl
 
 **Blocked by:** 02 — Configure from the Mod Control Panel; 03 — Editors and bar drag as windows; 04 — Bind menu as a framework window
 
-**Status:** claimed — development-line MCM/init scripts removed on `ng/smf-next`; runtime acceptance open
+**Status:** parked — owner 2026-09-04 accepted the development line after a partial live test; remaining runtime cells stay unchecked. Do not merge to `origin/master`.
+
+**Status (superseded — see the top):** claimed — development-line MCM/init scripts removed on `ng/smf-next`; runtime acceptance open
 
 **Status (superseded — see the top):** deferred — post-release. Owner ruling 2026-08-29.
 
@@ -16,3 +18,7 @@ MCM retirement stays last in *acceptance*: do not call this ticket runtime-compl
 - [ ] Hidden natives still compile and drive `castSlot` / load-save / get-set binds / `slotArt` / Spell GCD.
 - [ ] New game still gets unbind/dual-cast and `auto_profile.json` from SKSE.
 - [ ] Direct Cast and Dual-Input Compatibility still pass on the same natives-and-frames seam as ticket 01.
+
+## Comments
+
+Owner 2026-09-04: partial live test; integration handoff closed for now. Runtime checkboxes stay open. No stable merge.

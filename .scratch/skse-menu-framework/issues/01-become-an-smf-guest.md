@@ -4,7 +4,9 @@
 
 **Blocked by:** None
 
-**Status:** claimed — development-line code landed on `ng/smf-next`; runtime acceptance open
+**Status:** parked — owner 2026-09-04 accepted the development line after a partial live test; remaining runtime cells stay unchecked. Do not merge to `origin/master`.
+
+**Status (superseded — see the top):** claimed — development-line code landed on `ng/smf-next`; runtime acceptance open
 
 **Status (superseded — see the top):** deferred — post-release. Owner ruling 2026-08-29.
 
@@ -16,3 +18,7 @@ Development line (`ng/smf-next` merge `e19b273`): guest registration, SMF input 
 - [ ] SH2 does not install a second ImGui context or the old UI trampolines. *(development: static boundary check; runtime: logs)*
 - [ ] ENB / Display Tweaks: bar visible and scaled; if MenuManager misses frames, only the Present-on-host-context escape hatch is used, and that choice is recorded as Compatibility Evidence.
 - [ ] Without SMF, the plugin does not `CreateContext`; it logs and stays inert as a UI host. *(static fail-closed only; live missing-SMF cell is out of scope)*
+
+## Comments
+
+Owner 2026-09-04: partial live test on `ng/smf-next` / `Dev - Spell Hotbar 2 SMF Next`; did not cover every cell; “feels like it works.” Integration handoff closed for now. Runtime checkboxes stay open. No stable merge.
