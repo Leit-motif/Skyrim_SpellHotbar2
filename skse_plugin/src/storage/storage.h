@@ -13,7 +13,9 @@ namespace SpellHotbar::Storage {
     */
     // V7: ticket 43 appends GameData::spell_gcd to the HOTB record. Older saves stop at V6 and
     // keep the 1.5s default.
-    constexpr uint32_t save_format = 7U;
+    // V8: Hotbar Action slots use kind 2. Format 7 remains readable; Action-shaped records in
+    // that legacy format are ignored rather than interpreted as FormIDs.
+    constexpr uint32_t save_format = 8U;
 
     extern std::array<RE::FormID, 12> hotbar_main;
 

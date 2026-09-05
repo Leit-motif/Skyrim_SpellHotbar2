@@ -4,6 +4,7 @@
 #include <iostream>
 
 using SpellHotbar::BindMenu::apply_bind_drop;
+using SpellHotbar::BindMenu::action_bind;
 using SpellHotbar::BindMenu::art_bind;
 using SpellHotbar::BindMenu::empty_bind;
 using SpellHotbar::BindMenu::form_bind;
@@ -44,12 +45,39 @@ void dropping_an_art_onto_a_form_replaces_the_kind()
 	expect(next.form_id == 0, "the previous FormID is cleared");
 }
 
+void dropping_an_action_onto_empty_binds_the_action_id()
+{
+	const SlotBind next = apply_bind_drop(SlotBind{}, action_bind(42));
+	expect(next.action_id == 42, "Test Action id 42 is bound");
+	expect(next.form_id == 0, "an action bind has no FormID");
+	expect(next.art_id == 0, "an action bind has no Ability id");
+}
+
+void dropping_an_action_onto_an_art_replaces_the_kind()
+{
+	SlotBind slot{ .form_id = 0, .art_id = 1, .action_id = 0 };
+	const SlotBind next = apply_bind_drop(slot, action_bind(42));
+	expect(next.action_id == 42, "Test Action replaces the Ability");
+	expect(next.form_id == 0, "the previous FormID remains clear");
+	expect(next.art_id == 0, "the previous Ability id is cleared");
+}
+
+void dropping_an_action_onto_a_form_replaces_the_kind()
+{
+	SlotBind slot{ .form_id = 0x00012FCD, .art_id = 0, .action_id = 0 };
+	const SlotBind next = apply_bind_drop(slot, action_bind(42));
+	expect(next.action_id == 42, "Test Action replaces the spell");
+	expect(next.form_id == 0, "the previous FormID is cleared");
+	expect(next.art_id == 0, "the previous Ability id remains clear");
+}
+
 void unbind_clears_an_art_slot()
 {
-	SlotBind slot{ .form_id = 0, .art_id = 1 };
+	SlotBind slot{ .form_id = 0, .art_id = 1, .action_id = 0 };
 	const SlotBind next = apply_bind_drop(slot, empty_bind());
 	expect(next.form_id == 0, "unbind leaves no FormID");
 	expect(next.art_id == 0, "unbind leaves no art id");
+	expect(next.action_id == 0, "unbind leaves no action id");
 }
 
 }  // namespace
@@ -59,6 +87,9 @@ int main()
 	dropping_test_art_onto_empty_binds_the_art_id();
 	dropping_a_form_onto_an_art_replaces_the_kind();
 	dropping_an_art_onto_a_form_replaces_the_kind();
+	dropping_an_action_onto_empty_binds_the_action_id();
+	dropping_an_action_onto_an_art_replaces_the_kind();
+	dropping_an_action_onto_a_form_replaces_the_kind();
 	unbind_clears_an_art_slot();
 
 	if (g_failures != 0) {

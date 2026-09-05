@@ -8,7 +8,9 @@ is ticket 05). Kind pickers that ticket 01 rejected stay hidden.
 
 **Blocked by:** 01, 02
 
-**Status:** ready-for-agent
+**Status:** superseded — rolled into 02
+
+**Status (superseded — rolled into 02):** ready-for-agent
 
 The bind menu on this line is the SMF guest window (`advanced_bind_menu.cpp`, SMF ticket
 04). Add the tab there. Do not restore a second ImGui host.

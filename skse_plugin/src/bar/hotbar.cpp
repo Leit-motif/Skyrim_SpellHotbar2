@@ -86,12 +86,14 @@ namespace SpellHotbar
             }
 
             auto& skill = bar.m_slotted_skills[record.slot];
-            if (version >= 6 && record.kind == 1) {
+            if (BarSerialization::is_action_record(record, version)) {
+                skill.update_action_assignment(record.payload);
+            } else if (version >= 6 && record.kind == BarSerialization::kArtSlotKind) {
                 skill.update_art_assignment(record.payload);
                 if (!GameData::get_art(record.payload)) {
                     logger::info("Restored unknown art {} on slot {}; bind kept for a later data load.", record.payload, record.slot);
                 }
-            } else {
+            } else if (version < 6 || record.kind == BarSerialization::kFormSlotKind) {
                 RE::FormID resolved_id{0};
                 serializer->ResolveFormID(record.payload, resolved_id);
                 RE::TESForm* form = RE::TESForm::LookupByID(resolved_id);
@@ -102,6 +104,13 @@ namespace SpellHotbar
                     logger::info("Removing {:8x} from bar, form no longer exists or not valid for hotbar.", resolved_id);
                     skill = 0;
                 }
+            } else {
+                // A future/unsupported kind must not fall through to the FormID path. In
+                // particular, a format-7 record carrying kind 2 is not an Action slot: old
+                // builds do not know how to interpret its payload.
+                logger::warn("Ignoring unsupported slot kind {} on slot {} in Hotbar {}.",
+                    record.kind, record.slot, name);
+                skill.clear();
             }
             skill.hand = hand_mode(std::clamp(record.hand, 0Ui8, static_cast<uint8_t>(hand_mode::end-1)));
         }
@@ -931,7 +940,7 @@ namespace SpellHotbar
 
     SlottedSkill::SlottedSkill() : SlottedSkill(0U){};
 
-    SlottedSkill::SlottedSkill(RE::FormID id) : formID(0U), art_id(0U), type(slot_type::empty), hand(hand_mode::auto_hand), consumed(consumed_type::none), color(0xFFFFFFFF)
+    SlottedSkill::SlottedSkill(RE::FormID id) : formID(0U), art_id(0U), action_id(0U), type(slot_type::empty), hand(hand_mode::auto_hand), consumed(consumed_type::none), color(0xFFFFFFFF)
     { 
         update_skill_assignment(id);
     }
@@ -947,7 +956,12 @@ namespace SpellHotbar
             ok = false;
             logger::error("Failed to write data for {}_{}", name, index);
         }
-        uint8_t kind = (type == slot_type::weapon_art) ? 1Ui8 : 0Ui8;
+        uint8_t kind = BarSerialization::kFormSlotKind;
+        if (type == slot_type::weapon_art) {
+            kind = BarSerialization::kArtSlotKind;
+        } else if (type == slot_type::action) {
+            kind = BarSerialization::kActionSlotKind;
+        }
         if (ok) {
             if (!serializer->WriteRecordData(&kind, sizeof(uint8_t))) {
                 ok = false;
@@ -955,8 +969,13 @@ namespace SpellHotbar
             }
         }
         if (ok) {
-            if (kind == 1) {
+            if (kind == BarSerialization::kArtSlotKind) {
                 if (!serializer->WriteRecordData(&this->art_id, sizeof(uint32_t))) {
+                    ok = false;
+                    logger::error("Failed to write data for {}_{}", name, index);
+                }
+            } else if (kind == BarSerialization::kActionSlotKind) {
+                if (!serializer->WriteRecordData(&this->action_id, sizeof(uint32_t))) {
                     ok = false;
                     logger::error("Failed to write data for {}_{}", name, index);
                 }
@@ -1089,11 +1108,23 @@ namespace SpellHotbar
         hand = hand_mode::auto_hand;
     }
 
+    void SlottedSkill::update_action_assignment(uint32_t p_action_id)
+    {
+        clear();
+        if (p_action_id == 0) {
+            return;
+        }
+        action_id = p_action_id;
+        type = slot_type::action;
+        hand = hand_mode::auto_hand;
+    }
+
     void SlottedSkill::clear()
     { 
         type = slot_type::empty;
         formID = 0U;
         art_id = 0U;
+        action_id = 0U;
         hand = hand_mode::auto_hand;
         consumed = consumed_type::none;
         color = 0xFFFFFFFF;

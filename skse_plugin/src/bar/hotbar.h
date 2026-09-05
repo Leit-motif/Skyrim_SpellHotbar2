@@ -18,7 +18,8 @@ enum class slot_type: uint8_t {
     lesser_power,
     shout,
     potion,
-    weapon_art
+    weapon_art,
+    action
 };
 
 enum inherit_mode
@@ -50,6 +51,7 @@ struct SlottedSkill
 {
     RE::FormID formID;
     uint32_t art_id;
+    uint32_t action_id;
     slot_type type;
     hand_mode hand;
     consumed_type consumed;
@@ -67,6 +69,7 @@ struct SlottedSkill
        Runs the classifier itself, so the accepted set cannot drift from it. */
     static bool is_bindable_form(RE::FormID p_formID);
     void update_art_assignment(uint32_t p_art_id);
+    void update_action_assignment(uint32_t p_action_id);
 };
 
 struct SubBar {

@@ -1,4 +1,5 @@
 #include "oblivion_bar.h"
+#include "hotbar_serialization.h"
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
 #include "../input/keybinds.h"
@@ -78,12 +79,21 @@ namespace SpellHotbar::Bars {
 				}
 			}
 
-			if (version >= 6 && read_kind == 1) {
+			if (version >= 6 && read_kind == BarSerialization::kArtSlotKind) {
 				if (!serializer->ReadRecordData(&read_art, sizeof(uint32_t))) {
 					logger::error("Failed to load oblivion_bar!");
 					break;
 				}
 				logger::info("Skipping art {} on oblivion bar (arts are not slotted there)", read_art);
+			} else if (version >= 6 && read_kind != BarSerialization::kFormSlotKind) {
+				// Oblivion slots only accept forms. Consume every non-form payload using the
+				// same width so a future kind (including Action kind 2) cannot be mistaken
+				// for a FormID and accidentally bind an unrelated form.
+				if (!serializer->ReadRecordData(&read_id, sizeof(uint32_t))) {
+					logger::error("Failed to load oblivion_bar!");
+					break;
+				}
+				logger::info("Skipping unsupported kind {} on oblivion bar", read_kind);
 			} else {
 				if (!serializer->ReadRecordData(&read_id, sizeof(RE::FormID))) {
 					logger::error("Failed to load oblivion_bar!");

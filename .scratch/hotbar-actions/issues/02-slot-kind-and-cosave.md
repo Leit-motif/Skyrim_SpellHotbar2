@@ -1,15 +1,21 @@
-# 02 — Action slot kind, catalogue, and co-save
+# 02 — Hotbar Actions rollup: slot kind, catalogue, editor, press, and co-save
 
 **Type:** task
 
-**What to build:** `slot_type` grows an Action arm. Slots store an action id, not a FormID
-and not an `art_id`. Kind 2 serializes. Co-save bumps. An empty catalogue exists so later
-tickets have somewhere to put rows. Press may be a stub (red flash / log).
+**What to build:** This is the claimed implementation rollup for tickets 02–05. Build the
+Hotbar Actions product slice: `slot_type` grows an Action arm; slots store an action id, not
+a FormID and not an `art_id`; kind 2 serializes; the co-save bumps; the Actions catalogue,
+SMF bind-menu/editor, physical Action press path, and optional Action costs land together.
+VirtualKey remains ticket 06. The product slice is split into isolated implementation work,
+but this ticket is the single acceptance/closure record.
 
 **Blocked by:** Nothing. Ticket 01 decides *which kinds exist*; this ticket does not wait
 to land the identity.
 
-**Status:** ready-for-agent
+**Status:** claimed — Hotbar Actions 02–05 rollup
+
+Tickets 03–05 are superseded as standalone work and their acceptance criteria are carried
+by this rollup.
 
 ## Agent tests this
 

@@ -561,8 +561,11 @@ namespace SpellHotbar::BindMenu {
 
     void apply_payload_to_skill(SlottedSkill& skill, BindPayload payload)
     {
-        const SlotBind next = apply_bind_drop(SlotBind{ .form_id = skill.formID, .art_id = skill.art_id }, payload);
-        if (next.art_id != 0) {
+        const SlotBind next = apply_bind_drop(SlotBind{ .form_id = skill.formID, .art_id = skill.art_id, .action_id = skill.action_id }, payload);
+        if (next.action_id != 0) {
+            skill.update_action_assignment(next.action_id);
+        }
+        else if (next.art_id != 0) {
             skill.update_art_assignment(next.art_id);
         }
         else if (next.form_id != 0) {
@@ -575,6 +578,9 @@ namespace SpellHotbar::BindMenu {
 
     BindPayload payload_from_skill(const SlottedSkill& skill)
     {
+        if (skill.type == slot_type::action) {
+            return action_bind(skill.action_id);
+        }
         if (skill.type == slot_type::weapon_art) {
             return art_bind(skill.art_id);
         }

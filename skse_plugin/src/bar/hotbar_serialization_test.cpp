@@ -8,6 +8,11 @@
 #include <iostream>
 
 using SpellHotbar::BarSerialization::SlotRecord;
+using SpellHotbar::BarSerialization::kActionSlotKind;
+using SpellHotbar::BarSerialization::kActionSlotSaveFormat;
+using SpellHotbar::BarSerialization::kArtSlotKind;
+using SpellHotbar::BarSerialization::kFormSlotKind;
+using SpellHotbar::BarSerialization::is_action_record;
 using SpellHotbar::BarSerialization::read_slot_record;
 using SpellHotbar::BarSerialization::slot_is_in_range;
 
@@ -45,12 +50,17 @@ private:
 	std::size_t offset_{ 0 };
 };
 
-void format_7_is_the_writer_and_not_format_5()
+void format_8_is_the_writer_and_format_7_stays_readable()
 {
-	// Mirrors Storage::save_format. A format-5 writer would omit the kind byte
-	// (v6) and spell_gcd (v7). Keep this literal in lockstep with storage.h.
-	constexpr std::uint32_t writer_format = 7U;
-	expect(writer_format == 7U, "the addon writer is format 7");
+	// Mirrors Storage::save_format. Format 8 adds Action kind 2 while format 7
+	// remains a readable legacy record version. Keep this literal in lockstep
+	// with storage.h.
+	constexpr std::uint32_t writer_format = 8U;
+	expect(writer_format == kActionSlotSaveFormat, "the addon writer is the Action save format");
+	expect(kFormSlotKind == 0U, "form slots keep kind 0");
+	expect(kArtSlotKind == 1U, "Ability slots keep kind 1");
+	expect(kActionSlotKind == 2U, "Action slots use kind 2");
+	expect(writer_format != 7U, "the addon writer must bump past format 7 for Action slots");
 	expect(writer_format != 5U, "the addon writer must not regress to format 5");
 }
 
@@ -84,6 +94,27 @@ void format_7_hotb_trailer_keeps_spell_gcd_before_the_keybind_count()
 	expect(reader.offset() == tail.size(), "v7 trailer consumes exactly bool+float+count");
 }
 
+void action_kind_is_only_supported_in_format_8()
+{
+	// Version 7 can parse the kind byte introduced in v6, but it must not
+	// interpret a future kind 2 payload as a FormID. Format 8 owns Action ids.
+	const std::array<std::uint8_t, 7> bytes{
+		3, 2, 0x2a, 0x00, 0x00, 0x00, 1,
+	};
+	ByteReader reader(bytes);
+	auto read = [&reader](void* destination, std::size_t size) {
+		return reader.read(destination, size);
+	};
+
+	SlotRecord action;
+	expect(read_slot_record(read, 7, action), "format 7 Action-shaped record is readable");
+	expect(action.kind == 2, "the Action record keeps kind 2");
+	expect(!is_action_record(action, 7), "format 7 does not restore an Action slot");
+	expect(is_action_record(action, 8), "format 8 restores an Action slot");
+	expect(action.payload == 42, "the Action id is the payload");
+	expect(action.hand == 1, "the Action record keeps its hand byte");
+}
+
 void an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record()
 {
 	// Version 6 record layout: slot, kind, 32-bit payload, hand.
@@ -113,8 +144,9 @@ void an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record()
 
 int main()
 {
-	format_7_is_the_writer_and_not_format_5();
+	format_8_is_the_writer_and_format_7_stays_readable();
 	format_7_hotb_trailer_keeps_spell_gcd_before_the_keybind_count();
+	action_kind_is_only_supported_in_format_8();
 	an_out_of_range_slot_is_rejected_without_desynchronizing_the_next_record();
 
 	if (g_failures != 0) {

@@ -9,7 +9,9 @@ HUD shows cooldown overlay when a costed Action is on CD.
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** superseded — rolled into 02
+
+**Status (superseded — rolled into 02):** ready-for-agent
 
 ## You test this
 

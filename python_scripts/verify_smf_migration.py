@@ -190,14 +190,22 @@ def no_legacy_host_hooks() -> CheckResult:
 
 def serialization_formats_unchanged() -> CheckResult:
     storage = read(PLUGIN / "src" / "storage" / "storage.h")
+    storage_impl = read(PLUGIN / "src" / "storage" / "storage.cpp")
+    hotbar_serialization = read(PLUGIN / "src" / "bar" / "hotbar_serialization.h")
+    hotbar = read(PLUGIN / "src" / "bar" / "hotbar.cpp")
     presets = read(PLUGIN / "src" / "storage" / "user_data_io.h")
-    save_ok = bool(re.search(r"save_format\s*=\s*7(?:U)?\s*;", storage))
+    save_ok = bool(re.search(r"save_format\s*=\s*8(?:U)?\s*;", storage))
     not_format_5 = not re.search(r"save_format\s*=\s*5(?:U)?\s*;", storage)
+    legacy_format_7_readable = bool(re.search(r"version\s*>=\s*7U", storage_impl))
+    action_format_8_guarded = (
+        bool(re.search(r"kActionSlotSaveFormat\s*=\s*8U", hotbar_serialization))
+        and "is_action_record" in hotbar
+    )
     preset_ok = bool(re.search(r"preset_save_version\s*=\s*2\s*;", presets))
     return CheckResult(
         "persistence compatibility",
-        save_ok and not_format_5 and preset_ok,
-        f"co-save format 7={save_ok}; not format 5={not_format_5}; preset format 2={preset_ok}",
+        save_ok and not_format_5 and legacy_format_7_readable and action_format_8_guarded and preset_ok,
+        f"co-save format 8={save_ok}; format 7 readable={legacy_format_7_readable}; Action kind guarded at 8={action_format_8_guarded}; not format 5={not_format_5}; preset format 2={preset_ok}",
     )
 
 

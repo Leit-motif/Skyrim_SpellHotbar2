@@ -9,7 +9,7 @@ ADR-0012 is the host decision. This file is the branch and merge procedure.
 |---|---|---|
 | Stable addon | `origin/master` (`main` locally) | Shipped addon: SkyUI MCM + private ImGui host. Do not land SMF here yet. |
 | Forward addon | `ng/smf-next` | Current mod development: upstream SH2 + the folded-in SMF guest + addon gameplay. |
-| Upstream PR | `codex/smf-migration` | PR #86 only. No Ability, Weapon Art, Direct Cast, format 7, or addon branding. |
+| Upstream PR | `codex/smf-migration` | PR #86 only. No Ability, Weapon Art, Direct Cast, format 8, or addon branding. |
 
 Worktrees:
 
@@ -46,4 +46,4 @@ Missing-SMF live load stays out of scope; static fail-closed is the evidence.
 
 Standing rule: carry the migration downstream until upstream has an equivalent implementation; integrate it once per addon lineage; ship one SMF guest.
 
-Invariants on `ng/smf-next`: one `SpellHotbar2.dll`; Papyrus class `SpellHotbar`; unique id `0xB8498471`; co-save format 7 (format 6 still loads Ability slots); JSON presets format 2; SMF is a hard requirement and is not redistributed.
+Invariants on `ng/smf-next`: one `SpellHotbar2.dll`; Papyrus class `SpellHotbar`; unique id `0xB8498471`; co-save format 8 (format 7 still loads, and format 6 still loads Ability slots); JSON presets format 2; SMF is a hard requirement and is not redistributed.

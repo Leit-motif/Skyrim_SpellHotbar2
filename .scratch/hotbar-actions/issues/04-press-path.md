@@ -8,7 +8,9 @@ physical OCPA already does (mco-integration ticket 10). Equip mode refuses.
 
 **Blocked by:** 01, 02, 03
 
-**Status:** ready-for-agent
+**Status:** superseded — rolled into 02
+
+**Status (superseded — rolled into 02):** ready-for-agent
 
 ## You test this
 

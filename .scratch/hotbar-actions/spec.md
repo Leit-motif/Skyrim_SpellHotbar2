@@ -177,10 +177,10 @@ A good test is an observable move, not a log that a `ButtonEvent` was queued.
 | # | File | Status |
 |---|---|---|
 | 01 | `issues/01-spike-injected-ocpa-and-dodge.md` | resolved — physical-scancode v1 |
-| 02 | `issues/02-slot-kind-and-cosave.md` | ready-for-agent |
-| 03 | `issues/03-actions-tab-and-editor.md` | ready-for-agent, blocked by 01+02 |
-| 04 | `issues/04-press-path.md` | ready-for-agent, blocked by 01–03 |
-| 05 | `issues/05-optional-action-cost.md` | ready-for-agent, blocked by 04 |
+| 02 | `issues/02-slot-kind-and-cosave.md` | claimed — 02–05 rollup |
+| 03 | `issues/03-actions-tab-and-editor.md` | superseded — rolled into 02 |
+| 04 | `issues/04-press-path.md` | superseded — rolled into 02 |
+| 05 | `issues/05-optional-action-cost.md` | superseded — rolled into 02 |
 | 06 | `issues/06-virtualkey-guest.md` | ready-for-agent, blocked by 03; may wait |
 
 01 is resolved. 02 is the frontier and may run alone. 03 is unblocked once 02 lands.
