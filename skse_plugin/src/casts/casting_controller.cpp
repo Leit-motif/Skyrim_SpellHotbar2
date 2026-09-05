@@ -1,6 +1,8 @@
 #include "casting_controller.h"
 #include <algorithm>
 #include <atomic>
+#include <string>
+#include <vector>
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
 #include "../game_data/cast_anim_ids.h"
@@ -17,6 +19,45 @@
 namespace SpellHotbar::casts::CastingController {
 
 	std::unique_ptr<BaseCastingInstance> current_cast = nullptr;
+
+	// A physical Action is a small input bridge: the source key owns the target from its accepted
+	// down edge until that same source releases.  Keeping the resolved target and user-event name
+	// here prevents a rebind, modifier, menu, or mode change from redirecting the up edge.
+	struct ActiveActionInput {
+		std::uint32_t action_id{ 0 };
+		size_t slot{ 0 };
+		ActionInput target{};
+		std::string user_event;
+		std::uint32_t trigger_dx_scancode{ 0 };
+		bool has_trigger{ false };
+		bool release_pending{ false };
+	};
+
+	std::vector<ActiveActionInput> active_action_inputs;
+
+	[[nodiscard]] bool same_action_input(const ActionInput& left, const ActionInput& right) noexcept
+	{
+		return left.device == right.device && left.dx_scancode == right.dx_scancode;
+	}
+
+	[[nodiscard]] float release_held_duration(float held_duration) noexcept
+	{
+		return held_duration > 0.0f ? held_duration : Input::kKeyboardTapReleaseHeldSecs;
+	}
+
+	bool try_release_action_input(ActiveActionInput& active, float held_duration, const char* reason)
+	{
+		active.release_pending = true;
+		if (!Input::queue_action_event(active.target, 0.0f,
+			release_held_duration(held_duration), active.user_event)) {
+			logger::debug("SH2 action: target release pending (action={}, slot={}, reason={})",
+				active.action_id, active.slot, reason);
+			return false;
+		}
+		logger::debug("SH2 action: target released (action={}, slot={}, reason={})",
+			active.action_id, active.slot, reason);
+		return true;
+	}
 
 	// THE DEFERRED selectedPower WRITE-BACK (thuum ticket 62).
 	//
@@ -417,8 +458,91 @@ namespace SpellHotbar::casts::CastingController {
 		poll_pending_animation_var_reset();
 	}
 
+	bool mirror_action_hold(std::uint32_t trigger_dx_scancode, float value, float held_duration)
+	{
+		bool handled = false;
+		for (auto& active : active_action_inputs) {
+			if (!active.has_trigger || active.release_pending ||
+				active.trigger_dx_scancode != trigger_dx_scancode) {
+				continue;
+			}
+			handled = true;
+			if (!Input::queue_action_event(active.target, value, held_duration, active.user_event)) {
+				logger::debug("SH2 action: held mirror could not queue (action={}, slot={}, trigger={})",
+					active.action_id, active.slot, trigger_dx_scancode);
+			}
+		}
+		return handled;
+	}
+
+	bool release_action_for_trigger(std::uint32_t trigger_dx_scancode, float held_duration)
+	{
+		bool handled = false;
+		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
+			if (!it->has_trigger || it->trigger_dx_scancode != trigger_dx_scancode) {
+				++it;
+				continue;
+			}
+			handled = true;
+			if (try_release_action_input(*it, held_duration, "source up")) {
+				it = active_action_inputs.erase(it);
+			} else {
+				++it;
+			}
+		}
+		return handled;
+	}
+
+	void release_action_for_slot(size_t slot, size_t first_new_action, float held_duration)
+	{
+		if (first_new_action >= active_action_inputs.size()) {
+			return;
+		}
+		for (auto it = active_action_inputs.begin() + static_cast<std::ptrdiff_t>(first_new_action);
+			it != active_action_inputs.end();) {
+			if (it->slot != slot) {
+				++it;
+				continue;
+			}
+			if (try_release_action_input(*it, held_duration, "castSlot tap")) {
+				it = active_action_inputs.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
+	size_t action_input_count()
+	{
+		return active_action_inputs.size();
+	}
+
+	void release_all_action_inputs()
+	{
+		for (auto& active : active_action_inputs) {
+			active.release_pending = true;
+		}
+		retry_action_releases();
+	}
+
+	void retry_action_releases()
+	{
+		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
+			if (!it->release_pending) {
+				++it;
+				continue;
+			}
+			if (try_release_action_input(*it, 0.0f, "retry")) {
+				it = active_action_inputs.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
 	void drop_live_cast()
 	{
+		release_all_action_inputs();
 		// Dropped for a game load: the save being read owns selectedPower, so a hold from the
 		// session being left behind is forgotten rather than written over it.
 		discard_deferred_power_restore();
@@ -1880,6 +2004,23 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
+		const int triggering_scancode = keybind.get_dx_scancode();
+		const bool has_trigger = triggering_scancode >= 0;
+		const auto trigger_dx_scancode = has_trigger ?
+			static_cast<std::uint32_t>(triggering_scancode) : 0U;
+		for (const auto& active : active_action_inputs) {
+			const bool same_source = has_trigger && active.has_trigger &&
+				active.trigger_dx_scancode == trigger_dx_scancode;
+			const bool same_target = same_action_input(active.target, target);
+			if (same_source || same_target) {
+				logger::info(
+					"SH2 action: Action {} refused while target/source is already held (slot={}, trigger={}, target_device={}, target_scancode={})",
+					action_id, slot, triggering_scancode, static_cast<int>(target.device), target.dx_scancode);
+				RE::PlaySound(Input::sound_MagFail);
+				return false;
+			}
+		}
+
 		// A live cast protects the graph for every Action, including free Dodge and custom rows.
 		// The only live-cast cut-through is a costless Power Attack during the committed, cuttable
 		// Driver Cast span. Once the instance retires, ordinary Action admission resumes; the cut
@@ -1923,8 +2064,9 @@ namespace SpellHotbar::casts::CastingController {
 
 		// Queueing is the final commit point. Charge and install the lockout first so an accepted
 		// ButtonEvent can never race a second hotbar press before this Action owns its resources.
-		// `queue_keyboard_tap` pre-creates both phases before pushing either one; a false return is
-		// therefore a preflight failure and the transaction below can refund/clear atomically.
+		// The accepted down edge is recorded below; subsequent source-held and source-up events use
+		// that frozen record and never re-run admission, cost, cooldown, or GCD checks.
+		const auto user_event = Input::resolve_action_user_event(target);
 		const bool charged_stamina = action->stamina_cost > 0.0f && av;
 		const bool charged_magicka = action->magicka_cost > 0.0f && av;
 		const bool charged_health = action->health_cost > 0.0f && av;
@@ -1949,7 +2091,7 @@ namespace SpellHotbar::casts::CastingController {
 			current_cast = std::make_unique<CastingInstanceAction>(action->gcd);
 		}
 
-		if (!Input::queue_action_tap(target)) {
+		if (!Input::queue_action_event(target, 1.0f, 0.0f, user_event)) {
 			if (gcd_started) {
 				// This instance has no graph state or SpellFire arming of its own. Do not use
 				// reset_cast() here: a stale armed payload may still own the global SpellFire latch
@@ -1977,14 +2119,23 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
+		active_action_inputs.push_back(ActiveActionInput{
+			.action_id = action_id,
+			.slot = slot,
+			.target = target,
+			.user_event = user_event,
+			.trigger_dx_scancode = trigger_dx_scancode,
+			.has_trigger = has_trigger,
+		});
+
 		// This is ticket 10's cut, not a new SH2 cast. The injected event does not revisit this
 		// input hook, so the controller must perform the graph teardown explicitly for a Power
-		// Attack Action after its tap has been accepted.
+		// Attack Action after its down edge has been accepted.
 		if (!action->is_costed() && action->is_attack()) {
 			cut_committed_cast_for_attack(pc);
 		}
-		logger::info("SH2 action: Action {} queued target device {} / scancode {} (slot {})", action_id,
-			static_cast<int>(target.device), target.dx_scancode, slot);
+		logger::info("SH2 action: Action {} queued target device {} / scancode {} (slot {}, user_event='{}')",
+			action_id, static_cast<int>(target.device), target.dx_scancode, slot, user_event);
 		return true;
 	}
 

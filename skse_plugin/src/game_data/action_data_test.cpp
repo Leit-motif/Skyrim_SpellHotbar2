@@ -1,5 +1,6 @@
 #include "action_definition.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
@@ -14,6 +15,8 @@ using SpellHotbar::action_player_overlay_from;
 using SpellHotbar::action_press_is_admitted;
 using SpellHotbar::apply_action_player_overlay;
 using SpellHotbar::custom_action_id_base;
+using SpellHotbar::custom_action_count;
+using SpellHotbar::is_visible_action_id;
 using SpellHotbar::action_would_recurse;
 using SpellHotbar::default_action_catalogue;
 using SpellHotbar::resolve_action_input;
@@ -34,7 +37,7 @@ void expect(bool condition, const char* message)
 void shipped_catalogue_has_live_targets_and_custom_rows()
 {
 	const auto actions = default_action_catalogue();
-	expect(actions.size() >= 3, "the default catalogue has combat and custom rows");
+	expect(actions.size() == 2 + custom_action_count, "the default catalogue keeps two legacy rows and twelve visible rows");
 	expect(actions.size() >= 1 && actions[0].id == 1, "Power Attack keeps stable id 1");
 	expect(actions.size() >= 1 && actions[0].target == ActionTargetSource::ocpa_power,
 		"Power Attack resolves through OCPA");
@@ -47,6 +50,21 @@ void shipped_catalogue_has_live_targets_and_custom_rows()
 		"custom rows use captured scancodes");
 	expect(actions.size() >= 3 && actions[2].captured_scancode == 0,
 		"custom rows start unbound");
+	for (std::uint32_t offset = 0; offset < custom_action_count; ++offset) {
+		const auto id = custom_action_id_base + offset;
+		const auto it = std::find_if(actions.begin(), actions.end(), [id](const auto& action) {
+			return action.id == id;
+		});
+		expect(it != actions.end(), "every visible Action id is seeded");
+		if (it != actions.end()) {
+			expect(it->display_name == "Action " + std::to_string(offset + 1),
+				"visible Action rows use the shipped Action 1..12 names");
+		}
+	}
+	expect(!is_visible_action_id(1) && !is_visible_action_id(2),
+		"legacy Power Attack and Dodge ids stay hidden from the shipped list");
+	expect(is_visible_action_id(100) && is_visible_action_id(111) && !is_visible_action_id(112),
+		"only Action ids 100..111 are visible");
 }
 
 void target_resolution_uses_the_values_supplied_at_press()

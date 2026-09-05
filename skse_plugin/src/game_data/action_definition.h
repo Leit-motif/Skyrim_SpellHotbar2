@@ -88,6 +88,12 @@ struct ActionPlayerOverlay {
 inline constexpr std::uint32_t power_attack_action_id = 1;
 inline constexpr std::uint32_t dodge_action_id = 2;
 inline constexpr std::uint32_t custom_action_id_base = 100;
+inline constexpr std::uint32_t custom_action_count = 12;
+
+[[nodiscard]] constexpr bool is_visible_action_id(std::uint32_t id) noexcept
+{
+	return id >= custom_action_id_base && id < custom_action_id_base + custom_action_count;
+}
 
 [[nodiscard]] std::vector<ActionDefinition> default_action_catalogue();
 

@@ -424,6 +424,19 @@ namespace SpellHotbar::casts::CastingController {
 	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind);
 
 	bool try_start_action(uint32_t action_id, size_t slot, const Input::KeyBind& keybind);
+
+	/** Mirror a held physical Action source event onto its frozen target. */
+	bool mirror_action_hold(uint32_t trigger_dx_scancode, float value, float held_duration);
+	/** Release Actions owned by the original physical source; safe across menus and mode changes. */
+	bool release_action_for_trigger(uint32_t trigger_dx_scancode, float held_duration);
+	/** Release an Action invoked through the bounded Papyrus castSlot seam. */
+	void release_action_for_slot(size_t slot, size_t first_new_action, float held_duration);
+	/** Return a marker for the next accepted Action input. */
+	size_t action_input_count();
+	/** Mark all injected Action targets for release during load/mode invalidation. */
+	void release_all_action_inputs();
+	/** Retry target-up events that could not fit in the native input queue. */
+	void retry_action_releases();
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 

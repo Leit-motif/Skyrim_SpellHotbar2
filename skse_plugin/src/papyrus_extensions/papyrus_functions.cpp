@@ -36,10 +36,17 @@ void cast_slot(RE::StaticFunctionTag*, int slot_index)
         }
         size_t index = static_cast<size_t>(slot_index);
         auto skill = GameData::get_current_spell_info_in_slot(index);
+        const size_t action_marker = casts::CastingController::action_input_count();
         RE::InputEvent* addEvent = nullptr;
         auto [shoutKeyDev, shoutKey] = Input::get_shout_key_and_device();
         if (Input::InputModeBase::current_mode) {
             Input::InputModeBase::current_mode->process_input(skill, addEvent, index, Input::key_spells[index], shoutKeyDev, shoutKey);
+        }
+        if (skill.type == slot_type::action) {
+            // castSlot is an explicit bounded tap for agent/runtime seams. Physical Action input
+            // stays held until its source-up event, while this path always closes its target.
+            casts::CastingController::release_action_for_slot(
+                index, action_marker, Input::kKeyboardTapReleaseHeldSecs);
         }
         if (addEvent) {
             auto queue = RE::BSInputEventQueue::GetSingleton();

@@ -192,6 +192,30 @@ namespace SpellHotbar::Input {
             return {};
         }
 
+        bool action_event_handled = false;
+
+        // Action targets are an event bridge, so their release must not depend on the current
+        // mode, modifier, menu, capture state, or a still-loaded player.  Match the original DX
+        // source key before those filters can change and mirror the physical lifecycle onto the
+        // target frozen by try_start_action.
+        if (event->eventType == RE::INPUT_EVENT_TYPE::kButton) {
+            if (auto* button_event = event->AsButtonEvent()) {
+                const auto [key_code, key_device] = get_device_and_input(button_event);
+                const int trigger_dx_scancode = input_to_dx_scancode(
+                    key_device, static_cast<uint8_t>(key_code));
+                if (trigger_dx_scancode >= 0) {
+                    if (button_event->IsUp()) {
+                        action_event_handled = casts::CastingController::release_action_for_trigger(
+                            static_cast<std::uint32_t>(trigger_dx_scancode), button_event->HeldDuration());
+                    } else if (button_event->IsRepeating()) {
+                        action_event_handled = casts::CastingController::mirror_action_hold(
+                            static_cast<std::uint32_t>(trigger_dx_scancode), button_event->Value(),
+                            button_event->HeldDuration());
+                    }
+                }
+            }
+        }
+
         //don't react to inputs outside of the game:
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (!pc || !pc->Is3DLoaded()) {
@@ -201,7 +225,7 @@ namespace SpellHotbar::Input {
         RE::InputEvent* addEvent = nullptr;
         auto [shoutKeyDev, shoutKey] = get_shout_key_and_device();
 
-        bool captureEvent = false; // Capture this event? (do not forward to Skyrim)
+        bool captureEvent = action_event_handled; // Capture this event? (do not forward to Skyrim)
 
             // SMF runs this callback before TranslateInputEvent. Returning true
             // unlinks the event from the queue, so ImGui never sees the click.
@@ -409,7 +433,9 @@ namespace SpellHotbar::Input {
                                         else if (bEvent->IsUp()) {
                                             handled = true;
                                             //check for release of power/shout key release event
-                                            if (casts::CastingController::is_currently_using_power()) {
+                                            const auto skill = GameData::get_current_spell_info_in_slot(i);
+                                            if (skill.type != slot_type::action &&
+                                                casts::CastingController::is_currently_using_power()) {
 
                                                 float ct = casts::CastingController::get_current_casttime();
                                                 if (!addEvent) {
@@ -419,15 +445,25 @@ namespace SpellHotbar::Input {
                                         }
                                         else if (bEvent->IsRepeating()) {
                                             //Check in Oblivion Mode for holding slot key down to show bar.
-                                            InputModeBase::current_mode->process_key_update(bind, i, bEvent->HeldDuration());
+                                            const auto skill = GameData::get_current_spell_info_in_slot(i);
+                                            if (skill.type == slot_type::action) {
+                                                handled = true;
+                                            } else {
+                                                InputModeBase::current_mode->process_key_update(bind, i, bEvent->HeldDuration());
+                                            }
                                         }
                                         if (handled && (mod_1.isDown() || mod_2.isDown() || mod_3.isDown())) {
                                             //Do not forward keypress to game if modifier was used, this allows easy double binding with modifiers
                                             captureEvent = true;
                                         } else if (handled && in_ingame_state()) {
                                             const auto skill = GameData::get_current_spell_info_in_slot(i);
-                                            if (casts::capture_hotbar_press_to_prevent_dual_fire(
-                                                    skill.type == slot_type::spell, left_hand_holds_spell(pc))) {
+                                            if (skill.type == slot_type::action) {
+                                                // An Action owns its source key for the entire
+                                                // lifecycle; forwarding it would fire the original
+                                                // engine/mod binding alongside the mirrored target.
+                                                captureEvent = true;
+                                            } else if (casts::capture_hotbar_press_to_prevent_dual_fire(
+                                                skill.type == slot_type::spell, left_hand_holds_spell(pc))) {
                                                 captureEvent = true;
                                                 logger::debug("SH2 cast: captured hotbar press to prevent dual fire");
                                             }
@@ -781,9 +817,47 @@ namespace SpellHotbar::Input {
 
     }  // namespace
 
-    bool queue_action_tap(const ActionInput& input)
+    std::string resolve_action_user_event(const ActionInput& input)
     {
-        auto queue = RE::BSInputEventQueue::GetSingleton();
+        if (!input.is_bound() || input.dx_scancode > 281U) {
+            return {};
+        }
+
+        const auto device = native_action_device(input.device);
+        if (!device) {
+            return {};
+        }
+
+        const auto [decoded_device, decoded_code] =
+            dx_scan_code_to_input(static_cast<int>(input.dx_scancode));
+        if (decoded_device != *device) {
+            return {};
+        }
+
+        uint32_t event_code = decoded_code;
+        if (*device == RE::INPUT_DEVICE::kGamepad) {
+            const auto gamepad_code = gamepad_event_code(decoded_code);
+            if (!gamepad_code) {
+                return {};
+            }
+            event_code = *gamepad_code;
+        }
+
+        auto* control_map = RE::ControlMap::GetSingleton();
+        if (!control_map) {
+            return {};
+        }
+        const auto user_event = control_map->GetUserEventName(event_code, *device);
+        if (user_event.empty()) {
+            return {};
+        }
+        return std::string(user_event);
+    }
+
+    bool queue_action_event(const ActionInput& input, float value, float held_duration,
+        std::string_view user_event)
+    {
+        auto* queue = RE::BSInputEventQueue::GetSingleton();
         if (!queue) {
             logger::error("SH2 action: BSInputEventQueue missing (device={}, scancode={})",
                 static_cast<int>(input.device), input.dx_scancode);
@@ -819,6 +893,50 @@ namespace SpellHotbar::Input {
             event_code = *gamepad_code;
         }
 
+        const auto queued_button_events = static_cast<size_t>(queue->buttonEventCount);
+        const auto max_button_events = static_cast<size_t>(RE::BSInputEventQueue::MAX_BUTTON_EVENTS);
+        if (queued_button_events >= max_button_events) {
+            logger::warn(
+                "SH2 action: input queue has no room for event (device={}, scancode={}, queued={}, capacity={})",
+                static_cast<int>(*device), input.dx_scancode, queued_button_events, max_button_events);
+            return false;
+        }
+
+        // AddButtonEvent uses the queue's embedded ButtonEvent storage. This CommonLib build
+        // exposes only the four-argument queue helper, so set the user-event field on that same
+        // embedded slot immediately after insertion. That keeps the event lifetime owned by
+        // Skyrim's queue while still letting PlayerControls handle engine actions such as Block;
+        // an empty name remains the deliberate fallback for external hotkey consumers.
+        const std::string user_event_storage{ user_event };
+        const RE::BSFixedString native_user_event{ user_event_storage.c_str() };
+        queue->AddButtonEvent(*device, static_cast<std::int32_t>(event_code), value,
+            held_duration);
+        if (queue->buttonEventCount > queued_button_events) {
+            queue->buttonEvents[queued_button_events].userEvent = native_user_event;
+        }
+        const char* phase = value <= 0.0f ? "up" : held_duration > 0.0f ? "held" : "down";
+        if (value > 0.0f && held_duration > 0.0f) {
+            logger::debug(
+                "SH2 action: queued {} (device={}, scancode={}, event_code={}, value={}, held={}, user_event='{}', accepted=true)",
+                phase, static_cast<int>(*device), input.dx_scancode, event_code, value, held_duration,
+                user_event_storage);
+        } else {
+            logger::info(
+                "SH2 action: queued {} (device={}, scancode={}, event_code={}, value={}, held={}, user_event='{}', accepted=true)",
+                phase, static_cast<int>(*device), input.dx_scancode, event_code, value, held_duration,
+                user_event_storage);
+        }
+        return true;
+    }
+
+    bool queue_action_tap(const ActionInput& input)
+    {
+        auto* queue = RE::BSInputEventQueue::GetSingleton();
+        if (!queue) {
+            logger::error("SH2 action: BSInputEventQueue missing (device={}, scancode={})",
+                static_cast<int>(input.device), input.dx_scancode);
+            return false;
+        }
         const auto phases = keyboard_tap_phases();
         const auto queued_button_events = static_cast<size_t>(queue->buttonEventCount);
         const auto max_button_events = static_cast<size_t>(RE::BSInputEventQueue::MAX_BUTTON_EVENTS);
@@ -826,22 +944,16 @@ namespace SpellHotbar::Input {
             phases.size() > max_button_events - queued_button_events) {
             logger::warn(
                 "SH2 action: input queue has no room for tap (device={}, scancode={}, queued={}, required={}, capacity={})",
-                static_cast<int>(*device), input.dx_scancode, queued_button_events, phases.size(),
+                static_cast<int>(input.device), input.dx_scancode, queued_button_events, phases.size(),
                 max_button_events);
             return false;
         }
 
-        // AddButtonEvent uses the queue's embedded ButtonEvent storage. The old Create/Push pair
-        // allocated two raw events, while ClearInputQueue only reset the queue links and counts;
-        // using embedded slots removes that raw-event ownership ambiguity. Preflight both phases
-        // above, then let CommonLib own the embedded slots for the lifetime of this input queue.
-        for (size_t i = 0; i < phases.size(); ++i) {
-            queue->AddButtonEvent(*device, static_cast<std::int32_t>(event_code),
-                phases[i].value, phases[i].held_duration);
-            logger::info(
-                "SH2 action: queued {} (device={}, scancode={}, event_code={}, value={}, held={}, accepted=true)",
-                phases[i].value > 0.0f ? "down" : "up", static_cast<int>(*device), input.dx_scancode,
-                event_code, phases[i].value, phases[i].held_duration);
+        const auto user_event = resolve_action_user_event(input);
+        for (const auto& phase : phases) {
+            if (!queue_action_event(input, phase.value, phase.held_duration, user_event)) {
+                return false;
+            }
         }
         return true;
     }

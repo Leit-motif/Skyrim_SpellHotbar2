@@ -31,6 +31,7 @@ namespace SpellHotbar::Input {
 
     void set_input_mode(int index)
     {
+        casts::CastingController::release_all_action_inputs();
         if (index == 2) {
             InputModeBase::current_mode = InputModeOblivion::getSingleton();
         }

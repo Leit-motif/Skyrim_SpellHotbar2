@@ -15,7 +15,7 @@ ActionDefinition make_custom_action(std::uint32_t id)
 {
 	ActionDefinition action;
 	action.id = id;
-	action.display_name = "Custom Action " + std::to_string(id - custom_action_id_base + 1);
+	action.display_name = "Action " + std::to_string(id - custom_action_id_base + 1);
 	action.icon = "GREATER_POWER";
 	action.target = ActionTargetSource::captured;
 	action.captured_device = ActionInputDevice::keyboard;
@@ -41,7 +41,7 @@ bool ActionDefinition::is_attack() const noexcept
 std::vector<ActionDefinition> default_action_catalogue()
 {
 	std::vector<ActionDefinition> actions;
-	actions.reserve(10);
+	actions.reserve(2 + custom_action_count);
 
 	ActionDefinition power_attack;
 	power_attack.id = power_attack_action_id;
@@ -60,7 +60,7 @@ std::vector<ActionDefinition> default_action_catalogue()
 	// Keep a small, stable set of editable rows available before the Actions editor exists. The
 	// rows are intentionally unbound: an editor or future data source must opt a target in rather
 	// than accidentally making a newly-created Action inject an unrelated key.
-	for (std::uint32_t id = custom_action_id_base; id < custom_action_id_base + 8; ++id) {
+	for (std::uint32_t id = custom_action_id_base; id < custom_action_id_base + custom_action_count; ++id) {
 		actions.push_back(make_custom_action(id));
 	}
 	return actions;

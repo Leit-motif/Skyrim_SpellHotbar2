@@ -1624,7 +1624,9 @@ namespace SpellHotbar::GameData {
         ids.reserve(action_cast_info.size());
         for (const auto& [id, unused] : action_cast_info) {
             static_cast<void>(unused);
-            ids.push_back(id);
+            if (is_visible_action_id(id)) {
+                ids.push_back(id);
+            }
         }
         std::sort(ids.begin(), ids.end());
         return ids;

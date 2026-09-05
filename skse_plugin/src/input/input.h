@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "action_inject.h"
 #include "../game_data/action_definition.h"
 
@@ -34,6 +37,11 @@ namespace SpellHotbar::Input {
 	/** Resolve TK Dodge's binding from the current VFS state at Action press time. */
 	uint32_t resolve_dodge_hotkey_live();
 	bool queue_keyboard_tap(uint32_t scancode);
+	/** Queue one physical Action event, preserving the engine's user-event name when known. */
+	bool queue_action_event(const ActionInput& input, float value, float held_duration,
+		std::string_view user_event);
+	/** Resolve the current gameplay ControlMap event for a persisted Action target. */
+	std::string resolve_action_user_event(const ActionInput& input);
 	/** Queue a physical Action using its persisted device and DX scancode. */
 	bool queue_action_tap(const ActionInput& input);
 
