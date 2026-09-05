@@ -274,6 +274,19 @@ namespace SpellHotbar::casts::CastingController {
 	protected:
 	};
 
+	/**
+	 * A lightweight Action GCD owner. Actions inject their target input directly and never enter
+	 * SH2's ArtDriver or behavior-graph state; this instance exists only while a configured GCD
+	 * keeps the ordinary hotbar press gate closed.
+	 */
+	class CastingInstanceAction : public BaseCastingInstance {
+	public:
+		explicit CastingInstanceAction(float gcd);
+		virtual ~CastingInstanceAction() = default;
+
+		virtual bool update(RE::PlayerCharacter* pc, float delta) override;
+	};
+
 	class CastingInstanceWeaponArt : public BaseCastingInstance {
 	public:
 		CastingInstanceWeaponArt(uint32_t art_id, float gcd);
@@ -399,9 +412,18 @@ namespace SpellHotbar::casts::CastingController {
 	 */
 	void cut_channel_for_attack(RE::PlayerCharacter* pc);
 
+	/**
+	 * End the cuttable Driver Cast span for an attack-shaped Action or physical attack press.
+	 * The payload is delivered before the graph state is cancelled, matching the input hook's
+	 * existing ordering. Returns false when no committed/follow-through cast is present.
+	 */
+	bool cut_committed_cast_for_attack(RE::PlayerCharacter* pc);
+
 	bool try_start_cast(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 
 	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind);
+
+	bool try_start_action(uint32_t action_id, size_t slot, const Input::KeyBind& keybind);
 	
 	bool try_cast_power(RE::TESForm* form, const Input::KeyBind& keybind, size_t slot, hand_mode hand);
 

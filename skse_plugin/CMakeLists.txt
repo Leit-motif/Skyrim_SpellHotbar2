@@ -83,6 +83,8 @@ set(source_files src/plugin.cpp
                  src/game_data/animation_data_csv_loader.cpp
                  src/game_data/art_definition.h
                  src/game_data/art_definition.cpp
+                 src/game_data/action_definition.h
+                 src/game_data/action_definition.cpp
                  src/game_data/art_icon_resolve.h
                  src/game_data/art_icon_resolve.cpp
                  src/game_data/custom_ability_config.h
@@ -161,6 +163,10 @@ target_include_directories(art_pack_gen_test PRIVATE src/game_data)
 add_executable(art_data_test src/game_data/art_data_test.cpp src/game_data/art_definition.cpp src/game_data/art_icon_resolve.cpp src/game_data/custom_ability_config.cpp)
 target_compile_features(art_data_test PRIVATE cxx_std_23)
 target_include_directories(art_data_test PRIVATE src/game_data)
+
+add_executable(action_data_test src/game_data/action_data_test.cpp src/game_data/action_definition.cpp)
+target_compile_features(action_data_test PRIVATE cxx_std_23)
+target_include_directories(action_data_test PRIVATE src/game_data)
 
 add_executable(cast_anim_ids_test src/game_data/cast_anim_ids_test.cpp)
 target_compile_features(cast_anim_ids_test PRIVATE cxx_std_23)

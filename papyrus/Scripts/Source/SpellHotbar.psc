@@ -3,6 +3,7 @@ scriptName SpellHotbar hidden
 ; Test seam: trigger a hotbar slot exactly like its bound keypress (runtime verification)
 function castSlot(int slot_index) global native
 function slotArt(int slot_index, int art_id) global native
+function slotAction(int slot_index, int action_id) global native
 ; Test seam: assign a slot's hand (0=auto 1=left 2=right 3=dual 4=voice) on the current bar.
 ; Deliberately raw: unlike the menu's rotate it does not validate dual capability or slot
 ; type, so tests can exercise the resolver's downgrade and fallback paths on purpose.

@@ -21,27 +21,11 @@ int get_number_of_slots(RE::StaticFunctionTag*)
  * does not reach an unfocused window. Uses the same InputMode::process_input path as a real
  * key, including any queued native input event the mode produces (real shouts).
  *
- * Ticket 01 throwaway rider: slot -1 injects OCPA's configured power scancode; slot -2
- * injects TK Dodge RE's DodgeHotkey. Both are a keyboard down/up pair on BSInputEventQueue.
- * Not a product surface.
  */
 void cast_slot(RE::StaticFunctionTag*, int slot_index)
 {
     SKSE::GetTaskInterface()->AddTask([slot_index]() {
         using namespace SpellHotbar;
-        if (slot_index == -1 || slot_index == -2) {
-            if (!Input::in_ingame_state()) {
-                logger::warn("castSlot({}): not in ingame state", slot_index);
-                return;
-            }
-            const uint32_t scancode = slot_index == -1 ? Input::get_ocpa_keys().power : Input::get_dodge_hotkey();
-            const char* kind = slot_index == -1 ? "ocpa" : "dodge";
-            logger::info("castSlot({}): action spike {} scancode={}", slot_index, kind, scancode);
-            if (!Input::queue_keyboard_tap(scancode)) {
-                logger::warn("castSlot({}): action spike {} did not queue", slot_index, kind);
-            }
-            return;
-        }
         if (slot_index < 0 || slot_index >= static_cast<int>(Input::key_spells.size())) {
             logger::warn("castSlot({}): slot index out of range", slot_index);
             return;
@@ -100,6 +84,28 @@ void slot_art(RE::StaticFunctionTag*, int slot_index, int art_id)
         }
         Bars::hotbars.at(bar_id).slot_art(static_cast<size_t>(slot_index), static_cast<uint32_t>(std::max(0, art_id)),
                                           Bars::get_current_modifier());
+    });
+}
+
+void slot_action(RE::StaticFunctionTag*, int slot_index, int action_id)
+{
+    SKSE::GetTaskInterface()->AddTask([slot_index, action_id]() {
+        using namespace SpellHotbar;
+        if (slot_index < 0 || slot_index >= static_cast<int>(max_bar_size)) {
+            logger::warn("slotAction({}, {}): slot index out of range", slot_index, action_id);
+            return;
+        }
+        if (action_id <= 0) {
+            logger::warn("slotAction({}, {}): Action id must be positive", slot_index, action_id);
+            return;
+        }
+        const uint32_t bar_id = Bars::getCurrentHotbar_ingame();
+        if (!Bars::hotbars.contains(bar_id)) {
+            logger::warn("slotAction({}, {}): no current hotbar", slot_index, action_id);
+            return;
+        }
+        Bars::hotbars.at(bar_id).slot_action(static_cast<size_t>(slot_index),
+            static_cast<uint32_t>(action_id), Bars::get_current_modifier());
     });
 }
 
@@ -718,6 +724,7 @@ bool toggle_individual_shout_cooldowns(RE::StaticFunctionTag*) {
 bool SpellHotbar::register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("castSlot", "SpellHotbar", cast_slot);
     vm->RegisterFunction("slotArt", "SpellHotbar", slot_art);
+    vm->RegisterFunction("slotAction", "SpellHotbar", slot_action);
     vm->RegisterFunction("setSlotHand", "SpellHotbar", set_slot_hand);
     vm->RegisterFunction("setSlotKeyHeld", "SpellHotbar", set_slot_key_held);
     vm->RegisterFunction("getArtSelector", "SpellHotbar", get_art_selector);

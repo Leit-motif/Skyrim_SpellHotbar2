@@ -150,12 +150,34 @@ _Avoid_: art effect, Ashes of War payload as SH2 assignment.
 Stamina, magicka, and health spent by SH2 when an Ability starts. Defaults: 25 stamina, 0 magicka, 0 health, 8s cooldown, 1s GCD. The editor may change those numbers. Assigning a Custom Ability Spell (ticket 12, parked) does not seed or overwrite them. The press is refused if any required meter is short. Payload Interpreter costs stay at zero.
 _Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost seeding from an assigned spell.
 
+**Action**:
+A bindable hotbar payload that injects one authored input rather than starting a spell, shout,
+potion, or Ability. An Action has its own stable catalogue id, name, icon, target source, and
+optional resource cost, cooldown, and GCD. Power Attack and Dodge resolve their external
+scancodes when pressed; a Custom Action may hold a captured physical scancode. An Action does
+not own an animation, `SH2_Art_State`, Ability Selector value, or fallback chain. _Avoid_: Ability,
+hotkey slot, virtual key (that is a separate integration), click-to-cast.
+
+**Action Kind**:
+The single input seam an Action uses when it is pressed. The current product slice supports only
+physical scancodes; engine-control and VirtualKey kinds remain future extensions. The target is
+resolved once for that press, and a failed or recursive target refuses visibly. _Avoid_: trying
+multiple seams for one activation, storing a live external keycode in the catalogue.
+
+**Action Cost**:
+Optional stamina, magicka, and health spent before an Action's input is injected, with optional
+Action cooldown and GCD. Zero is free. It reuses the Ability affordability rule and refusal
+feedback; it is not a second spell-cost system. _Avoid_: charging after a failed injection,
+flashing a zero-cost meter, or treating a costless Power Attack cut as a new SH2 cast.
+
 **Terminal Ability / Chaining Ability**:
 An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.
 
 **Committed Action**:
 An action the actor cannot steer out of once it starts — an MCO attack, a shout, a Driver Cast, a Weapon Art. Commitment is authored on the behavior state that owns the action and nowhere else (ADR-0015), so every actor entering that state is committed, player and NPC alike. The fork's bar, stated by the owner 2026-08-24: a seamless modernized MCO-feel combat experience with Spell Hotbar 2 as the interface, which means every action a hotbar slot can start commits the same way.
-_Avoid_: Movement lock, input block, rooting as a DLL feature, player-only commitment
+This behavior term is distinct from the catalogue **Action** input payload, which does not itself
+enter a committed behavior state. _Avoid_: Movement lock, input block, rooting as a DLL feature,
+player-only commitment
 
 ## Findings
 

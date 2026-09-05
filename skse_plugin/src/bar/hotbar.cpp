@@ -915,6 +915,24 @@ namespace SpellHotbar
         logger::info("slotArt: bar slot {} bound to art {}", index, art_id);
     }
 
+    void SpellHotbar::Hotbar::slot_action(size_t index, uint32_t action_id, key_modifier modifier)
+    {
+        if (index >= max_bar_size) {
+            return;
+        }
+        if (action_id != 0 && !GameData::get_action(action_id)) {
+            logger::error("Unknown Action {}", action_id);
+            return;
+        }
+        auto& skill = get_skill_in_bar_by_ref(static_cast<int>(index), modifier);
+        if (action_id == 0) {
+            skill.clear();
+        } else {
+            skill.update_action_assignment(action_id);
+        }
+        logger::info("slotAction: bar slot {} bound to Action {}", index, action_id);
+    }
+
     RE::FormID Hotbar::get_spell(size_t index, key_modifier modifier)
     {
         RE::FormID ret{0};

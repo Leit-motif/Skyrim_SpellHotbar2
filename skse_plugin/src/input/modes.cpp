@@ -44,6 +44,17 @@ namespace SpellHotbar::Input {
 
 	void InputModeCast::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
 	{
+		// Actions have no FormID and their costless attack variant is deliberately allowed to
+		// chain out of a live committed Driver Cast. Handle them before the shared form/cast gate.
+		if (skill.type == slot_type::action) {
+			bool success = false;
+			if (allowed_to_instantcast(0)) {
+				success = casts::CastingController::try_start_action(skill.action_id, i, bind);
+			}
+			SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, !success);
+			return;
+		}
+
         // Ticket 41: one gate for every slot type, as stock SH2 shipped it. A press that arrives
         // while a cast instance is live dies here and paints the red flash in the else-branch --
         // press, lockout, visible refusal, identical across spells, shouts, arts, powers and
@@ -127,6 +138,11 @@ namespace SpellHotbar::Input {
 
     void InputModeEquip::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE&, uint8_t&)
     {
+        if (skill.type == slot_type::action) {
+            logger::info("SH2 action: refused in equip mode");
+            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+            return;
+        }
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (pc && allowed_to_instantcast(skill.formID)) {
             if (skill.type == slot_type::weapon_art) {
@@ -192,6 +208,11 @@ namespace SpellHotbar::Input {
 
     void InputModeOblivion::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeDev, uint8_t& shoutKey)
     {
+        if (skill.type == slot_type::action) {
+            logger::info("SH2 action: refused in oblivion mode");
+            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+            return;
+        }
         if (i == Input::keybind_id::oblivion_cast || i == Input::keybind_id::oblivion_potion) {
             //logger::info("Start Regular Cast");
             InputModeCast::getSingleton()->process_input(skill, addEvent, i, bind, shoutKeDev, shoutKey);
@@ -254,6 +275,11 @@ namespace SpellHotbar::Input {
 
     void InputModeVampireLord::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
     {
+        if (skill.type == slot_type::action) {
+            logger::info("SH2 action: refused in vampire-lord mode");
+            SpellHotbar::RenderManager::highlight_skill_slot(static_cast<int>(i), 0.5, true);
+            return;
+        }
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (pc && allowed_to_instantcast(skill.formID)) {
             if (skill.formID > 0) {

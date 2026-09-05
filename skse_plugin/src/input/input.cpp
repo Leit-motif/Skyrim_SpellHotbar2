@@ -300,13 +300,9 @@ namespace SpellHotbar::Input {
                         // would catch it a frame later anyway; delivering here keeps one delivery
                         // story and one log line per payload.
                         if (is_attack_press(key_code, key_device, attack_key)) {
-                            logger::debug("SH2 cast: attack pressed on a committed cast; ending the state");
-                            casts::CastingController::deliver_armed_payload("the cut (attack)");
-                            casts::MscoCastDriver::cancel(pc);
+                            casts::CastingController::cut_committed_cast_for_attack(pc);
                         } else if (is_left_hand_cast_press(pc, key_code, key_device)) {
-                            logger::debug("SH2 cast: left-hand cast pressed on a committed cast; ending the state");
-                            casts::CastingController::deliver_armed_payload("the cut (attack)");
-                            casts::MscoCastDriver::cancel(pc);
+                            casts::CastingController::cut_committed_cast_for_attack(pc);
                         }
                     }
 
@@ -633,8 +629,9 @@ namespace SpellHotbar::Input {
     }
 
     // One Click Power Attack's keys, read from its own config so they are configured in one
-    // place rather than copied here and left to drift. Read once; OCPA's binding does not move
-    // mid-session.
+    // place rather than copied here and left to drift. The cast-cut detector keeps a session
+    // snapshot, while Action dispatch has a live resolver below so a changed VFS config is
+    // reflected on the next press.
     //
     // A power attack does not travel the control map at all -- OCPA is a mod hotkey, which is
     // why the right-attack lookup above answers kInvalid for it and why three power-attack
@@ -642,43 +639,59 @@ namespace SpellHotbar::Input {
     // this hook, so knowing the key is the whole of what was missing.
     //
     // Fails open: no config, no key, and only the mapped right attack chains.
+    OcpaKeys read_ocpa_keys_from_vfs()
+    {
+        constexpr std::string_view paths[]{
+            "Data/MCM/Settings/OCPA.ini"sv,
+            "Data/MCM/Config/OCPA/settings.ini"sv,
+        };
+
+        for (const auto& path : paths) {
+            const auto text = read_data_file(path);
+            if (text.empty()) {
+                continue;
+            }
+            auto found = parse_ocpa_keys(text);
+            logger::info("SH2 cast: OCPA keys read from {} (power={}, dual={})", path, found.power, found.dual);
+            return found;
+        }
+        logger::info("SH2 cast: no OCPA config found; only the mapped right attack chains out of a cast");
+        return OcpaKeys{};
+    }
+
     const OcpaKeys& get_ocpa_keys()
     {
-        static const OcpaKeys keys = [] {
-            constexpr std::string_view paths[]{
-                "Data/MCM/Settings/OCPA.ini"sv,
-                "Data/MCM/Config/OCPA/settings.ini"sv,
-            };
-
-            for (const auto& path : paths) {
-                const auto text = read_data_file(path);
-                if (text.empty()) {
-                    continue;
-                }
-                auto found = parse_ocpa_keys(text);
-                logger::info("SH2 cast: OCPA keys read from {} (power={}, dual={})", path, found.power, found.dual);
-                return found;
-            }
-            logger::info("SH2 cast: no OCPA config found; only the mapped right attack chains out of a cast");
-            return OcpaKeys{};
-        }();
+        static const OcpaKeys keys = read_ocpa_keys_from_vfs();
         return keys;
+    }
+
+    OcpaKeys resolve_ocpa_keys_live()
+    {
+        return read_ocpa_keys_from_vfs();
+    }
+
+    uint32_t read_dodge_hotkey_from_vfs()
+    {
+        constexpr std::string_view path{ "Data/SKSE/Plugins/TK Dodge RE.ini"sv };
+        const auto text = read_data_file(path);
+        const auto found = parse_dodge_hotkey(text);
+        if (found == 0) {
+            logger::info("SH2 action spike: no DodgeHotkey in {}", path);
+            return 0U;
+        }
+        logger::info("SH2 action spike: dodge hotkey read from {} (key={})", path, found);
+        return found;
     }
 
     uint32_t get_dodge_hotkey()
     {
-        static const uint32_t key = [] {
-            constexpr std::string_view path{ "Data/SKSE/Plugins/TK Dodge RE.ini"sv };
-            const auto text = read_data_file(path);
-            const auto found = parse_dodge_hotkey(text);
-            if (found == 0) {
-                logger::info("SH2 action spike: no DodgeHotkey in {}", path);
-                return 0U;
-            }
-            logger::info("SH2 action spike: dodge hotkey read from {} (key={})", path, found);
-            return found;
-        }();
+        static const uint32_t key = read_dodge_hotkey_from_vfs();
         return key;
+    }
+
+    uint32_t resolve_dodge_hotkey_live()
+    {
+        return read_dodge_hotkey_from_vfs();
     }
 
     bool queue_keyboard_tap(uint32_t scancode)

@@ -142,6 +142,8 @@ public:
 
     void slot_art(size_t index, uint32_t art_id, key_modifier modifier);
 
+    void slot_action(size_t index, uint32_t action_id, key_modifier modifier);
+
     RE::FormID get_spell(size_t index, key_modifier modifier);
 
     inline int get_inherit_mode() const;

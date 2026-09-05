@@ -1,4 +1,5 @@
 #include "casting_controller.h"
+#include <algorithm>
 #include <atomic>
 #include "../logger/logger.h"
 #include "../game_data/game_data.h"
@@ -275,6 +276,17 @@ namespace SpellHotbar::casts::CastingController {
 			logger::debug("SH2 cast: attack pressed on a streaming channel; ending the channel");
 			channel->end_channel(pc);
 		}
+	}
+
+	bool cut_committed_cast_for_attack(RE::PlayerCharacter* pc)
+	{
+		if (!is_committed_cast_holding_graph() && !is_cuttable_follow_through()) {
+			return false;
+		}
+		logger::debug("SH2 cast: attack Action pressed on a committed cast; ending the state");
+		deliver_armed_payload("the cut (attack)");
+		MscoCastDriver::cancel(pc);
+		return true;
 	}
 
 	bool our_latch_is_closed()
@@ -1779,6 +1791,21 @@ namespace SpellHotbar::casts::CastingController {
 		return is_gcd_expired();
 	}
 
+	CastingInstanceAction::CastingInstanceAction(float gcd)
+		: BaseCastingInstance(nullptr, 0.0f)
+	{
+		m_gcd = std::max(0.0f, gcd);
+		// The input is delivered before this instance is installed, so no update-side work is
+		// required. Marking it complete makes update_cast advance only the lockout clock.
+		set_casted();
+	}
+
+	bool CastingInstanceAction::update(RE::PlayerCharacter*, float delta)
+	{
+		advance_time(delta);
+		return is_gcd_expired();
+	}
+
 	CastingInstanceWeaponArt::CastingInstanceWeaponArt(uint32_t art_id, float gcd)
 		: BaseCastingInstance(nullptr, 0.0f), m_art_id(art_id)
 	{
@@ -1808,6 +1835,117 @@ namespace SpellHotbar::casts::CastingController {
 	{
 		ArtDriver::finish(RE::PlayerCharacter::GetSingleton());
 		BaseCastingInstance::on_reset();
+	}
+
+	bool try_start_action(uint32_t action_id, size_t slot, const Input::KeyBind& keybind)
+	{
+		auto* pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc || !pc->Is3DLoaded()) {
+			logger::warn("SH2 action: no loaded player for Action {}", action_id);
+			return false;
+		}
+
+		const ActionDefinition* action = GameData::get_action(action_id);
+		if (!action) {
+			logger::warn("SH2 action: unknown Action id {}", action_id);
+			return false;
+		}
+		if (action->kind != ActionKind::physical_scancode) {
+			logger::warn("SH2 action: Action {} has unsupported kind {}", action_id,
+				static_cast<int>(action->kind));
+			return false;
+		}
+
+		ActionTargetKeys live_targets{};
+		switch (action->target) {
+		case ActionTargetSource::ocpa_power:
+			live_targets.ocpa_power = Input::resolve_ocpa_keys_live().power;
+			break;
+		case ActionTargetSource::dodge_hotkey:
+			live_targets.dodge_hotkey = Input::resolve_dodge_hotkey_live();
+			break;
+		case ActionTargetSource::captured:
+			break;
+		}
+		const std::uint32_t target_scancode = resolve_action_scancode(*action, live_targets);
+		if (target_scancode == 0) {
+			logger::info("SH2 action: Action {} has no resolved target", action_id);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+		if (action_would_recurse(target_scancode, keybind.get_dx_scancode())) {
+			logger::warn("SH2 action: Action {} target {} equals slot {} binding; refusing recursion",
+				action_id, target_scancode, slot);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+
+		// Costed Actions use the same whole-instance lockout as spells, potions, and Abilities. A
+		// zero-cost combat Action is deliberately outside this gate so Power Attack can chain out
+		// of a committed Driver Cast below.
+		if (action->is_costed() && !can_start_new_cast()) {
+			logger::info("SH2 action: Action {} refused while a cast is live", action_id);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+		if (GameData::is_action_on_cd(action_id)) {
+			logger::info("SH2 action: Action {} on cooldown", action_id);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+
+		auto* av = pc->AsActorValueOwner();
+		const float have_stamina = av ? av->GetActorValue(RE::ActorValue::kStamina) : 0.0f;
+		const float have_magicka = av ? av->GetActorValue(RE::ActorValue::kMagicka) : 0.0f;
+		const float have_health = av ? av->GetActorValue(RE::ActorValue::kHealth) : 0.0f;
+		const auto short_meter = unaffordable_art_meter(action->stamina_cost, action->magicka_cost,
+			action->health_cost, have_stamina, have_magicka, have_health);
+		if (short_meter != ArtMeter::None) {
+			RE::ActorValue flash = RE::ActorValue::kStamina;
+			if (short_meter == ArtMeter::Magicka) {
+				flash = RE::ActorValue::kMagicka;
+			} else if (short_meter == ArtMeter::Health) {
+				flash = RE::ActorValue::kHealth;
+			}
+			logger::info("SH2 action: Action {} unaffordable (stam {} mag {} hp {})", action_id,
+				action->stamina_cost, action->magicka_cost, action->health_cost);
+			RE::HUDMenu::FlashMeter(flash);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
+		}
+
+		if (!Input::queue_keyboard_tap(target_scancode)) {
+			logger::warn("SH2 action: Action {} target {} was not queued", action_id, target_scancode);
+			return false;
+		}
+
+		if (action->stamina_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina,
+				-action->stamina_cost);
+		}
+		if (action->magicka_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka,
+				-action->magicka_cost);
+		}
+		if (action->health_cost > 0.0f && av) {
+			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth,
+				-action->health_cost);
+		}
+		if (action->cooldown_days > 0.0f) {
+			GameData::add_action_cooldown(action_id, action->cooldown_days);
+		}
+
+		// This is ticket 10's cut, not a new SH2 cast. The injected event does not revisit this
+		// input hook, so the controller must perform the graph teardown explicitly for a Power
+		// Attack Action after its tap has been accepted.
+		if (!action->is_costed() && action->is_attack()) {
+			cut_committed_cast_for_attack(pc);
+		}
+		if (action->gcd > 0.0f) {
+			current_cast = std::make_unique<CastingInstanceAction>(action->gcd);
+		}
+		logger::info("SH2 action: Action {} queued target {} (slot {})", action_id, target_scancode, slot);
+		return true;
 	}
 
 	bool try_start_art(uint32_t art_id, size_t slot, const Input::KeyBind& keybind)

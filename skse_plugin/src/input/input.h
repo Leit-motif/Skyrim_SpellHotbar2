@@ -27,7 +27,11 @@ namespace SpellHotbar::Input {
 	int get_shout_key_dxcode();
 
 	const OcpaKeys& get_ocpa_keys();
+	/** Resolve external combat bindings from the current VFS state at Action press time. */
+	OcpaKeys resolve_ocpa_keys_live();
 	uint32_t get_dodge_hotkey();
+	/** Resolve TK Dodge's binding from the current VFS state at Action press time. */
+	uint32_t resolve_dodge_hotkey_live();
 	bool queue_keyboard_tap(uint32_t scancode);
 
 	/**

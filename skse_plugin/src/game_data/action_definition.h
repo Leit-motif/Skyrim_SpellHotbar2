@@ -1,0 +1,92 @@
+#pragma once
+
+#include <cstdint>
+#include <string>
+#include <vector>
+
+namespace SpellHotbar {
+
+enum class ActionKind : std::uint8_t {
+	physical_scancode = 0,
+};
+
+enum class ActionTargetSource : std::uint8_t {
+	ocpa_power = 0,
+	dodge_hotkey,
+	captured,
+};
+
+struct ActionTargetKeys {
+	std::uint32_t ocpa_power{ 0 };
+	std::uint32_t dodge_hotkey{ 0 };
+};
+
+struct ActionDefinition {
+	std::uint32_t id{ 0 };
+	std::string display_name;
+	std::string icon;
+	std::uint32_t icon_form{ 0 };
+	ActionKind kind{ ActionKind::physical_scancode };
+	ActionTargetSource target{ ActionTargetSource::captured };
+	std::uint32_t captured_scancode{ 0 };
+	float stamina_cost{ 0.0f };
+	float magicka_cost{ 0.0f };
+	float health_cost{ 0.0f };
+	float cooldown_days{ 0.0f };
+	float gcd{ 0.0f };
+
+	[[nodiscard]] bool is_costed() const noexcept;
+	[[nodiscard]] bool is_attack() const noexcept;
+};
+
+struct ActionPlayerOverlay {
+	std::string display_name;
+	std::string icon;
+	std::uint32_t icon_form{ 0 };
+	ActionKind kind{ ActionKind::physical_scancode };
+	ActionTargetSource target{ ActionTargetSource::captured };
+	std::uint32_t captured_scancode{ 0 };
+	float stamina_cost{ 0.0f };
+	float magicka_cost{ 0.0f };
+	float health_cost{ 0.0f };
+	float cooldown_days{ 0.0f };
+	float gcd{ 0.0f };
+};
+
+inline constexpr std::uint32_t power_attack_action_id = 1;
+inline constexpr std::uint32_t dodge_action_id = 2;
+inline constexpr std::uint32_t custom_action_id_base = 100;
+
+[[nodiscard]] std::vector<ActionDefinition> default_action_catalogue();
+
+[[nodiscard]] std::uint32_t resolve_action_scancode(
+	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;
+
+[[nodiscard]] constexpr bool action_would_recurse(
+	std::uint32_t target_scancode, int triggering_scancode) noexcept
+{
+	return target_scancode != 0 && triggering_scancode >= 0 &&
+		target_scancode == static_cast<std::uint32_t>(triggering_scancode);
+}
+
+void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay);
+
+[[nodiscard]] ActionPlayerOverlay action_player_overlay_from(const ActionDefinition& action);
+
+[[nodiscard]] bool action_matches_catalogue(
+	const ActionDefinition& live, const ActionDefinition& catalogue) noexcept;
+
+[[nodiscard]] constexpr const char* action_target_label(ActionTargetSource target) noexcept
+{
+	switch (target) {
+	case ActionTargetSource::ocpa_power:
+		return "OCPA power attack";
+	case ActionTargetSource::dodge_hotkey:
+		return "Dodge hotkey";
+	case ActionTargetSource::captured:
+		return "Captured scancode";
+	}
+	return "Captured scancode";
+}
+
+}  // namespace SpellHotbar

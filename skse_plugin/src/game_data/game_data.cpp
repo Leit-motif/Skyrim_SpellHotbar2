@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <fstream>
 #include <random>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -111,6 +112,10 @@ namespace SpellHotbar::GameData {
     std::unordered_map<uint32_t, ArtDefinition> art_cast_info;
     std::unordered_map<uint32_t, ArtDefinition> art_catalogue;
     std::unordered_map<uint32_t, Gametime_cooldown_value> art_cooldowns;
+    std::unordered_map<uint32_t, ActionDefinition> action_cast_info;
+    std::unordered_map<uint32_t, ActionDefinition> action_catalogue;
+    std::unordered_map<uint32_t, Gametime_cooldown_value> action_cooldowns;
+    std::unordered_map<uint32_t, ActionPlayerOverlay> action_player_overlays;
 
     struct ArtIconOverride {
         std::string icon;
@@ -444,12 +449,14 @@ namespace SpellHotbar::GameData {
         SpellCastEffectCSVLoader::load_spell_casteffects(std::filesystem::path(spell_casteffects_root));
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
+        seed_default_actions();
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
         // After both loaders, and deliberately: a scanned row only fills a gap the catalogue
         // left. A curated row wins -- see curated_row_wins.
         ArtPackGen::register_cached_arts();
         load_user_art_icons();
+        load_user_action_overlays();
 
         spell_effects_key_indices = nullptr; //no longer need this
 
@@ -542,6 +549,9 @@ namespace SpellHotbar::GameData {
         art_cast_info.clear();
         art_catalogue.clear();
         art_catalogue_icons.clear();
+        action_cast_info.clear();
+        action_catalogue.clear();
+        action_player_overlays.clear();
 
         load_translations(std::filesystem::path(translation_path));
 
@@ -549,12 +559,14 @@ namespace SpellHotbar::GameData {
         SpellCastEffectCSVLoader::load_spell_casteffects(std::filesystem::path(spell_casteffects_root));
         SpellDataCSVLoader::load_spell_data(std::filesystem::path(spell_data_root));
         AnimationDataCSVLoader::load_anim_data(std::filesystem::path(animation_data_root));
+        seed_default_actions();
         ArtDataCSVLoader::load_art_data(std::filesystem::path(art_data_root));
         ArtDataCSVLoader::load_custom_art_folders(std::filesystem::path(custom_art_pack_root));
         // After both loaders, and deliberately: a scanned row only fills a gap the catalogue
         // left. A curated row wins -- see curated_row_wins.
         ArtPackGen::register_cached_arts();
         load_user_art_icons();
+        load_user_action_overlays();
         spell_effects_key_indices = nullptr;  // no longer need this
     }
 
@@ -930,6 +942,13 @@ namespace SpellHotbar::GameData {
             }
             return art->display_name;
         }
+        if (skill.type == slot_type::action) {
+            const ActionDefinition* action = get_action(skill.action_id);
+            if (action == nullptr) {
+                return "<INVALID>";
+            }
+            return action->display_name;
+        }
         return resolve_spellname(skill.formID);
     }
 
@@ -1219,6 +1238,7 @@ namespace SpellHotbar::GameData {
         individual_shout_cooldowns = false;
         block_timer = 0.0f;
         art_cooldowns.clear();
+        action_cooldowns.clear();
         reset_art_selector();
     }
 
@@ -1469,6 +1489,241 @@ namespace SpellHotbar::GameData {
         return true;
     }
 
+    namespace {
+
+    constexpr std::uint32_t action_kind_max =
+        static_cast<std::uint32_t>(ActionKind::physical_scancode);
+    constexpr std::uint32_t action_target_max =
+        static_cast<std::uint32_t>(ActionTargetSource::captured);
+
+    std::filesystem::path user_action_overlays_path()
+    {
+        return Storage::IO::get_icon_edits_user_dir() / "action_overlays.json";
+    }
+
+    void apply_stored_action_tuning(ActionDefinition& action)
+    {
+        if (const auto it = action_player_overlays.find(action.id); it != action_player_overlays.end()) {
+            apply_action_player_overlay(action, it->second);
+        }
+    }
+
+    bool read_action_uint(const rj::Value& object, const char* member, std::uint32_t& value)
+    {
+        if (!object.HasMember(member) || !object[member].IsUint()) {
+            return false;
+        }
+        value = object[member].GetUint();
+        return true;
+    }
+
+    bool read_action_float(const rj::Value& object, const char* member, float& value)
+    {
+        if (!object.HasMember(member) || !object[member].IsNumber()) {
+            return false;
+        }
+        value = static_cast<float>(object[member].GetDouble());
+        return true;
+    }
+
+    void write_action_overlay_member(rj::Document& document, const std::uint32_t action_id,
+        const ActionPlayerOverlay& overlay, rj::Value& actions)
+    {
+        auto& allocator = document.GetAllocator();
+        rj::Value entry(rj::kObjectType);
+        entry.AddMember("action_id", action_id, allocator);
+        entry.AddMember("name", rj::Value(overlay.display_name.c_str(), allocator), allocator);
+        entry.AddMember("icon", rj::Value(overlay.icon.c_str(), allocator), allocator);
+        entry.AddMember("icon_form", overlay.icon_form, allocator);
+        entry.AddMember("kind", static_cast<std::uint32_t>(overlay.kind), allocator);
+        entry.AddMember("target", static_cast<std::uint32_t>(overlay.target), allocator);
+        entry.AddMember("captured_scancode", overlay.captured_scancode, allocator);
+        entry.AddMember("stamina_cost", overlay.stamina_cost, allocator);
+        entry.AddMember("magicka_cost", overlay.magicka_cost, allocator);
+        entry.AddMember("health_cost", overlay.health_cost, allocator);
+        entry.AddMember("cooldown_days", overlay.cooldown_days, allocator);
+        entry.AddMember("gcd", overlay.gcd, allocator);
+        actions.PushBack(std::move(entry), allocator);
+    }
+
+    }  // namespace
+
+    void seed_default_actions()
+    {
+        action_catalogue.clear();
+        action_cast_info.clear();
+        for (auto action : default_action_catalogue()) {
+            const auto id = action.id;
+            action_catalogue.insert_or_assign(id, action);
+            apply_stored_action_tuning(action);
+            action_cast_info.insert_or_assign(id, std::move(action));
+        }
+    }
+
+    void set_action(ActionDefinition action)
+    {
+        if (action.id == 0) {
+            return;
+        }
+        const auto id = action.id;
+        action_catalogue.insert_or_assign(id, action);
+        apply_stored_action_tuning(action);
+        action_cast_info.insert_or_assign(id, std::move(action));
+    }
+
+    const ActionDefinition* get_action(uint32_t action_id)
+    {
+        const auto it = action_cast_info.find(action_id);
+        return it == action_cast_info.end() ? nullptr : &it->second;
+    }
+
+    ActionDefinition* get_action_mut(uint32_t action_id)
+    {
+        const auto it = action_cast_info.find(action_id);
+        return it == action_cast_info.end() ? nullptr : &it->second;
+    }
+
+    const ActionDefinition* get_action_catalogue(uint32_t action_id)
+    {
+        const auto it = action_catalogue.find(action_id);
+        return it == action_catalogue.end() ? nullptr : &it->second;
+    }
+
+    std::vector<uint32_t> list_action_ids()
+    {
+        std::vector<uint32_t> ids;
+        ids.reserve(action_cast_info.size());
+        for (const auto& [id, unused] : action_cast_info) {
+            static_cast<void>(unused);
+            ids.push_back(id);
+        }
+        std::sort(ids.begin(), ids.end());
+        return ids;
+    }
+
+    bool persist_user_action_overlays()
+    {
+        const auto path = user_action_overlays_path();
+        const auto parent_dir = path.parent_path();
+        if (!parent_dir.empty()) {
+            std::error_code ec;
+            std::filesystem::create_directories(parent_dir, ec);
+            if (ec) {
+                logger::error("Could not create directory '{}': {}", parent_dir.string(), ec.message());
+                return false;
+            }
+        }
+
+        rj::Document document;
+        document.SetObject();
+        document.AddMember("version", 1, document.GetAllocator());
+        rj::Value actions(rj::kArrayType);
+        for (const auto& [id, overlay] : action_player_overlays) {
+            write_action_overlay_member(document, id, overlay, actions);
+        }
+        document.AddMember("actions", std::move(actions), document.GetAllocator());
+
+        std::ofstream output(path, std::ofstream::out);
+        if (!output.is_open()) {
+            logger::error("Could not open '{}' for writing", path.string());
+            return false;
+        }
+        rj::OStreamWrapper stream(output);
+        rj::PrettyWriter<rj::OStreamWrapper> writer(stream);
+        writer.SetIndent(' ', 4);
+        document.Accept(writer);
+        return true;
+    }
+
+    bool persist_action_player_overlay(const ActionDefinition& action)
+    {
+        if (action.id == 0) {
+            return false;
+        }
+        const auto* catalogue = get_action_catalogue(action.id);
+        if (catalogue && action_matches_catalogue(action, *catalogue)) {
+            action_player_overlays.erase(action.id);
+        } else {
+            action_player_overlays.insert_or_assign(action.id, action_player_overlay_from(action));
+        }
+        return persist_user_action_overlays();
+    }
+
+    bool load_user_action_overlays()
+    {
+        action_player_overlays.clear();
+        const auto path = user_action_overlays_path();
+        if (!std::filesystem::exists(path)) {
+            return true;
+        }
+
+        std::ifstream input(path);
+        if (!input.is_open()) {
+            logger::error("Could not open '{}' for reading", path.string());
+            return false;
+        }
+
+        rj::IStreamWrapper stream(input);
+        rj::Document document;
+        document.ParseStream(stream);
+        if (document.HasParseError() || !document.IsObject() || !document.HasMember("version") ||
+            !document["version"].IsInt() || document["version"].GetInt() != 1) {
+            logger::error("Invalid Action overlay JSON in '{}'", path.string());
+            return false;
+        }
+        if (!document.HasMember("actions") || !document["actions"].IsArray()) {
+            logger::error("Action overlay JSON '{}' has no actions array", path.string());
+            return false;
+        }
+
+        bool errors = false;
+        for (const auto& object : document["actions"].GetArray()) {
+            std::uint32_t id = 0;
+            if (!object.IsObject() || !read_action_uint(object, "action_id", id) || id == 0) {
+                errors = true;
+                continue;
+            }
+            ActionPlayerOverlay overlay;
+            if (const auto* live = get_action(id)) {
+                overlay = action_player_overlay_from(*live);
+            }
+            std::uint32_t kind = 0;
+            if (read_action_uint(object, "kind", kind)) {
+                if (kind > action_kind_max) {
+                    errors = true;
+                    continue;
+                }
+                overlay.kind = static_cast<ActionKind>(kind);
+            }
+            std::uint32_t target = 0;
+            if (read_action_uint(object, "target", target)) {
+                if (target > action_target_max) {
+                    errors = true;
+                    continue;
+                }
+                overlay.target = static_cast<ActionTargetSource>(target);
+            }
+            if (object.HasMember("name") && object["name"].IsString()) {
+                overlay.display_name = object["name"].GetString();
+            }
+            if (object.HasMember("icon") && object["icon"].IsString()) {
+                overlay.icon = object["icon"].GetString();
+            }
+            read_action_uint(object, "icon_form", overlay.icon_form);
+            read_action_uint(object, "captured_scancode", overlay.captured_scancode);
+            read_action_float(object, "stamina_cost", overlay.stamina_cost);
+            read_action_float(object, "magicka_cost", overlay.magicka_cost);
+            read_action_float(object, "health_cost", overlay.health_cost);
+            read_action_float(object, "cooldown_days", overlay.cooldown_days);
+            read_action_float(object, "gcd", overlay.gcd);
+            action_player_overlays.insert_or_assign(id, overlay);
+            if (auto* live = get_action_mut(id)) {
+                apply_action_player_overlay(*live, overlay);
+            }
+        }
+        return !errors;
+    }
+
     const ArtDefinition* get_art_catalogue(uint32_t art_id)
     {
         const auto it = art_catalogue.find(art_id);
@@ -1662,6 +1917,41 @@ namespace SpellHotbar::GameData {
         }
         if (it->second.readytime <= curr_game_time) {
             art_cooldowns.erase(it);
+            return std::make_tuple(0.0f, 0.0f);
+        }
+        return std::make_tuple(it->second.get_progress(curr_game_time), it->second.duration);
+    }
+
+    void add_action_cooldown(uint32_t action_id, float days)
+    {
+        auto cal = RE::Calendar::GetSingleton();
+        if (!cal || days <= 0.0f) {
+            return;
+        }
+        const float curr_time = cal->GetCurrentGameTime();
+        const float duration_days = days * cal->GetTimescale();
+        action_cooldowns.insert_or_assign(action_id,
+            Gametime_cooldown_value(curr_time + duration_days, duration_days));
+    }
+
+    bool is_action_on_cd(uint32_t action_id)
+    {
+        auto cal = RE::Calendar::GetSingleton();
+        if (!cal) {
+            return false;
+        }
+        const auto it = action_cooldowns.find(action_id);
+        return it != action_cooldowns.end() && !it->second.is_expired(cal->GetCurrentGameTime());
+    }
+
+    std::tuple<float, float> get_action_gametime_cooldown(float curr_game_time, uint32_t action_id)
+    {
+        const auto it = action_cooldowns.find(action_id);
+        if (it == action_cooldowns.end()) {
+            return std::make_tuple(0.0f, 0.0f);
+        }
+        if (it->second.readytime <= curr_game_time) {
+            action_cooldowns.erase(it);
             return std::make_tuple(0.0f, 0.0f);
         }
         return std::make_tuple(it->second.get_progress(curr_game_time), it->second.duration);

@@ -6,6 +6,7 @@
 #include "../bar/oblivion_bar.h"
 #include "equipped_type.h"
 #include "art_definition.h"
+#include "action_definition.h"
 #include <optional>
 #include <vector>
 
@@ -254,6 +255,21 @@ namespace SpellHotbar::GameData {
     bool get_art_catalogue_icon(uint32_t art_id, std::string& out_icon, std::uint32_t& out_icon_form);
     const ArtDefinition* get_art_catalogue(uint32_t art_id);
     std::vector<uint32_t> list_art_ids();
+
+    /**
+     * Actions are SH2-owned input payloads rather than TES forms or Ability clips. The catalogue
+     * is seeded independently of load-order forms and player overlays are kept in a sidecar so a
+     * DLL reload does not erase the editor's name, icon, target, or optional costs.
+     */
+    void seed_default_actions();
+    void set_action(ActionDefinition action);
+    const ActionDefinition* get_action(uint32_t action_id);
+    ActionDefinition* get_action_mut(uint32_t action_id);
+    const ActionDefinition* get_action_catalogue(uint32_t action_id);
+    std::vector<uint32_t> list_action_ids();
+    bool persist_user_action_overlays();
+    bool persist_action_player_overlay(const ActionDefinition& action);
+    bool load_user_action_overlays();
     /**
      * Which Ability art is playing, for OAR's benefit (ADR-0008: one selector, not a path per art).
      *
@@ -273,6 +289,10 @@ namespace SpellHotbar::GameData {
     void add_art_cooldown(uint32_t art_id, float days);
     bool is_art_on_cd(uint32_t art_id);
     std::tuple<float, float> get_art_gametime_cooldown(float curr_game_time, uint32_t art_id);
+
+    void add_action_cooldown(uint32_t action_id, float days);
+    bool is_action_on_cd(uint32_t action_id);
+    std::tuple<float, float> get_action_gametime_cooldown(float curr_game_time, uint32_t action_id);
 
     void add_gametime_cooldown(RE::FormID skill, float hours, bool update_existing);
 
