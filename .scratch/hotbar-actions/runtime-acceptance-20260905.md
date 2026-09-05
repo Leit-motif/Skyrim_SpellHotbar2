@@ -97,8 +97,14 @@ Still open (not exercised in this session):
       attached to it, and then when I added magica cost through this mod, pressing the hotbar
       version of dodge incurred both a magica and stamina cost, as expected." Long-hold
       single-charge not separately observed.
-- [ ] Mouse-button and gamepad targets.
-- [ ] Modifier held with the slot key.
+- [ ] Mouse-button and gamepad targets (owner does not use them; skipped).
+- [x] Modifier held with the slot key (13:02, Save5 session). Bars inherit, so with the Shift
+      bar inheriting, Shift + slot key fired the inherited Action and the mirrored V landed
+      while physical Shift was down; the game read Shift+V, which the owner has bound
+      elsewhere, and played that binding instead. With the Shift loadout set to blocked, the
+      slot key fires nothing (no Action lines after 13:02:26). Owner: "I had to set the shift
+      loadout to blocked. Then it does not play the V slot key." The Shift+V case is the mirror
+      behaving as a physical key would, not a defect; note it for players.
 
 ### Save6 load hang (2026-09-05 12:42, second session PID 50400)
 
