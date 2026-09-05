@@ -1,0 +1,9 @@
+{
+  "projectType": "skse",
+  "name": "Spell Hotbar 2 SMF Next",
+  "developmentModName": "Dev - Spell Hotbar 2 SMF Next",
+  "mo2ModsRoot": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\mods",
+  "mo2ProfileDir": "C:\\Nolvus\\Instances\\Nolvus Awakening\\MODS\\profiles\\Nolvus Awakening",
+  "spriggitPackageVersion": "0.40.1",
+  "assetDirectories": [".scratch/runtime-dist-20260905"]
+}
