@@ -749,8 +749,13 @@ namespace SpellHotbar::BindMenu {
         ImGui::TextUnformatted(translate_c(tab_texts[tab_index]));
         ImGui::PopFont();
 
-        int tab_icon_size = static_cast<int>(60.0f * scale_factor);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
+        const int natural_tab_icon_size = static_cast<int>(60.0f * scale_factor);
+        const float tab_count = static_cast<float>(tab_texts.size());
+        const float tab_spacing = ImGui::GetStyle().ItemSpacing.x;
+        const int max_fitting_tab_icon_size = static_cast<int>(
+            (ImGui::GetContentRegionAvail().x - tab_spacing * (tab_count - 1.0f)) / tab_count);
+        const int tab_icon_size = std::min(natural_tab_icon_size, std::max(1, max_fitting_tab_icon_size));
         Rendering::GuiTabButton::draw("##TabAll", TabIndex_All, GameData::DefaultIconType::TAB_ALL, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_All])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabSpells", TabIndex_Spells, GameData::DefaultIconType::TAB_SPELLS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Spells])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabAlteration", TabIndex_Alteration, GameData::DefaultIconType::ALTERATION_ADEPT, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Alteration])); ImGui::SameLine();
