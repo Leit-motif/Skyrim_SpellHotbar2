@@ -87,7 +87,15 @@ Still open (not exercised in this session):
 - [x] Switching to the gamepad mid-hold releases cleanly (owner test 2, same holds). Open
       side effect: keyboard/mouse did not return until the controller was powered off; see
       fast-follow 07 #18. Not attributed to this build yet.
-- [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control.
-- [ ] A costed Action charges once for a long hold.
+- [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control. First
+      attempt 12:27: the V hold released at 12:27:28.961, the manual load began 12:27:33, so
+      nothing was held through it and the deferred release never ran. The game then died
+      0.7 s into the load with no crash log and no Application event; owner: "I think I had a
+      memory spike, and the game crashed." Not attributable to this build on that evidence.
+- [x] Costs charge and stack with the target mod's own cost. Owner: "I've already tested the
+      costs using magica, not stamina, but they work ... my dodge mod has a stamina cost
+      attached to it, and then when I added magica cost through this mod, pressing the hotbar
+      version of dodge incurred both a magica and stamina cost, as expected." Long-hold
+      single-charge not separately observed.
 - [ ] Mouse-button and gamepad targets.
 - [ ] Modifier held with the slot key.
