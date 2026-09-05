@@ -72,7 +72,8 @@ Log (`SpellHotbar2.log`, PID 95380 session, save loaded 11:46:12):
 - `user_event=''` on every edge. The winning controlmap (`ZZZ - Personal Bindings`) maps
   `Left Attack/Block` and `Right Attack/Block` to mouse only (keyboard `0xff`), so none of
   these keys have an engine event; they are mod hotkeys, and the empty name is the correct
-  resolution. Whether an engine-mapped key resolves its name is untested (fast-follow 07 #4).
+  resolution. Owner: mirroring mod hotkeys "was the goal"; native controls such as native
+  Block on the right mouse button are not a target. No engine-mapped-key cell is required.
 
 Cells this closes (owner-confirmed behavior plus paired log edges):
 - [x] Held Action slot mirrors the source hold and releases on source up (V, Timed Block).
@@ -84,7 +85,5 @@ Still open (not exercised in this session):
 - [ ] Menu open or input-mode change mid-hold leaves no stuck input.
 - [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control.
 - [ ] A costed Action charges once for a long hold.
-- [ ] A key that has an engine ControlMap event resolves a non-empty `user_event` and the
-      engine control responds.
 - [ ] Mouse-button and gamepad targets.
 - [ ] Modifier held with the slot key.

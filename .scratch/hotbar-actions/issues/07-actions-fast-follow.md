@@ -24,13 +24,13 @@ noted.
    admission refuses against records still `release_pending`. Clears on the first loaded frame
    in practice; the queue-full case answers MagFail. After `kMaxReleaseAttempts` (300) the
    record is dropped with the target still down — the one path that leaves a phantom hold.
-4. **Empty `userEvent` is a silent fallback.** `resolve_action_user_event` returns empty when
-   ControlMap has no mapping, device disagrees, or scancode > 281. Live 2026-09-05 (V = Timed Block hotkey, not native Block): every
-   target (47, 48, 79, 81) resolved empty because the personal controlmap binds Block to mouse
-   only and those keys belong to mods, and every one of them worked. So empty is correct for
-   mod hotkeys and only wrong for a key that is meant to reach `PlayerControls`. Decide whether
-   an engine-control target should refuse when the name is empty, and log the resolved name at
-   info on the down edge rather than only in the queue line.
+4. **Empty `userEvent` is the normal case, not a fallback.** Owner 2026-09-05: "i assigned
+   the Block action to keycode V, this is what my block mod is assigned to. that was the goal.
+   i'm not trying to assign native skyrim functionality (such as native block which would be
+   right mouse button)." Actions mirror mod hotkeys; native controls are out of scope. Live,
+   every target (47, 48, 79, 81) resolved empty and every one worked. Fast-follow: stop
+   treating the empty name as a degraded path in comments and logs, and decide whether
+   `resolve_action_user_event` should stay at all or be removed as dead machinery.
 5. **Down and up are captured by different conditions.** Down capture sits behind
    `in_ingame_state()` and the bar-disable gate; up/repeat capture is unconditional in the
    pre-filter. Trace whether a forwarded down can still start an Action; if so the up is
@@ -66,7 +66,7 @@ noted.
 
 ## Acceptance
 
-- [ ] 1, 3, 4 fixed natively; build; CTest; redeploy; owner re-runs the hold/release cells.
+- [ ] 1 and 3 fixed natively; 4 decided; build; CTest; redeploy; owner re-runs the hold/release cells.
 - [ ] 2 and 5 decided and recorded in ticket 04.
 - [ ] 6–16 addressed or explicitly declined with one line each.
 - [ ] 17: tests added for the seams that survive the above.
