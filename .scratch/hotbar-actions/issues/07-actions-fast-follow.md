@@ -63,10 +63,25 @@ noted.
     (255/256/265/266), `is_action_record` for version 6 kind 2,
     `BindCaptureState::apply_action_down_edge` with `dx_scancode == 0`, overlay JSON rejection
     of out-of-range `kind`/`target`/`device`.
+18. **Auto Input Switch did not return to keyboard/mouse after a gamepad hold test (live
+    2026-09-05 12:01–12:20).** Owner held an Action slot, switched to the gamepad mid-hold
+    (the hold paired cleanly in the log), then keyboard and mouse stayed dead: W, mouse look,
+    mouse attack, and Escape did nothing while `Game.UsingGamepad()` stayed true, yet the
+    keyboard still reached the SMF hook (the slot key produced a paired mirrored press at
+    12:17:09) and Timed Block answered a physical V. An injected keyboard Escape through
+    DevBench opened the Journal. Runtime `bGamepadEnable` off via Papyrus did not flip the
+    flag; powering the controller off did. Owner: "iirc that is not normal behavior with
+    autoinput switch." Auto Input Switch is `iPreferredPlatform=-1` with one trampoline hook.
+    Not attributed yet. Retest: same sequence on the pre-mirroring DLL `6ad3dd5`
+    (SHA `9B889C70...`); if it reverts there, the mirror's queued keyboard events or the
+    source-key consumption is interfering with the switch's detection, most likely the
+    consumed source events never reaching its hook. If it also sticks there, it is the
+    switch or the engine, and this item closes as not ours.
 
 ## Acceptance
 
 - [ ] 1 and 3 fixed natively; 4 decided; build; CTest; redeploy; owner re-runs the hold/release cells.
 - [ ] 2 and 5 decided and recorded in ticket 04.
 - [ ] 6–16 addressed or explicitly declined with one line each.
+- [ ] 18 retested against 6ad3dd5 and attributed.
 - [ ] 17: tests added for the seams that survive the above.

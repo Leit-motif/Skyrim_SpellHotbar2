@@ -82,7 +82,11 @@ Cells this closes (owner-confirmed behavior plus paired log edges):
 - [x] Twelve rows usable: Actions 100–102 bound and fired from the shipped list.
 
 Still open (not exercised in this session):
-- [ ] Menu open or input-mode change mid-hold leaves no stuck input.
+- [x] Menu open mid-hold leaves no stuck input (owner test 1; holds of 3.8 s, 7.2 s, 12.2 s
+      at 12:00–12:01 all paired with `reason=source up`).
+- [x] Switching to the gamepad mid-hold releases cleanly (owner test 2, same holds). Open
+      side effect: keyboard/mouse did not return until the controller was powered off; see
+      fast-follow 07 #18. Not attributed to this build yet.
 - [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control.
 - [ ] A costed Action charges once for a long hold.
 - [ ] Mouse-button and gamepad targets.
