@@ -86,7 +86,7 @@ Still open (not exercised in this session):
       at 12:00–12:01 all paired with `reason=source up`).
 - [x] Switching to the gamepad mid-hold releases cleanly (owner test 2, same holds). Open
       side effect: keyboard/mouse did not return until the controller was powered off; see
-      fast-follow 07 #18. Not attributed to this build yet.
+      fast-follow 07 #18. Sink-injection test at 14:01 exonerated the SH2/SMF capture path.
 - [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control. First
       attempt 12:27: the V hold released at 12:27:28.961, the manual load began 12:27:33, so
       nothing was held through it and the deferred release never ran. The game then died

@@ -63,20 +63,21 @@ noted.
     (255/256/265/266), `is_action_record` for version 6 kind 2,
     `BindCaptureState::apply_action_down_edge` with `dx_scancode == 0`, overlay JSON rejection
     of out-of-range `kind`/`target`/`device`.
-18. **Auto Input Switch did not return to keyboard/mouse after a gamepad hold test (live
-    2026-09-05 12:01–12:20).** Owner held an Action slot, switched to the gamepad mid-hold
-    (the hold paired cleanly in the log), then keyboard and mouse stayed dead: W, mouse look,
-    mouse attack, and Escape did nothing while `Game.UsingGamepad()` stayed true, yet the
-    keyboard still reached the SMF hook (the slot key produced a paired mirrored press at
-    12:17:09) and Timed Block answered a physical V. An injected keyboard Escape through
-    DevBench opened the Journal. Runtime `bGamepadEnable` off via Papyrus did not flip the
-    flag; powering the controller off did. Owner: "iirc that is not normal behavior with
-    autoinput switch." Auto Input Switch is `iPreferredPlatform=-1` with one trampoline hook.
-    Not attributed yet. Retest: same sequence on the pre-mirroring DLL `6ad3dd5`
-    (SHA `9B889C70...`); if it reverts there, the mirror's queued keyboard events or the
-    source-key consumption is interfering with the switch's detection, most likely the
-    consumed source events never reaching its hook. If it also sticks there, it is the
-    switch or the engine, and this item closes as not ours.
+18. **Auto Input Switch does not return to keyboard/mouse while the pad stays on — NOT this
+    build's capture path.** Live 2026-09-05 12:01–14:02, reproduced three times. Mechanism
+    (source `Exit-9B/AutoInputSwitch`): the switch flips back when its `BSInputDeviceManager`
+    event sink sees any non-repeating keyboard or mouse event; `Game.UsingGamepad()` reports
+    the physical pad, not the switch's state, so Papyrus cannot observe it. Discriminator run at
+    14:01:20 with the pad on and KBM dead: DevBench injected a keyboard Shift tap and a mouse
+    right-button tap through `BSInputDeviceManager::SendEvent`, which reaches every sink and
+    bypasses the SMF per-event hook and all of SH2. KBM stayed dead (owner: "nope"). Physical
+    keys meanwhile reached SH2's hook and Timed Block throughout, and the mirror held nothing.
+    Conclusion: the switch's sink is not acting on keyboard events while the pad is connected,
+    independent of anything SH2 unlinks. Installed version is 1.3.1 (2026-08-26, "Updated for
+    SkyrimSE 1.7.99 and Address Library 12"); if the owner's memory of clean switching predates
+    that update, the update is the suspect. Owner preference: not an incompatibility to list.
+    Recovery observed each time: power the pad off. Remaining action for a later session: retest
+    with SH2 disabled once, or ask on the switch's page; no code change here.
 
 ## Acceptance
 
@@ -86,5 +87,5 @@ noted.
 - [ ] Save-then-load while holding an Action exercised once on a fresh save (the deferred
       `kPreLoadGame` release, expect `reason=retry`); if the save made mid-hold hangs post-thaw
       like Save6 did, that becomes finding 19.
-- [ ] 18 retested against 6ad3dd5 and attributed.
+- [ ] 18: one retest with SH2 disabled, or upstream question; no SH2 change expected.
 - [ ] 17: tests added for the seams that survive the above.
