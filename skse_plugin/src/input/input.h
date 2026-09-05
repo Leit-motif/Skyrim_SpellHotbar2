@@ -1,5 +1,7 @@
 #pragma once
 
+#include "action_inject.h"
+
 namespace SpellHotbar::Input {
 	static inline const char* sound_UISkillsBackward = "UISkillsBackward";
 	static inline const char* sound_UISkillsForward = "UISkillsForward";
@@ -23,6 +25,10 @@ namespace SpellHotbar::Input {
 
 	std::tuple<RE::INPUT_DEVICE, uint8_t> get_shout_key_and_device();
 	int get_shout_key_dxcode();
+
+	const OcpaKeys& get_ocpa_keys();
+	uint32_t get_dodge_hotkey();
+	bool queue_keyboard_tap(uint32_t scancode);
 
 	/**
 	* allowed to use powers, less restrictive than regular casts

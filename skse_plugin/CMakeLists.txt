@@ -55,6 +55,7 @@ set(source_files src/plugin.cpp
                  src/bar/oblivion_bar.cpp
                  "src/input/input.h"
                  "src/input/input.cpp"
+                 "src/input/action_inject.h"
                  "src/input/input_event_adapter.h"
                  "src/input/keybinds.h"
                  "src/input/keybinds.cpp"
@@ -181,6 +182,10 @@ add_executable(texture_registry_test src/rendering/texture_registry_test.cpp)
 target_compile_features(texture_registry_test PRIVATE cxx_std_23)
 target_include_directories(texture_registry_test PRIVATE src/rendering)
 
+add_executable(action_inject_test src/input/action_inject_test.cpp)
+target_compile_features(action_inject_test PRIVATE cxx_std_23)
+target_include_directories(action_inject_test PRIVATE src/input)
+
 add_test(NAME combo_cache_test COMMAND combo_cache_test)
 add_test(NAME clip_translation_test COMMAND clip_translation_test)
 add_test(NAME art_pack_gen_test COMMAND art_pack_gen_test)
@@ -190,6 +195,7 @@ add_test(NAME art_bind_record_test COMMAND art_bind_record_test)
 add_test(NAME bind_drop_test COMMAND bind_drop_test)
 add_test(NAME hotbar_serialization_test COMMAND hotbar_serialization_test)
 add_test(NAME texture_registry_test COMMAND texture_registry_test)
+add_test(NAME action_inject_test COMMAND action_inject_test)
 endif()
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})

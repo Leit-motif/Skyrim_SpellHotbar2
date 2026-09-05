@@ -20,11 +20,28 @@ int get_number_of_slots(RE::StaticFunctionTag*)
  * the process. Runtime verification drives casts through this because synthetic OS input
  * does not reach an unfocused window. Uses the same InputMode::process_input path as a real
  * key, including any queued native input event the mode produces (real shouts).
+ *
+ * Ticket 01 throwaway rider: slot -1 injects OCPA's configured power scancode; slot -2
+ * injects TK Dodge RE's DodgeHotkey. Both are a keyboard down/up pair on BSInputEventQueue.
+ * Not a product surface.
  */
 void cast_slot(RE::StaticFunctionTag*, int slot_index)
 {
     SKSE::GetTaskInterface()->AddTask([slot_index]() {
         using namespace SpellHotbar;
+        if (slot_index == -1 || slot_index == -2) {
+            if (!Input::in_ingame_state()) {
+                logger::warn("castSlot({}): not in ingame state", slot_index);
+                return;
+            }
+            const uint32_t scancode = slot_index == -1 ? Input::get_ocpa_keys().power : Input::get_dodge_hotkey();
+            const char* kind = slot_index == -1 ? "ocpa" : "dodge";
+            logger::info("castSlot({}): action spike {} scancode={}", slot_index, kind, scancode);
+            if (!Input::queue_keyboard_tap(scancode)) {
+                logger::warn("castSlot({}): action spike {} did not queue", slot_index, kind);
+            }
+            return;
+        }
         if (slot_index < 0 || slot_index >= static_cast<int>(Input::key_spells.size())) {
             logger::warn("castSlot({}): slot index out of range", slot_index);
             return;

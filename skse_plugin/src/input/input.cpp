@@ -1,7 +1,7 @@
 #include "input.h"
-#include <charconv>
 #include <chrono>
 #include <fstream>
+#include <iterator>
 #include <unordered_map>
 #include "input_event_adapter.h"
 #include "keybinds.h"
@@ -117,68 +117,6 @@ namespace SpellHotbar::Input {
                 return RE::ControlMap::kInvalid;
             }
             return control_map->GetMappedKey(user_events->rightAttack, key_device);
-        }
-
-        // One Click Power Attack's keys, read from its own config so they are configured in one
-        // place rather than copied here and left to drift. Read once; OCPA's binding does not move
-        // mid-session.
-        //
-        // A power attack does not travel the control map at all -- OCPA is a mod hotkey, which is
-        // why the right-attack lookup above answers kInvalid for it and why three power-attack
-        // presses during a cast were seen and declined on 2026-08-12. The press itself does reach
-        // this hook, so knowing the key is the whole of what was missing.
-        //
-        // Fails open: no config, no key, and only the mapped right attack chains.
-        struct OcpaKeys {
-            uint32_t power{ 0 };
-            uint32_t dual{ 0 };
-        };
-
-        const OcpaKeys& get_ocpa_keys()
-        {
-            static const OcpaKeys keys = [] {
-                // Both paths OCPA has shipped. Relative to the game root, so MO2's VFS resolves
-                // them to the load order's winner exactly as it does for the game's own files.
-                constexpr std::string_view paths[]{
-                    "Data/MCM/Settings/OCPA.ini"sv,
-                    "Data/MCM/Config/OCPA/settings.ini"sv,
-                };
-
-                OcpaKeys found{};
-                for (const auto& path : paths) {
-                    std::ifstream in{ std::string{ path } };
-                    if (!in) {
-                        continue;
-                    }
-                    // The file's first `iKeycode` is [General]'s -- the power attack. The second is
-                    // [DualAttack]'s. Either may be absent or negative, meaning unbound.
-                    std::string line;
-                    int seen{ 0 };
-                    while (std::getline(in, line) && seen < 2) {
-                        const auto eq = line.find('=');
-                        if (eq == std::string::npos || line.find("iKeycode") == std::string::npos) {
-                            continue;
-                        }
-                        int code{ 0 };
-                        const auto value = line.substr(eq + 1);
-                        const auto* first = value.data();
-                        const auto* last = first + value.size();
-                        while (first != last && (*first == ' ' || *first == '\t')) {
-                            ++first;
-                        }
-                        if (std::from_chars(first, last, code).ec != std::errc{}) {
-                            continue;
-                        }
-                        (seen == 0 ? found.power : found.dual) = code > 0 ? static_cast<uint32_t>(code) : 0U;
-                        ++seen;
-                    }
-                    logger::info("SH2 cast: OCPA keys read from {} (power={}, dual={})", path, found.power, found.dual);
-                    return found;
-                }
-                logger::info("SH2 cast: no OCPA config found; only the mapped right attack chains out of a cast");
-                return found;
-            }();
-            return keys;
         }
 
         // Is this press one that starts an attack -- the mapped right attack, or one of OCPA's
@@ -681,6 +619,100 @@ namespace SpellHotbar::Input {
             offset = 266;
         }
         return static_cast<int>(code) + offset;
+    }
+
+    namespace {
+        std::string read_data_file(std::string_view path)
+        {
+            std::ifstream in{ std::string{ path } };
+            if (!in) {
+                return {};
+            }
+            return { std::istreambuf_iterator<char>{ in }, std::istreambuf_iterator<char>{} };
+        }
+    }
+
+    // One Click Power Attack's keys, read from its own config so they are configured in one
+    // place rather than copied here and left to drift. Read once; OCPA's binding does not move
+    // mid-session.
+    //
+    // A power attack does not travel the control map at all -- OCPA is a mod hotkey, which is
+    // why the right-attack lookup above answers kInvalid for it and why three power-attack
+    // presses during a cast were seen and declined on 2026-08-12. The press itself does reach
+    // this hook, so knowing the key is the whole of what was missing.
+    //
+    // Fails open: no config, no key, and only the mapped right attack chains.
+    const OcpaKeys& get_ocpa_keys()
+    {
+        static const OcpaKeys keys = [] {
+            constexpr std::string_view paths[]{
+                "Data/MCM/Settings/OCPA.ini"sv,
+                "Data/MCM/Config/OCPA/settings.ini"sv,
+            };
+
+            for (const auto& path : paths) {
+                const auto text = read_data_file(path);
+                if (text.empty()) {
+                    continue;
+                }
+                auto found = parse_ocpa_keys(text);
+                logger::info("SH2 cast: OCPA keys read from {} (power={}, dual={})", path, found.power, found.dual);
+                return found;
+            }
+            logger::info("SH2 cast: no OCPA config found; only the mapped right attack chains out of a cast");
+            return OcpaKeys{};
+        }();
+        return keys;
+    }
+
+    uint32_t get_dodge_hotkey()
+    {
+        static const uint32_t key = [] {
+            constexpr std::string_view path{ "Data/SKSE/Plugins/TK Dodge RE.ini"sv };
+            const auto text = read_data_file(path);
+            const auto found = parse_dodge_hotkey(text);
+            if (found == 0) {
+                logger::info("SH2 action spike: no DodgeHotkey in {}", path);
+                return 0U;
+            }
+            logger::info("SH2 action spike: dodge hotkey read from {} (key={})", path, found);
+            return found;
+        }();
+        return key;
+    }
+
+    bool queue_keyboard_tap(uint32_t scancode)
+    {
+        auto queue = RE::BSInputEventQueue::GetSingleton();
+        if (!queue) {
+            logger::error("action spike: BSInputEventQueue missing (scancode={})", scancode);
+            return false;
+        }
+        if (scancode == 0) {
+            logger::warn("action spike: scancode 0, not queued");
+            return false;
+        }
+
+        const auto device = RE::INPUT_DEVICE::kKeyboard;
+        const auto phases = keyboard_tap_phases();
+        RE::ButtonEvent* events[2]{ nullptr, nullptr };
+        for (size_t i = 0; i < phases.size(); ++i) {
+            events[i] = RE::ButtonEvent::Create(device, ""sv, scancode, phases[i].value, phases[i].held_duration);
+            if (!events[i]) {
+                logger::error(
+                    "action spike: ButtonEvent::Create refused (device={}, scancode={}, value={}, held={}, accepted=false)",
+                    static_cast<int>(device), scancode, phases[i].value, phases[i].held_duration);
+                return false;
+            }
+        }
+        for (size_t i = 0; i < phases.size(); ++i) {
+            queue->PushOntoInputQueue(events[i]);
+            logger::info(
+                "action spike: queued {} (device={}, scancode={}, value={}, held={}, accepted=true)",
+                phases[i].value > 0.0f ? "down" : "up", static_cast<int>(device), scancode, phases[i].value,
+                phases[i].held_duration);
+        }
+        return true;
     }
 
     std::tuple<RE::INPUT_DEVICE, uint8_t> get_shout_key_and_device()
