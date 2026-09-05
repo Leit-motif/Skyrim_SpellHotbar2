@@ -12,7 +12,9 @@ but this ticket is the single acceptance/closure record.
 **Blocked by:** Nothing. Ticket 01 decides *which kinds exist*; this ticket does not wait
 to land the identity.
 
-**Status:** claimed — Hotbar Actions 02–05 rollup
+**Status:** closed 2026-09-05 — Hotbar Actions 02–05 rollup accepted by the owner
+
+**Status (superseded — see the top):** claimed — Hotbar Actions 02–05 rollup
 
 Tickets 03–05 are superseded as standalone work and their acceptance criteria are carried
 by this rollup.
@@ -56,5 +58,32 @@ here.
 Native SKSE only: no new Papyrus scripts, no new dependencies, minimal changes.
 
 All runtime cells here are unproven.
+
+## Closure 2026-09-05
+
+Owner: "close out ticket 02, waive the mouse and gamepad cells."
+
+Cells, with evidence (all on `ng/smf-next`, builds `d7b0b3a` and `76737e6`, overlay
+`Dev - Spell Hotbar 2 SMF Next`; log evidence in `runtime-acceptance-20260905.md` and ticket 07):
+
+1. Slot holds an Action id, three-way exclusivity — `bind_drop_test` (extended in ticket 07
+   finding 17); owner bound Actions 100–102 onto slots 6–8 live.
+2. Save/load keeps the Action id — owner sessions across Save4–Save7 today; format 7 loading
+   covered by `hotbar_serialization_test` (version 7 kind 2 is not an Action record).
+3. Kind 0/1/2 serialization — `hotbar_serialization_test`; WART art slots restored on every load
+   today (`WART: restored art 1010/1011` at 15:43:39).
+4. Unit tests — CTest 18/18.
+5. Twelve rows `Action 1`..`Action 12`, ids 1 and 2 hidden — `action_data_test`; owner used the
+   shipped list live.
+6. Overlays persist — per-install JSON sidecar, recorded above; names survived every reload today.
+7. Down edge only is costed — owner: magicka cost charged once per press, stacking with TK
+   Dodge's own stamina cost (13:0x); held mirror events carry no cost path (ticket 04 cell 8).
+8. Mode change / game load releases the target — menu mid-hold and door transition (13:05)
+   paired `reason=source up`; save-then-load mid-hold released with `reason=retry` at 14:45 and
+   again at 15:43:36.
+
+Waived by owner 2026-09-05: mouse-button and gamepad Action targets ("i can't afford" is not the
+reason here — the owner does not use them: "Mouse-button and gamepad targets (owner does not use
+them; skipped)"). They stay unproven and are not a release blocker.
 
 Do not overload `slot_type::weapon_art`.

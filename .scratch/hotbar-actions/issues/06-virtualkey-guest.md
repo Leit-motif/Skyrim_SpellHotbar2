@@ -9,7 +9,9 @@ absent, that kind is hidden and SH2 still loads. Not a requirement.
 **Blocked by:** 03. Can wait; not on the 01 critical path. Tickets 04–05 may ship without
 this.
 
-**Status:** ready-for-agent
+**Status:** deferred 2026-09-05 — owner: "let's defer to a future enhancement, don't want to worry about that right now." Not a requirement; nothing blocks on it.
+
+**Status (superseded — see the top):** ready-for-agent
 
 ## You test this
 

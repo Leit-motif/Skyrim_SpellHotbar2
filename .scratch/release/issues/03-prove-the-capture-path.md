@@ -1,7 +1,9 @@
 # 03 — Prove the capture path carries the hotbar
 
 **Type:** prototype
-**Status:** ready-for-agent
+**Status:** closed 2026-09-05 — owner: "we already know that desktop capture pulls in the hotbar--close this." The desktop-duplication rig (`record-demo.ps1`, ffmpeg via Desktop Duplication) composites the presented frame including SH2's ImGui bar; only the engine's native `capture` path omits it. Tickets 04 and 07 are unblocked on this point.
+
+**Status (superseded — see the top):** ready-for-agent
 
 Three seconds of footage decides whether tickets 04 and 07 are possible as planned. Do this before
 writing a shot list.
