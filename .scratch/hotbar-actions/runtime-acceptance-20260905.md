@@ -38,3 +38,21 @@ Review: Standards PASS and Spec PASS against fixed point `429b937`; no concrete 
 - The named DevBench save request did not create a file or temporary save. The newest existing save, `Save18_00000000_0_43532D544553542D4E4557_Tamriel_000254_20260905145806_1_1`, was preserved and queued for load after deployment.
 - The replacement Skyrim process is PID 53740. After the normal multi-minute load window, `CommunityShaders.log` showed cached features valid, shader resources loading, and `InitializeMenuIcons: Loaded 22/22 icons successfully`; no Community Shaders settings or cache were changed. A later DevBench state drain remained ambiguous, so no runtime acceptance cell is claimed. `GetExitCodeProcess` semantics confirmed the process is active (`HasExited=false`); it remains running for owner visual review. The orphaned lease was recovered through the documented CLI preview/apply path and is now free.
 - Owner visual check remains open: with the preserved save loaded in the `Nolvus Awakening` profile, open Spell Hotbar 2's Binding Menu and verify that the `Actions` category is visible in the left tab row. Slot dispatch and all earlier action-matrix cells remain unproven.
+
+## Follow-up: held Action mirroring deployment
+
+- Source: `d7b0b3a` on `ng/smf-next` (`eb51046` native held mirroring + `d7b0b3a` deferred load-time release + `faf7293` contract wording). Not pushed.
+- Review adjudication: the mirror reviewer's load-time release blocker is neither confirmed nor refuted from the vendored CommonLibSSE-NG headers. `BSInputEventQueue::ClearInputQueue` has no visible call sites, so enqueue-versus-dispatch ordering across a load cannot be proven statically. The change taken is the smallest one safe under both readings: `drop_live_cast` marks held targets pending without emitting, and the per-frame retry emits the up on the first frame `PlayerCharacter::Is3DLoaded()` is true again, bounded at 300 failed queue attempts. `set_input_mode` keeps the immediate release.
+- Cross-action recursion: refuted from the seam. SH2's input callback is SMF's per-event hook before `TranslateInputEvent`; the playbook's 2026-08-28 contrast test records that queue-injected events reach `PlayerControls` but never re-enter `process_event`. No key-equality bypass added.
+- Static validation: native Release build from the canonical checkout; CTest 17/17. DLL SHA-256 `D5F497A50D5DCFE738300F7423188DAE0008348D143F7F5287BF155BB9167218`. No Papyrus change; PEX unchanged.
+- Staging: `.scratch/runtime-dist-20260905` rebuilt as a copy of the live `Dev - Spell Hotbar 2 SMF Next` overlay with the new DLL (now gitignored; the earlier "ignored" wording was wrong).
+- Deployment: `skyrim-agent deploy` dry-run then `--apply` under lease `9743bc5a` (agent `fable-d1`); verified active at priority 4621; overlay DLL hash matches the build. Skyrim was not running at deploy time, so no graceful close was needed. Newest save before launch: `Save4_D2FB9A73_0_43532D544553542D4E4557_Tamriel_000314_20260905160723_1_1` (owner's 11:07 session).
+- Launch: `moshortcut://:SKSE` against the already-running MO2; SkyrimSE PID 95380 at 11:36. No Community Shaders, INI, or cache changes.
+
+Open owner cells (physical hands required; injected input cannot prove a hold):
+- [ ] V directly blocks (control).
+- [ ] Slot bound to an Action assigned V: holding the slot key holds Block; releasing stops it.
+- [ ] Repeated tap and long hold behave like the physical key; a long hold charges once.
+- [ ] Opening a menu or changing mode mid-hold leaves no stuck Block.
+- [ ] Save then load while holding leaves no stuck control; log shows `SH2 action: target released (... reason=retry)` after the load.
+- [ ] Twelve rows `Action 1`..`Action 12` visible in the Actions tab; existing overlays and names preserved.
