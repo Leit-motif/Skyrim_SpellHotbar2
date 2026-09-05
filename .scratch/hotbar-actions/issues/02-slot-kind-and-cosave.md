@@ -26,6 +26,11 @@ by this rollup.
 3. `serialize_skill` kind 0 = form, 1 = art, 2 = action. Old kind-1 Ability slots still
    load.
 4. Unit / bind-drop tests cover the third identity the way `bind_drop_test.cpp` covers art.
+5. Twelve generic rows named `Action 1` through `Action 12` (ids 100–111) are present in
+   the catalogue. Ids 1 and 2 load but are hidden.
+6. A save written before this change keeps its assigned Action names and slot overlays.
+7. Only the initial down edge is costed: a held slot charges cost, cooldown, and GCD once.
+8. A mode change or a game load during a held mirror releases the target.
 
 ## You test this
 
@@ -36,8 +41,15 @@ Nothing visual until ticket 03. If a loaded format-7 save loses Ability binds, i
 `Storage::save_format` is 7. This bump is 8 unless the inner HOTB versioning can grow a
 kind without invalidating 7 — prefer an explicit format bump over clever reuse.
 
-Catalogue rows: `{id, name, icon, kind, target, optional costs}`. Shipped defaults can be
-stub Power Attack + empty Custom Action N. Do not invent Ability Class, clip paths, or
-ArtDriver here.
+Catalogue rows: `{id, name, icon, kind, target, optional costs}`. Ship twelve configurable
+rows named `Action 1` through `Action 12`, ids 100–111. Superseded 2026-09-05: the earlier
+"stub Power Attack + empty Custom Action N" default set is withdrawn — Power Attack (id 1)
+and Dodge (id 2) were ticket 01 test fixtures and remain hidden catalogue entries only so
+previously saved bindings still load. Do not invent Ability Class, clip paths, or ArtDriver
+here.
+
+Native SKSE only: no new Papyrus scripts, no new dependencies, minimal changes.
+
+All runtime cells here are unproven.
 
 Do not overload `slot_type::weapon_art`.

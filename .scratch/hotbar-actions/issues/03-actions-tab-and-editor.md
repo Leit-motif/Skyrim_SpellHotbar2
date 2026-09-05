@@ -19,9 +19,9 @@ The bind menu on this line is the SMF guest window (`advanced_bind_menu.cpp`, SM
 
 Open the bind menu (existing Open Binding Menu bind, Magic Menu or supported inventory).
 
-1. There is an **Actions** tab. It lists named Actions, at least Power Attack if 01
-   admitted that kind.
-2. Drag Power Attack onto an empty slot. The slot shows that icon and name, not a spell
+1. There is an **Actions** tab. It lists twelve rows, `Action 1` through `Action 12`.
+   Superseded 2026-09-05: this cell previously required a shipped Power Attack row.
+2. Drag `Action 1` onto an empty slot. The slot shows that icon and name, not a spell
    and not an Ability.
 3. Right-click the row. Editor sets name and icon. The slot updates.
 4. Bind a spell on another slot from Spells. That slot stays a spell. The Action slot is
@@ -36,6 +36,10 @@ If Actions appear as fake spells or fake Abilities, it fails.
 7. Save, load. The Action is still on that slot (ticket 02 serialization).
 8. If ticket 01 dropped a kind, that picker is absent. VirtualKey rows: hide when
    `VirtualKey.dll` is missing (ticket 06 owns the tap; this ticket only hides the picker).
+9. Hidden legacy rows (ids 1 and 2) do not appear in the tab, and a save that already
+   binds one keeps its slot overlay and assigned name.
+
+All runtime cells here are unproven.
 
 ## Notes
 

@@ -19,15 +19,21 @@ payload is an injected press, not a FormID and not an Ability clip.
 
 ## Solution
 
-An **Action** is a fifth thing a hotbar slot can hold. Binding one and pressing that slot
-injects a single input on a seam chosen when the Action is authored. One press, one seam.
-No ladder, no silent fallback, no double-fire.
+An **Action** is a fifth thing a hotbar slot can hold. An Action *is* its assigned key:
+the slot mirrors the source hotbar key's down, held/repeat, and up edges onto the target
+the Action names. Hold a slot bound to Block and Block stays held; release the slot and
+Block releases. One seam per Action, no ladder, no silent fallback, no double-fire.
+
+Superseded 2026-09-05: the earlier "one press, one seam, down then up" tap contract is
+wrong for physical input. A fixed down-then-up tap cannot express a held control. The
+Papyrus `castSlot` testing seam stays a bounded tap — it always closes its own target —
+because it is an existing native testing entry point with no key to mirror.
 
 Three kinds, not one generic "send a keycode":
 
 | Kind | What the slot stores | Seam | Motivating case |
 |---|---|---|---|
-| Physical scancode | DX scancode + device | `ButtonEvent` onto `BSInputEventQueue` (existing shout queue), down then up | OCPA on `B` (key 48), dodge |
+| Physical scancode | DX scancode + device | `ButtonEvent` onto `BSInputEventQueue` (existing shout queue), mirroring down, held, and up | OCPA on `B` (key 48), dodge, Block |
 | Engine control | Control-map `userEvent` name | Same queue, with that `userEvent` and the mapped scancode | First-class Power Attack if the OCPA spike fails |
 | VirtualKey binding | Stable `binding_id` | `VirtualKey_GetInterface(2)` → `TriggerBinding` | MCM functions already in the VK catalog |
 
@@ -64,8 +70,13 @@ refuse flash). Skip ArtDriver, Ability Selector, and clip/class gating.
     verification uses the existing Papyrus seam.
 11. As the fork maintainer, I want Action bindings to survive save/load, so they are
     durable like Ability binds.
-12. As the fork maintainer, I want a down-only inject to be illegal, so we do not leave
-    the phantom held button VoiceCastDriver already diagnosed.
+12. As the fork maintainer, I want every held target to be released — on the slot's up
+    edge, on a mode change, and on game load — so we never leave the phantom held button
+    VoiceCastDriver already diagnosed. (Superseded 2026-09-05: this previously read "a
+    down-only inject is illegal". A down without an up is now the normal held state; the
+    guarantee is that something always closes it.)
+13. As a player, I want twelve generic rows named Action 1 through Action 12, so I name
+    and fill them myself rather than working around someone else's defaults.
 
 ## Implementation Decisions
 
@@ -76,6 +87,8 @@ refuse flash). Skip ArtDriver, Ability Selector, and clip/class gating.
   product), click-to-cast.
 - **Action Kind** — physical scancode, engine control, or VirtualKey binding. Chosen in
   the editor. One kind per Action. _Avoid_: fallback chain, try-all seams.
+- **Mirror** — the Action's press path: the source hotbar key's down, held/repeat, and up
+  edges reproduced on the target. _Avoid_: tap, inject-once.
 - **Action Editor** — the ImGui that sets name, icon, kind, target (scancode /
   `userEvent` / VK binding), and optional Ability Costs. Opened from the Actions tab.
 - **Action Cost** — the same meters as Ability Cost, applied before inject. Default
@@ -102,11 +115,19 @@ Repeat the cell for dodge with that mod's bound scancode. Same rule.
 
 ### Dispatch
 
-- One seam per press, selected by Action Kind. Never queue-inject then SendEvent then
+- One seam per Action, selected by Action Kind. Never queue-inject then SendEvent then
   SendInput on the same activation.
 - Physical scancode and engine control reuse `RE::BSInputEventQueue` +
   `ButtonEvent::Create`, the path `InputModeCast` already uses for shouts and
-  `VoiceCastDriver` uses for hold/release. Down and up are both required.
+  `VoiceCastDriver` uses for hold/release. The source key's down opens the target, its
+  held/repeat events are mirrored with the held duration, and its up closes the target.
+- The target device, scancode, and `userEvent` are frozen at the accepted down. A rebind,
+  a modifier, a menu, or a mode change during the hold cannot redirect the up edge.
+- Source key events for a bound Action slot are consumed, so the original engine or mod
+  binding does not fire alongside the mirror.
+- A mode change or a game load releases any held target.
+- Native SKSE only. No new Papyrus scripts and no new dependencies. Execute Hotkeys (MIT)
+  was inspiration only; nothing is copied from it.
 - Engine control must set the control-map `userEvent` string. A scancode alone is not
   enough for PlayerControls.
 - VirtualKey: `GetModuleHandleW(L"VirtualKey")` + `GetProcAddress("VirtualKey_GetInterface")`
@@ -117,8 +138,10 @@ Repeat the cell for dodge with that mod's bound scancode. Same rule.
 
 ### Press gate
 
+- Cost, cooldown, and GCD are charged once, at the accepted down edge. Mirrored held
+  events and the up edge bypass admission, cost, cooldown, and GCD entirely.
 - Ticket 41 (`current_cast` lockout) applies to costed / GCD Actions the way it applies
-  to potions: a live SH2 instance refuses a new Action.
+  to potions: a live SH2 instance refuses a new Action at its down edge.
 - A costless combat Action whose target is an attack press (OCPA scancode, or
   engine-control Power Attack) is an attack press for ticket 10: it may cut a committed
   Driver Cast the same way physical OCPA already does. It is not a new cast instance.
@@ -129,8 +152,11 @@ Repeat the cell for dodge with that mod's bound scancode. Same rule.
 - Bind-menu tab cloned from Abilities (`TabIndex_Arts` in `advanced_bind_menu.cpp`):
   clipper, drag source, right-click opens Action Editor.
 - Catalogue is SH2-owned, not TESForms. Name, icon (atlas / form, same as Ability Editor),
-  kind, target, optional costs. Custom rows the player fills; a few shipped defaults
-  (Power Attack, empty Custom Action N) are enough for v1.
+  kind, target, optional costs.
+- Ship exactly twelve configurable rows, named `Action 1` through `Action 12`, ids
+  100–111. Superseded 2026-09-05: Power Attack (id 1) and Dodge (id 2) were ticket 01 test
+  fixtures, not shipping defaults. They stay in the catalogue, hidden, only so previously
+  saved bindings still load. There is no "Custom Action N" naming and no eight-row set.
 - `slot_type` gains a new arm. `serialize_skill` is currently kind 0 (form) / 1 (art).
   Kind 2 is an Action id. That is a co-save bump (`Storage::save_format` is 7). Old
   saves load; Action slots on those saves are empty.
@@ -152,8 +178,14 @@ A good test is an observable move, not a log that a `ButtonEvent` was queued.
 
 - Ticket 01 is owner-hands: physical `B` vs injected 48, then dodge vs its scancode.
   Injected-input evidence alone is forbidden on this path (mco-integration ticket 50).
-- After the product exists, `castSlot` on an Action slot is the agent seam. The owner
-  still confirms OCPA/dodge identity by eye once per kind.
+- After the product exists, `castSlot` on an Action slot is the agent seam. It is a
+  bounded tap and cannot prove held mirroring; a held cell needs the owner's hands.
+- Owner cells: a slot bound to Block holds Block while the slot key is held and stops on
+  release; repeated tap and hold behave like the physical key.
+- A menu or mode transition during a hold leaves no stuck input.
+- Only the initial down is costed — a long hold charges once.
+- Twelve generic rows are visible in the Actions tab, and existing overlays and assigned
+  names are preserved across load.
 - Save/load of an Action bind is an agent cell.
 - Missing VirtualKey must not crash; VK-kind rows absent from the tab is the pass.
 
