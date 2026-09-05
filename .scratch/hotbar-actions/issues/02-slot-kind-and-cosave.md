@@ -82,8 +82,8 @@ Cells, with evidence (all on `ng/smf-next`, builds `d7b0b3a` and `76737e6`, over
    paired `reason=source up`; save-then-load mid-hold released with `reason=retry` at 14:45 and
    again at 15:43:36.
 
-Waived by owner 2026-09-05: mouse-button and gamepad Action targets ("i can't afford" is not the
-reason here — the owner does not use them: "Mouse-button and gamepad targets (owner does not use
-them; skipped)"). They stay unproven and are not a release blocker.
+Waived by owner 2026-09-05: mouse-button and gamepad Action targets. The owner does not use
+them (runtime-acceptance: "owner does not use them; skipped"). They stay unproven and are not a
+release blocker.
 
 Do not overload `slot_type::weapon_art`.
