@@ -1934,6 +1934,11 @@ namespace SpellHotbar::GameData {
             Gametime_cooldown_value(curr_time + duration_days, duration_days));
     }
 
+    void clear_action_cooldown(uint32_t action_id)
+    {
+        action_cooldowns.erase(action_id);
+    }
+
     bool is_action_on_cd(uint32_t action_id)
     {
         auto cal = RE::Calendar::GetSingleton();

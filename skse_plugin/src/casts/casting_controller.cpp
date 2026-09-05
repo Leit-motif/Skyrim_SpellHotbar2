@@ -1914,25 +1914,60 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
-		if (!Input::queue_keyboard_tap(target_scancode)) {
-			logger::warn("SH2 action: Action {} target {} was not queued", action_id, target_scancode);
-			return false;
-		}
-
-		if (action->stamina_cost > 0.0f && av) {
+		// Queueing is the final commit point. Charge and install the lockout first so an accepted
+		// ButtonEvent can never race a second hotbar press before this Action owns its resources.
+		// `queue_keyboard_tap` pre-creates both phases before pushing either one; a false return is
+		// therefore a preflight failure and the transaction below can refund/clear atomically.
+		const bool charged_stamina = action->stamina_cost > 0.0f && av;
+		const bool charged_magicka = action->magicka_cost > 0.0f && av;
+		const bool charged_health = action->health_cost > 0.0f && av;
+		if (charged_stamina) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina,
 				-action->stamina_cost);
 		}
-		if (action->magicka_cost > 0.0f && av) {
+		if (charged_magicka) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka,
 				-action->magicka_cost);
 		}
-		if (action->health_cost > 0.0f && av) {
+		if (charged_health) {
 			av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth,
 				-action->health_cost);
 		}
-		if (action->cooldown_days > 0.0f) {
+		const bool cooldown_started = action->cooldown_days > 0.0f;
+		if (cooldown_started) {
 			GameData::add_action_cooldown(action_id, action->cooldown_days);
+		}
+		const bool gcd_started = action->gcd > 0.0f;
+		if (gcd_started) {
+			current_cast = std::make_unique<CastingInstanceAction>(action->gcd);
+		}
+
+		if (!Input::queue_keyboard_tap(target_scancode)) {
+			if (gcd_started) {
+				// This instance has no graph state or SpellFire arming of its own. Do not use
+				// reset_cast() here: a stale armed payload may still own the global SpellFire latch
+				// while current_cast is empty, and a failed Action preflight must not clear it.
+				current_cast->on_reset();
+				current_cast.reset();
+			}
+			if (cooldown_started) {
+				GameData::clear_action_cooldown(action_id);
+			}
+			if (charged_health) {
+				av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth,
+					action->health_cost);
+			}
+			if (charged_magicka) {
+				av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka,
+					action->magicka_cost);
+			}
+			if (charged_stamina) {
+				av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina,
+					action->stamina_cost);
+			}
+			logger::warn("SH2 action: Action {} target {} was not queued; transaction rolled back",
+				action_id, target_scancode);
+			return false;
 		}
 
 		// This is ticket 10's cut, not a new SH2 cast. The injected event does not revisit this
@@ -1940,9 +1975,6 @@ namespace SpellHotbar::casts::CastingController {
 		// Attack Action after its tap has been accepted.
 		if (!action->is_costed() && action->is_attack()) {
 			cut_committed_cast_for_attack(pc);
-		}
-		if (action->gcd > 0.0f) {
-			current_cast = std::make_unique<CastingInstanceAction>(action->gcd);
 		}
 		logger::info("SH2 action: Action {} queued target {} (slot {})", action_id, target_scancode, slot);
 		return true;

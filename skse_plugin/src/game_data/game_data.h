@@ -291,6 +291,7 @@ namespace SpellHotbar::GameData {
     std::tuple<float, float> get_art_gametime_cooldown(float curr_game_time, uint32_t art_id);
 
     void add_action_cooldown(uint32_t action_id, float days);
+    void clear_action_cooldown(uint32_t action_id);
     bool is_action_on_cd(uint32_t action_id);
     std::tuple<float, float> get_action_gametime_cooldown(float curr_game_time, uint32_t action_id);
 
