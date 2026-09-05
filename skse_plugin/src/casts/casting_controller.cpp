@@ -31,7 +31,13 @@ namespace SpellHotbar::casts::CastingController {
 		std::uint32_t trigger_dx_scancode{ 0 };
 		bool has_trigger{ false };
 		bool release_pending{ false };
+		std::uint32_t release_attempts{ 0 };
 	};
+
+	// A pending release that can never be queued would otherwise be retried every frame forever.
+	// The queue-full case clears within a frame or two; this bound only exists so an unexpected
+	// permanent refusal drops the record instead of spinning.
+	constexpr std::uint32_t kMaxReleaseAttempts = 300U;
 
 	std::vector<ActiveActionInput> active_action_inputs;
 
@@ -50,8 +56,14 @@ namespace SpellHotbar::casts::CastingController {
 		active.release_pending = true;
 		if (!Input::queue_action_event(active.target, 0.0f,
 			release_held_duration(held_duration), active.user_event)) {
-			logger::debug("SH2 action: target release pending (action={}, slot={}, reason={})",
-				active.action_id, active.slot, reason);
+			++active.release_attempts;
+			logger::debug("SH2 action: target release pending (action={}, slot={}, reason={}, attempt={})",
+				active.action_id, active.slot, reason, active.release_attempts);
+			if (active.release_attempts >= kMaxReleaseAttempts) {
+				logger::warn("SH2 action: abandoning target release (action={}, slot={}, reason={})",
+					active.action_id, active.slot, reason);
+				return true;
+			}
 			return false;
 		}
 		logger::debug("SH2 action: target released (action={}, slot={}, reason={})",
@@ -517,16 +529,31 @@ namespace SpellHotbar::casts::CastingController {
 		return active_action_inputs.size();
 	}
 
-	void release_all_action_inputs()
+	void release_all_action_inputs(bool defer)
 	{
 		for (auto& active : active_action_inputs) {
 			active.release_pending = true;
+		}
+		if (defer) {
+			// A game load is the one caller that cannot trust delivery: an enqueue is not a
+			// dispatch, and the load may reset the native input queue before PlayerControls ever
+			// sees the up.  Keep the record instead and let the Timinghook retry below emit the
+			// up on the first frame the player is live again, where delivery is observable.
+			return;
 		}
 		retry_action_releases();
 	}
 
 	void retry_action_releases()
 	{
+		if (active_action_inputs.empty()) {
+			return;
+		}
+		auto* pc = RE::PlayerCharacter::GetSingleton();
+		if (!pc || !pc->Is3DLoaded()) {
+			// Mid-load / no player: a queued event has no consumer to reach yet.
+			return;
+		}
 		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
 			if (!it->release_pending) {
 				++it;
@@ -542,7 +569,7 @@ namespace SpellHotbar::casts::CastingController {
 
 	void drop_live_cast()
 	{
-		release_all_action_inputs();
+		release_all_action_inputs(true);
 		// Dropped for a game load: the save being read owns selectedPower, so a hold from the
 		// session being left behind is forgotten rather than written over it.
 		discard_deferred_power_restore();

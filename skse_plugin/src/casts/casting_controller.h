@@ -433,8 +433,10 @@ namespace SpellHotbar::casts::CastingController {
 	void release_action_for_slot(size_t slot, size_t first_new_action, float held_duration);
 	/** Return a marker for the next accepted Action input. */
 	size_t action_input_count();
-	/** Mark all injected Action targets for release during load/mode invalidation. */
-	void release_all_action_inputs();
+	/** Mark all injected Action targets for release during load/mode invalidation.
+	 *  `defer` keeps the record instead of emitting the up now: a game load may reset the native
+	 *  input queue before the event is dispatched, so the up is left to retry_action_releases. */
+	void release_all_action_inputs(bool defer = false);
 	/** Retry target-up events that could not fit in the native input queue. */
 	void retry_action_releases();
 	
