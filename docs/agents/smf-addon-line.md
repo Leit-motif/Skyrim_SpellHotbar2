@@ -8,7 +8,7 @@ ADR-0012 is the host decision. This file is the branch and merge procedure.
 | Line | Branch | Role |
 |---|---|---|
 | Stable addon | `origin/master` (`main` locally) | Shipped addon: SkyUI MCM + private ImGui host. Do not land SMF here yet. |
-| Addon SMF | `ng/smf-next` | Combined implementation: upstream SH2 + PR #86 guest + addon gameplay. |
+| Forward addon | `ng/smf-next` | Current mod development: upstream SH2 + the folded-in SMF guest + addon gameplay. |
 | Upstream PR | `codex/smf-migration` | PR #86 only. No Ability, Weapon Art, Direct Cast, format 7, or addon branding. |
 
 Worktrees:
@@ -21,7 +21,10 @@ If the addon worktree is missing: `git worktree add C:\Nolvus\Projects\spell-hot
 
 ## What to do
 
-Continue addon SMF work on `ng/smf-next` in the addon worktree. Keep the canonical checkout on `main`.
+`ng/smf-next` is the forward development line for this mod. Put new addon features and fixes there
+now that the SMF guest is folded in. This remains true while PR #86 is unmerged and if it never
+merges: the addon ships its own `SpellHotbar2.dll`, which overwrites the upstream DLL. Keep `main`
+as the frozen first-release line and use the addon worktree for development.
 
 The PR merge already exists: `e19b273` (parents `9186eee` and `4131cf0`). Integrate `codex/smf-migration` **once** per addon lineage. Upstream review fixes land on `codex/smf-migration` first, then merge that new head once into `ng/smf-next`.
 
