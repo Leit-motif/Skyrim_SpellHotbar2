@@ -137,9 +137,19 @@ noted.
       `Dev - Spell Hotbar 2 SMF Next` at MO2 priority 4626 under lease `4c0c2a68`; overlay
       DLL SHA-256 `76737E670154B39E612F8B55D302D90385100E92638EA0B59238D0477AC8E276`,
       translation `B65AA519...ECED8`. Release guard passed (268 files).
-- [ ] Owner re-runs the hold/release cells on this build (V hold, tap, menu mid-hold, save
-      then load mid-hold, and one fast double-tap of an Action slot, which finding 3 now
-      admits instead of refusing).
+- [x] Owner re-ran the hold/release cells on build `76737e6` 2026-09-05 15:41-15:43 (V
+      hold, tap, menu mid-hold, double-tap, save then load mid-hold). Cells 1-4 passed by
+      owner report. Cell 5 (Save7 written 15:43:29 while holding V, loaded 15:43:36): the
+      plugin half is proven by log -- `dropped live cast for game load` 15:43:36.012, deferred
+      up + `target released (action=100, slot=7, reason=retry)` 15:43:36.187, co-save read
+      15:43:39.215, Papyrus thawed 15:43:39, player 3D-loaded and drawn by 15:43:51. The game
+      then stopped responding (PID 98660, `Responding=False`, 11.5 GB resident, 25 GB commit)
+      with no crash log and no Windows application error; the machine had 0.9 GB of 31 GB
+      available and 70 GB committed. Same shape as the 12:42 Save6 hang. Owner: "let's just
+      count the load thing as passed. i dont want to mess with that." Counted passed;
+      the post-load hang is attributed to memory pressure, not this build. Seamless Saving
+      1.0.6 and S.L.A.C.K. 1.4.0 (both installed 14:19-14:20) were present for the
+      successful 14:45 run and are not implicated.
 - Finding 8's original direction (attack classification) is superseded: the source-agnostic
   attack seam is ticket 08, `08-send-side-attack-seam.md`.
 - [x] 2 and 5 decided and recorded in ticket 04.
