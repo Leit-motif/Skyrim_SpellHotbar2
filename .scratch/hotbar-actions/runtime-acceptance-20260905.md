@@ -99,3 +99,19 @@ Still open (not exercised in this session):
       single-charge not separately observed.
 - [ ] Mouse-button and gamepad targets.
 - [ ] Modifier held with the slot key.
+
+### Save6 load hang (2026-09-05 12:42, second session PID 50400)
+
+- Start On Save auto-loaded `Save6_..._20260905172719` (written 12:27:20, owner: made "while
+  blocking"). SH2 `LoadCallback` completed (`Reading 'GDAT'` at 12:42:33.690), Papyrus logged
+  `VM is thawing...` at 12:42:34, SH2 wrote its last per-frame line at 12:42:34.439, then the
+  frame counter froze at 33091 (DevBench `inspect state` unchanged 12:47:43 -> 12:48:30),
+  `Responding=False`, 10.4 GB working set. Same save died 0.7 s into its load at 12:27:38 in the
+  first session. No crash log, no Application event either time.
+- This plugin's co-save chunk list is identical across Save4, Save5, Save6: 21 chunks,
+  `HOTB/115 ... WART/24 GDAT/4`, same versions and lengths. The SH2 co-save is not what differs.
+- The mirror held nothing at either load (the last hold released 12:27:28.961, after Save6 was
+  written at 12:27:20; no `pending`/`retry` lines). Not attributed to this build; Timed Block
+  state at save time is the open suspect. Owner clears the hung process; relaunch with SHIFT
+  held to skip the auto-load and load Save5.
+
