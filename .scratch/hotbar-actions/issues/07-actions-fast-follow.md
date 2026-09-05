@@ -133,7 +133,15 @@ noted.
 ## Acceptance
 
 - [x] 1 and 3 fixed natively; 4 decided; build (full DLL, Release) and CTest (18/18) green
-      2026-09-05. Redeploy and the owner's hold/release re-runs stay with the coordinator.
+      2026-09-05 from the canonical checkout. Redeployed 2026-09-05 15:29 to
+      `Dev - Spell Hotbar 2 SMF Next` at MO2 priority 4626 under lease `4c0c2a68`; overlay
+      DLL SHA-256 `76737E670154B39E612F8B55D302D90385100E92638EA0B59238D0477AC8E276`,
+      translation `B65AA519...ECED8`. Release guard passed (268 files).
+- [ ] Owner re-runs the hold/release cells on this build (V hold, tap, menu mid-hold, save
+      then load mid-hold, and one fast double-tap of an Action slot, which finding 3 now
+      admits instead of refusing).
+- Finding 8's original direction (attack classification) is superseded: the source-agnostic
+  attack seam is ticket 08, `08-send-side-attack-seam.md`.
 - [x] 2 and 5 decided and recorded in ticket 04.
 - [x] 6–16 addressed with one line each above.
 - [x] Save-then-load while holding an Action exercised once on a fresh save (the deferred
