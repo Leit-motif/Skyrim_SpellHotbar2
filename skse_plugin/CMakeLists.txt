@@ -204,6 +204,7 @@ add_test(NAME bind_drop_test COMMAND bind_drop_test)
 add_test(NAME hotbar_serialization_test COMMAND hotbar_serialization_test)
 add_test(NAME texture_registry_test COMMAND texture_registry_test)
 add_test(NAME action_inject_test COMMAND action_inject_test)
+add_test(NAME action_data_test COMMAND action_data_test)
 endif()
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})
