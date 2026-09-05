@@ -1880,11 +1880,18 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
-		// Costed Actions use the same whole-instance lockout as spells, potions, and Abilities. A
-		// zero-cost combat Action is deliberately outside this gate so Power Attack can chain out
-		// of a committed Driver Cast below.
-		if (action->is_costed() && !can_start_new_cast()) {
-			logger::info("SH2 action: Action {} refused while a cast is live", action_id);
+		// A live cast protects the graph for every Action, including free Dodge and custom rows.
+		// The only live-cast cut-through is a costless Power Attack during the committed, cuttable
+		// Driver Cast span. Once the instance retires, ordinary Action admission resumes; the cut
+		// helper below still limits follow-through teardown to attack-shaped Actions. Keep this gate
+		// ahead of cooldown/resource work so a refused press has no side effects.
+		const bool committed_cuttable = is_committed_cast_holding_graph();
+		if (!action_press_is_admitted(action->is_costed(), action->is_attack(), current_cast != nullptr,
+			committed_cuttable)) {
+			logger::info(
+				"SH2 action: Action {} refused while a live cast is active (costed={}, attack={}, committed={}, follow_through={})",
+				action_id, action->is_costed(), action->is_attack(), committed_cuttable,
+				is_cuttable_follow_through());
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}

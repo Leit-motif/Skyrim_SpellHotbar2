@@ -11,6 +11,7 @@ using SpellHotbar::ActionTargetSource;
 using SpellHotbar::ActionPlayerOverlay;
 using SpellHotbar::action_matches_catalogue;
 using SpellHotbar::action_player_overlay_from;
+using SpellHotbar::action_press_is_admitted;
 using SpellHotbar::apply_action_player_overlay;
 using SpellHotbar::custom_action_id_base;
 using SpellHotbar::action_would_recurse;
@@ -91,6 +92,26 @@ void only_nonzero_meter_gcd_or_cooldown_makes_an_action_costed()
 	expect(action.is_costed(), "cooldown makes an Action costed");
 }
 
+void only_a_costless_power_attack_can_cut_a_live_driver_cast()
+{
+	expect(action_press_is_admitted(false, false, false, false),
+		"an idle free custom Action is admitted");
+	expect(!action_press_is_admitted(false, false, true, false),
+		"a live cast blocks a free Dodge or custom Action");
+	expect(!action_press_is_admitted(false, true, true, false),
+		"a pre-commit live cast blocks even a free Power Attack");
+	expect(action_press_is_admitted(false, true, true, true),
+		"a committed cuttable cast admits a costless Power Attack");
+	expect(!action_press_is_admitted(true, true, true, true),
+		"a costed Power Attack never cuts a live cast");
+	expect(action_press_is_admitted(false, true, false, false),
+		"a retired cuttable follow-through admits a costless Power Attack");
+	expect(action_press_is_admitted(false, false, false, false),
+		"a retired cuttable follow-through does not block Dodge or custom Actions");
+	expect(action_press_is_admitted(true, false, false, false),
+		"an idle costed Action reaches ordinary cost checks");
+}
+
 void player_overlay_round_trips_the_action_fields()
 {
 	const auto actions = default_action_catalogue();
@@ -148,6 +169,7 @@ int main()
 	target_resolution_uses_the_values_supplied_at_press();
 	recursion_is_rejected_only_for_the_triggering_bind();
 	only_nonzero_meter_gcd_or_cooldown_makes_an_action_costed();
+	only_a_costless_power_attack_can_cut_a_live_driver_cast();
 	player_overlay_round_trips_the_action_fields();
 	captured_device_and_target_round_trip_through_an_overlay();
 	return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

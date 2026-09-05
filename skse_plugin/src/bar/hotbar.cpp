@@ -445,7 +445,7 @@ namespace SpellHotbar
                 color = SpellHotbarImColor(255, 255, 127 + static_cast<int>(128.0 * (1.0f - highlight_factor)));
             }
 
-            ImGui::TextColored(color, text.c_str());
+            ImGui::TextColored(color, "%s", text.c_str());
 
         }
         ImGui::PopFont();

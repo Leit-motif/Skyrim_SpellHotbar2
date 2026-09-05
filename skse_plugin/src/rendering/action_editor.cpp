@@ -330,8 +330,10 @@ namespace SpellHotbar::ActionEditor {
 
 		RenderManager::set_large_font();
 		if (ImGui::Button(translate_id("$SAVE").c_str())) {
-			apply_to_action(*action);
-			if (GameData::persist_action_player_overlay(*action)) {
+			ActionDefinition candidate = *action;
+			apply_to_action(candidate);
+			if (GameData::persist_action_player_overlay(candidate)) {
+				*action = std::move(candidate);
 				close();
 			} else {
 				persist_failed = true;

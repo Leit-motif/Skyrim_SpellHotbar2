@@ -198,6 +198,10 @@ add_executable(action_inject_test src/input/action_inject_test.cpp)
 target_compile_features(action_inject_test PRIVATE cxx_std_23)
 target_include_directories(action_inject_test PRIVATE src/input)
 
+add_executable(action_overlay_persistence_test src/storage/action_overlay_persistence_test.cpp)
+target_compile_features(action_overlay_persistence_test PRIVATE cxx_std_23)
+target_include_directories(action_overlay_persistence_test PRIVATE src/storage)
+
 add_test(NAME combo_cache_test COMMAND combo_cache_test)
 add_test(NAME clip_translation_test COMMAND clip_translation_test)
 add_test(NAME art_pack_gen_test COMMAND art_pack_gen_test)
@@ -209,6 +213,7 @@ add_test(NAME hotbar_serialization_test COMMAND hotbar_serialization_test)
 add_test(NAME texture_registry_test COMMAND texture_registry_test)
 add_test(NAME action_inject_test COMMAND action_inject_test)
 add_test(NAME action_data_test COMMAND action_data_test)
+add_test(NAME action_overlay_persistence_test COMMAND action_overlay_persistence_test)
 add_test(NAME bind_capture_test COMMAND bind_capture_test)
 endif()
 

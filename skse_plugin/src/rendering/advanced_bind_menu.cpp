@@ -587,7 +587,7 @@ namespace SpellHotbar::BindMenu {
                     }
                     
                     ImGui::SameLine();
-                    ImGui::Text(current_dragged_skill.form->GetName());
+                    ImGui::TextUnformatted(current_dragged_skill.form->GetName());
                 }
                 ImGui::EndDragDropSource();
             }
@@ -1033,7 +1033,7 @@ namespace SpellHotbar::BindMenu {
 
                     ImGui::TableNextColumn();
                     if (is_shout && rank == 0) {
-                        ImGui::TextColored(SpellHotbarImColor(0.5f, 0.5f, 0.5f), item->GetName());
+                        ImGui::TextColored(SpellHotbarImColor(0.5f, 0.5f, 0.5f), "%s", item->GetName());
                     }
                     else {
                         ImGui::TextUnformatted(item->GetName());
@@ -1453,7 +1453,7 @@ namespace SpellHotbar::BindMenu {
 
             std::string text = GameData::resolve_slot_name(skill);
 
-            ImGui::TextColored(SpellHotbarImColor(slot_text_col), text.c_str());
+            ImGui::TextColored(SpellHotbarImColor(slot_text_col), "%s", text.c_str());
         }
 
         if (Bars::use_keybind_icons()) {

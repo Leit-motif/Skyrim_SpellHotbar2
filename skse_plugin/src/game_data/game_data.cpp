@@ -14,6 +14,7 @@
 #include "spell_cast_data.h"
 #include "../input/modes.h"
 #include "../storage/user_data_io.h"
+#include "../storage/atomic_file.h"
 
 #include <algorithm>
 #include <atomic>
@@ -1549,6 +1550,31 @@ namespace SpellHotbar::GameData {
         actions.PushBack(std::move(entry), allocator);
     }
 
+    bool write_action_overlays_atomically(
+        const std::filesystem::path& path,
+        const std::unordered_map<uint32_t, ActionPlayerOverlay>& overlays)
+    {
+        rj::Document document;
+        document.SetObject();
+        document.AddMember("version", 1, document.GetAllocator());
+        rj::Value actions(rj::kArrayType);
+        for (const auto& [id, overlay] : overlays) {
+            write_action_overlay_member(document, id, overlay, actions);
+        }
+        document.AddMember("actions", std::move(actions), document.GetAllocator());
+
+        const bool serialized = Storage::write_file_atomically(path, [&](std::ostream& output) {
+            rj::OStreamWrapper stream(output);
+            rj::PrettyWriter<rj::OStreamWrapper> writer(stream);
+            writer.SetIndent(' ', 4);
+            return document.Accept(writer);
+        });
+        if (!serialized) {
+            logger::error("Could not atomically persist Action overlays to '{}'", path.string());
+        }
+        return serialized;
+    }
+
     }  // namespace
 
     void seed_default_actions()
@@ -1606,36 +1632,7 @@ namespace SpellHotbar::GameData {
 
     bool persist_user_action_overlays()
     {
-        const auto path = user_action_overlays_path();
-        const auto parent_dir = path.parent_path();
-        if (!parent_dir.empty()) {
-            std::error_code ec;
-            std::filesystem::create_directories(parent_dir, ec);
-            if (ec) {
-                logger::error("Could not create directory '{}': {}", parent_dir.string(), ec.message());
-                return false;
-            }
-        }
-
-        rj::Document document;
-        document.SetObject();
-        document.AddMember("version", 1, document.GetAllocator());
-        rj::Value actions(rj::kArrayType);
-        for (const auto& [id, overlay] : action_player_overlays) {
-            write_action_overlay_member(document, id, overlay, actions);
-        }
-        document.AddMember("actions", std::move(actions), document.GetAllocator());
-
-        std::ofstream output(path, std::ofstream::out);
-        if (!output.is_open()) {
-            logger::error("Could not open '{}' for writing", path.string());
-            return false;
-        }
-        rj::OStreamWrapper stream(output);
-        rj::PrettyWriter<rj::OStreamWrapper> writer(stream);
-        writer.SetIndent(' ', 4);
-        document.Accept(writer);
-        return true;
+        return write_action_overlays_atomically(user_action_overlays_path(), action_player_overlays);
     }
 
     bool persist_action_player_overlay(const ActionDefinition& action)
@@ -1643,13 +1640,18 @@ namespace SpellHotbar::GameData {
         if (action.id == 0) {
             return false;
         }
+        auto candidate = action_player_overlays;
         const auto* catalogue = get_action_catalogue(action.id);
         if (catalogue && action_matches_catalogue(action, *catalogue)) {
-            action_player_overlays.erase(action.id);
+            candidate.erase(action.id);
         } else {
-            action_player_overlays.insert_or_assign(action.id, action_player_overlay_from(action));
+            candidate.insert_or_assign(action.id, action_player_overlay_from(action));
         }
-        return persist_user_action_overlays();
+        if (!write_action_overlays_atomically(user_action_overlays_path(), candidate)) {
+            return false;
+        }
+        action_player_overlays = std::move(candidate);
+        return true;
     }
 
     bool load_user_action_overlays()

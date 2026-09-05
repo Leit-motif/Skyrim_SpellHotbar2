@@ -820,20 +820,24 @@ namespace SpellHotbar::Input {
         }
 
         const auto phases = keyboard_tap_phases();
-        RE::ButtonEvent* events[2]{ nullptr, nullptr };
-        for (size_t i = 0; i < phases.size(); ++i) {
-            events[i] = RE::ButtonEvent::Create(*device, ""sv, event_code,
-                phases[i].value, phases[i].held_duration);
-            if (!events[i]) {
-                logger::error(
-                    "SH2 action: ButtonEvent::Create refused (device={}, scancode={}, event_code={}, value={}, held={}, accepted=false)",
-                    static_cast<int>(*device), input.dx_scancode, event_code, phases[i].value,
-                    phases[i].held_duration);
-                return false;
-            }
+        const auto queued_button_events = static_cast<size_t>(queue->buttonEventCount);
+        const auto max_button_events = static_cast<size_t>(RE::BSInputEventQueue::MAX_BUTTON_EVENTS);
+        if (queued_button_events > max_button_events ||
+            phases.size() > max_button_events - queued_button_events) {
+            logger::warn(
+                "SH2 action: input queue has no room for tap (device={}, scancode={}, queued={}, required={}, capacity={})",
+                static_cast<int>(*device), input.dx_scancode, queued_button_events, phases.size(),
+                max_button_events);
+            return false;
         }
+
+        // AddButtonEvent uses the queue's embedded ButtonEvent storage. The old Create/Push pair
+        // allocated two raw events, while ClearInputQueue only reset the queue links and counts;
+        // using embedded slots removes that raw-event ownership ambiguity. Preflight both phases
+        // above, then let CommonLib own the embedded slots for the lifetime of this input queue.
         for (size_t i = 0; i < phases.size(); ++i) {
-            queue->PushOntoInputQueue(events[i]);
+            queue->AddButtonEvent(*device, static_cast<std::int32_t>(event_code),
+                phases[i].value, phases[i].held_duration);
             logger::info(
                 "SH2 action: queued {} (device={}, scancode={}, event_code={}, value={}, held={}, accepted=true)",
                 phases[i].value > 0.0f ? "down" : "up", static_cast<int>(*device), input.dx_scancode,

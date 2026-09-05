@@ -44,8 +44,8 @@ namespace SpellHotbar::Input {
 
 	void InputModeCast::process_input(SlottedSkill& skill, RE::InputEvent*& addEvent, size_t& i, const KeyBind& bind, RE::INPUT_DEVICE& shoutKeyDev, uint8_t& shoutKey)
 	{
-		// Actions have no FormID and their costless attack variant is deliberately allowed to
-		// chain out of a live committed Driver Cast. Handle them before the shared form/cast gate.
+		// Actions have no FormID. Their controller path owns the same conservative live-cast gate as
+		// the other slot types; only a costless Power Attack can cut a committed Driver Cast.
 		if (skill.type == slot_type::action) {
 			bool success = false;
 			if (allowed_to_instantcast(0)) {

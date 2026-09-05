@@ -104,6 +104,26 @@ inline constexpr std::uint32_t custom_action_id_base = 100;
 		target_scancode == static_cast<std::uint32_t>(triggering_scancode);
 }
 
+/**
+ * Decide whether an Action press may enter dispatch before its ordinary cost, cooldown, and
+ * resource checks. A live cast protects the graph until the committed cuttable span; the sole
+ * exception is a costless Power Attack, which is allowed to cut that span. A retired
+ * follow-through has no live casting instance and therefore does not reopen the whole-instance
+ * gate; the existing attack cut seam still limits who can end it. Keeping this pure makes the
+ * safety rule testable without constructing the native casting controller.
+ */
+[[nodiscard]] constexpr bool action_press_is_admitted(
+	bool action_costed,
+	bool action_attack,
+	bool has_live_cast,
+	bool committed_cuttable) noexcept
+{
+	if (!has_live_cast) {
+		return true;
+	}
+	return !action_costed && action_attack && committed_cuttable;
+}
+
 void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay);
 
 [[nodiscard]] ActionPlayerOverlay action_player_overlay_from(const ActionDefinition& action);

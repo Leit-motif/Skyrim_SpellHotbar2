@@ -1380,7 +1380,7 @@ void RenderManager::draw_icon_overlay(ImVec2 pos, int size, GameData::DefaultIco
 void TextCenterHorizontal(std::string text) {
     float font_size = ImGui::GetFontSize() * text.size() / 2;
     ImGui::SameLine(ImGui::GetWindowSize().x / 2 - font_size + (font_size / 2));
-    ImGui::Text(text.c_str());
+    ImGui::TextUnformatted(text.c_str());
 }
 
 void drawCenteredText(std::string text, float alpha = 1.0F) {
@@ -1388,7 +1388,7 @@ void drawCenteredText(std::string text, float alpha = 1.0F) {
     auto textWidth = ImGui::CalcTextSize(text.c_str()).x;
 
     ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-    ImGui::TextColored(SpellHotbarImColor(1.0f, 1.0f, 1.0f, alpha), text.c_str());
+    ImGui::TextColored(SpellHotbarImColor(1.0f, 1.0f, 1.0f, alpha), "%s", text.c_str());
 }
 
 inline bool is_ultrawide(const float & screen_size_x, const float & screen_size_y) {
@@ -1805,7 +1805,7 @@ void RenderManager::show_tooltip(const std::string & title, const std::string & 
 
         ImGui::Dummy(left_offset); ImGui::SameLine();
         RenderManager::set_large_font();
-        ImGui::Text(title.c_str());
+        ImGui::TextUnformatted(title.c_str());
         RenderManager::revert_font();
 
         if (!desc.empty()) {
