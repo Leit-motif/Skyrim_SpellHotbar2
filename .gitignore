@@ -40,3 +40,6 @@ python_scripts/weapon_art_icons/pilot/
 # Visual-brief HTML is local; the ticket is the record
 .scratch/**/*.html
 /.skyrim-agent/
+
+# Data-shaped deployment staging trees are rebuilt from the live overlay, never tracked
+/.scratch/runtime-dist-*/
