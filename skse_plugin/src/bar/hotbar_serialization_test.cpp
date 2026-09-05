@@ -109,6 +109,7 @@ void action_kind_is_only_supported_in_format_8()
 	SlotRecord action;
 	expect(read_slot_record(read, 7, action), "format 7 Action-shaped record is readable");
 	expect(action.kind == 2, "the Action record keeps kind 2");
+	expect(!is_action_record(action, 6), "format 6 does not restore an Action slot");
 	expect(!is_action_record(action, 7), "format 7 does not restore an Action slot");
 	expect(is_action_record(action, 8), "format 8 restores an Action slot");
 	expect(action.payload == 42, "the Action id is the payload");

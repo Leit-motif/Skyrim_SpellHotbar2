@@ -89,6 +89,9 @@ namespace SpellHotbar
             auto& skill = bar.m_slotted_skills[record.slot];
             if (BarSerialization::is_action_record(record, version)) {
                 skill.update_action_assignment(record.payload);
+                if (!GameData::get_action(record.payload)) {
+                    logger::info("Restored unknown Action {} on slot {}; bind kept for a later data load.", record.payload, record.slot);
+                }
             } else if (version >= 6 && record.kind == BarSerialization::kArtSlotKind) {
                 skill.update_art_assignment(record.payload);
                 if (!GameData::get_art(record.payload)) {

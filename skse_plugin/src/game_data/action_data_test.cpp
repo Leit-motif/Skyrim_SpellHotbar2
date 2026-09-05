@@ -20,7 +20,9 @@ using SpellHotbar::is_visible_action_id;
 using SpellHotbar::action_would_recurse;
 using SpellHotbar::default_action_catalogue;
 using SpellHotbar::resolve_action_input;
-using SpellHotbar::resolve_action_scancode;
+using SpellHotbar::action_input_device_from_dx_scancode;
+using SpellHotbar::ActionInput;
+using SpellHotbar::action_input_is_attack;
 
 namespace {
 
@@ -77,14 +79,9 @@ void target_resolution_uses_the_values_supplied_at_press()
 	const auto dodge = resolve_action_input(actions[1], live);
 	expect(dodge.device == ActionInputDevice::keyboard && dodge.dx_scancode == 81,
 		"Dodge resolves as a keyboard dynamic target");
-	expect(resolve_action_scancode(actions[0], live) == 79,
-		"Power Attack reads the current OCPA power scancode");
-	expect(resolve_action_scancode(actions[1], live) == 81,
-		"Dodge reads the current DodgeHotkey scancode");
-
 	ActionDefinition custom = actions[2];
 	custom.captured_scancode = 42;
-	expect(resolve_action_scancode(custom, live) == 42,
+	expect(resolve_action_input(custom, live).dx_scancode == 42,
 		"a captured Action resolves its authored scancode");
 }
 
@@ -179,6 +176,79 @@ void captured_device_and_target_round_trip_through_an_overlay()
 		"captured target resolves both device and DX scancode");
 }
 
+void legacy_dx_values_map_to_the_device_they_were_written_for()
+{
+	expect(action_input_device_from_dx_scancode(255) == ActionInputDevice::keyboard,
+		"255 is the last keyboard DX value");
+	expect(action_input_device_from_dx_scancode(256) == ActionInputDevice::mouse,
+		"256 is the first mouse DX value");
+	expect(action_input_device_from_dx_scancode(265) == ActionInputDevice::mouse,
+		"265 is the last mouse DX value");
+	expect(action_input_device_from_dx_scancode(266) == ActionInputDevice::gamepad,
+		"266 is the first gamepad DX value");
+}
+
+void a_captured_key_equal_to_a_live_ocpa_hotkey_reads_as_an_attack()
+{
+	const ActionTargetKeys live{ .ocpa_power = 79, .ocpa_dual = 47, .dodge_hotkey = 81 };
+	const auto actions = default_action_catalogue();
+
+	expect(action_input_is_attack(actions[0], ActionInput{ ActionInputDevice::keyboard, 79 }, live),
+		"the declared OCPA power target is always attack-shaped");
+	expect(action_input_is_attack(actions[0], ActionInput{}, ActionTargetKeys{}),
+		"the declared target needs no live keys to read as an attack");
+
+	ActionDefinition captured = actions[2];
+	captured.target = ActionTargetSource::captured;
+	captured.captured_device = ActionInputDevice::keyboard;
+
+	captured.captured_scancode = 47;
+	expect(action_input_is_attack(captured, resolve_action_input(captured, live), live),
+		"a captured B key equal to the live OCPA dual key is an attack");
+	captured.captured_scancode = 79;
+	expect(action_input_is_attack(captured, resolve_action_input(captured, live), live),
+		"a captured key equal to the live OCPA power key is an attack");
+	captured.captured_scancode = 48;
+	expect(!action_input_is_attack(captured, resolve_action_input(captured, live), live),
+		"a captured key that is neither OCPA key is not an attack");
+	captured.captured_scancode = 79;
+	expect(!action_input_is_attack(captured, resolve_action_input(captured, live), ActionTargetKeys{}),
+		"with OCPA unconfigured a captured key matches nothing");
+
+	captured.captured_device = ActionInputDevice::mouse;
+	captured.captured_scancode = 79;
+	expect(!action_input_is_attack(captured, ActionInput{ ActionInputDevice::mouse, 79 }, live),
+		"the OCPA keys are keyboard values, so a mouse target never matches them");
+}
+
+void a_silent_overlay_keeps_the_icon_and_the_name()
+{
+	const auto actions = default_action_catalogue();
+	ActionPlayerOverlay overlay = action_player_overlay_from(actions.front());
+	overlay.display_name.clear();
+	overlay.icon.clear();
+	overlay.icon_form = 0;
+
+	ActionDefinition restored = actions.front();
+	apply_action_player_overlay(restored, overlay);
+	expect(restored.display_name == actions.front().display_name,
+		"an empty overlay name keeps the catalogue name");
+	expect(restored.icon == actions.front().icon,
+		"an overlay naming neither icon path nor icon form keeps the catalogue icon");
+
+	overlay.icon = "DESTRUCTION_FIRE_ADEPT";
+	ActionDefinition with_icon = actions.front();
+	apply_action_player_overlay(with_icon, overlay);
+	expect(with_icon.icon == "DESTRUCTION_FIRE_ADEPT", "an overlay icon path still wins");
+
+	overlay.icon.clear();
+	overlay.icon_form = 0x1234;
+	ActionDefinition with_form = actions.front();
+	apply_action_player_overlay(with_form, overlay);
+	expect(with_form.icon.empty() && with_form.icon_form == 0x1234,
+		"an overlay icon form alone still wins and clears the path");
+}
+
 }  // namespace
 
 int main()
@@ -190,5 +260,8 @@ int main()
 	only_a_costless_power_attack_can_cut_a_live_driver_cast();
 	player_overlay_round_trips_the_action_fields();
 	captured_device_and_target_round_trip_through_an_overlay();
+	legacy_dx_values_map_to_the_device_they_were_written_for();
+	a_captured_key_equal_to_a_live_ocpa_hotkey_reads_as_an_attack();
+	a_silent_overlay_keeps_the_icon_and_the_name();
 	return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

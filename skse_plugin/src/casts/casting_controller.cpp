@@ -32,14 +32,22 @@ namespace SpellHotbar::casts::CastingController {
 		bool has_trigger{ false };
 		bool release_pending{ false };
 		std::uint32_t release_attempts{ 0 };
+		bool retry_exhausted{ false };
+		std::uint64_t generation{ 0 };
 	};
 
 	// A pending release that can never be queued would otherwise be retried every frame forever.
-	// The queue-full case clears within a frame or two; this bound only exists so an unexpected
-	// permanent refusal drops the record instead of spinning.
+	// The queue-full case clears within a frame or two; this bound stops the per-frame retry after
+	// an unexpected permanent refusal. The record is KEPT: dropping it while the target is still
+	// down leaves a phantom hold nothing can clear. A later source edge, a re-press of the same
+	// slot, or a mode change resets the counter and tries the release again.
 	constexpr std::uint32_t kMaxReleaseAttempts = 300U;
 
 	std::vector<ActiveActionInput> active_action_inputs;
+
+	// Marks each accepted record so a caller can name "everything admitted after this point"
+	// without depending on the vector's indices, which shift when a record is erased.
+	std::uint64_t next_action_generation_value = 1;
 
 	[[nodiscard]] bool same_action_input(const ActionInput& left, const ActionInput& right) noexcept
 	{
@@ -51,6 +59,15 @@ namespace SpellHotbar::casts::CastingController {
 		return held_duration > 0.0f ? held_duration : Input::kKeyboardTapReleaseHeldSecs;
 	}
 
+	// Start a release attempt driven by something other than the per-frame retry -- a source up, a
+	// re-press admitting over this record, or a mode change. Those are new information, so the
+	// exhausted retry budget is refunded and the record becomes eligible for retries again.
+	void rearm_action_release(ActiveActionInput& active) noexcept
+	{
+		active.release_attempts = 0;
+		active.retry_exhausted = false;
+	}
+
 	bool try_release_action_input(ActiveActionInput& active, float held_duration, const char* reason)
 	{
 		active.release_pending = true;
@@ -59,10 +76,11 @@ namespace SpellHotbar::casts::CastingController {
 			++active.release_attempts;
 			logger::debug("SH2 action: target release pending (action={}, slot={}, reason={}, attempt={})",
 				active.action_id, active.slot, reason, active.release_attempts);
-			if (active.release_attempts >= kMaxReleaseAttempts) {
-				logger::warn("SH2 action: abandoning target release (action={}, slot={}, reason={})",
+			if (active.release_attempts >= kMaxReleaseAttempts && !active.retry_exhausted) {
+				active.retry_exhausted = true;
+				logger::warn(
+					"SH2 action: target release retry exhausted; keeping record, will retry on the next source edge or re-press (action={}, slot={}, reason={})",
 					active.action_id, active.slot, reason);
-				return true;
 			}
 			return false;
 		}
@@ -496,6 +514,7 @@ namespace SpellHotbar::casts::CastingController {
 				continue;
 			}
 			handled = true;
+			rearm_action_release(*it);
 			if (try_release_action_input(*it, held_duration, "source up")) {
 				it = active_action_inputs.erase(it);
 			} else {
@@ -505,17 +524,14 @@ namespace SpellHotbar::casts::CastingController {
 		return handled;
 	}
 
-	void release_action_for_slot(size_t slot, size_t first_new_action, float held_duration)
+	void release_action_for_slot(size_t slot, std::uint64_t first_generation, float held_duration)
 	{
-		if (first_new_action >= active_action_inputs.size()) {
-			return;
-		}
-		for (auto it = active_action_inputs.begin() + static_cast<std::ptrdiff_t>(first_new_action);
-			it != active_action_inputs.end();) {
-			if (it->slot != slot) {
+		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
+			if (it->slot != slot || it->generation < first_generation) {
 				++it;
 				continue;
 			}
+			rearm_action_release(*it);
 			if (try_release_action_input(*it, held_duration, "castSlot tap")) {
 				it = active_action_inputs.erase(it);
 			} else {
@@ -524,15 +540,16 @@ namespace SpellHotbar::casts::CastingController {
 		}
 	}
 
-	size_t action_input_count()
+	std::uint64_t next_action_generation()
 	{
-		return active_action_inputs.size();
+		return next_action_generation_value;
 	}
 
 	void release_all_action_inputs(bool defer)
 	{
 		for (auto& active : active_action_inputs) {
 			active.release_pending = true;
+			rearm_action_release(active);
 		}
 		if (defer) {
 			// A game load is the one caller that cannot trust delivery: an enqueue is not a
@@ -555,7 +572,7 @@ namespace SpellHotbar::casts::CastingController {
 			return;
 		}
 		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
-			if (!it->release_pending) {
+			if (!it->release_pending || it->retry_exhausted) {
 				++it;
 				continue;
 			}
@@ -2007,16 +2024,14 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
+		// Both OCPA keys are read on every press, not just for the ocpa_power target: a captured
+		// key can be OCPA's own hotkey, and action_input_is_attack needs the live values to see it.
 		ActionTargetKeys live_targets{};
-		switch (action->target) {
-		case ActionTargetSource::ocpa_power:
-			live_targets.ocpa_power = Input::resolve_ocpa_keys_live().power;
-			break;
-		case ActionTargetSource::dodge_hotkey:
+		const auto live_ocpa = Input::resolve_ocpa_keys_live();
+		live_targets.ocpa_power = live_ocpa.power;
+		live_targets.ocpa_dual = live_ocpa.dual;
+		if (action->target == ActionTargetSource::dodge_hotkey) {
 			live_targets.dodge_hotkey = Input::resolve_dodge_hotkey_live();
-			break;
-		case ActionTargetSource::captured:
-			break;
 		}
 		const ActionInput target = resolve_action_input(*action, live_targets);
 		if (!target.is_bound()) {
@@ -2035,17 +2050,29 @@ namespace SpellHotbar::casts::CastingController {
 		const bool has_trigger = triggering_scancode >= 0;
 		const auto trigger_dx_scancode = has_trigger ?
 			static_cast<std::uint32_t>(triggering_scancode) : 0U;
-		for (const auto& active : active_action_inputs) {
-			const bool same_source = has_trigger && active.has_trigger &&
-				active.trigger_dx_scancode == trigger_dx_scancode;
-			const bool same_target = same_action_input(active.target, target);
-			if (same_source || same_target) {
-				logger::info(
-					"SH2 action: Action {} refused while target/source is already held (slot={}, trigger={}, target_device={}, target_scancode={})",
-					action_id, slot, triggering_scancode, static_cast<int>(target.device), target.dx_scancode);
-				RE::PlaySound(Input::sound_MagFail);
-				return false;
+		for (auto it = active_action_inputs.begin(); it != active_action_inputs.end();) {
+			const bool same_source = has_trigger && it->has_trigger &&
+				it->trigger_dx_scancode == trigger_dx_scancode;
+			const bool same_target = same_action_input(it->target, target);
+			if (!same_source && !same_target) {
+				++it;
+				continue;
 			}
+			// A record whose release is still owed is not a live hold, it is unfinished business.
+			// Try to close it now: a re-press is a fresh source edge, so the retry budget resets.
+			// Only a target-up that still cannot be queued blocks the press.
+			if (it->release_pending) {
+				rearm_action_release(*it);
+				if (try_release_action_input(*it, 0.0f, "re-press")) {
+					it = active_action_inputs.erase(it);
+					continue;
+				}
+			}
+			logger::info(
+				"SH2 action: Action {} refused while target/source is already held (slot={}, trigger={}, target_device={}, target_scancode={})",
+				action_id, slot, triggering_scancode, static_cast<int>(target.device), target.dx_scancode);
+			RE::PlaySound(Input::sound_MagFail);
+			return false;
 		}
 
 		// A live cast protects the graph for every Action, including free Dodge and custom rows.
@@ -2054,11 +2081,12 @@ namespace SpellHotbar::casts::CastingController {
 		// helper below still limits follow-through teardown to attack-shaped Actions. Keep this gate
 		// ahead of cooldown/resource work so a refused press has no side effects.
 		const bool committed_cuttable = is_committed_cast_holding_graph();
-		if (!action_press_is_admitted(action->is_costed(), action->is_attack(), current_cast != nullptr,
+		const bool action_attack = action_input_is_attack(*action, target, live_targets);
+		if (!action_press_is_admitted(action->is_costed(), action_attack, current_cast != nullptr,
 			committed_cuttable)) {
 			logger::info(
 				"SH2 action: Action {} refused while a live cast is active (costed={}, attack={}, committed={}, follow_through={})",
-				action_id, action->is_costed(), action->is_attack(), committed_cuttable,
+				action_id, action->is_costed(), action_attack, committed_cuttable,
 				is_cuttable_follow_through());
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
@@ -2153,12 +2181,13 @@ namespace SpellHotbar::casts::CastingController {
 			.user_event = user_event,
 			.trigger_dx_scancode = trigger_dx_scancode,
 			.has_trigger = has_trigger,
+			.generation = next_action_generation_value++,
 		});
 
 		// This is ticket 10's cut, not a new SH2 cast. The injected event does not revisit this
 		// input hook, so the controller must perform the graph teardown explicitly for a Power
 		// Attack Action after its down edge has been accepted.
-		if (!action->is_costed() && action->is_attack()) {
+		if (!action->is_costed() && action_attack) {
 			cut_committed_cast_for_attack(pc);
 		}
 		logger::info("SH2 action: Action {} queued target device {} / scancode {} (slot {}, user_event='{}')",

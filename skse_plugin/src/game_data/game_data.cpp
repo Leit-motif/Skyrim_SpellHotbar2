@@ -1,4 +1,5 @@
 #include "game_data.h"
+#include "action_overlay_json.h"
 #include "../logger/logger.h"
 #include "../bar/hotbars.h"
 #include "../rendering/render_manager.h"
@@ -1492,13 +1493,6 @@ namespace SpellHotbar::GameData {
 
     namespace {
 
-    constexpr std::uint32_t action_kind_max =
-        static_cast<std::uint32_t>(ActionKind::physical_scancode);
-    constexpr std::uint32_t action_target_max =
-        static_cast<std::uint32_t>(ActionTargetSource::captured);
-    constexpr std::uint32_t action_input_device_max =
-        static_cast<std::uint32_t>(ActionInputDevice::gamepad);
-
     std::filesystem::path user_action_overlays_path()
     {
         return Storage::IO::get_icon_edits_user_dir() / "action_overlays.json";
@@ -1517,15 +1511,6 @@ namespace SpellHotbar::GameData {
             return false;
         }
         value = object[member].GetUint();
-        return true;
-    }
-
-    bool read_action_float(const rj::Value& object, const char* member, float& value)
-    {
-        if (!object.HasMember(member) || !object[member].IsNumber()) {
-            return false;
-        }
-        value = static_cast<float>(object[member].GetDouble());
         return true;
     }
 
@@ -1589,17 +1574,6 @@ namespace SpellHotbar::GameData {
         }
     }
 
-    void set_action(ActionDefinition action)
-    {
-        if (action.id == 0) {
-            return;
-        }
-        const auto id = action.id;
-        action_catalogue.insert_or_assign(id, action);
-        apply_stored_action_tuning(action);
-        action_cast_info.insert_or_assign(id, std::move(action));
-    }
-
     const ActionDefinition* get_action(uint32_t action_id)
     {
         const auto it = action_cast_info.find(action_id);
@@ -1630,11 +1604,6 @@ namespace SpellHotbar::GameData {
         }
         std::sort(ids.begin(), ids.end());
         return ids;
-    }
-
-    bool persist_user_action_overlays()
-    {
-        return write_action_overlays_atomically(user_action_overlays_path(), action_player_overlays);
     }
 
     bool persist_action_player_overlay(const ActionDefinition& action)
@@ -1685,60 +1654,33 @@ namespace SpellHotbar::GameData {
 
         bool errors = false;
         for (const auto& object : document["actions"].GetArray()) {
-            std::uint32_t id = 0;
-            if (!object.IsObject() || !read_action_uint(object, "action_id", id) || id == 0) {
+            ActionPlayerOverlay base;
+            std::uint32_t probe_id = 0;
+            if (object.IsObject() && read_action_uint(object, "action_id", probe_id)) {
+                if (const auto* live = get_action(probe_id)) {
+                    base = action_player_overlay_from(*live);
+                }
+            }
+            const auto parsed = parse_action_overlay_entry(object, base);
+            if (!parsed.overlay) {
                 errors = true;
+                if (parsed.error_is_type) {
+                    const char* kind = parsed.error_member == "stamina_cost" ||
+                        parsed.error_member == "magicka_cost" ||
+                        parsed.error_member == "health_cost" ||
+                        parsed.error_member == "cooldown_days" ||
+                        parsed.error_member == "gcd" ? "a number" : "an unsigned integer";
+                    logger::warn("Action overlay {}: '{}' is not {}; entry skipped",
+                        parsed.action_id, parsed.error_member, kind);
+                } else {
+                    logger::warn("Action overlay {}: '{}' is out of range; entry skipped",
+                        parsed.action_id, parsed.error_member);
+                }
                 continue;
             }
-            ActionPlayerOverlay overlay;
-            if (const auto* live = get_action(id)) {
-                overlay = action_player_overlay_from(*live);
-            }
-            std::uint32_t kind = 0;
-            if (read_action_uint(object, "kind", kind)) {
-                if (kind > action_kind_max) {
-                    errors = true;
-                    continue;
-                }
-                overlay.kind = static_cast<ActionKind>(kind);
-            }
-            std::uint32_t target = 0;
-            if (read_action_uint(object, "target", target)) {
-                if (target > action_target_max) {
-                    errors = true;
-                    continue;
-                }
-                overlay.target = static_cast<ActionTargetSource>(target);
-            }
-            std::uint32_t captured_device = 0;
-            if (read_action_uint(object, "captured_device", captured_device)) {
-                if (captured_device > action_input_device_max) {
-                    errors = true;
-                    continue;
-                }
-                overlay.captured_device = static_cast<ActionInputDevice>(captured_device);
-            }
-            if (object.HasMember("name") && object["name"].IsString()) {
-                overlay.display_name = object["name"].GetString();
-            }
-            if (object.HasMember("icon") && object["icon"].IsString()) {
-                overlay.icon = object["icon"].GetString();
-            }
-            read_action_uint(object, "icon_form", overlay.icon_form);
-            read_action_uint(object, "captured_scancode", overlay.captured_scancode);
-            // Version-1 overlays written before the device field used SH2's combined DX value.
-            // Infer its device so those bindings continue to inject on the same native device.
-            if (!object.HasMember("captured_device")) {
-                overlay.captured_device = action_input_device_from_dx_scancode(overlay.captured_scancode);
-            }
-            read_action_float(object, "stamina_cost", overlay.stamina_cost);
-            read_action_float(object, "magicka_cost", overlay.magicka_cost);
-            read_action_float(object, "health_cost", overlay.health_cost);
-            read_action_float(object, "cooldown_days", overlay.cooldown_days);
-            read_action_float(object, "gcd", overlay.gcd);
-            action_player_overlays.insert_or_assign(id, overlay);
-            if (auto* live = get_action_mut(id)) {
-                apply_action_player_overlay(*live, overlay);
+            action_player_overlays.insert_or_assign(parsed.action_id, *parsed.overlay);
+            if (auto* live = get_action_mut(parsed.action_id)) {
+                apply_action_player_overlay(*live, *parsed.overlay);
             }
         }
         return !errors;

@@ -144,7 +144,7 @@ namespace SpellHotbar {
 			{ "$ACTION_UNBOUND", "Unbound" },
 			{ "$ACTION_CAPTURE", "Capture input" },
 			{ "$ACTION_CAPTURE_CANCEL", "Cancel capture" },
-			{ "$ACTION_CAPTURE_ARMED", "Press a keyboard, mouse, or gamepad button..." },
+			{ "$ACTION_CAPTURE_ARMED", "The next key, mouse button, or gamepad button becomes the binding. Press Escape to cancel." },
 			{ "$ACTION_SAVE_FAILED", "Could not save Action settings." },
 			{ "$CUSTOM_ABILITY_SPELL", "Custom Ability Spell" },
 			{ "$STAMINA_COST", "Stamina" },

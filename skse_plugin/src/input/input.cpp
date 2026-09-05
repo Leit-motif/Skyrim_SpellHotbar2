@@ -219,7 +219,9 @@ namespace SpellHotbar::Input {
         //don't react to inputs outside of the game:
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (!pc || !pc->Is3DLoaded()) {
-            return {};
+            // The mirror above already answered this event; forwarding it too would send the
+            // source key's own binding an up or repeat the Action already consumed.
+            return InputEventDecision<RE::InputEvent>{ .capture = action_event_handled };
         }
 
         RE::InputEvent* addEvent = nullptr;
@@ -239,6 +241,10 @@ namespace SpellHotbar::Input {
                     bool is_pressed = bEvent->IsPressed();
 
                     auto& capture = Mcp::bind_capture();
+                    // Armed Action capture swallows every button event, so the mouse cannot reach
+                    // the dialog's Cancel button: any click is itself a candidate binding, and a
+                    // capture that let one through would bind the button the player used to stop.
+                    // Escape is the cancel, and the armed prompt says so.
                     if (capture.action_armed()) {
                         if (bEvent->IsDown()) {
                             const bool is_escape =
@@ -748,12 +754,6 @@ namespace SpellHotbar::Input {
         return found;
     }
 
-    uint32_t get_dodge_hotkey()
-    {
-        static const uint32_t key = read_dodge_hotkey_from_vfs();
-        return key;
-    }
-
     uint32_t resolve_dodge_hotkey_live()
     {
         return read_dodge_hotkey_from_vfs();
@@ -817,6 +817,10 @@ namespace SpellHotbar::Input {
 
     }  // namespace
 
+    // Actions mirror mod hotkeys, so an empty name is the ordinary answer: a mod hotkey is not in
+    // the engine's controlmap and has no user-event name to carry. Live 2026-09-05 every target
+    // (47, 48, 79, 81) resolved empty and every one worked. A non-empty name only appears when the
+    // target key is also mapped in the engine controlmap, and PlayerControls needs it there.
     std::string resolve_action_user_event(const ActionInput& input)
     {
         if (!input.is_bound() || input.dx_scancode > 281U) {
@@ -906,7 +910,13 @@ namespace SpellHotbar::Input {
         // exposes only the four-argument queue helper, so set the user-event field on that same
         // embedded slot immediately after insertion. That keeps the event lifetime owned by
         // Skyrim's queue while still letting PlayerControls handle engine actions such as Block;
-        // an empty name remains the deliberate fallback for external hotkey consumers.
+        // an empty name is the ordinary case, because a mod hotkey has no controlmap entry.
+        //
+        // Which slot was just written: RE/B/BSInputEventQueue.h (vendored via vcpkg,
+        // CommonLibSSE-NG) has AddButtonEvent(device, id, value, duration) fill
+        // buttonEvents[buttonEventCount] and then increment the count, with
+        // MAX_BUTTON_EVENTS = 10. So the count moving past the value read before the call
+        // identifies the slot this event landed in.
         const std::string user_event_storage{ user_event };
         const RE::BSFixedString native_user_event{ user_event_storage.c_str() };
         queue->AddButtonEvent(*device, static_cast<std::int32_t>(event_code), value,
@@ -927,40 +937,6 @@ namespace SpellHotbar::Input {
                 user_event_storage);
         }
         return true;
-    }
-
-    bool queue_action_tap(const ActionInput& input)
-    {
-        auto* queue = RE::BSInputEventQueue::GetSingleton();
-        if (!queue) {
-            logger::error("SH2 action: BSInputEventQueue missing (device={}, scancode={})",
-                static_cast<int>(input.device), input.dx_scancode);
-            return false;
-        }
-        const auto phases = keyboard_tap_phases();
-        const auto queued_button_events = static_cast<size_t>(queue->buttonEventCount);
-        const auto max_button_events = static_cast<size_t>(RE::BSInputEventQueue::MAX_BUTTON_EVENTS);
-        if (queued_button_events > max_button_events ||
-            phases.size() > max_button_events - queued_button_events) {
-            logger::warn(
-                "SH2 action: input queue has no room for tap (device={}, scancode={}, queued={}, required={}, capacity={})",
-                static_cast<int>(input.device), input.dx_scancode, queued_button_events, phases.size(),
-                max_button_events);
-            return false;
-        }
-
-        const auto user_event = resolve_action_user_event(input);
-        for (const auto& phase : phases) {
-            if (!queue_action_event(input, phase.value, phase.held_duration, user_event)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    bool queue_keyboard_tap(uint32_t scancode)
-    {
-        return queue_action_tap(ActionInput{ ActionInputDevice::keyboard, scancode });
     }
 
     std::tuple<RE::INPUT_DEVICE, uint8_t> get_shout_key_and_device()

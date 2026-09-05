@@ -32,7 +32,6 @@ namespace SpellHotbar::ActionEditor {
 		float draft_gcd{ 0.0f };
 		bool persist_failed{ false };
 
-		constexpr std::array<ActionKind, 1> kind_values{ ActionKind::physical_scancode };
 		constexpr std::array<ActionTargetSource, 3> target_values{
 			ActionTargetSource::ocpa_power,
 			ActionTargetSource::dodge_hotkey,
@@ -263,19 +262,10 @@ namespace SpellHotbar::ActionEditor {
 		RenderManager::draw_art_icon_fields_in_editor(draft_icon_form, draft_icon, icon_pos,
 			static_cast<int>(icon_size), IM_COL32_WHITE);
 
+		// One kind exists, so a dropdown offers the player no choice. Show what it is instead;
+		// draft_kind still round-trips the value so a second kind only needs the control back.
 		ImGui::TextUnformatted(translate_c("$ACTION_KIND"));
-		if (ImGui::BeginCombo("##action_kind", translate_c(action_kind_key(draft_kind)))) {
-			for (const ActionKind value : kind_values) {
-				const bool selected = draft_kind == value;
-				if (ImGui::Selectable(translate_c(action_kind_key(value)), selected)) {
-					draft_kind = value;
-				}
-				if (selected) {
-					ImGui::SetItemDefaultFocus();
-				}
-			}
-			ImGui::EndCombo();
-		}
+		ImGui::TextUnformatted(translate_c(action_kind_key(draft_kind)));
 
 		ImGui::TextUnformatted(translate_c("$ACTION_TARGET"));
 		if (ImGui::BeginCombo("##action_target", translate_c(action_target_key(draft_target)))) {

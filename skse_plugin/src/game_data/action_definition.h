@@ -27,6 +27,7 @@ enum class ActionTargetSource : std::uint8_t {
 
 struct ActionTargetKeys {
 	std::uint32_t ocpa_power{ 0 };
+	std::uint32_t ocpa_dual{ 0 };
 	std::uint32_t dodge_hotkey{ 0 };
 };
 
@@ -67,6 +68,9 @@ struct ActionDefinition {
 	float gcd{ 0.0f };
 
 	[[nodiscard]] bool is_costed() const noexcept;
+	/** The static form: does this Action name the OCPA power-attack target by source? A captured
+	 *  key that happens to be OCPA's own hotkey is an attack too -- see
+	 *  `action_input_is_attack`, which is what a live press should ask. */
 	[[nodiscard]] bool is_attack() const noexcept;
 };
 
@@ -100,8 +104,16 @@ inline constexpr std::uint32_t custom_action_count = 12;
 [[nodiscard]] ActionInput resolve_action_input(
 	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;
 
-[[nodiscard]] std::uint32_t resolve_action_scancode(
-	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;
+/**
+ * Is this press attack-shaped? The declared `ocpa_power` target always is. So is a captured
+ * keyboard key that happens to be one of OCPA's own hotkeys: the target it drives is identical,
+ * so the press should cut a committed cast the same way the declared target does. `live` carries
+ * the keys read from OCPA's config at press time; a zero entry means unconfigured and matches
+ * nothing.
+ */
+[[nodiscard]] bool action_input_is_attack(
+	const ActionDefinition& action, const ActionInput& resolved,
+	const ActionTargetKeys& live) noexcept;
 
 [[nodiscard]] constexpr bool action_would_recurse(
 	std::uint32_t target_scancode, int triggering_scancode) noexcept

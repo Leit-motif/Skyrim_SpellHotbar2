@@ -71,6 +71,24 @@ void dropping_an_action_onto_a_form_replaces_the_kind()
 	expect(next.art_id == 0, "the previous Ability id remains clear");
 }
 
+void dropping_a_form_onto_an_action_replaces_the_kind()
+{
+	SlotBind slot{ .form_id = 0, .art_id = 0, .action_id = 42 };
+	const SlotBind next = apply_bind_drop(slot, form_bind(0x00012FCD));
+	expect(next.form_id == 0x00012FCD, "the spell FormID is bound");
+	expect(next.action_id == 0, "the previous Action id is cleared");
+	expect(next.art_id == 0, "the previous Ability id remains clear");
+}
+
+void dropping_an_art_onto_an_action_replaces_the_kind()
+{
+	SlotBind slot{ .form_id = 0, .art_id = 0, .action_id = 42 };
+	const SlotBind next = apply_bind_drop(slot, art_bind(1));
+	expect(next.art_id == 1, "Test Ability replaces the Action");
+	expect(next.action_id == 0, "the previous Action id is cleared");
+	expect(next.form_id == 0, "the previous FormID remains clear");
+}
+
 void unbind_clears_an_art_slot()
 {
 	SlotBind slot{ .form_id = 0, .art_id = 1, .action_id = 0 };
@@ -90,6 +108,8 @@ int main()
 	dropping_an_action_onto_empty_binds_the_action_id();
 	dropping_an_action_onto_an_art_replaces_the_kind();
 	dropping_an_action_onto_a_form_replaces_the_kind();
+	dropping_a_form_onto_an_action_replaces_the_kind();
+	dropping_an_art_onto_an_action_replaces_the_kind();
 	unbind_clears_an_art_slot();
 
 	if (g_failures != 0) {

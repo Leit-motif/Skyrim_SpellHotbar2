@@ -33,17 +33,15 @@ namespace SpellHotbar::Input {
 	const OcpaKeys& get_ocpa_keys();
 	/** Resolve external combat bindings from the current VFS state at Action press time. */
 	OcpaKeys resolve_ocpa_keys_live();
-	uint32_t get_dodge_hotkey();
 	/** Resolve TK Dodge's binding from the current VFS state at Action press time. */
 	uint32_t resolve_dodge_hotkey_live();
-	bool queue_keyboard_tap(uint32_t scancode);
-	/** Queue one physical Action event, preserving the engine's user-event name when known. */
+	/** Queue one physical Action event. `user_event` is the engine's controlmap name for the
+	 *  target key, or empty -- the ordinary case, since a mod hotkey has no controlmap entry. */
 	bool queue_action_event(const ActionInput& input, float value, float held_duration,
 		std::string_view user_event);
-	/** Resolve the current gameplay ControlMap event for a persisted Action target. */
+	/** Name the gameplay ControlMap event for an Action target, or empty when the target key is
+	 *  not mapped in the engine controlmap. Empty is the normal mod-hotkey answer. */
 	std::string resolve_action_user_event(const ActionInput& input);
-	/** Queue a physical Action using its persisted device and DX scancode. */
-	bool queue_action_tap(const ActionInput& input);
 
 	/**
 	* allowed to use powers, less restrictive than regular casts

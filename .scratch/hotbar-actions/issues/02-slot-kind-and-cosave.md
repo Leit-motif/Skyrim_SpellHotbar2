@@ -29,6 +29,11 @@ by this rollup.
 5. Twelve generic rows named `Action 1` through `Action 12` (ids 100–111) are present in
    the catalogue. Ids 1 and 2 load but are hidden.
 6. A save written before this change keeps its assigned Action names and slot overlays.
+   Recorded 2026-09-05 (ticket 07 finding 9): Action overlays -- name, icon, target, costs --
+   are NOT co-save state. They live in `action_overlays.json` under the icon-edits user dir and
+   are shared across every character on the install, matching `art_icons.json`. That is the right
+   scope: the mod hotkeys they mirror (OCPA, TK Dodge, Timed Block) are per-install settings too.
+   Only the slot assignment is per-character co-save state.
 7. Only the initial down edge is costed: a held slot charges cost, cooldown, and GCD once.
 8. A mode change or a game load during a held mirror releases the target.
 

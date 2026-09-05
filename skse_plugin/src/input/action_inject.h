@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <charconv>
 #include <cstdint>
 #include <string_view>
@@ -8,23 +7,12 @@
 
 namespace SpellHotbar::Input {
 
-struct KeyboardTapPhase {
-	float value{ 0.0f };
-	float held_duration{ 0.0f };
-};
-
-// VoiceCastDriver: a down-only ButtonEvent leaves a phantom held key. A tap is
-// always down then up; the up carries a tiny hold so the engine treats it as a
-// release rather than an instant no-op.
+// A down-only ButtonEvent leaves a phantom held key, so every target down needs an up. The up
+// carries a tiny hold because a zero hold reads as an instant no-op rather than a release.
+// Physical Actions get their real hold from the source key; the two callers that have no source
+// hold to pass -- the Papyrus castSlot bounded tap, and a release retried after the source is
+// already gone -- use this value instead.
 inline constexpr float kKeyboardTapReleaseHeldSecs = 0.001f;
-
-constexpr std::array<KeyboardTapPhase, 2> keyboard_tap_phases()
-{
-	return {{
-		{ 1.0f, 0.0f },
-		{ 0.0f, kKeyboardTapReleaseHeldSecs },
-	}};
-}
 
 struct OcpaKeys {
 	uint32_t power{ 0 };

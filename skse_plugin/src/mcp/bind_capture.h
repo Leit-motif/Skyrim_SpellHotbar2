@@ -53,8 +53,6 @@ namespace SpellHotbar::Mcp {
 
         bool action_armed() const { return pending_action_id_ != 0; }
 
-        bool any_armed() const { return armed() || action_armed(); }
-
         int pending_id() const { return pending_id_; }
 
         std::uint32_t pending_action_id() const { return pending_action_id_; }

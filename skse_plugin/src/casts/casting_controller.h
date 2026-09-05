@@ -429,10 +429,12 @@ namespace SpellHotbar::casts::CastingController {
 	bool mirror_action_hold(uint32_t trigger_dx_scancode, float value, float held_duration);
 	/** Release Actions owned by the original physical source; safe across menus and mode changes. */
 	bool release_action_for_trigger(uint32_t trigger_dx_scancode, float held_duration);
-	/** Release an Action invoked through the bounded Papyrus castSlot seam. */
-	void release_action_for_slot(size_t slot, size_t first_new_action, float held_duration);
-	/** Return a marker for the next accepted Action input. */
-	size_t action_input_count();
+	/** Release Actions on `slot` whose generation is at or past `first_generation`, the marker
+	 *  taken before the press. Used by the bounded Papyrus castSlot seam. */
+	void release_action_for_slot(size_t slot, std::uint64_t first_generation, float held_duration);
+	/** The generation the next accepted Action input will carry. Take this before a press and
+	 *  hand it back to release_action_for_slot to name only what that press admitted. */
+	std::uint64_t next_action_generation();
 	/** Mark all injected Action targets for release during load/mode invalidation.
 	 *  `defer` keeps the record instead of emitting the up now: a game load may reset the native
 	 *  input queue before the event is dispatched, so the up is left to retry_action_releases. */

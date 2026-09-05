@@ -36,7 +36,7 @@ void cast_slot(RE::StaticFunctionTag*, int slot_index)
         }
         size_t index = static_cast<size_t>(slot_index);
         auto skill = GameData::get_current_spell_info_in_slot(index);
-        const size_t action_marker = casts::CastingController::action_input_count();
+        const std::uint64_t action_marker = casts::CastingController::next_action_generation();
         RE::InputEvent* addEvent = nullptr;
         auto [shoutKeyDev, shoutKey] = Input::get_shout_key_and_device();
         if (Input::InputModeBase::current_mode) {

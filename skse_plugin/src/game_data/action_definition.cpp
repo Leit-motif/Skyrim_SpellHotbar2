@@ -86,10 +86,18 @@ ActionInput resolve_action_input(
 	return {};
 }
 
-std::uint32_t resolve_action_scancode(
-	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept
+bool action_input_is_attack(
+	const ActionDefinition& action, const ActionInput& resolved,
+	const ActionTargetKeys& live) noexcept
 {
-	return resolve_action_input(action, live_targets).dx_scancode;
+	if (action.target == ActionTargetSource::ocpa_power) {
+		return true;
+	}
+	if (!resolved.is_bound() || resolved.device != ActionInputDevice::keyboard) {
+		return false;
+	}
+	return (live.ocpa_power != 0 && resolved.dx_scancode == live.ocpa_power) ||
+		(live.ocpa_dual != 0 && resolved.dx_scancode == live.ocpa_dual);
 }
 
 void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay)
@@ -97,8 +105,12 @@ void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOve
 	if (!overlay.display_name.empty()) {
 		action.display_name = overlay.display_name;
 	}
-	action.icon = overlay.icon;
-	action.icon_form = overlay.icon_form;
+	// An overlay that names neither an icon path nor an icon form is not asking for a blank icon;
+	// it is silent about the icon, the same way an empty name is silent about the name.
+	if (!overlay.icon.empty() || overlay.icon_form != 0) {
+		action.icon = overlay.icon;
+		action.icon_form = overlay.icon_form;
+	}
 	action.kind = overlay.kind;
 	action.target = overlay.target;
 	action.captured_device = overlay.captured_device;

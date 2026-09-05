@@ -259,15 +259,15 @@ namespace SpellHotbar::GameData {
     /**
      * Actions are SH2-owned input payloads rather than TES forms or Ability clips. The catalogue
      * is seeded independently of load-order forms and player overlays are kept in a sidecar so a
-     * DLL reload does not erase the editor's name, icon, target, or optional costs.
+     * DLL reload does not erase the editor's name, icon, target, or optional costs. That sidecar
+     * (action_overlays.json, under the icon-edits user dir) is per install, not per character,
+     * matching art_icons.json; slot assignments stay per character in the co-save.
      */
     void seed_default_actions();
-    void set_action(ActionDefinition action);
     const ActionDefinition* get_action(uint32_t action_id);
     ActionDefinition* get_action_mut(uint32_t action_id);
     const ActionDefinition* get_action_catalogue(uint32_t action_id);
     std::vector<uint32_t> list_action_ids();
-    bool persist_user_action_overlays();
     bool persist_action_player_overlay(const ActionDefinition& action);
     bool load_user_action_overlays();
     /**

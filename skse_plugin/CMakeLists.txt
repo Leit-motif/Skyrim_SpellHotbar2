@@ -84,6 +84,7 @@ set(source_files src/plugin.cpp
                  src/game_data/art_definition.h
                  src/game_data/art_definition.cpp
                  src/game_data/action_definition.h
+                 src/game_data/action_overlay_json.h
                  src/game_data/action_definition.cpp
                  src/game_data/art_icon_resolve.h
                  src/game_data/art_icon_resolve.cpp
@@ -170,6 +171,11 @@ add_executable(action_data_test src/game_data/action_data_test.cpp src/game_data
 target_compile_features(action_data_test PRIVATE cxx_std_23)
 target_include_directories(action_data_test PRIVATE src/game_data)
 
+add_executable(action_overlay_json_test src/game_data/action_overlay_json_test.cpp)
+target_compile_features(action_overlay_json_test PRIVATE cxx_std_23)
+target_include_directories(action_overlay_json_test PRIVATE src/game_data)
+target_link_libraries(action_overlay_json_test PRIVATE rapidjson)
+
 add_executable(bind_capture_test src/mcp/bind_capture_test.cpp)
 target_compile_features(bind_capture_test PRIVATE cxx_std_23)
 target_include_directories(bind_capture_test PRIVATE src/mcp src/game_data)
@@ -215,6 +221,7 @@ add_test(NAME action_inject_test COMMAND action_inject_test)
 add_test(NAME action_data_test COMMAND action_data_test)
 add_test(NAME action_overlay_persistence_test COMMAND action_overlay_persistence_test)
 add_test(NAME bind_capture_test COMMAND bind_capture_test)
+add_test(NAME action_overlay_json_test COMMAND action_overlay_json_test)
 endif()
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})

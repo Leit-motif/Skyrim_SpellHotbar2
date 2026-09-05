@@ -62,3 +62,21 @@ An Action does not start `SH2_Art_State`, write the Ability Selector, or plant W
 
 Native SKSE only: no new Papyrus scripts and no new dependencies. Execute Hotkeys (MIT)
 was inspiration only; nothing is copied from it.
+
+## Comments
+
+2026-09-05 — A key physically held across a game load goes dead until it is re-pressed
+(finding 2 of ticket 07, accepted). `kPreLoadGame` defers the release; `retry_action_releases`
+emits the target up on the first loaded frame and erases the record. A source key the player is
+still physically holding then has no record: its repeats are forwarded as plain repeats and its
+later up passes through as a plain up. Re-pressing the key re-arms the mirror normally. Accepted
+rather than re-arming on the next repeat, because re-arming would re-run admission and re-charge
+cost, cooldown, and GCD for a press the player made in the previous session.
+
+2026-09-05 — Down and up are captured by different conditions, and the asymmetry is one-way
+(finding 5 of ticket 07, traced). An Action down can only start through the `key_spells` branch,
+and that branch always sets `captureEvent` for an action slot -- either through the modifier
+clause or the `in_ingame_state()` clause -- so no forwarded down ever starts an Action. The
+reverse does exist: a down that was captured but refused (cooldown, cost, a live cast) has no
+record, so its up passes through the pre-filter unmatched and reaches the game. Harmless for the
+mod hotkeys Actions mirror: an up with no matching down is what those consumers already ignore.

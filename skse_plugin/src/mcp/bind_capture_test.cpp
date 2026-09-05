@@ -31,7 +31,7 @@ void action_capture_waits_for_a_supported_button_edge()
 	expect(state.action_armed(), "an unsupported ButtonEvent leaves capture armed");
 	expect(state.apply_action_down_edge(false, ActionInputDevice::mouse, 261) == CaptureApply::rebound,
 		"the next supported ButtonEvent commits the capture");
-	expect(!state.any_armed(), "a committed Action capture disarms the shared state");
+	expect(!state.armed() && !state.action_armed(), "a committed Action capture disarms the shared state");
 
 	const auto result = state.take_action_capture_result(100);
 	expect(result.has_value(), "the capture seam exposes the committed Action result");
@@ -46,13 +46,24 @@ void action_capture_waits_for_a_supported_button_edge()
 		"a capture result is consumed exactly once");
 }
 
+void a_zero_dx_scancode_is_ignored_and_leaves_capture_armed()
+{
+	BindCaptureState state;
+	state.arm_action(102);
+	expect(state.apply_action_down_edge(false, ActionInputDevice::keyboard, 0) == CaptureApply::ignored,
+		"a zero DX value is not a binding");
+	expect(state.action_armed(), "a zero DX value leaves the Action capture armed");
+	expect(!state.take_action_capture_result(102).has_value(),
+		"a zero DX value produces no capture result");
+}
+
 void escape_cancels_action_capture_without_a_result()
 {
 	BindCaptureState state;
 	state.arm_action(101);
 	expect(state.apply_action_down_edge(true, ActionInputDevice::keyboard, -1) == CaptureApply::cancelled,
 		"Escape cancels an armed Action capture");
-	expect(!state.any_armed(), "Escape disarms the Action capture");
+	expect(!state.armed() && !state.action_armed(), "Escape disarms the Action capture");
 	expect(!state.take_action_capture_result(101).has_value(),
 		"Escape does not create an Action binding");
 }
@@ -64,7 +75,7 @@ void keybind_capture_remains_unchanged()
 	expect(state.armed() && !state.action_armed(), "keybind capture is distinct from Action capture");
 	expect(state.apply_down_edge(false) == CaptureApply::rebound,
 		"ordinary keybind capture still consumes its next down edge");
-	expect(!state.any_armed(), "ordinary keybind capture disarms after its edge");
+	expect(!state.armed() && !state.action_armed(), "ordinary keybind capture disarms after its edge");
 }
 
 }  // namespace
@@ -72,6 +83,7 @@ void keybind_capture_remains_unchanged()
 int main()
 {
 	action_capture_waits_for_a_supported_button_edge();
+	a_zero_dx_scancode_is_ignored_and_leaves_capture_armed();
 	escape_cancels_action_capture_without_a_result();
 	keybind_capture_remains_unchanged();
 	return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

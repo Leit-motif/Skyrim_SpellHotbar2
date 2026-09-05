@@ -151,12 +151,28 @@ Stamina, magicka, and health spent by SH2 when an Ability starts. Defaults: 25 s
 _Avoid_: PIE magicka line, shout recovery, Additional Attack stamina spell, cost seeding from an assigned spell.
 
 **Action**:
-A bindable hotbar payload that injects one authored input rather than starting a spell, shout,
-potion, or Ability. An Action has its own stable catalogue id, name, icon, target source, and
-optional resource cost, cooldown, and GCD. Power Attack and Dodge resolve their external
-scancodes when pressed; a Custom Action may hold a captured physical scancode. An Action does
-not own an animation, `SH2_Art_State`, Ability Selector value, or fallback chain. _Avoid_: Ability,
-hotkey slot, virtual key (that is a separate integration), click-to-cast.
+A bindable hotbar payload that mirrors its slot key onto one authored input rather than starting
+a spell, shout, potion, or Ability. An Action has its own stable catalogue id, name, icon, target
+source, and optional resource cost, cooldown, and GCD. Power Attack and Dodge resolve their
+external scancodes when pressed; a Custom Action may hold a captured physical scancode. The
+player's edits to those fields live in `action_overlays.json` under the icon-edits user dir and
+are shared across characters, the same as `art_icons.json`; only the slot assignment is
+per-character co-save state. An Action does not own an animation, `SH2_Art_State`, Ability
+Selector value, or fallback chain. _Avoid_: Ability, hotkey slot, virtual key (that is a separate
+integration), click-to-cast.
+
+**Mirror**:
+What an Action does with its slot key. The source key owns its target from the accepted down edge
+until that same source's up; held and repeat events are mirrored per frame carrying the source's
+own held duration. The target, its device, and its user-event name are frozen at the accepted
+down, so a rebind, modifier, menu, or mode change cannot redirect the up. A game load defers the
+release to the first loaded frame; a mode change releases immediately. _Avoid_: tap, re-running
+admission on held events, redirecting the up after a rebind.
+
+**Action Editor**:
+The SMF bind-menu dialog that edits one Action's name, icon, target source, captured input, and
+costs. Capture arms on the next button down of any device, and Escape cancels. Save writes the
+global overlay sidecar; Reset reloads the catalogue row. _Avoid_: MCM, per-character overlay.
 
 **Action Kind**:
 The single input seam an Action uses when it is pressed. The current product slice supports only
