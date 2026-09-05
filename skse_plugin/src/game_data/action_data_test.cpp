@@ -22,7 +22,6 @@ using SpellHotbar::default_action_catalogue;
 using SpellHotbar::resolve_action_input;
 using SpellHotbar::action_input_device_from_dx_scancode;
 using SpellHotbar::ActionInput;
-using SpellHotbar::action_input_is_attack;
 
 namespace {
 
@@ -107,23 +106,21 @@ void only_nonzero_meter_gcd_or_cooldown_makes_an_action_costed()
 	expect(action.is_costed(), "cooldown makes an Action costed");
 }
 
-void only_a_costless_power_attack_can_cut_a_live_driver_cast()
+void any_costless_action_can_cut_a_committed_cuttable_cast()
 {
-	expect(action_press_is_admitted(false, false, false, false),
+	expect(action_press_is_admitted(false, false, false),
 		"an idle free custom Action is admitted");
-	expect(!action_press_is_admitted(false, false, true, false),
-		"a live cast blocks a free Dodge or custom Action");
-	expect(!action_press_is_admitted(false, true, true, false),
-		"a pre-commit live cast blocks even a free Power Attack");
-	expect(action_press_is_admitted(false, true, true, true),
-		"a committed cuttable cast admits a costless Power Attack");
-	expect(!action_press_is_admitted(true, true, true, true),
-		"a costed Power Attack never cuts a live cast");
-	expect(action_press_is_admitted(false, true, false, false),
-		"a retired cuttable follow-through admits a costless Power Attack");
-	expect(action_press_is_admitted(false, false, false, false),
-		"a retired cuttable follow-through does not block Dodge or custom Actions");
-	expect(action_press_is_admitted(true, false, false, false),
+	expect(!action_press_is_admitted(false, true, false),
+		"a pre-commit live cast blocks every Action, costless included");
+	expect(action_press_is_admitted(false, true, true),
+		"a committed cuttable cast admits any costless Action");
+	expect(!action_press_is_admitted(true, true, true),
+		"a costed Action never cuts a committed cuttable cast");
+	expect(!action_press_is_admitted(true, true, false),
+		"a costed Action is refused while any cast is live");
+	expect(action_press_is_admitted(false, false, true),
+		"a retired cuttable follow-through admits a costless Action");
+	expect(action_press_is_admitted(true, false, false),
 		"an idle costed Action reaches ordinary cost checks");
 }
 
@@ -188,39 +185,6 @@ void legacy_dx_values_map_to_the_device_they_were_written_for()
 		"266 is the first gamepad DX value");
 }
 
-void a_captured_key_equal_to_a_live_ocpa_hotkey_reads_as_an_attack()
-{
-	const ActionTargetKeys live{ .ocpa_power = 79, .ocpa_dual = 47, .dodge_hotkey = 81 };
-	const auto actions = default_action_catalogue();
-
-	expect(action_input_is_attack(actions[0], ActionInput{ ActionInputDevice::keyboard, 79 }, live),
-		"the declared OCPA power target is always attack-shaped");
-	expect(action_input_is_attack(actions[0], ActionInput{}, ActionTargetKeys{}),
-		"the declared target needs no live keys to read as an attack");
-
-	ActionDefinition captured = actions[2];
-	captured.target = ActionTargetSource::captured;
-	captured.captured_device = ActionInputDevice::keyboard;
-
-	captured.captured_scancode = 47;
-	expect(action_input_is_attack(captured, resolve_action_input(captured, live), live),
-		"a captured B key equal to the live OCPA dual key is an attack");
-	captured.captured_scancode = 79;
-	expect(action_input_is_attack(captured, resolve_action_input(captured, live), live),
-		"a captured key equal to the live OCPA power key is an attack");
-	captured.captured_scancode = 48;
-	expect(!action_input_is_attack(captured, resolve_action_input(captured, live), live),
-		"a captured key that is neither OCPA key is not an attack");
-	captured.captured_scancode = 79;
-	expect(!action_input_is_attack(captured, resolve_action_input(captured, live), ActionTargetKeys{}),
-		"with OCPA unconfigured a captured key matches nothing");
-
-	captured.captured_device = ActionInputDevice::mouse;
-	captured.captured_scancode = 79;
-	expect(!action_input_is_attack(captured, ActionInput{ ActionInputDevice::mouse, 79 }, live),
-		"the OCPA keys are keyboard values, so a mouse target never matches them");
-}
-
 void a_silent_overlay_keeps_the_icon_and_the_name()
 {
 	const auto actions = default_action_catalogue();
@@ -257,11 +221,10 @@ int main()
 	target_resolution_uses_the_values_supplied_at_press();
 	recursion_is_rejected_only_for_the_triggering_bind();
 	only_nonzero_meter_gcd_or_cooldown_makes_an_action_costed();
-	only_a_costless_power_attack_can_cut_a_live_driver_cast();
+	any_costless_action_can_cut_a_committed_cuttable_cast();
 	player_overlay_round_trips_the_action_fields();
 	captured_device_and_target_round_trip_through_an_overlay();
 	legacy_dx_values_map_to_the_device_they_were_written_for();
-	a_captured_key_equal_to_a_live_ocpa_hotkey_reads_as_an_attack();
 	a_silent_overlay_keeps_the_icon_and_the_name();
 	return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

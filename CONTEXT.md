@@ -183,8 +183,10 @@ multiple seams for one activation, storing a live external keycode in the catalo
 **Action Cost**:
 Optional stamina, magicka, and health spent before an Action's input is injected, with optional
 Action cooldown and GCD. Zero is free. It reuses the Ability affordability rule and refusal
-feedback; it is not a second spell-cost system. _Avoid_: charging after a failed injection,
-flashing a zero-cost meter, or treating a costless Power Attack cut as a new SH2 cast.
+feedback; it is not a second spell-cost system. Cost is also what decides the live-cast rule: any
+costless Action pressed in the committed cuttable span cuts the cast, as the physical key would,
+while a costed Action is refused for as long as a cast is live. _Avoid_: charging after a failed
+injection, flashing a zero-cost meter, or treating a costless Action's cast cut as a new SH2 cast.
 
 **Terminal Ability / Chaining Ability**:
 An ability whose clip does not, or does, carry `MCO_WinOpen`. A property of the clip, never of the binding. Chain-out still happens: WinOpen when present, otherwise HitFrame.

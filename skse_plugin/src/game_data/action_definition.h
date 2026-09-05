@@ -27,7 +27,6 @@ enum class ActionTargetSource : std::uint8_t {
 
 struct ActionTargetKeys {
 	std::uint32_t ocpa_power{ 0 };
-	std::uint32_t ocpa_dual{ 0 };
 	std::uint32_t dodge_hotkey{ 0 };
 };
 
@@ -68,10 +67,6 @@ struct ActionDefinition {
 	float gcd{ 0.0f };
 
 	[[nodiscard]] bool is_costed() const noexcept;
-	/** The static form: does this Action name the OCPA power-attack target by source? A captured
-	 *  key that happens to be OCPA's own hotkey is an attack too -- see
-	 *  `action_input_is_attack`, which is what a live press should ask. */
-	[[nodiscard]] bool is_attack() const noexcept;
 };
 
 struct ActionPlayerOverlay {
@@ -104,17 +99,6 @@ inline constexpr std::uint32_t custom_action_count = 12;
 [[nodiscard]] ActionInput resolve_action_input(
 	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;
 
-/**
- * Is this press attack-shaped? The declared `ocpa_power` target always is. So is a captured
- * keyboard key that happens to be one of OCPA's own hotkeys: the target it drives is identical,
- * so the press should cut a committed cast the same way the declared target does. `live` carries
- * the keys read from OCPA's config at press time; a zero entry means unconfigured and matches
- * nothing.
- */
-[[nodiscard]] bool action_input_is_attack(
-	const ActionDefinition& action, const ActionInput& resolved,
-	const ActionTargetKeys& live) noexcept;
-
 [[nodiscard]] constexpr bool action_would_recurse(
 	std::uint32_t target_scancode, int triggering_scancode) noexcept
 {
@@ -124,22 +108,22 @@ inline constexpr std::uint32_t custom_action_count = 12;
 
 /**
  * Decide whether an Action press may enter dispatch before its ordinary cost, cooldown, and
- * resource checks. A live cast protects the graph until the committed cuttable span; the sole
- * exception is a costless Power Attack, which is allowed to cut that span. A retired
+ * resource checks. A live cast protects the graph until the committed cuttable span. Inside that
+ * span any costless Action is admitted, and accepting it cuts the committed cast -- mirroring what
+ * the physical key would do had the player pressed it directly. SH2 does not classify an Action as
+ * an attack: policing which key events "should" cut is not this framework's job. A costed Action
+ * never cuts and stays refused while any cast is live, so its own GCD can never stack on one.
+ * Outside the cuttable span -- charging, pre-commit -- a live cast refuses every Action. A retired
  * follow-through has no live casting instance and therefore does not reopen the whole-instance
- * gate; the existing attack cut seam still limits who can end it. Keeping this pure makes the
- * safety rule testable without constructing the native casting controller.
+ * gate. Keeping this pure makes the safety rule testable without constructing the native casting
+ * controller.
  */
 [[nodiscard]] constexpr bool action_press_is_admitted(
 	bool action_costed,
-	bool action_attack,
 	bool has_live_cast,
 	bool committed_cuttable) noexcept
 {
-	if (!has_live_cast) {
-		return true;
-	}
-	return !action_costed && action_attack && committed_cuttable;
+	return !has_live_cast || (!action_costed && committed_cuttable);
 }
 
 void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay);

@@ -2024,14 +2024,16 @@ namespace SpellHotbar::casts::CastingController {
 			return false;
 		}
 
-		// Both OCPA keys are read on every press, not just for the ocpa_power target: a captured
-		// key can be OCPA's own hotkey, and action_input_is_attack needs the live values to see it.
 		ActionTargetKeys live_targets{};
-		const auto live_ocpa = Input::resolve_ocpa_keys_live();
-		live_targets.ocpa_power = live_ocpa.power;
-		live_targets.ocpa_dual = live_ocpa.dual;
-		if (action->target == ActionTargetSource::dodge_hotkey) {
+		switch (action->target) {
+		case ActionTargetSource::ocpa_power:
+			live_targets.ocpa_power = Input::resolve_ocpa_keys_live().power;
+			break;
+		case ActionTargetSource::dodge_hotkey:
 			live_targets.dodge_hotkey = Input::resolve_dodge_hotkey_live();
+			break;
+		case ActionTargetSource::captured:
+			break;
 		}
 		const ActionInput target = resolve_action_input(*action, live_targets);
 		if (!target.is_bound()) {
@@ -2076,17 +2078,16 @@ namespace SpellHotbar::casts::CastingController {
 		}
 
 		// A live cast protects the graph for every Action, including free Dodge and custom rows.
-		// The only live-cast cut-through is a costless Power Attack during the committed, cuttable
-		// Driver Cast span. Once the instance retires, ordinary Action admission resumes; the cut
-		// helper below still limits follow-through teardown to attack-shaped Actions. Keep this gate
-		// ahead of cooldown/resource work so a refused press has no side effects.
+		// The live-cast cut-through is any costless Action pressed during the committed, cuttable
+		// Driver Cast span; SH2 does not classify Actions as attacks. Once the instance retires,
+		// ordinary Action admission resumes. Keep this gate ahead of cooldown/resource work so a
+		// refused press has no side effects.
 		const bool committed_cuttable = is_committed_cast_holding_graph();
-		const bool action_attack = action_input_is_attack(*action, target, live_targets);
-		if (!action_press_is_admitted(action->is_costed(), action_attack, current_cast != nullptr,
+		if (!action_press_is_admitted(action->is_costed(), current_cast != nullptr,
 			committed_cuttable)) {
 			logger::info(
-				"SH2 action: Action {} refused while a live cast is active (costed={}, attack={}, committed={}, follow_through={})",
-				action_id, action->is_costed(), action_attack, committed_cuttable,
+				"SH2 action: Action {} refused while a live cast is active (costed={}, committed={}, follow_through={})",
+				action_id, action->is_costed(), committed_cuttable,
 				is_cuttable_follow_through());
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
@@ -2185,9 +2186,12 @@ namespace SpellHotbar::casts::CastingController {
 		});
 
 		// This is ticket 10's cut, not a new SH2 cast. The injected event does not revisit this
-		// input hook, so the controller must perform the graph teardown explicitly for a Power
-		// Attack Action after its down edge has been accepted.
-		if (!action->is_costed() && action_attack) {
+		// input hook, so the controller must perform the graph teardown itself after the down edge
+		// has been accepted. It cuts for ANY costless Action admitted in the committed cuttable
+		// span, because the owner ruled the Action must behave exactly as the physical key would
+		// have; a send-side graph hook (follow-up ticket) will make the physical path
+		// source-agnostic too.
+		if (!action->is_costed() && committed_cuttable) {
 			cut_committed_cast_for_attack(pc);
 		}
 		logger::info("SH2 action: Action {} queued target device {} / scancode {} (slot {}, user_event='{}')",

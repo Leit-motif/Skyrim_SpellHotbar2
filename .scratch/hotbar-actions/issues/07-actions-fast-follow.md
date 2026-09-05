@@ -61,10 +61,10 @@ noted.
    is 10, which is why the count-moved check identifies the slot just written.
 8. **`is_attack()` is `target == ocpa_power` only.** A captured B key is an identical target
    with `is_attack() == false`, so it does not cut a committed cast (ticket 04 cell 3).
-   Resolved 2026-09-05: new pure `action_input_is_attack(action, resolved, live)` also reads a
-   captured keyboard key equal to the live OCPA power or dual hotkey as an attack.
-   `try_start_action` resolves both OCPA keys on every press and uses the helper for the
-   admission gate, the post-acceptance cut, and the refusal log. Unit tested.
+   Decided 2026-09-05: superseded -- no attack classification at all. Any costless Action is
+   admitted during the committed cuttable span and cuts the cast; costed Actions stay refused.
+   Owner: "we're being too restrictive by trying to police key events through our framework."
+   The OCPA readers go with the send-side graph hook ticket (08).
 9. **Action overlays are a global JSON sidecar, not co-save state.** Names, icons, targets,
    and costs are shared across characters. State this in ticket 02 cell 6 or move them.
    Decided 2026-09-05: accepted as a global sidecar, no code. Recorded in ticket 02 cell 6 and

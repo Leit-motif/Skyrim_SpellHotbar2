@@ -33,11 +33,6 @@ bool ActionDefinition::is_costed() const noexcept
 		positive_or_zero(gcd) > 0.0f;
 }
 
-bool ActionDefinition::is_attack() const noexcept
-{
-	return target == ActionTargetSource::ocpa_power;
-}
-
 std::vector<ActionDefinition> default_action_catalogue()
 {
 	std::vector<ActionDefinition> actions;
@@ -84,20 +79,6 @@ ActionInput resolve_action_input(
 		return ActionInput{ action.captured_device, action.captured_scancode };
 	}
 	return {};
-}
-
-bool action_input_is_attack(
-	const ActionDefinition& action, const ActionInput& resolved,
-	const ActionTargetKeys& live) noexcept
-{
-	if (action.target == ActionTargetSource::ocpa_power) {
-		return true;
-	}
-	if (!resolved.is_bound() || resolved.device != ActionInputDevice::keyboard) {
-		return false;
-	}
-	return (live.ocpa_power != 0 && resolved.dx_scancode == live.ocpa_power) ||
-		(live.ocpa_dual != 0 && resolved.dx_scancode == live.ocpa_dual);
 }
 
 void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay)
