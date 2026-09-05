@@ -56,3 +56,35 @@ Open owner cells (physical hands required; injected input cannot prove a hold):
 - [ ] Opening a menu or changing mode mid-hold leaves no stuck Block.
 - [ ] Save then load while holding leaves no stuck control; log shows `SH2 action: target released (... reason=retry)` after the load.
 - [ ] Twelve rows `Action 1`..`Action 12` visible in the Actions tab; existing overlays and names preserved.
+
+### Owner live test of d7b0b3a (2026-09-05 11:49–11:52)
+
+Owner: "i am in-game, have tested, and everything seems to be functioning correctly."
+
+Log (`SpellHotbar2.log`, PID 95380 session, save loaded 11:46:12):
+- 15 Action downs, 15 ups, every up logged `target released (... reason=source up)`. No
+  `release pending`, `reason=retry`, `refused`, `no room`, or `abandoning` lines.
+- Action 100 in slot 7 -> keyboard 47 (V, the Timed Block hotkey — owner: "i meant timed block. not native block"): holds of 1.83 s, 3.68 s, 2.13 s, 1.05 s with
+  per-frame `queued held` mirrors carrying the source held duration, then a paired up.
+- Action 101 in slot 8 -> 48 (B), later rebound to 79 (Numpad 1, OCPA power): repeated taps of
+  0.10–0.94 s, each paired.
+- Action 102 in slot 6 -> 81 (Numpad 3, TK Dodge): four taps of 0.12–0.15 s, each paired.
+- `user_event=''` on every edge. The winning controlmap (`ZZZ - Personal Bindings`) maps
+  `Left Attack/Block` and `Right Attack/Block` to mouse only (keyboard `0xff`), so none of
+  these keys have an engine event; they are mod hotkeys, and the empty name is the correct
+  resolution. Whether an engine-mapped key resolves its name is untested (fast-follow 07 #4).
+
+Cells this closes (owner-confirmed behavior plus paired log edges):
+- [x] Held Action slot mirrors the source hold and releases on source up (V, Timed Block).
+- [x] Repeated tap and hold on the same slot behave like the physical key.
+- [x] Rebinding a slot's Action target between presses takes effect (48 -> 79 on slot 8).
+- [x] Twelve rows usable: Actions 100–102 bound and fired from the shipped list.
+
+Still open (not exercised in this session):
+- [ ] Menu open or input-mode change mid-hold leaves no stuck input.
+- [ ] Save then load mid-hold: `reason=retry` line after the load, no stuck control.
+- [ ] A costed Action charges once for a long hold.
+- [ ] A key that has an engine ControlMap event resolves a non-empty `user_event` and the
+      engine control responds.
+- [ ] Mouse-button and gamepad targets.
+- [ ] Modifier held with the slot key.
