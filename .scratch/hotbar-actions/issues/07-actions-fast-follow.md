@@ -83,5 +83,8 @@ noted.
 - [ ] 1 and 3 fixed natively; 4 decided; build; CTest; redeploy; owner re-runs the hold/release cells.
 - [ ] 2 and 5 decided and recorded in ticket 04.
 - [ ] 6–16 addressed or explicitly declined with one line each.
+- [ ] Save-then-load while holding an Action exercised once on a fresh save (the deferred
+      `kPreLoadGame` release, expect `reason=retry`); if the save made mid-hold hangs post-thaw
+      like Save6 did, that becomes finding 19.
 - [ ] 18 retested against 6ad3dd5 and attributed.
 - [ ] 17: tests added for the seams that survive the above.

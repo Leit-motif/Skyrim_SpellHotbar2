@@ -121,3 +121,17 @@ Still open (not exercised in this session):
   state at save time is the open suspect. Owner clears the hung process; relaunch with SHIFT
   held to skip the auto-load and load Save5.
 
+### Door transition mid-hold (13:05, Save5 session)
+
+Owner: "went through a door while holding. It retained the held state, and then when I let
+go, it dropped the block cleanly. I pressed the block again, and it held and released cleanly."
+Log: down 13:05:04.576, up 13:05:16.540 with `held=10.49` (the held clock paused for the load
+screen), `reason=source up`; re-press 13:05:17.6–13:05:18.4 paired. No `pending`, `retry`, or
+`dropped live cast` lines: a cell transition is not a game load, so this proves the hold
+survives a loading screen but does not exercise the deferred release at `kPreLoadGame`.
+
+- [x] Hold survives a cell-transition load screen and releases on source up; re-press clean.
+- [ ] Save then load while holding (deferred release, `reason=retry`) remains unexercised. The
+      one attempt hit Save6, which hangs post-thaw independent of this plugin's co-save. Left
+      open; fast-follow 07 owns it together with the Save6 question.
+
