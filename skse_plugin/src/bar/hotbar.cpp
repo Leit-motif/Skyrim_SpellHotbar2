@@ -3,6 +3,7 @@
 #include "../logger/logger.h"
 #include "../storage/storage.h"
 #include "hotbars.h"
+#include "../game_data/action_definition.h"
 #include "../game_data/game_data.h"
 #include "../rendering/render_manager.h"
 #include "../casts/casting_controller.h"
@@ -371,9 +372,18 @@ namespace SpellHotbar
                 p = ImGui::GetCursorScreenPos();
             }
 
-            const bool drew_icon = (skill.type == slot_type::weapon_art)
-                ? RenderManager::draw_art_icon(skill.art_id, icon_size, skill.color)
-                : RenderManager::draw_skill(skill.formID, icon_size, skill.color);
+            bool drew_icon{ false };
+            if (skill.type == slot_type::action) {
+                if (const ActionDefinition* action = GameData::get_action(skill.action_id)) {
+                    drew_icon = RenderManager::draw_art_icon_fields(action->icon_form, action->icon, icon_size, skill.color);
+                }
+            }
+            else if (skill.type == slot_type::weapon_art) {
+                drew_icon = RenderManager::draw_art_icon(skill.art_id, icon_size, skill.color);
+            }
+            else {
+                drew_icon = RenderManager::draw_skill(skill.formID, icon_size, skill.color);
+            }
             if (!drew_icon) {
                 RenderManager::draw_bg(icon_size);
             } else {
@@ -695,6 +705,7 @@ namespace SpellHotbar
         GameData::Spell_cast_data skill_dat;
         bool has_spell_proc{ false };
         auto form = RE::TESForm::LookupByID(skill.formID);
+        const ActionDefinition* action = skill.type == slot_type::action ? GameData::get_action(skill.action_id) : nullptr;
         RE::SpellItem* spell_item = nullptr;
         if (form) {
             skill_dat = GameData::get_spell_data(form, true, true);
@@ -723,9 +734,17 @@ namespace SpellHotbar
         int alpha_i = static_cast<int>(255 * alpha);
         ImVec4 color = SpellHotbarImColor(skill.color);
         color.w = alpha;
-        const bool drew_icon = (skill.type == slot_type::weapon_art)
-            ? RenderManager::draw_art_icon(skill.art_id, icon_size, SpellHotbarImColor(color))
-            : RenderManager::draw_skill(skill.formID, icon_size, SpellHotbarImColor(color));
+        bool drew_icon{ false };
+        if (action != nullptr) {
+            drew_icon = RenderManager::draw_art_icon_fields(action->icon_form, action->icon, icon_size,
+                SpellHotbarImColor(color));
+        }
+        else if (skill.type == slot_type::weapon_art) {
+            drew_icon = RenderManager::draw_art_icon(skill.art_id, icon_size, SpellHotbarImColor(color));
+        }
+        else {
+            drew_icon = RenderManager::draw_skill(skill.formID, icon_size, SpellHotbarImColor(color));
+        }
         if (!drew_icon) {
             RenderManager::draw_bg(icon_size, alpha);
         }
@@ -757,7 +776,23 @@ namespace SpellHotbar
                 RenderManager::draw_highlight_overlay(p, icon_size, IM_COL32(127, 127, 255, alpha_i));
             }
 
-            if (skill.type == slot_type::weapon_art) {
+            if (skill.type == slot_type::action) {
+                float cd_prog{ 0.0f };
+                if (action != nullptr && action->is_costed()) {
+                    auto [gt_prog, gt_dur] = GameData::get_action_gametime_cooldown(game_time, skill.action_id);
+                    if (gt_dur > 0.0f) {
+                        cd_prog = gt_prog;
+                    }
+                    else if (gcd_prog > 0.0f) {
+                        cd_prog = gcd_prog;
+                    }
+                }
+                if (cd_prog > 0.0f) {
+                    RenderManager::draw_cd_overlay(p, icon_size, cd_prog,
+                        IM_COL32(255, 255, 255, alpha_i));
+                }
+            }
+            else if (skill.type == slot_type::weapon_art) {
                 const ArtDefinition* art = GameData::get_art(skill.art_id);
                 if (art && !art_class_is_live(art->art_class, equipped_type)) {
                     RenderManager::draw_cd_overlay(p, icon_size, 0.0f, IM_COL32(255, 255, 255, alpha_i));

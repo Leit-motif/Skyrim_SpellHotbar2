@@ -14,6 +14,8 @@ $TAB_TEXT_SCROLLS	 Scrolls
 $TAB_TEXT_POTIONS	 Potions
 $TAB_TEXT_POISONS	 Poisons
 $TAB_TEXT_FOOD	 Food
+$TAB_TEXT_ARTS	 Abilities
+$TAB_TEXT_ACTIONS	 Actions
 $FILTER_TEXT	Filter text
 $COLUMN_DRAG	Drag Icon
 $COLUMN_NAME	Name
@@ -30,6 +32,8 @@ $TYPE_SHOUT	Shout
 $TYPE_SCROLL	Scroll
 $TYPE_POISON	Poison
 $TYPE_FOOD	Food
+$TYPE_ABILITY	Ability
+$TYPE_ACTION	Action
 $DASH	-
 $ICON_SIZE	Icon Size
 $BIND_MENU	Binding Menu
@@ -112,6 +116,20 @@ $ANIMATION2	Animation2
 $SAVE	Save
 $POTION_EDITOR	Potion Editor
 $EDIT_ICON	Edit Icon
+$ABILITY_EDITOR	Ability Editor
+$ACTION_EDITOR	Action Editor
+$ART_CLASS	Ability Class
+$ACTION_KIND	Kind
+$ACTION_KIND_PHYSICAL	Physical scancode
+$ACTION_TARGET	Target
+$ACTION_TARGET_OCPA	OCPA power attack
+$ACTION_TARGET_DODGE	Dodge hotkey
+$ACTION_TARGET_CAPTURED	Captured scancode
+$ACTION_SCANCODE	Scancode
+$STAMINA_COST	Stamina
+$MAGICKA_COST	Magicka
+$HEALTH_COST	Health
+$COOLDOWN_DAYS	Cooldown (days)
 $BAR_TEXT	Bar Text
 $BAR_DRAG_INFO_ESC	ESC: finish dragging
 $BAR_DRAG_INFO_TAB	TAB: leave menus while still dragging

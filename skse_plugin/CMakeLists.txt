@@ -130,6 +130,8 @@ set(source_files src/plugin.cpp
                  src/rendering/art_icon_edit_dialog.cpp
                  src/rendering/ability_editor.h
                  src/rendering/ability_editor.cpp
+                 src/rendering/action_editor.h
+                 src/rendering/action_editor.cpp
                  src/game_data/art_pack_gen.h
                  src/game_data/art_pack_gen.cpp
                  src/game_data/custom_ability_runtime.h

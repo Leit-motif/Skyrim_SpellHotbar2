@@ -4,10 +4,12 @@
 #include "../input/keybinds.h"
 #include "gui_tab_button.h"
 #include "../bar/hotbars.h"
+#include "../game_data/action_definition.h"
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
 #include "art_icon_edit_dialog.h"
 #include "ability_editor.h"
+#include "action_editor.h"
 
 namespace SpellHotbar::BindMenu {
 
@@ -16,6 +18,11 @@ namespace SpellHotbar::BindMenu {
     const char* art_row_type_key(uint32_t)
     {
         return "$TYPE_ABILITY";
+    }
+
+    const char* action_row_type_key(uint32_t)
+    {
+        return "$TYPE_ACTION";
     }
 
     // TICKET 17. The Abilities list and the bound-slot strip paint the same three tiers, so both
@@ -42,6 +49,8 @@ namespace SpellHotbar::BindMenu {
     std::vector<RE::TESForm*> list_of_skills_filtered;
     std::vector<uint32_t> list_of_arts;
     std::vector<uint32_t> list_of_arts_filtered;
+    std::vector<uint32_t> list_of_actions;
+    std::vector<uint32_t> list_of_actions_filtered;
 
     std::array<std::string, 6> rank_texts = { "$DASH", "$RANK_NOVICE", "$RANK_APPRENTICE", "$RANK_ADEPT", "$RANK_EXPERT", "$RANK_MASTER"};
     std::array<std::string, 4> rank_texts_shout = { "$WORDS_0", "$WORDS_1", "$WORDS_2", "$WORDS_3" };
@@ -49,7 +58,7 @@ namespace SpellHotbar::BindMenu {
 
     std::array<std::string, 10> type_texts = { "$TYPE_POTION", "$TYPE_SPELL", "$TYPE_LESSER_POWER", "$TYPE_GREATER_POWER", "$TYPE_SHOUT", "$TYPE_SCROLL", "$TYPE_POISON", "$TYPE_FOOD", "$TYPE_ABILITY", "$DASH" };
 
-    std::array<std::string, 14> tab_texts = {
+    std::array<std::string, 15> tab_texts = {
         "$TAB_TEXT_ALL",
         "$TAB_TEXT_SPELLS",
         "$TAB_TEXT_ALTERATION",
@@ -64,6 +73,7 @@ namespace SpellHotbar::BindMenu {
         "$TAB_TEXT_POISONS",
         "$TAB_TEXT_FOOD",
         "$TAB_TEXT_ARTS",
+        "$TAB_TEXT_ACTIONS",
     };
 
     enum tab_index : uint8_t {
@@ -80,34 +90,45 @@ namespace SpellHotbar::BindMenu {
         TabIndex_Potions,
         TabIndex_Poisons,
         TabIndex_Food,
-        TabIndex_Arts
+        TabIndex_Arts,
+        TabIndex_Actions
     };
 
     struct Dragged_skill {
         const RE::TESForm* form;
         uint32_t art_id;
+        uint32_t action_id;
         SlottedSkill* source_slot;
 
-        Dragged_skill() : form(nullptr), art_id(0), source_slot(nullptr) {};
+        Dragged_skill() : form(nullptr), art_id(0), action_id(0), source_slot(nullptr) {};
 
         void set_dragged(const RE::TESForm* tesform) {
             form = tesform;
             art_id = 0;
+            action_id = 0;
             source_slot = nullptr;
         }
         void set_dragged(const RE::TESForm* tesform, SlottedSkill* source) {
             form = tesform;
             art_id = 0;
+            action_id = 0;
             source_slot = source;
         }
         void set_dragged_art(uint32_t id, SlottedSkill* source = nullptr) {
             form = nullptr;
             art_id = id;
+            action_id = 0;
+            source_slot = source;
+        }
+        void set_dragged_action(uint32_t id, SlottedSkill* source = nullptr) {
+            form = nullptr;
+            art_id = 0;
+            action_id = id;
             source_slot = source;
         }
 
         inline bool has_dragged_from() const {
-            return form != nullptr || art_id != 0;
+            return form != nullptr || art_id != 0 || action_id != 0;
         }
 
         inline RE::FormID get_form_id() const
@@ -116,6 +137,9 @@ namespace SpellHotbar::BindMenu {
         }
 
         inline BindPayload to_payload() const {
+            if (action_id != 0) {
+                return action_bind(action_id);
+            }
             if (art_id != 0) {
                 return art_bind(art_id);
             }
@@ -159,12 +183,15 @@ namespace SpellHotbar::BindMenu {
     {
         ArtIconEditor::close();
         AbilityEditor::close();
+        ActionEditor::close();
         show_frame = false;
 
         list_of_skills.clear();
         list_of_skills_filtered.clear();
         list_of_arts.clear();
         list_of_arts_filtered.clear();
+        list_of_actions.clear();
+        list_of_actions_filtered.clear();
     }
 
     void load_arts() {
@@ -172,10 +199,17 @@ namespace SpellHotbar::BindMenu {
         list_of_arts_filtered.clear();
     }
 
+    void load_actions()
+    {
+        list_of_actions = GameData::list_action_ids();
+        list_of_actions_filtered.clear();
+    }
+
     void load_spells() {
         list_of_skills.clear();
         list_of_skills_filtered.clear();
         load_arts();
+        load_actions();
 
         RE::PlayerCharacter* pc = RE::PlayerCharacter::GetSingleton();
         if (pc && pc->GetActorBase() != nullptr) {
@@ -362,10 +396,31 @@ namespace SpellHotbar::BindMenu {
         }
     }
 
+    void update_action_filter(const std::string& filter_text)
+    {
+        list_of_actions_filtered.clear();
+        list_of_actions_filtered.reserve(list_of_actions.size());
+        for (const uint32_t id : list_of_actions) {
+            const ActionDefinition* action = GameData::get_action(id);
+            if (action == nullptr) {
+                continue;
+            }
+            if (filter_text.empty() || action->display_name.find(filter_text) != std::string::npos) {
+                list_of_actions_filtered.push_back(id);
+            }
+        }
+    }
+
     void update_filter(const std::string filter_text, uint8_t tab_ind) {
         if (tab_ind == TabIndex_Arts) {
             list_of_skills_filtered.clear();
             update_art_filter(filter_text);
+            return;
+        }
+        if (tab_ind == TabIndex_Actions) {
+            list_of_skills_filtered.clear();
+            list_of_arts_filtered.clear();
+            update_action_filter(filter_text);
             return;
         }
         list_of_arts_filtered.clear();
@@ -559,6 +614,26 @@ namespace SpellHotbar::BindMenu {
         }
     }
 
+    void set_drag_source_action(uint32_t action_id, float scale_factor, SlottedSkill* source = nullptr)
+    {
+        if (action_id == 0) {
+            return;
+        }
+        const ActionDefinition* action = GameData::get_action(action_id);
+        if (action == nullptr) {
+            return;
+        }
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+            current_dragged_skill.set_dragged_action(action_id, source);
+            ImGui::SetDragDropPayload("SPELL_SLOT", &current_dragged_skill, sizeof(Dragged_skill));
+            const int icon_size = static_cast<int>(std::round(60.0f * scale_factor));
+            RenderManager::draw_art_icon_fields(action->icon_form, action->icon, icon_size);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(action->display_name.c_str());
+            ImGui::EndDragDropSource();
+        }
+    }
+
     void apply_payload_to_skill(SlottedSkill& skill, BindPayload payload)
     {
         const SlotBind next = apply_bind_drop(SlotBind{ .form_id = skill.formID, .art_id = skill.art_id, .action_id = skill.action_id }, payload);
@@ -642,6 +717,10 @@ namespace SpellHotbar::BindMenu {
             AbilityEditor::draw();
             return;
         }
+        if (ActionEditor::is_open()) {
+            ActionEditor::draw();
+            return;
+        }
 
         ImGui::PushFont(font_text);
         static constexpr ImGuiWindowFlags window_flag = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground;
@@ -686,6 +765,8 @@ namespace SpellHotbar::BindMenu {
         Rendering::GuiTabButton::draw("##TabPoisons", TabIndex_Poisons, GameData::DefaultIconType::TAB_POISONS, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Poisons])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabFood", TabIndex_Food, GameData::DefaultIconType::TAB_FOOD, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Food])); ImGui::SameLine();
         Rendering::GuiTabButton::draw("##TabAbilities", TabIndex_Arts, GameData::DefaultIconType::GREATER_POWER, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Arts]));
+        ImGui::SameLine();
+        Rendering::GuiTabButton::draw("##TabActions", TabIndex_Actions, GameData::DefaultIconType::GREATER_POWER, tab_icon_size, tab_index, filter_dirty, translate_c(tab_texts[TabIndex_Actions]));
         ImGui::PopStyleVar();
 
         int bsize = static_cast<int>(30.0f * scale_factor);
@@ -764,7 +845,7 @@ namespace SpellHotbar::BindMenu {
                 if (sort_specs->SpecsDirty)
                 {
                     s_current_sort_specs = sort_specs;
-                    if (tab_index != TabIndex_Arts && !list_of_skills.empty()) {
+                    if (tab_index != TabIndex_Arts && tab_index != TabIndex_Actions && !list_of_skills.empty()) {
                         std::sort(list_of_skills.begin(), list_of_skills.end(), compare_entries_for_sort);
                     }
                     sort_specs->SpecsDirty = false;
@@ -780,7 +861,63 @@ namespace SpellHotbar::BindMenu {
                 filter_dirty = false;
             }
 
-            if (tab_index == TabIndex_Arts) {
+            if (tab_index == TabIndex_Actions) {
+                SpellHotbarImGuiListClipper clipper;
+                clipper.Begin(static_cast<int>(list_of_actions_filtered.size()));
+                while (clipper.Step()) {
+                    for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                        const uint32_t action_id = list_of_actions_filtered[static_cast<size_t>(row_n)];
+                        const ActionDefinition* action = GameData::get_action(action_id);
+                        if (action == nullptr) {
+                            continue;
+                        }
+
+                        ImGui::PushID("action");
+                        ImGui::PushID(static_cast<int>(action_id));
+                        ImGui::TableNextRow();
+
+                        ImGui::TableNextColumn();
+                        const ImVec2 icon_pos = ImGui::GetCursorScreenPos();
+                        const ImVec2 icon_btn_size(static_cast<float>(table_icon_size),
+                            static_cast<float>(table_icon_size));
+                        ImGui::InvisibleButton("##action_icon", icon_btn_size);
+                        if (ImGui::IsItemHovered()) {
+                            RenderManager::show_tooltip(action->display_name,
+                                translate(action_row_type_key(action_id)));
+                        }
+                        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+                            ActionEditor::open(action_id);
+                        }
+                        RenderManager::draw_art_icon_fields_in_editor(action->icon_form, action->icon,
+                            icon_pos, table_icon_size);
+                        if (!ArtIconEditor::is_open() && !AbilityEditor::is_open() && !ActionEditor::is_open()) {
+                            set_drag_source_action(action_id, scale_factor);
+                        }
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(action->display_name.c_str());
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton(translate_c("$EDIT"))) {
+                            ActionEditor::open(action_id);
+                        }
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c(action_row_type_key(action_id)));
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(translate_c("$DASH"));
+
+                        ImGui::PopID();
+                        ImGui::PopID();
+                    }
+                }
+            }
+            else if (tab_index == TabIndex_Arts) {
                 SpellHotbarImGuiListClipper clipper;
                 clipper.Begin(static_cast<int>(list_of_arts_filtered.size()));
                 while (clipper.Step())
@@ -1167,7 +1304,14 @@ namespace SpellHotbar::BindMenu {
                 }
             }
             else {
-                if (skill.type == slot_type::weapon_art) {
+                if (skill.type == slot_type::action) {
+                    const ActionDefinition* action = GameData::get_action(skill.action_id);
+                    if (action != nullptr) {
+                        drawn_skill = RenderManager::draw_art_icon_fields_in_editor(action->icon_form,
+                            action->icon, bpos, icon_size, skill.color);
+                    }
+                }
+                else if (skill.type == slot_type::weapon_art) {
                     drawn_skill = RenderManager::draw_art_icon_in_editor(skill.art_id, bpos, icon_size, skill.color);
                     if (slot_tint == ArtBarTint::dead) {
                         RenderManager::draw_cd_overlay(bpos, icon_size, 0.0f, IM_COL32_WHITE);
@@ -1186,7 +1330,10 @@ namespace SpellHotbar::BindMenu {
                 if (!skill.isEmpty()) {
                     source_skill = bar.get_skill_in_bar_ptr(i, mod);
                 }
-                if (skill.type == slot_type::weapon_art) {
+                if (skill.type == slot_type::action) {
+                    set_drag_source_action(skill.action_id, scale_factor, source_skill);
+                }
+                else if (skill.type == slot_type::weapon_art) {
                     set_drag_source_art(skill.art_id, scale_factor, source_skill);
                 }
                 else {
@@ -1264,6 +1411,13 @@ namespace SpellHotbar::BindMenu {
                 const ArtDefinition* art = GameData::get_art(skill.art_id);
                 if (art != nullptr) {
                     RenderManager::show_tooltip(art->display_name, translate(art_row_type_key(skill.art_id)));
+                }
+            }
+            else if (button_hovered && skill.type == slot_type::action) {
+                const ActionDefinition* action = GameData::get_action(skill.action_id);
+                if (action != nullptr) {
+                    RenderManager::show_tooltip(action->display_name,
+                        translate(action_row_type_key(skill.action_id)));
                 }
             }
             ImGui::SameLine();
