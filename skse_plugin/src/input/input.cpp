@@ -2,6 +2,7 @@
 #include <chrono>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <unordered_map>
 #include "input_event_adapter.h"
 #include "keybinds.h"
@@ -15,6 +16,7 @@
 #include "../storage/storage.h"
 #include "modes.h"
 #include "../rendering/advanced_bind_menu.h"
+#include "../game_data/action_definition.h"
 
 namespace {
     thread_local SpellHotbar::Input::InputEventAdapter<RE::InputEvent> input_event_adapter;
@@ -92,6 +94,20 @@ namespace SpellHotbar::Input {
         }
 
         return std::make_tuple(key, dev);
+    }
+
+    std::optional<ActionInputDevice> action_input_device(RE::INPUT_DEVICE device)
+    {
+        switch (device) {
+        case RE::INPUT_DEVICE::kKeyboard:
+            return ActionInputDevice::keyboard;
+        case RE::INPUT_DEVICE::kMouse:
+            return ActionInputDevice::mouse;
+        case RE::INPUT_DEVICE::kGamepad:
+            return ActionInputDevice::gamepad;
+        default:
+            return std::nullopt;
+        }
     }
 
     namespace {
@@ -199,7 +215,20 @@ namespace SpellHotbar::Input {
                     bool is_pressed = bEvent->IsPressed();
 
                     auto& capture = Mcp::bind_capture();
-                    if (capture.armed()) {
+                    if (capture.action_armed()) {
+                        if (bEvent->IsDown()) {
+                            const bool is_escape =
+                                key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1;
+                            if (is_escape) {
+                                capture.apply_action_down_edge(true, ActionInputDevice::keyboard, -1);
+                            } else if (const auto device = action_input_device(key_device)) {
+                                const int dx = input_to_dx_scancode(
+                                    key_device, static_cast<uint8_t>(key_code));
+                                capture.apply_action_down_edge(false, *device, dx);
+                            }
+                        }
+                        captureEvent = true;
+                    } else if (capture.armed()) {
                         if (bEvent->IsDown()) {
                             const bool is_escape =
                                 key_device == RE::INPUT_DEVICE::kKeyboard && key_code == 1;
@@ -694,38 +723,128 @@ namespace SpellHotbar::Input {
         return read_dodge_hotkey_from_vfs();
     }
 
-    bool queue_keyboard_tap(uint32_t scancode)
+    namespace {
+
+        std::optional<uint32_t> gamepad_event_code(uint8_t key)
+        {
+            using GamepadKey = RE::BSWin32GamepadDevice::Keys::Key;
+            switch (key) {
+            case 0:
+                return static_cast<uint32_t>(GamepadKey::kUp);
+            case 1:
+                return static_cast<uint32_t>(GamepadKey::kDown);
+            case 2:
+                return static_cast<uint32_t>(GamepadKey::kLeft);
+            case 3:
+                return static_cast<uint32_t>(GamepadKey::kRight);
+            case 4:
+                return static_cast<uint32_t>(GamepadKey::kStart);
+            case 5:
+                return static_cast<uint32_t>(GamepadKey::kBack);
+            case 6:
+                return static_cast<uint32_t>(GamepadKey::kLeftThumb);
+            case 7:
+                return static_cast<uint32_t>(GamepadKey::kRightThumb);
+            case 8:
+                return static_cast<uint32_t>(GamepadKey::kLeftShoulder);
+            case 9:
+                return static_cast<uint32_t>(GamepadKey::kRightShoulder);
+            case 10:
+                return static_cast<uint32_t>(GamepadKey::kA);
+            case 11:
+                return static_cast<uint32_t>(GamepadKey::kB);
+            case 12:
+                return static_cast<uint32_t>(GamepadKey::kX);
+            case 13:
+                return static_cast<uint32_t>(GamepadKey::kY);
+            case 14:
+                return static_cast<uint32_t>(GamepadKey::kLeftTrigger);
+            case 15:
+                return static_cast<uint32_t>(GamepadKey::kRightTrigger);
+            default:
+                return std::nullopt;
+            }
+        }
+
+        std::optional<RE::INPUT_DEVICE> native_action_device(ActionInputDevice device)
+        {
+            switch (device) {
+            case ActionInputDevice::keyboard:
+                return RE::INPUT_DEVICE::kKeyboard;
+            case ActionInputDevice::mouse:
+                return RE::INPUT_DEVICE::kMouse;
+            case ActionInputDevice::gamepad:
+                return RE::INPUT_DEVICE::kGamepad;
+            }
+            return std::nullopt;
+        }
+
+    }  // namespace
+
+    bool queue_action_tap(const ActionInput& input)
     {
         auto queue = RE::BSInputEventQueue::GetSingleton();
         if (!queue) {
-            logger::error("action spike: BSInputEventQueue missing (scancode={})", scancode);
+            logger::error("SH2 action: BSInputEventQueue missing (device={}, scancode={})",
+                static_cast<int>(input.device), input.dx_scancode);
             return false;
         }
-        if (scancode == 0) {
-            logger::warn("action spike: scancode 0, not queued");
+        if (!input.is_bound() || input.dx_scancode > 281U) {
+            logger::warn("SH2 action: invalid physical target (device={}, scancode={})",
+                static_cast<int>(input.device), input.dx_scancode);
             return false;
         }
 
-        const auto device = RE::INPUT_DEVICE::kKeyboard;
+        const auto device = native_action_device(input.device);
+        if (!device) {
+            logger::warn("SH2 action: unsupported input device {}", static_cast<int>(input.device));
+            return false;
+        }
+
+        const auto [decoded_device, decoded_code] =
+            dx_scan_code_to_input(static_cast<int>(input.dx_scancode));
+        if (decoded_device != *device) {
+            logger::warn("SH2 action: device/scancode mismatch (device={}, scancode={})",
+                static_cast<int>(input.device), input.dx_scancode);
+            return false;
+        }
+
+        uint32_t event_code = decoded_code;
+        if (*device == RE::INPUT_DEVICE::kGamepad) {
+            const auto gamepad_code = gamepad_event_code(decoded_code);
+            if (!gamepad_code) {
+                logger::warn("SH2 action: unsupported gamepad scancode {}", input.dx_scancode);
+                return false;
+            }
+            event_code = *gamepad_code;
+        }
+
         const auto phases = keyboard_tap_phases();
         RE::ButtonEvent* events[2]{ nullptr, nullptr };
         for (size_t i = 0; i < phases.size(); ++i) {
-            events[i] = RE::ButtonEvent::Create(device, ""sv, scancode, phases[i].value, phases[i].held_duration);
+            events[i] = RE::ButtonEvent::Create(*device, ""sv, event_code,
+                phases[i].value, phases[i].held_duration);
             if (!events[i]) {
                 logger::error(
-                    "action spike: ButtonEvent::Create refused (device={}, scancode={}, value={}, held={}, accepted=false)",
-                    static_cast<int>(device), scancode, phases[i].value, phases[i].held_duration);
+                    "SH2 action: ButtonEvent::Create refused (device={}, scancode={}, event_code={}, value={}, held={}, accepted=false)",
+                    static_cast<int>(*device), input.dx_scancode, event_code, phases[i].value,
+                    phases[i].held_duration);
                 return false;
             }
         }
         for (size_t i = 0; i < phases.size(); ++i) {
             queue->PushOntoInputQueue(events[i]);
             logger::info(
-                "action spike: queued {} (device={}, scancode={}, value={}, held={}, accepted=true)",
-                phases[i].value > 0.0f ? "down" : "up", static_cast<int>(device), scancode, phases[i].value,
-                phases[i].held_duration);
+                "SH2 action: queued {} (device={}, scancode={}, event_code={}, value={}, held={}, accepted=true)",
+                phases[i].value > 0.0f ? "down" : "up", static_cast<int>(*device), input.dx_scancode,
+                event_code, phases[i].value, phases[i].held_duration);
         }
         return true;
+    }
+
+    bool queue_keyboard_tap(uint32_t scancode)
+    {
+        return queue_action_tap(ActionInput{ ActionInputDevice::keyboard, scancode });
     }
 
     std::tuple<RE::INPUT_DEVICE, uint8_t> get_shout_key_and_device()

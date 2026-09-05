@@ -1,6 +1,7 @@
 #pragma once
 
 #include "action_inject.h"
+#include "../game_data/action_definition.h"
 
 namespace SpellHotbar::Input {
 	static inline const char* sound_UISkillsBackward = "UISkillsBackward";
@@ -33,6 +34,8 @@ namespace SpellHotbar::Input {
 	/** Resolve TK Dodge's binding from the current VFS state at Action press time. */
 	uint32_t resolve_dodge_hotkey_live();
 	bool queue_keyboard_tap(uint32_t scancode);
+	/** Queue a physical Action using its persisted device and DX scancode. */
+	bool queue_action_tap(const ActionInput& input);
 
 	/**
 	* allowed to use powers, less restrictive than regular casts

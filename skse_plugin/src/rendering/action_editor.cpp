@@ -5,6 +5,7 @@
 #include "../game_data/action_definition.h"
 #include "../game_data/game_data.h"
 #include "../game_data/localization.h"
+#include "../mcp/bind_capture.h"
 
 #include <algorithm>
 #include <array>
@@ -22,12 +23,14 @@ namespace SpellHotbar::ActionEditor {
 		std::uint32_t draft_icon_form{ 0 };
 		ActionKind draft_kind{ ActionKind::physical_scancode };
 		ActionTargetSource draft_target{ ActionTargetSource::captured };
+		ActionInputDevice draft_captured_device{ ActionInputDevice::keyboard };
 		std::uint32_t draft_captured_scancode{ 0 };
 		float draft_stamina{ 0.0f };
 		float draft_magicka{ 0.0f };
 		float draft_health{ 0.0f };
 		float draft_cooldown_days{ 0.0f };
 		float draft_gcd{ 0.0f };
+		bool persist_failed{ false };
 
 		constexpr std::array<ActionKind, 1> kind_values{ ActionKind::physical_scancode };
 		constexpr std::array<ActionTargetSource, 3> target_values{
@@ -58,6 +61,28 @@ namespace SpellHotbar::ActionEditor {
 			return "$ACTION_TARGET_CAPTURED";
 		}
 
+		const char* action_input_device_key(ActionInputDevice device)
+		{
+			switch (device) {
+			case ActionInputDevice::keyboard:
+				return "$ACTION_DEVICE_KEYBOARD";
+			case ActionInputDevice::mouse:
+				return "$ACTION_DEVICE_MOUSE";
+			case ActionInputDevice::gamepad:
+				return "$ACTION_DEVICE_GAMEPAD";
+			}
+			return "$ACTION_DEVICE_KEYBOARD";
+		}
+
+		std::string captured_input_label()
+		{
+			if (draft_captured_scancode == 0) {
+				return translate("$ACTION_UNBOUND");
+			}
+			return translate(action_input_device_key(draft_captured_device)) + " (DX " +
+				std::to_string(draft_captured_scancode) + ")";
+		}
+
 		void load_from_action(const ActionDefinition& action)
 		{
 			name_buf.fill('\0');
@@ -67,6 +92,7 @@ namespace SpellHotbar::ActionEditor {
 			draft_icon_form = action.icon_form;
 			draft_kind = action.kind;
 			draft_target = action.target;
+			draft_captured_device = action.captured_device;
 			draft_captured_scancode = action.captured_scancode;
 			draft_stamina = std::max(action.stamina_cost, 0.0f);
 			draft_magicka = std::max(action.magicka_cost, 0.0f);
@@ -87,6 +113,7 @@ namespace SpellHotbar::ActionEditor {
 			action.icon_form = draft_icon_form;
 			action.kind = draft_kind;
 			action.target = draft_target;
+			action.captured_device = draft_captured_device;
 			action.captured_scancode = draft_captured_scancode;
 			action.stamina_cost = std::max(draft_stamina, 0.0f);
 			action.magicka_cost = std::max(draft_magicka, 0.0f);
@@ -147,6 +174,14 @@ namespace SpellHotbar::ActionEditor {
 			}
 		}
 
+		void update_captured_input_from_event()
+		{
+			if (const auto result = Mcp::bind_capture().take_action_capture_result(editing_action_id)) {
+				draft_captured_device = result->input.device;
+				draft_captured_scancode = result->input.dx_scancode;
+			}
+		}
+
 	}  // namespace
 
 	bool is_open()
@@ -162,13 +197,22 @@ namespace SpellHotbar::ActionEditor {
 		}
 		editing_action_id = action_id;
 		load_from_action(*action);
+		persist_failed = false;
 		show_dialog = true;
 	}
 
 	void close()
 	{
+		if (editing_action_id != 0) {
+			auto& capture = Mcp::bind_capture();
+			if (capture.action_armed() && capture.pending_action_id() == editing_action_id) {
+				capture.cancel();
+			}
+			capture.discard_action_capture_result(editing_action_id);
+		}
 		show_dialog = false;
 		editing_action_id = 0;
+		persist_failed = false;
 	}
 
 	void draw()
@@ -182,6 +226,7 @@ namespace SpellHotbar::ActionEditor {
 			close();
 			return;
 		}
+		update_captured_input_from_event();
 
 		static constexpr ImGuiWindowFlags window_flag =
 			ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground;
@@ -247,12 +292,26 @@ namespace SpellHotbar::ActionEditor {
 		}
 
 		const bool captured_target = draft_target == ActionTargetSource::captured;
-		if (!captured_target) {
+		if (captured_target) {
+			ImGui::Text("%s: %s", translate_c("$ACTION_SCANCODE"), captured_input_label().c_str());
+			ImGui::SameLine();
+			auto& capture = Mcp::bind_capture();
+			const bool capture_armed = capture.action_armed() &&
+				capture.pending_action_id() == editing_action_id;
+			const char* capture_key = capture_armed ? "$ACTION_CAPTURE_CANCEL" : "$ACTION_CAPTURE";
+			if (ImGui::Button(translate_id(capture_key).c_str())) {
+				if (capture_armed) {
+					capture.cancel();
+				} else {
+					capture.arm_action(editing_action_id);
+				}
+			}
+			if (capture_armed) {
+				ImGui::TextUnformatted(translate_c("$ACTION_CAPTURE_ARMED"));
+			}
+		} else {
 			ImGui::BeginDisabled();
-		}
-		ImGui::InputScalar(translate_id("$ACTION_SCANCODE").c_str(), ImGuiDataType_U32,
-			&draft_captured_scancode, nullptr, nullptr, "%u");
-		if (!captured_target) {
+			ImGui::Text("%s: %s", translate_c("$ACTION_SCANCODE"), captured_input_label().c_str());
 			ImGui::EndDisabled();
 		}
 
@@ -272,8 +331,11 @@ namespace SpellHotbar::ActionEditor {
 		RenderManager::set_large_font();
 		if (ImGui::Button(translate_id("$SAVE").c_str())) {
 			apply_to_action(*action);
-			GameData::persist_action_player_overlay(*action);
-			close();
+			if (GameData::persist_action_player_overlay(*action)) {
+				close();
+			} else {
+				persist_failed = true;
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button(translate_id("$RESET").c_str())) {
@@ -284,6 +346,10 @@ namespace SpellHotbar::ActionEditor {
 		ImGui::SameLine();
 		if (ImGui::Button(translate_id("$CANCEL").c_str())) {
 			close();
+		}
+		if (persist_failed) {
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "%s",
+				translate_c("$ACTION_SAVE_FAILED"));
 		}
 		RenderManager::revert_font();
 

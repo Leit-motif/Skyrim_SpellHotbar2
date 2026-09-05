@@ -1867,15 +1867,15 @@ namespace SpellHotbar::casts::CastingController {
 		case ActionTargetSource::captured:
 			break;
 		}
-		const std::uint32_t target_scancode = resolve_action_scancode(*action, live_targets);
-		if (target_scancode == 0) {
+		const ActionInput target = resolve_action_input(*action, live_targets);
+		if (!target.is_bound()) {
 			logger::info("SH2 action: Action {} has no resolved target", action_id);
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
-		if (action_would_recurse(target_scancode, keybind.get_dx_scancode())) {
+		if (action_would_recurse(target.dx_scancode, keybind.get_dx_scancode())) {
 			logger::warn("SH2 action: Action {} target {} equals slot {} binding; refusing recursion",
-				action_id, target_scancode, slot);
+				action_id, target.dx_scancode, slot);
 			RE::PlaySound(Input::sound_MagFail);
 			return false;
 		}
@@ -1942,7 +1942,7 @@ namespace SpellHotbar::casts::CastingController {
 			current_cast = std::make_unique<CastingInstanceAction>(action->gcd);
 		}
 
-		if (!Input::queue_keyboard_tap(target_scancode)) {
+		if (!Input::queue_action_tap(target)) {
 			if (gcd_started) {
 				// This instance has no graph state or SpellFire arming of its own. Do not use
 				// reset_cast() here: a stale armed payload may still own the global SpellFire latch
@@ -1965,8 +1965,8 @@ namespace SpellHotbar::casts::CastingController {
 				av->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina,
 					action->stamina_cost);
 			}
-			logger::warn("SH2 action: Action {} target {} was not queued; transaction rolled back",
-				action_id, target_scancode);
+			logger::warn("SH2 action: Action {} target device {} / scancode {} was not queued; transaction rolled back",
+				action_id, static_cast<int>(target.device), target.dx_scancode);
 			return false;
 		}
 
@@ -1976,7 +1976,8 @@ namespace SpellHotbar::casts::CastingController {
 		if (!action->is_costed() && action->is_attack()) {
 			cut_committed_cast_for_attack(pc);
 		}
-		logger::info("SH2 action: Action {} queued target {} (slot {})", action_id, target_scancode, slot);
+		logger::info("SH2 action: Action {} queued target device {} / scancode {} (slot {})", action_id,
+			static_cast<int>(target.device), target.dx_scancode, slot);
 		return true;
 	}
 

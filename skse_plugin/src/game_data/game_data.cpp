@@ -1495,6 +1495,8 @@ namespace SpellHotbar::GameData {
         static_cast<std::uint32_t>(ActionKind::physical_scancode);
     constexpr std::uint32_t action_target_max =
         static_cast<std::uint32_t>(ActionTargetSource::captured);
+    constexpr std::uint32_t action_input_device_max =
+        static_cast<std::uint32_t>(ActionInputDevice::gamepad);
 
     std::filesystem::path user_action_overlays_path()
     {
@@ -1537,6 +1539,7 @@ namespace SpellHotbar::GameData {
         entry.AddMember("icon_form", overlay.icon_form, allocator);
         entry.AddMember("kind", static_cast<std::uint32_t>(overlay.kind), allocator);
         entry.AddMember("target", static_cast<std::uint32_t>(overlay.target), allocator);
+        entry.AddMember("captured_device", static_cast<std::uint32_t>(overlay.captured_device), allocator);
         entry.AddMember("captured_scancode", overlay.captured_scancode, allocator);
         entry.AddMember("stamina_cost", overlay.stamina_cost, allocator);
         entry.AddMember("magicka_cost", overlay.magicka_cost, allocator);
@@ -1703,6 +1706,14 @@ namespace SpellHotbar::GameData {
                 }
                 overlay.target = static_cast<ActionTargetSource>(target);
             }
+            std::uint32_t captured_device = 0;
+            if (read_action_uint(object, "captured_device", captured_device)) {
+                if (captured_device > action_input_device_max) {
+                    errors = true;
+                    continue;
+                }
+                overlay.captured_device = static_cast<ActionInputDevice>(captured_device);
+            }
             if (object.HasMember("name") && object["name"].IsString()) {
                 overlay.display_name = object["name"].GetString();
             }
@@ -1711,6 +1722,11 @@ namespace SpellHotbar::GameData {
             }
             read_action_uint(object, "icon_form", overlay.icon_form);
             read_action_uint(object, "captured_scancode", overlay.captured_scancode);
+            // Version-1 overlays written before the device field used SH2's combined DX value.
+            // Infer its device so those bindings continue to inject on the same native device.
+            if (!object.HasMember("captured_device")) {
+                overlay.captured_device = action_input_device_from_dx_scancode(overlay.captured_scancode);
+            }
             read_action_float(object, "stamina_cost", overlay.stamina_cost);
             read_action_float(object, "magicka_cost", overlay.magicka_cost);
             read_action_float(object, "health_cost", overlay.health_cost);

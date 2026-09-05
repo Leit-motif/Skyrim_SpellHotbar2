@@ -170,6 +170,10 @@ add_executable(action_data_test src/game_data/action_data_test.cpp src/game_data
 target_compile_features(action_data_test PRIVATE cxx_std_23)
 target_include_directories(action_data_test PRIVATE src/game_data)
 
+add_executable(bind_capture_test src/mcp/bind_capture_test.cpp)
+target_compile_features(bind_capture_test PRIVATE cxx_std_23)
+target_include_directories(bind_capture_test PRIVATE src/mcp src/game_data)
+
 add_executable(cast_anim_ids_test src/game_data/cast_anim_ids_test.cpp)
 target_compile_features(cast_anim_ids_test PRIVATE cxx_std_23)
 target_include_directories(cast_anim_ids_test PRIVATE src/game_data)
@@ -205,6 +209,7 @@ add_test(NAME hotbar_serialization_test COMMAND hotbar_serialization_test)
 add_test(NAME texture_registry_test COMMAND texture_registry_test)
 add_test(NAME action_inject_test COMMAND action_inject_test)
 add_test(NAME action_data_test COMMAND action_data_test)
+add_test(NAME bind_capture_test COMMAND bind_capture_test)
 endif()
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${source_files})

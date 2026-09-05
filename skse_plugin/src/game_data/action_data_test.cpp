@@ -4,6 +4,7 @@
 #include <iostream>
 
 using SpellHotbar::ActionDefinition;
+using SpellHotbar::ActionInputDevice;
 using SpellHotbar::ActionKind;
 using SpellHotbar::ActionTargetKeys;
 using SpellHotbar::ActionTargetSource;
@@ -14,6 +15,7 @@ using SpellHotbar::apply_action_player_overlay;
 using SpellHotbar::custom_action_id_base;
 using SpellHotbar::action_would_recurse;
 using SpellHotbar::default_action_catalogue;
+using SpellHotbar::resolve_action_input;
 using SpellHotbar::resolve_action_scancode;
 
 namespace {
@@ -50,6 +52,12 @@ void target_resolution_uses_the_values_supplied_at_press()
 {
 	const ActionTargetKeys live{ .ocpa_power = 79, .dodge_hotkey = 81 };
 	const auto actions = default_action_catalogue();
+	const auto power = resolve_action_input(actions[0], live);
+	expect(power.device == ActionInputDevice::keyboard && power.dx_scancode == 79,
+		"Power Attack resolves as a keyboard dynamic target");
+	const auto dodge = resolve_action_input(actions[1], live);
+	expect(dodge.device == ActionInputDevice::keyboard && dodge.dx_scancode == 81,
+		"Dodge resolves as a keyboard dynamic target");
 	expect(resolve_action_scancode(actions[0], live) == 79,
 		"Power Attack reads the current OCPA power scancode");
 	expect(resolve_action_scancode(actions[1], live) == 81,
@@ -110,6 +118,28 @@ void player_overlay_round_trips_the_action_fields()
 	expect(!action_matches_catalogue(restored, actions.front()), "an edited Action differs from its catalogue row");
 }
 
+void captured_device_and_target_round_trip_through_an_overlay()
+{
+	const auto actions = default_action_catalogue();
+	ActionDefinition edited = actions[2];
+	edited.target = ActionTargetSource::captured;
+	edited.captured_device = ActionInputDevice::gamepad;
+	edited.captured_scancode = 277; // a supported gamepad DX range value
+
+	const ActionPlayerOverlay overlay = action_player_overlay_from(edited);
+	ActionDefinition restored = actions[2];
+	apply_action_player_overlay(restored, overlay);
+	expect(restored.target == ActionTargetSource::captured,
+		"overlay preserves a custom Action's captured target");
+	expect(restored.captured_device == ActionInputDevice::gamepad,
+		"overlay preserves the captured input device");
+	expect(restored.captured_scancode == 277,
+		"overlay preserves the captured DX scancode");
+	const auto resolved = resolve_action_input(restored, {});
+	expect(resolved.device == ActionInputDevice::gamepad && resolved.dx_scancode == 277,
+		"captured target resolves both device and DX scancode");
+}
+
 }  // namespace
 
 int main()
@@ -119,5 +149,6 @@ int main()
 	recursion_is_rejected_only_for_the_triggering_bind();
 	only_nonzero_meter_gcd_or_cooldown_makes_an_action_costed();
 	player_overlay_round_trips_the_action_fields();
+	captured_device_and_target_round_trip_through_an_overlay();
 	return g_failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

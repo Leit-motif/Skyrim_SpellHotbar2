@@ -10,6 +10,15 @@ enum class ActionKind : std::uint8_t {
 	physical_scancode = 0,
 };
 
+// The persisted device is deliberately separate from the DX scancode.  The latter is the
+// device-independent value SH2 already uses for ordinary keybinds, while the device tells the
+// injection seam which native ButtonEvent device should receive the decoded code.
+enum class ActionInputDevice : std::uint8_t {
+	keyboard = 0,
+	mouse,
+	gamepad,
+};
+
 enum class ActionTargetSource : std::uint8_t {
 	ocpa_power = 0,
 	dodge_hotkey,
@@ -21,6 +30,27 @@ struct ActionTargetKeys {
 	std::uint32_t dodge_hotkey{ 0 };
 };
 
+struct ActionInput {
+	ActionInputDevice device{ ActionInputDevice::keyboard };
+	std::uint32_t dx_scancode{ 0 };
+
+	[[nodiscard]] constexpr bool is_bound() const noexcept { return dx_scancode != 0; }
+};
+
+// Legacy Action overlays stored only the combined DX value.  Keep those overlays loadable while
+// new saves record both pieces explicitly.
+[[nodiscard]] constexpr ActionInputDevice action_input_device_from_dx_scancode(
+	std::uint32_t dx_scancode) noexcept
+{
+	if (dx_scancode >= 266U) {
+		return ActionInputDevice::gamepad;
+	}
+	if (dx_scancode >= 256U) {
+		return ActionInputDevice::mouse;
+	}
+	return ActionInputDevice::keyboard;
+}
+
 struct ActionDefinition {
 	std::uint32_t id{ 0 };
 	std::string display_name;
@@ -28,6 +58,7 @@ struct ActionDefinition {
 	std::uint32_t icon_form{ 0 };
 	ActionKind kind{ ActionKind::physical_scancode };
 	ActionTargetSource target{ ActionTargetSource::captured };
+	ActionInputDevice captured_device{ ActionInputDevice::keyboard };
 	std::uint32_t captured_scancode{ 0 };
 	float stamina_cost{ 0.0f };
 	float magicka_cost{ 0.0f };
@@ -45,6 +76,7 @@ struct ActionPlayerOverlay {
 	std::uint32_t icon_form{ 0 };
 	ActionKind kind{ ActionKind::physical_scancode };
 	ActionTargetSource target{ ActionTargetSource::captured };
+	ActionInputDevice captured_device{ ActionInputDevice::keyboard };
 	std::uint32_t captured_scancode{ 0 };
 	float stamina_cost{ 0.0f };
 	float magicka_cost{ 0.0f };
@@ -58,6 +90,9 @@ inline constexpr std::uint32_t dodge_action_id = 2;
 inline constexpr std::uint32_t custom_action_id_base = 100;
 
 [[nodiscard]] std::vector<ActionDefinition> default_action_catalogue();
+
+[[nodiscard]] ActionInput resolve_action_input(
+	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;
 
 [[nodiscard]] std::uint32_t resolve_action_scancode(
 	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept;

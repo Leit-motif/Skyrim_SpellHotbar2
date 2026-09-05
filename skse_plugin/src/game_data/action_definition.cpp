@@ -18,6 +18,7 @@ ActionDefinition make_custom_action(std::uint32_t id)
 	action.display_name = "Custom Action " + std::to_string(id - custom_action_id_base + 1);
 	action.icon = "GREATER_POWER";
 	action.target = ActionTargetSource::captured;
+	action.captured_device = ActionInputDevice::keyboard;
 	return action;
 }
 
@@ -65,21 +66,30 @@ std::vector<ActionDefinition> default_action_catalogue()
 	return actions;
 }
 
-std::uint32_t resolve_action_scancode(
+ActionInput resolve_action_input(
 	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept
 {
 	if (action.kind != ActionKind::physical_scancode) {
-		return 0;
+		return {};
 	}
 	switch (action.target) {
 	case ActionTargetSource::ocpa_power:
-		return live_targets.ocpa_power;
+		// OCPA and TK Dodge are external keyboard hotkeys in this product slice. Their values are
+		// resolved on every press, so changing either mod's setting does not require rewriting the
+		// Action overlay.
+		return ActionInput{ ActionInputDevice::keyboard, live_targets.ocpa_power };
 	case ActionTargetSource::dodge_hotkey:
-		return live_targets.dodge_hotkey;
+		return ActionInput{ ActionInputDevice::keyboard, live_targets.dodge_hotkey };
 	case ActionTargetSource::captured:
-		return action.captured_scancode;
+		return ActionInput{ action.captured_device, action.captured_scancode };
 	}
-	return 0;
+	return {};
+}
+
+std::uint32_t resolve_action_scancode(
+	const ActionDefinition& action, const ActionTargetKeys& live_targets) noexcept
+{
+	return resolve_action_input(action, live_targets).dx_scancode;
 }
 
 void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOverlay& overlay)
@@ -91,6 +101,7 @@ void apply_action_player_overlay(ActionDefinition& action, const ActionPlayerOve
 	action.icon_form = overlay.icon_form;
 	action.kind = overlay.kind;
 	action.target = overlay.target;
+	action.captured_device = overlay.captured_device;
 	action.captured_scancode = overlay.captured_scancode;
 	action.stamina_cost = positive_or_zero(overlay.stamina_cost);
 	action.magicka_cost = positive_or_zero(overlay.magicka_cost);
@@ -107,6 +118,7 @@ ActionPlayerOverlay action_player_overlay_from(const ActionDefinition& action)
 		.icon_form = action.icon_form,
 		.kind = action.kind,
 		.target = action.target,
+		.captured_device = action.captured_device,
 		.captured_scancode = action.captured_scancode,
 		.stamina_cost = positive_or_zero(action.stamina_cost),
 		.magicka_cost = positive_or_zero(action.magicka_cost),
@@ -124,6 +136,7 @@ bool action_matches_catalogue(
 		live.icon_form == catalogue.icon_form &&
 		live.kind == catalogue.kind &&
 		live.target == catalogue.target &&
+		live.captured_device == catalogue.captured_device &&
 		live.captured_scancode == catalogue.captured_scancode &&
 		positive_or_zero(live.stamina_cost) == positive_or_zero(catalogue.stamina_cost) &&
 		positive_or_zero(live.magicka_cost) == positive_or_zero(catalogue.magicka_cost) &&

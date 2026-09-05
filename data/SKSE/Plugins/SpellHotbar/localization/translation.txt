@@ -126,6 +126,14 @@ $ACTION_TARGET_OCPA	OCPA power attack
 $ACTION_TARGET_DODGE	Dodge hotkey
 $ACTION_TARGET_CAPTURED	Captured scancode
 $ACTION_SCANCODE	Scancode
+$ACTION_DEVICE_KEYBOARD	Keyboard
+$ACTION_DEVICE_MOUSE	Mouse
+$ACTION_DEVICE_GAMEPAD	Gamepad
+$ACTION_UNBOUND	Unbound
+$ACTION_CAPTURE	Capture input
+$ACTION_CAPTURE_CANCEL	Cancel capture
+$ACTION_CAPTURE_ARMED	Press a keyboard, mouse, or gamepad button...
+$ACTION_SAVE_FAILED	Could not save Action settings.
 $STAMINA_COST	Stamina
 $MAGICKA_COST	Magicka
 $HEALTH_COST	Health
