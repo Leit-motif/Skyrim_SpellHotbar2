@@ -13,18 +13,19 @@ ADR-0012 is the host decision. This file is the branch and merge procedure.
 
 Worktrees:
 
-- Canonical / stable: `C:\Nolvus\Projects\spell-hotbar-2`
-- Addon SMF: `C:\Nolvus\Projects\spell-hotbar-2-smf-addon`
+- Canonical / forward addon: `C:\Nolvus\Projects\spell-hotbar-2`
+- Frozen stable: `C:\Nolvus\Projects\spell-hotbar-2-stable`
 - Upstream PR: `C:\Nolvus\Projects\spell-hotbar-2-smf-upstream`
 
-If the addon worktree is missing: `git worktree add C:\Nolvus\Projects\spell-hotbar-2-smf-addon ng/smf-next`.
+If the stable worktree is missing: `git worktree add C:\Nolvus\Projects\spell-hotbar-2-stable main`.
 
 ## What to do
 
 `ng/smf-next` is the forward development line for this mod. Put new addon features and fixes there
 now that the SMF guest is folded in. This remains true while PR #86 is unmerged and if it never
-merges: the addon ships its own `SpellHotbar2.dll`, which overwrites the upstream DLL. Keep `main`
-as the frozen first-release line and use the addon worktree for development.
+merges: the addon ships its own `SpellHotbar2.dll`, which overwrites the upstream DLL. The canonical
+checkout stays on `ng/smf-next`; use the stable worktree only to inspect or maintain the frozen
+first-release line.
 
 The PR merge already exists: `e19b273` (parents `9186eee` and `4131cf0`). Integrate `codex/smf-migration` **once** per addon lineage. Upstream review fixes land on `codex/smf-migration` first, then merge that new head once into `ng/smf-next`.
 
