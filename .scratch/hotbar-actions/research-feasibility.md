@@ -1,10 +1,10 @@
 # Hotbar Actions — feasibility
 
-**Status:** research complete — plan is `spec.md`. No SH2 code changes. Tickets uncut.
+**Status:** research complete — plan is `spec.md`. Tickets cut 2026-09-04. No SH2 code changes.
 **Date:** 2026-09-02.
 **Prompt:** owner idea — an "Action" bind-menu tab, in the vein of Abilities, whose slot fires a keycode rather than a spell or clip. Motivating cases: One Click Power Attack bound to `B`, and dodge, both reached through a hotbar slot as if the player pressed the key. Beyond VirtualKey (Nexus 187350) is a named future integration, not v1.
 **Owner clarification 2026-09-02:** "assign an icon" was never click-to-cast. It means a hotbar slot whose activation sends a virtual keypress.
-**This session had no DevBench, MO2, or Skyrim.** Runtime claims below are from prior tickets in this repo, SH2 source, the VirtualKey Nexus page, and VirtualKey 1.3.2 source (`VirtualKey Source 187350 1.3.2`, extracted under `virtualkey-src/`). Anything that still needs a live press is labelled **Unverified**.
+**This session had no DevBench, MO2, or Skyrim.** Runtime claims below are from prior tickets in this repo, SH2 source, the VirtualKey Nexus page, and VirtualKey 1.3.2 source (zip in Downloads). Anything that still needs a live press is labelled **Unverified**.
 
 **Confidence labels:** **Confirmed** = quoted from this repo or a first-party page. **Inferred** = reasonable conclusion from those sources, not stated verbatim. **Unverified** = needs a live press.
 

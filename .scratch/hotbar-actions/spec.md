@@ -1,10 +1,11 @@
 # Hotbar Actions
 
-Status: spec complete, tickets uncut — waiting on owner accept. Research:
-`research-feasibility.md`. Source read: Beyond VirtualKey 1.3.2 (`virtualkey-src/`).
+Status: ticket 01 resolved — physical-scancode kind is v1. Frontier is
+`issues/02-slot-kind-and-cosave.md`. Research: `research-feasibility.md`. Line:
+`ng/smf-next`. Overlay: `Dev - Spell Hotbar 2 SMF Next`.
 
-Created 2026-09-02. No DevBench / live spike this session. Ticket 01 is that spike and
-blocks the combat kinds.
+Created 2026-09-02. Tickets cut 2026-09-04. Ticket 01 admitted the physical-scancode
+kind (OCPA and dodge both play from the shout queue).
 
 ## Problem Statement
 
@@ -168,22 +169,22 @@ A good test is an observable move, not a log that a `ButtonEvent` was queued.
   *triggers* a binding the player already made.
 - Owning dodge or power-attack animations. An Action does not start `SH2_Art_State`.
 - Ability Class gating, drawn-weapon refuse, or Cast Plant. Those belong to Abilities.
-- Shipping this before the current release freeze if the owner still holds that bar.
-  Default: this effort is post-release unless the owner says otherwise.
+- Landing this on `origin/master` / the first-release archive. Development is
+  `ng/smf-next` (`docs/agents/smf-addon-line.md`).
 
-## Ticket sequence (cut after accept)
+## Tickets
 
-| # | Type | What |
+| # | File | Status |
 |---|---|---|
-| 01 | spike | Inject OCPA 48 (down/up on the shout queue). Owner compares to physical `B`. Same cell for dodge. Writes the kind table for v1. |
-| 02 | task | `slot_type`, serialize kind 2, co-save bump, `BindPayload`, empty catalogue. Blocked by 01 only for which kinds exist; the slot kind itself can land with a stub press. |
-| 03 | task | Actions tab + Action Editor (name, icon, kind, capture scancode / pick `userEvent` / list VK bindings if present). |
-| 04 | task | Press path for the kinds 01 admitted. VoiceCastDriver down/up. Ticket-10 cut for attack Actions. `castSlot` drives it. |
-| 05 | task | Optional Action Cost: reuse Ability Cost helpers, default zero. Overlay + refuse flash. |
-| 06 | task | VirtualKey guest: detect, `TriggerBinding`, hide kind if absent. Can wait; not on the 01 critical path. |
+| 01 | `issues/01-spike-injected-ocpa-and-dodge.md` | resolved — physical-scancode v1 |
+| 02 | `issues/02-slot-kind-and-cosave.md` | ready-for-agent |
+| 03 | `issues/03-actions-tab-and-editor.md` | ready-for-agent, blocked by 01+02 |
+| 04 | `issues/04-press-path.md` | ready-for-agent, blocked by 01–03 |
+| 05 | `issues/05-optional-action-cost.md` | ready-for-agent, blocked by 04 |
+| 06 | `issues/06-virtualkey-guest.md` | ready-for-agent, blocked by 03; may wait |
 
-01 is the frontier. 06 may be deferred without blocking 02–05. Do not start 04's
-engine-control Power Attack arm unless 01 says the scancode kind failed.
+01 is resolved. 02 is the frontier and may run alone. 03 is unblocked once 02 lands.
+Do not start 04's engine-control Power Attack arm: 01 admitted the scancode kind.
 
 ## Further Notes
 
@@ -191,5 +192,5 @@ engine-control Power Attack arm unless 01 says the scancode kind failed.
   Ticket 01 should use that, not a hardcoded 48.
 - VoiceCastDriver (`voice_cast_driver.cpp`) is the hold/release reference, not DevBench
   `input`.
-- VirtualKey 1.3.2 API: `src/include/VirtualKeyAPI.h` in `virtualkey-src/`. Consume V2.
-  Installed runtime on this machine is 1.3.0; treat ABI as "V2 prefix stable, V4 extra."
+- VirtualKey 1.3.2 API: `VirtualKeyAPI.h` in the source zip in Downloads. Do not vendor
+  that tree. Consume V2. Installed runtime may lag (1.3.0 seen on this machine).

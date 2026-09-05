@@ -8,7 +8,7 @@ writes which Action kinds v1 may ship. No bind-menu tab.
 
 **Blocked by:** Nothing.
 
-**Status:** claimed
+**Status:** resolved
 
 Line: `ng/smf-next`. Overlay: `Dev - Spell Hotbar 2 SMF Next`. Spec: `../spec.md`.
 Do not write `Dev - Spell Hotbar 2` or `Dev - Spell Hotbar 2 SMF`.
@@ -39,15 +39,18 @@ product surface.
   different, and still needs the owner's eyes.
 - Log device, scancode, down/up, and whether the queue accepted the event.
 
-## What this ticket decides
+## Answer
 
-Write the answer under `## Answer` and set Status to `resolved`.
+Both play. Physical-scancode is v1. Tickets 03–04 ship that kind. Engine-control Power
+Attack stays unused.
 
-- Both OCPA and dodge play: physical-scancode kind is v1. Tickets 03–04 ship that kind.
-  Engine-control Power Attack stays unused.
-- OCPA fails: physical-scancode is not a combat product. Ticket 04's Power Attack arm is
-  engine-control (`userEvent` for the attack chord). Dodge waits or drops from v1.
-- Dodge fails independently: record it; do not block Power Attack on that cell.
+Live 2026-09-04, `ng/smf-next`, overlay `Dev - Spell Hotbar 2 SMF Next`, save
+`CS-TEST-NEW`. Inject: `SpellHotbar.castSlot(-1)` / `castSlot(-2)` (keyboard
+`ButtonEvent` down then up on `BSInputEventQueue`). Keys from config, not hardcoded 48:
+OCPA power 79 (Numpad 1), TK Dodge RE `DodgeHotkey` 81 (Numpad 3).
+
+Owner: injected OCPA was a power attack matching the physical key. Injected dodge
+played. A queued-event log alone is not this pass.
 
 ## Notes
 
@@ -61,4 +64,4 @@ Agent 2026-09-04: throwaway inject is `SpellHotbar.castSlot(-1)` for OCPA's conf
 power scancode (`get_ocpa_keys().power`) and `castSlot(-2)` for TK Dodge RE
 `DodgeHotkey`. Both queue a keyboard `ButtonEvent` down then up on `BSInputEventQueue`.
 VFS at build time: OCPA power **79** (Numpad 1, not B/48), dodge **81** (Numpad 3).
-Overlay: `Dev - Spell Hotbar 2 SMF Next`. Owner-hands still open.
+Overlay: `Dev - Spell Hotbar 2 SMF Next`. Owner: OCPA and dodge both played.
