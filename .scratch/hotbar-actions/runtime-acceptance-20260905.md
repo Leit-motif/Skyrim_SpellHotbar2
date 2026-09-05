@@ -132,7 +132,14 @@ screen), `reason=source up`; re-press 13:05:17.6–13:05:18.4 paired. No `pendin
 survives a loading screen but does not exercise the deferred release at `kPreLoadGame`.
 
 - [x] Hold survives a cell-transition load screen and releases on source up; re-press clean.
-- [ ] Save then load while holding (deferred release, `reason=retry`) remains unexercised. The
-      one attempt hit Save6, which hangs post-thaw independent of this plugin's co-save. Left
-      open; fast-follow 07 owns it together with the Save6 question.
+- [x] Save then load while holding (deferred release). 14:45, Save5 session, owner: "held
+      through save and load, released (after load screen) ... the game was not in a held block
+      state." Log: down 14:45:21.777 (Action 100, slot 7, V); `dropped live cast for game load`
+      at 14:45:27.335 (`kPreLoadGame`); `queued up ... held=0.001` and `target released
+      (action=100, slot=7, reason=retry)` at 14:45:27.505, the next Timinghook frame with the
+      player still 3D-loaded; co-save read at 14:45:30.772; no stuck block after the load. The
+      physical release after the load screen found no record and passed through as a plain key
+      up (fast-follow 07 #2 describes this). The queue-clear concern did not bite because the up
+      was dispatched before the load began; a load that tears the player down on the same frame
+      as `kPreLoadGame` remains a theoretical gap, and 07 #2/#3 keep it.
 
