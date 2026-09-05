@@ -63,8 +63,11 @@ noted.
     (255/256/265/266), `is_action_record` for version 6 kind 2,
     `BindCaptureState::apply_action_down_edge` with `dx_scancode == 0`, overlay JSON rejection
     of out-of-range `kind`/`target`/`device`.
-18. **Auto Input Switch does not return to keyboard/mouse while the pad stays on — NOT this
-    build's capture path.** Live 2026-09-05 12:01–14:02, reproduced three times. Mechanism
+18. **CLOSED 2026-09-05 — Auto Input Switch 1.3.1 was the cause.** Owner reverted to the
+    previous version: "that was the problem all along. This mod has been functioning
+    perfectly fine. I'm able to swap between mouse and keyboard easily." Kept for the record:
+    the switch does not return to keyboard/mouse while the pad stays on — NOT this build's
+    capture path. Live 2026-09-05 12:01–14:02, reproduced three times. Mechanism
     (source `Exit-9B/AutoInputSwitch`): the switch flips back when its `BSInputDeviceManager`
     event sink sees any non-repeating keyboard or mouse event; `Game.UsingGamepad()` reports
     the physical pad, not the switch's state, so Papyrus cannot observe it. Discriminator run at
@@ -87,5 +90,5 @@ noted.
 - [ ] Save-then-load while holding an Action exercised once on a fresh save (the deferred
       `kPreLoadGame` release, expect `reason=retry`); if the save made mid-hold hangs post-thaw
       like Save6 did, that becomes finding 19.
-- [ ] 18: one retest with SH2 disabled, or upstream question; no SH2 change expected.
+- [x] 18: closed; Auto Input Switch 1.3.1 regression, owner reverted. No SH2 change.
 - [ ] 17: tests added for the seams that survive the above.
