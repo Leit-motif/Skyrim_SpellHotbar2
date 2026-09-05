@@ -8,8 +8,16 @@ downstream of the key, where every attack source looks the same. The cast cut (m
 extended by 45) and Thu'um's shout-lock buffer both move to that seam. The OCPA ini readers,
 the `ocpa_power` Action target source, and Thu'um's `sPowerSource` auto-detection go away.
 
-**Blocked by:** 07 (landed 2026-09-05). BFCO must be installed in the test profile before the
-trace task can run; it is not in `Nolvus Awakening` today.
+**Blocked by:** 07 (landed 2026-09-05).
+
+**Scope ruling 2026-09-05.** Owner: "There's a lot I need to do in order to transition from MCO
+to BFCO. That's going to be its own project because the way Nolvus v6 is set up is insane:
+there are so many animations, and every weapon type is mapped to different animation sets per
+stance. So I suppose BFCO will be out of scope until the migration." So: build the seam now
+against OCPA and vanilla through the `NotifyAnimationGraph` hook, and keep the `PlayIdle` path
+as a designed-for extension point. The BFCO trace, the BFCO cells below, and the `PlayIdle`
+hook itself wait for the MCO-to-BFCO migration project. The OCPA readers still come out in
+this ticket.
 
 **Status:** ready-for-agent
 
