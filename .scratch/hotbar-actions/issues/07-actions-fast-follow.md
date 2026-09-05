@@ -1,6 +1,6 @@
 # 07 — Actions fast-follow: review findings after the mirroring build
 
-Status: open. Cut 2026-09-05 from the review of `429b937..255769c`. Owner: "capture these
+Status: closed 2026-09-05 (all 18 findings resolved, decided, or closed; build 76737e6 deployed and owner-tested). Cut 2026-09-05 from the review of `429b937..255769c`. Owner: "capture these
 observations and fixes as a fast-follow up. i want to address all of them in a separate
 session." Nothing here blocks the current build; the owner tested `d7b0b3a` live the same
 day and reported "everything seems to be functioning correctly".
