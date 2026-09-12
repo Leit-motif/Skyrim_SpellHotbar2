@@ -18,7 +18,6 @@ If you have created cool Screenshots or video clips using the mods I could also 
 [SKSE](https://skse.silverlock.org/)  
 [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)  
 [FLICK](https://www.nexusmods.com/skyrimspecialedition/mods/181603) - hosts every window, the in-menu dock, the HUD bars and the configuration tool (see below)  
-[SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604)  
 [OAR](https://www.nexusmods.com/skyrimspecialedition/mods/92109)  
 [Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702) - if you want icons in the swf menu  
 [Custom Skill Framework v3](https://www.nexusmods.com/skyrimspecialedition/mods/41780) - when using custom perk tree, a v2 compatible config is also provided for 1.5.97 users    

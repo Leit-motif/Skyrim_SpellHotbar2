@@ -79,6 +79,7 @@ namespace SpellHotbar::Lifecycle {
 
         void finish_first_initialization(RE::PlayerCharacter* player)
         {
+            remove_legacy_battlemage_power();
             grant_powers(player);
 
             const bool profile_loaded = Storage::IO::load_preset("auto_profile.json", false);
@@ -167,6 +168,9 @@ namespace SpellHotbar::Lifecycle {
         remove_legacy_battlemage_power();
         if (should_run_first_initialization(false, Storage::loaded_existing_settings())) {
             begin_first_initialization(false);
+        } else {
+            //A save that carries our cosave has been through this before; nothing left to do this game.
+            initialized_this_game = true;
         }
     }
 
@@ -179,8 +183,15 @@ namespace SpellHotbar::Lifecycle {
         if (initialized_this_game) {
             return;
         }
-        // Neither message arrived (console `coc` from the main menu). A save load has already
-        // run LoadCallback by the time the player's 3D is up, so an existing cosave still wins.
+        // Neither message arrived (console `coc` from the main menu). Only act with the game
+        // unpaused and no loading screen up: during a save load the previous session's player
+        // 3D can still be loaded between SKSE's Revert (which clears the loaded-settings flag)
+        // and its Load callback, and acting in that window would bootstrap on top of a save
+        // that is about to restore its own settings.
+        auto* ui = RE::UI::GetSingleton();
+        if (ui == nullptr || ui->GameIsPaused() || ui->IsMenuOpen(RE::LoadingMenu::MENU_NAME)) {
+            return;
+        }
         if (should_run_first_initialization(false, Storage::loaded_existing_settings())) {
             remove_legacy_battlemage_power();
             begin_first_initialization(false);
@@ -239,6 +250,8 @@ namespace SpellHotbar::Lifecycle {
         RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> result;
         const bool dispatched = skyrim_vm->impl->DispatchStaticCall(class_name, function_name, args, result);
         if (!dispatched) {
+            //The VM takes the arguments only on a successful dispatch.
+            delete args;
             logger::error("Cannot open BattleMage tree: CustomSkills.OpenCustomSkillMenu is unavailable");
         }
         return dispatched;

@@ -134,15 +134,8 @@ namespace SpellHotbar {
 			{ "$BAR_DRAG_INFO_TAB", "TAB: leave menus while still dragging" },
 			{ "$BAR_DRAG_INFO_WHEEL", "Mouse Wheel: Icon Size" },
 			{ "$BAR_DRAG_INFO_ALT", "ALT + Mouse Wheel : Spacing" },
-			{ "$MCM_PROMPT_BAR_LOAD", "Load bars from" },
-			{ "$MCM_PROMPT_BAR_SAVE", "Save current bars as" },
-			{ "$MCM_PROMPT_OVERWRITE", "exists, overwrite ?" },
-			{ "$MCM_PROMPT_SETTINGS_LOAD", "Load settings from preset" },
-			{ "$MCM_PROMPT_SETTINGS_SAVE", "Save current settings as" },
 			{ "$SLOT_BLOCKED_TITLE", "Blocked from Inheritance" },
 			{ "$SLOT_BLOCKED_INFO", "<Click to unblock>" },
-			{ "$MCM_PROMPT_ICON_EDITS_SAVE", "Save Spell and Item edits as" },
-			{ "$MCM_PROMPT_ICON_EDITS_LOAD", "Load Spell and Item edits from" },
 			{ "$RESET_ALL", "Reset All" },
 			{ "$RESET_ALL_PROMPT", "Reset all edits?" }
 		};

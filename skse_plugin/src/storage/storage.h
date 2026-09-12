@@ -33,7 +33,8 @@ namespace SpellHotbar::Storage {
     void LoadCallback(SKSE::SerializationInterface* a_intfc);
 
     /**
-     * Reset on revert (a new game or a load that carries no cosave for us)
+     * SKSE reverts before every load and new game; LoadCallback then restores what the cosave
+     * carries. Clears the loaded-settings flag and the lifecycle state.
      */
     void RevertCallback(SKSE::SerializationInterface* a_intfc);
 
