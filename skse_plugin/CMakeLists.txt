@@ -2,10 +2,27 @@ cmake_minimum_required(VERSION 3.21)
 
 project(SpellHotbar2 VERSION 2.0.10 LANGUAGES CXX)
 
-#output folder to copy dll after building
-set(OUTPUT_FOLDER "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_5_97/mods/Spell Hotbar 2")
-#set(OUTPUT_FOLDER "F:/Skyrim Dev/DEV_1_6_1170/mods/Spell Hotbar 2")
+#output folder to copy dll after building, e.g. "F:/Skyrim Dev/ADT/mods/Spell Hotbar 2".
+#Empty by default so a plain configure never deploys anywhere; pass -DOUTPUT_FOLDER=... to enable.
+set(OUTPUT_FOLDER "" CACHE PATH "Optional mod folder that receives the built SKSE plugin")
+
+
+# FLICK's guest header, vendored from github.com/Fuzzlesz/FUCK. It is still moving upstream --
+# API 4 landed days before this pin -- so track a commit, not HEAD, and let FUCK::Connect()'s own
+# version check fail closed against an older installed host.
+set(FLICK_API_CANONICAL_COMMIT "a123c11629da3b86ffd1c8e15081d5d641001ed3")
+set(FLICK_API_CANONICAL_SHA256 "9dc5f80490c9067d2cff98c9104b5e2df15b3af6df421546556ed726166ccefa")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flick/FUCK_API.h" FLICK_API_HEADER)
+# Normalize line endings before hashing, written as CMake escapes rather than literal newlines
+# so no editor or checkout can rewrite them.
+string(REPLACE "\r\n" "\n" FLICK_API_HEADER "${FLICK_API_HEADER}")
+string(REPLACE "\r" "\n" FLICK_API_HEADER "${FLICK_API_HEADER}")
+string(SHA256 FLICK_API_SHA256 "${FLICK_API_HEADER}")
+if(NOT FLICK_API_SHA256 STREQUAL FLICK_API_CANONICAL_SHA256)
+    message(FATAL_ERROR
+        "third_party/flick/FUCK_API.h differs from the pinned FLICK header at "
+        "${FLICK_API_CANONICAL_COMMIT}. Refresh it from upstream and update the pinned hash.")
+endif()
 
 
 find_package(imgui CONFIG REQUIRED)
@@ -98,7 +115,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTK)
 
 #automatically copy to output folder if set
-if(DEFINED OUTPUT_FOLDER)
+if(OUTPUT_FOLDER)
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
