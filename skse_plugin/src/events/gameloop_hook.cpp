@@ -4,6 +4,7 @@
 #include "../casts/spell_proc.h"
 #include "../game_data/game_data.h"
 #include "../bar/hotbars.h"
+#include "../flick/flick_watch.h"
 
 namespace SpellHotbar::events {
 
@@ -20,6 +21,12 @@ namespace SpellHotbar::events {
         Bars::update_oblivion_bar_press_show_timer(deltaTime);
         auto pc = RE::PlayerCharacter::GetSingleton();
         if (pc) {
+            //A new game (or a console `coc`) sends no kPostLoadGame, so the FLICK surfaces are
+            //registered from here once the player is actually in the world. Idempotent; on a
+            //save load kPostLoadGame usually gets there first.
+            if (pc->Is3DLoaded()) {
+                Flick::register_surfaces();
+            }
             bool blocking = pc->IsBlocking();
             if (blocking) {
                 if (!was_blocking) {

@@ -1,5 +1,7 @@
 #include "flick_watch.h"
 #include "flick_images.h"
+#include "flick_windows.h"
+#include "ui/config_tool.h"
 
 // This translation unit is built without the shared PCH (see CMakeLists, target sh2_flick), so it
 // pulls its own prerequisites. FUCK_API.h's inline Connect() calls GetModuleHandleW,
@@ -445,7 +447,7 @@ namespace SpellHotbar::Flick {
         // never ran.
         FUCK::RegisterWindow(&dock);
         dock_registered.store(true, std::memory_order_relaxed);
-        SKSE::log::info("SH2 dock: registered with FLICK at kPostLoadGame");
+        SKSE::log::info("SH2 dock: registered with FLICK");
     }
 
     bool hosts_dock()
@@ -498,5 +500,17 @@ namespace SpellHotbar::Flick {
         // Stale in the true direction costs one ignored keypress; stale in the false direction
         // eats a letter out of somebody's search box, which is the bug. Erring true is correct.
         return FUCK::IsAnyItemActive() || FUCK::IsBinding();
+    }
+
+    void register_surfaces()
+    {
+        static std::atomic<bool> done{ false };
+        if (!connected.load(std::memory_order_relaxed) || done.exchange(true)) {
+            return;
+        }
+        register_windows();
+        register_hud_windows();
+        register_ui_windows(WindowSet{});
+        FlickUi::ConfigTool::register_tool();
     }
 }

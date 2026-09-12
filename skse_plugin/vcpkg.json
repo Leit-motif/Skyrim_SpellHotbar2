@@ -8,5 +8,11 @@
 		"rapidcsv",
 		"rapidjson",
 		"imgui"
+	],
+	"overrides": [
+		{
+			"name": "imgui",
+			"version": "1.92.8"
+		}
 	]
 }

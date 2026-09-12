@@ -45,6 +45,12 @@ namespace SpellHotbar::Flick {
     // Idempotent.
     void register_windows();
 
+    // Every FLICK surface at once: the dock, the HUD bars, the windows and the config tool.
+    // Idempotent. plugin.cpp calls it at kPostLoadGame; the game loop calls it once the player's
+    // 3D is loaded, which is the same moment for a new game or a console `coc`, where SKSE sends
+    // no kPostLoadGame at all and the UI would otherwise wait for the first save load.
+    void register_surfaces();
+
     // ---- The in-menu dock, hosted on FLICK ----
     //
     // The dock is a FLICK window because that is how a Spell Hotbar 2 surface can take the mouse

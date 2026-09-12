@@ -397,7 +397,7 @@ namespace SpellHotbar::Flick {
         if (any_tab && !main_registered.load(std::memory_order_relaxed)) {
             FUCK::RegisterWindow(&main_window);
             main_registered.store(true, std::memory_order_relaxed);
-            logger::info("SH2 window '{}': registered with FLICK at kPostLoadGame (spellbind {}, spell editor {}, potion editor {})",
+            logger::info("SH2 window '{}': registered with FLICK (spellbind {}, spell editor {}, potion editor {})",
                          main_window.Id(), a_set.bind_menu ? "on" : "off", a_set.spell_editor ? "on" : "off",
                          a_set.potion_editor ? "on" : "off");
         }
@@ -405,7 +405,7 @@ namespace SpellHotbar::Flick {
             FUCK::RegisterWindow(&bar_drag_window);
             FUCK::RegisterWindow(&bar_drag_info_window);
             bar_drag_registered.store(true, std::memory_order_relaxed);
-            logger::info("SH2 window '{}': registered with FLICK at kPostLoadGame", bar_drag_window.Id());
+            logger::info("SH2 window '{}': registered with FLICK", bar_drag_window.Id());
         }
     }
 
