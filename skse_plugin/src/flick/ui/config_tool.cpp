@@ -1,4 +1,5 @@
 #include "config_tool.h"
+#include "../../lifecycle/lifecycle.h"
 
 #include "widgets.h"
 #include "../flick_watch.h"
@@ -12,7 +13,7 @@
 #include "../../mcp/mcp_preset_name.h"
 #include "../../storage/user_data_io.h"
 
-// The configuration pages as seven tabs of one FLICK sidebar tool, mirroring the MCM. The
+// The configuration pages as seven tabs of one FLICK sidebar tool (the retired MCM's pages). The
 // keybind rows arm Mcp::bind_capture(); the press itself is caught by SH2's own input hook,
 // which runs ahead of FLICK's (input/input_hook.h), so a key typed while this tool is open
 // reaches the capture before the host zeroes it.
@@ -102,75 +103,6 @@ namespace SpellHotbar::FlickUi::ConfigTool {
         bool combo(const char* label, int* value, const char* const* items, int count)
         {
             return FUCK::Combo(label, value, items, count);
-        }
-
-        // The mod's own powers, by the index the Papyrus natives playerKnowsPower /
-        // togglePlayerKnowsPower use: 0 the unbind-slot power, 1 the dual-cast toggle, 2 the
-        // BattleMage perk-tree opener.
-        RE::SpellItem* power_for_type(int type)
-        {
-            switch (type) {
-            case 0:
-                return GameData::spellhotbar_unbind_slot;
-            case 1:
-                return GameData::spellhotbar_toggle_dualcast;
-            case 2:
-                return GameData::spellhotbar_battlemage_open_perks_power;
-            default:
-                return nullptr;
-            }
-        }
-
-        bool player_has_power(int type)
-        {
-            auto* player = RE::PlayerCharacter::GetSingleton();
-            auto* power = power_for_type(type);
-            return player != nullptr && power != nullptr && player->HasSpell(power);
-        }
-
-        bool toggle_player_power(int type)
-        {
-            auto* player = RE::PlayerCharacter::GetSingleton();
-            auto* power = power_for_type(type);
-            if (player == nullptr || power == nullptr) {
-                return false;
-            }
-            if (player->HasSpell(power)) {
-                player->RemoveSpell(power);
-            } else {
-                player->AddSpell(power);
-            }
-            return player->HasSpell(power);
-        }
-
-        // What the MCM's "Open BattleMage tree" does from Papyrus: CustomSkills.OpenCustomSkillMenu
-        // ("SpellHotbar_Battlemage"), dispatched on the VM. False when the BattleMage plugin or
-        // Custom Skills Framework is missing.
-        bool open_battlemage_tree()
-        {
-            if (GameData::spellhotbar_battlemage_open_perks_power == nullptr) {
-                logger::warn("Cannot open BattleMage tree: SpellHotbar_BattleMage.esp is not loaded");
-                return false;
-            }
-            auto* skyrim_vm = RE::SkyrimVM::GetSingleton();
-            if (skyrim_vm == nullptr || skyrim_vm->impl == nullptr) {
-                logger::error("Cannot open BattleMage tree: Papyrus VM is unavailable");
-                return false;
-            }
-            static const RE::BSFixedString class_name{ "CustomSkills" };
-            static const RE::BSFixedString function_name{ "OpenCustomSkillMenu" };
-            RE::BSTSmartPointer<RE::BSScript::ObjectTypeInfo> type_info;
-            if (!skyrim_vm->impl->GetScriptObjectType(class_name, type_info) || !type_info) {
-                logger::error("Cannot open BattleMage tree: CustomSkills.OpenCustomSkillMenu is unavailable");
-                return false;
-            }
-            auto* args = RE::MakeFunctionArguments(std::string{ "SpellHotbar_Battlemage" });
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> result;
-            const bool dispatched = skyrim_vm->impl->DispatchStaticCall(class_name, function_name, args, result);
-            if (!dispatched) {
-                logger::error("Cannot open BattleMage tree: CustomSkills.OpenCustomSkillMenu is unavailable");
-            }
-            return dispatched;
         }
 
         void confirm_modal(const char* id, const char* message, const std::function<void()>& on_yes)
@@ -415,7 +347,7 @@ namespace SpellHotbar::FlickUi::ConfigTool {
             const bool plugin_present = GameData::spellhotbar_battlemage_open_perks_power != nullptr;
             if (plugin_present) {
                 if (FUCK::Button("Open BattleMage tree")) {
-                    if (!open_battlemage_tree()) {
+                    if (!Lifecycle::open_battlemage_tree()) {
                         status_message = "Custom Skills Framework is unavailable; the tree was not opened.";
                     } else {
                         status_message.clear();
@@ -638,13 +570,13 @@ namespace SpellHotbar::FlickUi::ConfigTool {
                 status_message = "Cleared bars.";
             });
 
-            bool unbind = player_has_power(0);
-            if (checkbox("Unbind Slot", &unbind) && unbind != player_has_power(0)) {
-                toggle_player_power(0);
+            bool unbind = Lifecycle::player_has_power(0);
+            if (checkbox("Unbind Slot", &unbind) && unbind != Lifecycle::player_has_power(0)) {
+                Lifecycle::toggle_player_power(0);
             }
-            bool dual = player_has_power(1);
-            if (checkbox("Hotbar Dual Casting", &dual) && dual != player_has_power(1)) {
-                toggle_player_power(1);
+            bool dual = Lifecycle::player_has_power(1);
+            if (checkbox("Hotbar Dual Casting", &dual) && dual != Lifecycle::player_has_power(1)) {
+                Lifecycle::toggle_player_power(1);
             }
             if (!status_message.empty()) {
                 FUCK::TextUnformatted(status_message.c_str());

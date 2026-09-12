@@ -40,6 +40,9 @@ set(source_files src/plugin.cpp
                  src/mcp/bind_capture.h
                  src/mcp/bind_capture.cpp
                  src/mcp/mcp_preset_name.h
+                 src/lifecycle/first_run_policy.h
+                 src/lifecycle/lifecycle.h
+                 src/lifecycle/lifecycle.cpp
                  src/papyrus_extensions/papyrus_functions.h
                  src/papyrus_extensions/papyrus_functions.cpp
                  src/storage/storage.h

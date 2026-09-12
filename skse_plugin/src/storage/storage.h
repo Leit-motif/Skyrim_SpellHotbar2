@@ -32,6 +32,17 @@ namespace SpellHotbar::Storage {
      */
     void LoadCallback(SKSE::SerializationInterface* a_intfc);
 
+    /**
+     * Reset on revert (a new game or a load that carries no cosave for us)
+     */
+    void RevertCallback(SKSE::SerializationInterface* a_intfc);
+
+    /**
+     * True once LoadCallback has read a 'HOTB' record for the current game; false after a
+     * revert. Lifecycle uses it to tell a save that has seen the mod from one that has not.
+     */
+    bool loaded_existing_settings();
+
     bool slotSpell(RE::FormID form, size_t index, menu_slot_type slot_type);
 
 }

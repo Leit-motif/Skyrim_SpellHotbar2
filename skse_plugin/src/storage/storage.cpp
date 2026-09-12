@@ -5,8 +5,24 @@
 #include "../bar/hotbar.h"
 #include "../input/keybinds.h"
 #include "../input/modes.h"
+#include "../lifecycle/lifecycle.h"
 
 namespace SpellHotbar::Storage {
+
+    namespace {
+        bool has_loaded_settings{ false };
+    }
+
+    bool loaded_existing_settings()
+    {
+        return has_loaded_settings;
+    }
+
+    void RevertCallback(SKSE::SerializationInterface*)
+    {
+        has_loaded_settings = false;
+        Lifecycle::reset();
+    }
 
     void SaveCallback(SKSE::SerializationInterface* a_intfc)
     {
@@ -191,6 +207,9 @@ namespace SpellHotbar::Storage {
         SpellHotbar::Bars::clear_bars();
         GameData::oblivion_bar.clear();
 
+        has_loaded_settings = false;
+        Lifecycle::reset();
+
         uint32_t type{0};
         uint32_t version{0};
         uint32_t length{0};
@@ -201,6 +220,7 @@ namespace SpellHotbar::Storage {
 
             if (type == 'HOTB')
             {
+                has_loaded_settings = true;
                 //HOTB is now variable length
                 //logger::trace("Reading 'HOTB' data from save...");
                 //if (length != ((sizeof(bool) * 3) + (sizeof(uint8_t) * 6) + (sizeof(float)* 3) )) {

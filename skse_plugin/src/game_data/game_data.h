@@ -158,6 +158,7 @@ namespace SpellHotbar::GameData {
     extern RE::SpellItem* spellhotbar_battlemage_open_perks_power;
 
     extern RE::TESGlobal* global_spellhotbar_perks_override;
+    extern RE::TESGlobal* global_spellhotbar_use_dual_casting;
     extern RE::TESGlobal* global_spellhotbar_perks_timed_block_window;
     extern RE::TESGlobal* global_spellhotbar_perks_block_trigger_chance;
     extern RE::TESGlobal* global_spellhotbar_perks_power_attack_trigger_chance;

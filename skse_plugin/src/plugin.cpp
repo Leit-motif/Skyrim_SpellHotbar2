@@ -10,6 +10,7 @@
 #include "events/eventlistener.h"
 #include "events/animationeventhook.h"
 #include "events/gameloop_hook.h"
+#include "lifecycle/lifecycle.h"
 
 
 constexpr uint32_t serializazion_id = 0xB8498471; //random generated 4byte
@@ -46,6 +47,10 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
             //(flick_watch.h). Idempotent, so later save loads are no-ops. A new game sends no
             //kPostLoadGame; the game loop hook covers that (gameloop_hook.cpp).
             SpellHotbar::Flick::register_surfaces();
+            SpellHotbar::Lifecycle::on_post_load_game();
+        }
+        else if (message->type == SKSE::MessagingInterface::kNewGame) {
+            SpellHotbar::Lifecycle::on_new_game();
         }
      });
 
@@ -76,6 +81,7 @@ SKSEPluginLoad(const SKSE::LoadInterface * skse)
     serialization->SetUniqueID(serializazion_id);
     serialization->SetSaveCallback(SpellHotbar::Storage::SaveCallback);
     serialization->SetLoadCallback(SpellHotbar::Storage::LoadCallback);
+    serialization->SetRevertCallback(SpellHotbar::Storage::RevertCallback);
     logger::info("SpellHotbar2 serialization registered!");
 
     return true;

@@ -5,6 +5,7 @@
 #include "../game_data/game_data.h"
 #include "../bar/hotbars.h"
 #include "../flick/flick_watch.h"
+#include "../lifecycle/lifecycle.h"
 
 namespace SpellHotbar::events {
 
@@ -26,6 +27,7 @@ namespace SpellHotbar::events {
             //save load kPostLoadGame usually gets there first.
             if (pc->Is3DLoaded()) {
                 Flick::register_surfaces();
+                Lifecycle::on_player_in_world();
             }
             bool blocking = pc->IsBlocking();
             if (blocking) {
