@@ -7,13 +7,6 @@
 		"stb",
 		"rapidcsv",
 		"rapidjson",
-		"directxtk",
-		{
-			"name": "imgui",
-			"features": [
-				"dx11-binding",
-				"win32-binding"
-			]
-		}
+		"imgui"
 	]
 }
