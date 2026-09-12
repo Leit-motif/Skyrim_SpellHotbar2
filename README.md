@@ -17,6 +17,7 @@ If you have created cool Screenshots or video clips using the mods I could also 
 ## Requirements
 [SKSE](https://skse.silverlock.org/)  
 [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)  
+[FLICK](https://www.nexusmods.com/skyrimspecialedition/mods/181603) - hosts every window, the in-menu dock, the HUD bars and the configuration tool (see below)  
 [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604)  
 [OAR](https://www.nexusmods.com/skyrimspecialedition/mods/92109)  
 [Inventory Interface Information Injector](https://www.nexusmods.com/skyrimspecialedition/mods/85702) - if you want icons in the swf menu  
@@ -104,6 +105,13 @@ Note: chances and timing is configurable in MCM
 * Master Battlemage (Requires Expert Battlemage): Spell Procs can trigger Master spells. Reduces Cooldown by 40%. Requires 'Alteration' 75.   (Note 40% reduction in total, not additive)
  
 ![#BattleMage_Perks1](docs/images/battlemage_1.jpg) ![#BattleMage_Perks2](docs/images/battlemage_2.jpg)  
+
+## FLICK hosted UI
+The bind menu, the spell and potion editors, the bar position editor, the in-menu dock and the HUD bars are all windows of [FLICK](https://www.nexusmods.com/skyrimspecialedition/mods/181603) (`FUCK.dll`), which is a hard requirement. The configuration pages are also available as the "Spell Hotbar 2" tool in FLICK's sidebar (F7 by default) next to the MCM. The plugin draws nothing itself.
+
+The dock over the Magic, Inventory and Favorites menus shows the current bar; its gear opens the bind menu, the arrows page through the bars, and it can be dragged into place (the lock glyph fixes it). Its position is saved in the SKSE co-save (format 6; older saves load with the defaults) and in exported presets under `settings.menu_bar`.
+
+FLICK loads images as PNG, so every DDS under `SKSE/Plugins/SpellHotbar/images` needs a PNG sibling of the same name. `skse_plugin/scripts/dds_to_png.py` writes them; run it over the images folder when packaging a release or after adding icons. The key glyphs `keynames.csv` points at (the ImGui Icons pack) already ship as PNG. The vendored guest header `skse_plugin/third_party/flick/FUCK_API.h` is pinned to FLICK commit `a123c11` and checked at configure time.
 
 ## Ingame Editor
 In the MCM an editor for Spells and Potions can be opened to edit the spell data, this allows to set custom Icons and some other values like animation for the spell and is savegame specific (stored in SKSE co-save).
